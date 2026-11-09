@@ -13,16 +13,6 @@ namespace RTC
 		constexpr size_t SerializationBufferSize{ 65536 };
 		extern uint8_t SerializationBuffer[SerializationBufferSize];
 
-		// Maximum interval for regular RTCP mode.
-		//
-		// NOTE: Audio does not take the 5000 ms that other implementations take, because our
-		// correspondence between NTP and RTP timestamps is not the fixed line of a real
-		// capture system but an estimation that moves. Refreshing it for audio less often
-		// than for video would make receivers combine measurements taken at different
-		// instants, and that difference is lip sync error.
-		constexpr int64_t MaxAudioIntervalMs{ 1000 };
-		constexpr int64_t MaxVideoIntervalMs{ 1000 };
-
 		enum class Type : uint8_t
 		{
 			SR    = 200,

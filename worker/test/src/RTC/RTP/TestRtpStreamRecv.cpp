@@ -1,12 +1,19 @@
 #include "common.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/NEW_RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/AnyReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/NackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/NEW_RTCP/packet/ReceiverReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
 #include "RTC/NackGenerator.hpp"
-#include "RTC/RTCP/FeedbackPs.hpp"
-#include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
+#include "RTC/RtpDictionaries.hpp"
+#include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp"
 #include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
@@ -26,15 +33,17 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		{
 		}
 
-		void OnRtpStreamSendRtcpPacket(RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet) override
+		void OnRtpStreamSendRtcpPacket(
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::NEW_RTCP::Packet* packet) override
 		{
 			switch (packet->GetType())
 			{
-				case RTC::RTCP::Type::PSFB:
+				case RTC::NEW_RTCP::Packet::PacketType::PSFB:
 				{
-					switch (dynamic_cast<RTC::RTCP::FeedbackPsPacket*>(packet)->GetMessageType())
+					switch (dynamic_cast<const RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket*>(packet)
+					          ->GetMessageType())
 					{
-						case RTC::RTCP::FeedbackPs::MessageType::PLI:
+						case RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI:
 						{
 							INFO("PLI required");
 
@@ -46,7 +55,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 							break;
 						}
 
-						case RTC::RTCP::FeedbackPs::MessageType::FIR:
+						case RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR:
 						{
 							INFO("FIR required");
 
@@ -64,11 +73,12 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 					break;
 				}
 
-				case RTC::RTCP::Type::RTPFB:
+				case RTC::NEW_RTCP::Packet::PacketType::RTPFB:
 				{
-					switch (dynamic_cast<RTC::RTCP::FeedbackRtpPacket*>(packet)->GetMessageType())
+					switch (dynamic_cast<const RTC::NEW_RTCP::AnyTransportLayerFeedbackPacket*>(packet)
+					          ->GetMessageType())
 					{
-						case RTC::RTCP::FeedbackRtp::MessageType::NACK:
+						case RTC::NEW_RTCP::AnyTransportLayerFeedbackPacket::MessageType::NACK:
 						{
 							INFO("NACK required");
 
@@ -76,14 +86,12 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 
 							this->shouldTriggerNack = false;
 
-							auto* nackPacket = dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+							const auto* const nackPacket = dynamic_cast<const RTC::NEW_RTCP::NackPacket*>(packet);
 
-							for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
+							for (const RTC::NEW_RTCP::NackPacket::Item& item : nackPacket->GetItems())
 							{
-								const RTC::RTCP::FeedbackRtpNackItem* item = *it;
-
-								const uint16_t firstSeq = item->GetPacketId();
-								uint16_t bitmask        = item->GetLostPacketBitmask();
+								const uint16_t firstSeq = item.packetId;
+								uint16_t bitmask        = item.lostPacketBitmask;
 
 								this->nackedSeqNumbers.push_back(firstSeq);
 
@@ -202,21 +210,14 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 			}
 
 			void OnRtpStreamSendRtcpPacket(
-			  RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet) override
+			  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::NEW_RTCP::Packet* packet) override
 			{
-				auto* const nackPacket = dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+				const auto* const nackPacket = dynamic_cast<const RTC::NEW_RTCP::NackPacket*>(packet);
 
 				REQUIRE(nackPacket);
-				REQUIRE(nackPacket->GetSize() <= RTC::Consts::OutgoingRtcpPacketMaxSize);
+				REQUIRE(nackPacket->GetLength() <= RTC::Consts::OutgoingRtcpPacketMaxSize);
 
-				size_t itemCount{ 0 };
-
-				for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
-				{
-					++itemCount;
-				}
-
-				this->nackPacketItemCounts.push_back(itemCount);
+				this->nackPacketItemCounts.push_back(nackPacket->GetNumberOfItems());
 			}
 
 			uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* /*rtpStream*/) override
@@ -283,7 +284,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		packet->SetSequenceNumber(6);
 		packet->RtxEncode(params.rtxPayloadType, params.rtxSsrc, 1000 /*seq=*/);
 
-		REQUIRE(rtpStream.ReceiveRtxPacket(packet.get()));
+		REQUIRE(rtpStream.ReceiveRtxPacket(packet.get(), shared.GetTimeUs()));
 
 		packet->RtxDecode(originalPayloadType, originalSsrc);
 	}
@@ -318,13 +319,13 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		const auto receiveDelaySinceLastRr =
 		  [&](int64_t receivedAtUs, uint32_t lastRr, uint32_t dlrr) -> std::optional<float>
 		{
-			RTC::RTCP::DelaySinceLastRr::SsrcInfo ssrcInfo;
+			const RTC::NEW_RTCP::DlrrExtendedReport::SubBlock subBlock{
+				.ssrc                         = params.ssrc,
+				.lastReceiverReport           = lastRr,
+				.delaySinceLastReceiverReport = dlrr,
+			};
 
-			ssrcInfo.SetSsrc(params.ssrc);
-			ssrcInfo.SetLastReceiverReport(lastRr);
-			ssrcInfo.SetDelaySinceLastReceiverReport(dlrr);
-
-			return rtpStream.ReceiveRtcpXrDelaySinceLastRr(std::addressof(ssrcInfo), receivedAtUs);
+			return rtpStream.ReceiveRtcpDlrrSubBlock(subBlock, receivedAtUs);
 		};
 
 		// The compact NTP representation has 16 bits of seconds, so it wraps around
@@ -377,5 +378,283 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		listener.shouldTriggerPLI = true;
 		listener.shouldTriggerFIR = false;
 		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+	}
+
+	SECTION("ReceiveRtcpSenderReportPacket() ignores a zeroed NTP timestamp")
+	{
+		RtpStreamRecvListener listener;
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
+
+		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket{
+			RTC::NEW_RTCP::SenderReportPacket::Factory(
+			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
+		};
+
+		senderReportPacket->SetSsrc(params.ssrc);
+		senderReportPacket->SetNtp({ .seconds = 0, .fractions = 0 });
+		senderReportPacket->SetRtpTimestamp(1000);
+
+		rtpStream.ReceiveRtcpSenderReportPacket(senderReportPacket.get(), shared.GetTimeUs());
+
+		REQUIRE(!rtpStream.GetSenderReportReceivedAtUs().has_value());
+		REQUIRE(!rtpStream.GetSenderReportMapping().has_value());
+
+		senderReportPacket->SetNtp({ .seconds = 1000, .fractions = 0 });
+
+		rtpStream.ReceiveRtcpSenderReportPacket(senderReportPacket.get(), shared.GetTimeUs());
+
+		REQUIRE(rtpStream.GetSenderReportReceivedAtUs() == shared.GetTimeUs());
+
+		const std::optional<RTC::RTP::RtpStream::SenderReportMapping> senderReportMapping =
+		  rtpStream.GetSenderReportMapping();
+
+		REQUIRE(senderReportMapping.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const RTC::RTP::RtpStream::SenderReportMapping& senderReportMappingValue =
+		  senderReportMapping.value();
+
+		REQUIRE(senderReportMappingValue.ntpUs == 1000 * 1000000);
+		REQUIRE(senderReportMappingValue.ts == 1000);
+	}
+
+	SECTION("AddRtcpReportBlock() reports the losses and the last Sender Report")
+	{
+		RtpStreamRecvListener listener;
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
+
+		packet->SetSequenceNumber(1);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		packet->SetSequenceNumber(2);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		// Sequence number 3 is lost.
+		packet->SetSequenceNumber(4);
+		listener.shouldTriggerNack = true;
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		// The Sender Report arrived half a second before the report block is built.
+		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket{
+			RTC::NEW_RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		};
+
+		senderReportPacket->SetSsrc(params.ssrc);
+		senderReportPacket->SetNtp({ .seconds = 0x00010002, .fractions = 0x00030000 });
+		senderReportPacket->SetRtpTimestamp(4);
+
+		rtpStream.ReceiveRtcpSenderReportPacket(senderReportPacket.get(), shared.GetTimeUs() - 500000);
+
+		const std::unique_ptr<RTC::NEW_RTCP::ReceiverReportPacket> receiverReportPacket{
+			RTC::NEW_RTCP::ReceiverReportPacket::Factory(rtcpCommon::FactoryBuffer + 1000, 1000)
+		};
+
+		REQUIRE(rtpStream.AddRtcpReportBlock(receiverReportPacket.get()));
+		REQUIRE(receiverReportPacket->GetNumberOfReportBlocks() == 1);
+
+		const std::vector<RTC::NEW_RTCP::AnyReportPacket::ReportBlock> reportBlocks =
+		  receiverReportPacket->GetReportBlocks();
+		const RTC::NEW_RTCP::AnyReportPacket::ReportBlock& reportBlock = reportBlocks.at(0);
+
+		REQUIRE(reportBlock.ssrc == params.ssrc);
+		// 1 packet lost out of 4 expected, as a fixed point number with 8 bits of
+		// fraction.
+		REQUIRE(reportBlock.fractionLost == 64);
+		REQUIRE(reportBlock.totalLost == 1);
+		REQUIRE(reportBlock.extendedHighestSeq == 4);
+		REQUIRE(reportBlock.jitter == 0);
+		// Middle 32 bits out of 64 in the NTP timestamp of the Sender Report.
+		REQUIRE(reportBlock.lastSenderReport == 0x00020003);
+		// Half a second in units of 1/65536 seconds.
+		REQUIRE(reportBlock.delaySinceLastSenderReport == 0x8000);
+	}
+
+	SECTION("AddRtcpReportBlock() touches nothing if the report block does not fit")
+	{
+		RtpStreamRecvListener listener;
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
+
+		packet->SetSequenceNumber(1);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		packet->SetSequenceNumber(2);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		// Sequence number 3 is lost.
+		packet->SetSequenceNumber(4);
+		listener.shouldTriggerNack = true;
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		// Room for the header of the packet alone.
+		const std::unique_ptr<RTC::NEW_RTCP::ReceiverReportPacket> smallReceiverReportPacket{
+			RTC::NEW_RTCP::ReceiverReportPacket::Factory(
+			  rtcpCommon::FactoryBuffer, RTC::NEW_RTCP::ReceiverReportPacket::ReceiverReportHeaderLength)
+		};
+
+		REQUIRE(!rtpStream.AddRtcpReportBlock(smallReceiverReportPacket.get()));
+		REQUIRE(smallReceiverReportPacket->GetNumberOfReportBlocks() == 0);
+		REQUIRE(
+		  smallReceiverReportPacket->GetLength() ==
+		  RTC::NEW_RTCP::ReceiverReportPacket::ReceiverReportHeaderLength);
+
+		// Room for as many report blocks as the packet can count, all of them taken.
+		const std::unique_ptr<RTC::NEW_RTCP::ReceiverReportPacket> fullReceiverReportPacket{
+			RTC::NEW_RTCP::ReceiverReportPacket::Factory(rtcpCommon::FactoryBuffer + 1000, 1000)
+		};
+
+		for (size_t idx{ 0 }; idx < RTC::NEW_RTCP::AnyReportPacket::MaxReportBlocks; ++idx)
+		{
+			fullReceiverReportPacket->AddReportBlock({ .ssrc = static_cast<uint32_t>(idx) });
+		}
+
+		REQUIRE(!rtpStream.AddRtcpReportBlock(fullReceiverReportPacket.get()));
+		REQUIRE(
+		  fullReceiverReportPacket->GetNumberOfReportBlocks() ==
+		  RTC::NEW_RTCP::AnyReportPacket::MaxReportBlocks);
+
+		// Had any of the failed attempts closed the reporting interval, this one
+		// would report no loss.
+		const std::unique_ptr<RTC::NEW_RTCP::ReceiverReportPacket> receiverReportPacket{
+			RTC::NEW_RTCP::ReceiverReportPacket::Factory(rtcpCommon::FactoryBuffer + 2000, 1000)
+		};
+
+		REQUIRE(rtpStream.AddRtcpReportBlock(receiverReportPacket.get()));
+
+		const std::vector<RTC::NEW_RTCP::AnyReportPacket::ReportBlock> reportBlocks =
+		  receiverReportPacket->GetReportBlocks();
+		const RTC::NEW_RTCP::AnyReportPacket::ReportBlock& reportBlock = reportBlocks.at(0);
+
+		REQUIRE(reportBlock.fractionLost == 64);
+		REQUIRE(reportBlock.totalLost == 1);
+	}
+
+	SECTION("AddRtxRtcpReportBlock() reports about the RTX stream once it receives packets")
+	{
+		// Needed by the RTX stream to tell its MIME type, and by the codec
+		// processing of the packets it carries.
+		params.mimeType.type    = RTC::RtpCodecMimeType::Type::VIDEO;
+		params.mimeType.subtype = RTC::RtpCodecMimeType::Subtype::VP8;
+
+		RtpStreamRecvListener listener;
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
+
+		const std::unique_ptr<RTC::NEW_RTCP::ReceiverReportPacket> receiverReportPacket{
+			RTC::NEW_RTCP::ReceiverReportPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		};
+
+		REQUIRE(!rtpStream.AddRtxRtcpReportBlock(receiverReportPacket.get()));
+		REQUIRE(receiverReportPacket->GetNumberOfReportBlocks() == 0);
+
+		rtpStream.SetRtx(params.rtxPayloadType, params.rtxSsrc);
+
+		// Neither while the RTX stream has received no packet.
+		REQUIRE(!rtpStream.AddRtxRtcpReportBlock(receiverReportPacket.get()));
+		REQUIRE(receiverReportPacket->GetNumberOfReportBlocks() == 0);
+
+		packet->SetSequenceNumber(1);
+		packet->RtxEncode(params.rtxPayloadType, params.rtxSsrc, /*seq*/ 1000);
+
+		rtpStream.ReceiveRtxPacket(packet.get(), shared.GetTimeUs());
+
+		// A Sender Report with a zeroed NTP timestamp leaves nothing to report back.
+		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket{
+			RTC::NEW_RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer + 1000, 1000)
+		};
+
+		senderReportPacket->SetSsrc(params.rtxSsrc);
+		senderReportPacket->SetNtp({ .seconds = 0, .fractions = 0 });
+
+		rtpStream.ReceiveRtxRtcpSenderReportPacket(senderReportPacket.get(), shared.GetTimeUs() - 500000);
+
+		REQUIRE(rtpStream.AddRtxRtcpReportBlock(receiverReportPacket.get()));
+
+		// The Sender Report arrived half a second before the report block is built.
+		senderReportPacket->SetNtp({ .seconds = 0x00010002, .fractions = 0x00030000 });
+
+		rtpStream.ReceiveRtxRtcpSenderReportPacket(senderReportPacket.get(), shared.GetTimeUs() - 500000);
+
+		REQUIRE(rtpStream.AddRtxRtcpReportBlock(receiverReportPacket.get()));
+		REQUIRE(receiverReportPacket->GetNumberOfReportBlocks() == 2);
+
+		const std::vector<RTC::NEW_RTCP::AnyReportPacket::ReportBlock> reportBlocks =
+		  receiverReportPacket->GetReportBlocks();
+		const RTC::NEW_RTCP::AnyReportPacket::ReportBlock& reportBlock0 = reportBlocks.at(0);
+
+		REQUIRE(reportBlock0.ssrc == params.rtxSsrc);
+		REQUIRE(reportBlock0.lastSenderReport == 0);
+		REQUIRE(reportBlock0.delaySinceLastSenderReport == 0);
+
+		const RTC::NEW_RTCP::AnyReportPacket::ReportBlock& reportBlock1 = reportBlocks.at(1);
+
+		REQUIRE(reportBlock1.ssrc == params.rtxSsrc);
+		// Middle 32 bits out of 64 in the NTP timestamp of the Sender Report.
+		REQUIRE(reportBlock1.lastSenderReport == 0x00020003);
+		// Half a second in units of 1/65536 seconds.
+		REQUIRE(reportBlock1.delaySinceLastSenderReport == 0x8000);
+	}
+
+	SECTION(
+	  "AddRtcpReportBlock() and AddRtxRtcpReportBlock() stop reporting about streams that receive nothing for too long")
+	{
+		int64_t nowUs{ 1000 * 1000 };
+
+		mocks::MockShared sharedWithClock(/*getTimeUs*/
+		                                  [&nowUs]() -> int64_t
+		                                  {
+			                                  return nowUs;
+		                                  });
+
+		// Needed by the RTX stream to tell its MIME type, and by the codec
+		// processing of the packets it carries.
+		params.mimeType.type    = RTC::RtpCodecMimeType::Type::VIDEO;
+		params.mimeType.subtype = RTC::RtpCodecMimeType::Subtype::VP8;
+
+		RtpStreamRecvListener listener;
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener),
+		  std::addressof(sharedWithClock),
+		  params,
+		  SendNackDelay,
+		  UseRtpInactivityCheck);
+
+		rtpStream.SetRtx(params.rtxPayloadType, params.rtxSsrc);
+
+		packet->SetSequenceNumber(1);
+		rtpStream.ReceivePacket(packet.get(), sharedWithClock.GetTimeUs());
+
+		packet->SetSequenceNumber(2);
+		packet->RtxEncode(params.rtxPayloadType, params.rtxSsrc, /*seq*/ 1000);
+		rtpStream.ReceiveRtxPacket(packet.get(), sharedWithClock.GetTimeUs());
+
+		const std::unique_ptr<RTC::NEW_RTCP::ReceiverReportPacket> receiverReportPacket{
+			RTC::NEW_RTCP::ReceiverReportPacket::Factory(
+			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
+		};
+
+		// Right before the timeout both streams are still reported about.
+		nowUs += (RTC::RTP::RtpStream::ReportBlockTimeoutMs * 1000) - 1;
+
+		REQUIRE(rtpStream.AddRtcpReportBlock(receiverReportPacket.get()));
+		REQUIRE(rtpStream.AddRtxRtcpReportBlock(receiverReportPacket.get()));
+		REQUIRE(receiverReportPacket->GetNumberOfReportBlocks() == 2);
+
+		// Once the timeout is reached neither of them is.
+		nowUs += 1;
+
+		REQUIRE(!rtpStream.AddRtcpReportBlock(receiverReportPacket.get()));
+		REQUIRE(!rtpStream.AddRtxRtcpReportBlock(receiverReportPacket.get()));
+		REQUIRE(receiverReportPacket->GetNumberOfReportBlocks() == 2);
+
+		// A new packet makes the stream that receives it be reported about again.
+		packet->SetSequenceNumber(3);
+		rtpStream.ReceivePacket(packet.get(), sharedWithClock.GetTimeUs());
+
+		REQUIRE(rtpStream.AddRtcpReportBlock(receiverReportPacket.get()));
+		REQUIRE(!rtpStream.AddRtxRtcpReportBlock(receiverReportPacket.get()));
+		REQUIRE(receiverReportPacket->GetNumberOfReportBlocks() == 3);
 	}
 }

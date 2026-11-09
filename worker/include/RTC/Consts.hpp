@@ -100,6 +100,24 @@ namespace RTC
 		constexpr uint8_t MidRtpExtensionMaxLength{ 8 };
 
 		/**
+		 * Maximum interval for regular RTCP mode for audio (ms).
+		 *
+		 * @remarks
+		 * - Not the 5000 ms that other implementations take, because our
+		 *   correspondence between NTP and RTP timestamps is not the fixed line of
+		 *   a real capture system but an estimation that moves. Refreshing it for
+		 *   audio less often than for video would make receivers combine
+		 *   measurements taken at different instants, and that difference is lip
+		 *   sync error.
+		 */
+		constexpr int64_t MaxAudioRtcpIntervalMs{ 1000 };
+
+		/**
+		 * Maximum interval for regular RTCP mode for video (ms).
+		 */
+		constexpr int64_t MaxVideoRtcpIntervalMs{ 1000 };
+
+		/**
 		 * SSRC of the RTP stream the probing packets are sent on.
 		 *
 		 * @remarks

@@ -31,6 +31,11 @@ namespace RTC
 			 * Size of the RTP sequence number space, which is where it wraps around.
 			 */
 			static constexpr uint32_t RtpSeqMod{ 1 << 16 };
+			/**
+			 * How long a received stream may go without receiving any RTP packet
+			 * before RTCP Receiver Reports stop carrying a report block about it (ms).
+			 */
+			static constexpr int64_t ReportBlockTimeoutMs{ 8000 };
 
 		protected:
 			class Listener

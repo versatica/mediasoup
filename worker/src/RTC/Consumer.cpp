@@ -233,11 +233,11 @@ namespace RTC
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 		{
-			this->maxRtcpIntervalMs = RTC::RTCP::MaxAudioIntervalMs;
+			this->maxRtcpIntervalMs = RTC::Consts::MaxAudioRtcpIntervalMs;
 		}
 		else
 		{
-			this->maxRtcpIntervalMs = RTC::RTCP::MaxVideoIntervalMs;
+			this->maxRtcpIntervalMs = RTC::Consts::MaxVideoRtcpIntervalMs;
 		}
 
 		auto& encoding = this->rtpParameters.encodings[0];

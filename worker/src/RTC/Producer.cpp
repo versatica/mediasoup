@@ -5,7 +5,8 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/Consts.hpp"
-#include "RTC/RTCP/Feedback.hpp"
+#include "RTC/NEW_RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
 #include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
@@ -195,11 +196,11 @@ namespace RTC
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 		{
-			this->maxRtcpIntervalMs = RTC::RTCP::MaxAudioIntervalMs;
+			this->maxRtcpIntervalMs = RTC::Consts::MaxAudioRtcpIntervalMs;
 		}
 		else
 		{
-			this->maxRtcpIntervalMs = RTC::RTCP::MaxVideoIntervalMs;
+			this->maxRtcpIntervalMs = RTC::Consts::MaxVideoRtcpIntervalMs;
 		}
 
 		// NOTE: This may throw.
@@ -630,7 +631,7 @@ namespace RTC
 			isRtx  = true;
 
 			// Process the packet.
-			if (!rtpStream->ReceiveRtxPacket(packet))
+			if (!rtpStream->ReceiveRtxPacket(packet, receivedAtUs))
 			{
 #ifdef MS_RTC_LOGGER_RTP
 				packet->logger.Discarded(
@@ -795,7 +796,12 @@ namespace RTC
 		{
 			auto* const rtpStream = kv.second;
 
-			receiverReports.emplace_back(rtpStream->GetRtcpReceiverReport());
+			auto* const report = rtpStream->GetRtcpReceiverReport();
+
+			if (report)
+			{
+				receiverReports.emplace_back(report);
+			}
 
 			auto* const rtxReport = rtpStream->GetRtxRtcpReceiverReport();
 
@@ -1734,45 +1740,49 @@ namespace RTC
 	}
 
 	void Producer::OnRtpStreamSendRtcpPacket(
-	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet)
+	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::NEW_RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
 		switch (packet->GetType())
 		{
-			case RTC::RTCP::Type::PSFB:
+			case RTC::NEW_RTCP::Packet::PacketType::PSFB:
 			{
-				auto* feedback = static_cast<RTC::RTCP::FeedbackPsPacket*>(packet);
+				const auto* const feedbackPacket =
+				  static_cast<const RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket*>(packet);
 
-				switch (feedback->GetMessageType())
+				switch (feedbackPacket->GetMessageType())
 				{
-					case RTC::RTCP::FeedbackPs::MessageType::PLI:
+					case RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI:
 					{
 						// May emit 'trace' event.
-						EmitTraceEventPliType(feedback->GetMediaSsrc());
+						EmitTraceEventPliType(feedbackPacket->GetMediaSsrc());
 
 						break;
 					}
 
-					case RTC::RTCP::FeedbackPs::MessageType::FIR:
+					case RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR:
 					{
 						// May emit 'trace' event.
-						EmitTraceEventFirType(feedback->GetMediaSsrc());
+						EmitTraceEventFirType(feedbackPacket->GetMediaSsrc());
 
 						break;
 					}
 
 					default:;
 				}
+
+				break;
 			}
 
-			case RTC::RTCP::Type::RTPFB:
+			case RTC::NEW_RTCP::Packet::PacketType::RTPFB:
 			{
-				auto* feedback = static_cast<RTC::RTCP::FeedbackRtpPacket*>(packet);
+				const auto* const feedbackPacket =
+				  static_cast<const RTC::NEW_RTCP::AnyTransportLayerFeedbackPacket*>(packet);
 
-				switch (feedback->GetMessageType())
+				switch (feedbackPacket->GetMessageType())
 				{
-					case RTC::RTCP::FeedbackRtp::MessageType::NACK:
+					case RTC::NEW_RTCP::AnyTransportLayerFeedbackPacket::MessageType::NACK:
 					{
 						// May emit 'trace' event.
 						EmitTraceEventNackType();
@@ -1782,6 +1792,8 @@ namespace RTC
 
 					default:;
 				}
+
+				break;
 			}
 
 			default:;

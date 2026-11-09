@@ -1473,7 +1473,7 @@ namespace RTC
 		}
 
 		// Start the RTCP timer.
-		this->rtcpTimer->Start(RTC::RTCP::MaxVideoIntervalMs / 2);
+		this->rtcpTimer->Start(RTC::Consts::MaxVideoRtcpIntervalMs / 2);
 	}
 
 	void Transport::Disconnected()
@@ -2636,7 +2636,7 @@ namespace RTC
 		this->listener->OnTransportProducerRtpPacketReceived(this, producer, packet);
 	}
 
-	void Transport::OnProducerSendRtcpPacket(RTC::Producer* /*producer*/, RTC::RTCP::Packet* packet)
+	void Transport::OnProducerSendRtcpPacket(RTC::Producer* /*producer*/, const RTC::NEW_RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -3456,7 +3456,7 @@ namespace RTC
 		// RTCP timer.
 		if (timer == this->rtcpTimer.get())
 		{
-			auto intervalMs = static_cast<int64_t>(RTC::RTCP::MaxVideoIntervalMs);
+			int64_t intervalMs = RTC::Consts::MaxVideoRtcpIntervalMs;
 
 			SendRtcp(this->shared->GetTimeUs());
 

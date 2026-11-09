@@ -320,7 +320,7 @@ namespace RTC
 		  uint8_t spatialLayer,
 		  bool isActive) override;
 		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) override;
-		void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) override;
+		void OnProducerSendRtcpPacket(RTC::Producer* producer, const RTC::NEW_RTCP::Packet* packet) override;
 		uint8_t OnProducerNeedWorstRemoteFractionLost(RTC::Producer* producer, uint32_t mappedSsrc) override;
 		std::optional<int64_t> OnProducerNeedLocalCaptureAtUs(
 		  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts) override;

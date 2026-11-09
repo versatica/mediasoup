@@ -5,7 +5,7 @@
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
-#include "RTC/RTCP/Packet.hpp"
+#include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
@@ -52,7 +52,8 @@ namespace RTC
 			  uint8_t spatialLayer,
 			  bool isActive) = 0;
 			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
-			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
+			virtual void OnProducerSendRtcpPacket(
+			  RTC::Producer* producer, const RTC::NEW_RTCP::Packet* packet) = 0;
 			/**
 			 * Obtains the worst remote fraction lost of all the Consumers consuming the
 			 * given mapped SSRC of this Producer.
@@ -228,7 +229,8 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
 		void OnRtpStreamScore(RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void OnRtpStreamSendRtcpPacket(RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTCP::Packet* packet) override;
+		void OnRtpStreamSendRtcpPacket(
+		  RTC::RTP::RtpStreamRecv* rtpStream, const RTC::NEW_RTCP::Packet* packet) override;
 		uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* rtpStream) override;
 		void OnRtpStreamSpatialLayerActivityChanged(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive) override;

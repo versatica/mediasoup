@@ -1,12 +1,14 @@
 #include "common.hpp"
 #include "RTC/ConsumerTypes.hpp"
-#include "RTC/RTCP/SenderReport.hpp"
+#include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SimulcastProducerStreamManager.hpp"
 #include "Utils.hpp"
+#include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include "mocks/include/MockShared.hpp"
 
@@ -69,7 +71,7 @@ namespace
 		}
 
 		void OnRtpStreamSendRtcpPacket(
-		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* /*packet*/) override
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::NEW_RTCP::Packet* /*packet*/) override
 		{
 		}
 
@@ -267,15 +269,16 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	  [](RTC::RTP::RtpStreamRecv* rtpStream, int64_t captureAtUs, uint32_t rtpTs) -> void
 	{
 		const auto ntp = Utils::Time::TimeUsToNtp(captureAtUs);
+		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket{
+			RTC::NEW_RTCP::SenderReportPacket::Factory(
+			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
+		};
 
-		RTC::RTCP::SenderReport sr;
+		senderReportPacket->SetSsrc(rtpStream->GetSsrc());
+		senderReportPacket->SetNtp(ntp);
+		senderReportPacket->SetRtpTimestamp(rtpTs);
 
-		sr.SetSsrc(rtpStream->GetSsrc());
-		sr.SetNtpSec(ntp.seconds);
-		sr.SetNtpFrac(ntp.fractions);
-		sr.SetRtpTs(rtpTs);
-
-		rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUs());
+		rtpStream->ReceiveRtcpSenderReportPacket(senderReportPacket.get(), shared.GetTimeUs());
 	};
 
 	// Make the stream receive a packet carrying the 'abs-capture-time' extension,
@@ -899,7 +902,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// Target stays at 0 because the capture instant of layer 1 cannot be told.
 		REQUIRE(manager->GetTargetLayers().spatial == 0);
 
-		// Feed packets to both streams so ReceiveRtcpSenderReport's UpdateScore
+		// Feed packets to both streams so ReceiveRtcpSenderReportPacket's UpdateScore
 		// doesn't drop the score to 0.
 		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 10);
@@ -910,19 +913,25 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// Provide Sender Reports for both streams so that they get a score. Both tell
 		// that RTP timestamp 90000 was captured at the same instant, which is what makes
 		// them alignable to each other.
-		RTC::RTCP::SenderReport sr0;
-		sr0.SetSsrc(MappedSsrc0);
-		sr0.SetNtpSec(1000);
-		sr0.SetNtpFrac(0);
-		sr0.SetRtpTs(90000);
-		rtpStream0->ReceiveRtcpSenderReport(std::addressof(sr0), shared.GetTimeUs());
+		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket0{
+			RTC::NEW_RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		};
 
-		RTC::RTCP::SenderReport sr1;
-		sr1.SetSsrc(MappedSsrc1);
-		sr1.SetNtpSec(1000);
-		sr1.SetNtpFrac(0);
-		sr1.SetRtpTs(90000);
-		rtpStream1->ReceiveRtcpSenderReport(std::addressof(sr1), shared.GetTimeUs());
+		senderReportPacket0->SetSsrc(MappedSsrc0);
+		senderReportPacket0->SetNtp({ .seconds = 1000, .fractions = 0 });
+		senderReportPacket0->SetRtpTimestamp(90000);
+
+		rtpStream0->ReceiveRtcpSenderReportPacket(senderReportPacket0.get(), shared.GetTimeUs());
+
+		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket1{
+			RTC::NEW_RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer + 1000, 1000)
+		};
+
+		senderReportPacket1->SetSsrc(MappedSsrc1);
+		senderReportPacket1->SetNtp({ .seconds = 1000, .fractions = 0 });
+		senderReportPacket1->SetRtpTimestamp(90000);
+
+		rtpStream1->ReceiveRtcpSenderReportPacket(senderReportPacket1.get(), shared.GetTimeUs());
 
 		// Notify the manager about the first Sender Report for layer 1.
 		// This triggers MayChangeLayers() -> RecalculateTargetLayers().
@@ -1322,12 +1331,15 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// yet, so it cannot be aligned to layer 0 and the target stays at layer 0.
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 10);
 
-		RTC::RTCP::SenderReport sr0;
-		sr0.SetSsrc(MappedSsrc0);
-		sr0.SetNtpSec(1000);
-		sr0.SetNtpFrac(0);
-		sr0.SetRtpTs(90000);
-		rtpStream0->ReceiveRtcpSenderReport(std::addressof(sr0), shared.GetTimeUs());
+		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket0{
+			RTC::NEW_RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		};
+
+		senderReportPacket0->SetSsrc(MappedSsrc0);
+		senderReportPacket0->SetNtp({ .seconds = 1000, .fractions = 0 });
+		senderReportPacket0->SetRtpTimestamp(90000);
+
+		rtpStream0->ReceiveRtcpSenderReportPacket(senderReportPacket0.get(), shared.GetTimeUs());
 
 		manager->ProducerRtcpSenderReport(rtpStream0.get(), /*first*/ true);
 
@@ -1341,12 +1353,15 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 10);
 
-		RTC::RTCP::SenderReport sr1;
-		sr1.SetSsrc(MappedSsrc1);
-		sr1.SetNtpSec(1000);
-		sr1.SetNtpFrac(0);
-		sr1.SetRtpTs(135000);
-		rtpStream1->ReceiveRtcpSenderReport(std::addressof(sr1), shared.GetTimeUs());
+		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket1{
+			RTC::NEW_RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer + 1000, 1000)
+		};
+
+		senderReportPacket1->SetSsrc(MappedSsrc1);
+		senderReportPacket1->SetNtp({ .seconds = 1000, .fractions = 0 });
+		senderReportPacket1->SetRtpTimestamp(135000);
+
+		rtpStream1->ReceiveRtcpSenderReportPacket(senderReportPacket1.get(), shared.GetTimeUs());
 
 		manager->ProducerRtcpSenderReport(rtpStream1.get(), /*first*/ true);
 
@@ -2135,17 +2150,21 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		// Feed packets and a Sender Report to both streams so that they get a score and
 		// RecalculateTargetLayers() takes them into account.
-		for (auto* rtpStream : { rtpStream0.get(), rtpStream1.get() })
+		for (auto* const rtpStream : { rtpStream0.get(), rtpStream1.get() })
 		{
 			packet->SetSsrc(rtpStream->GetSsrc());
 			feedRtpStreamRecv(rtpStream, packet.get(), 10);
 
-			RTC::RTCP::SenderReport sr;
-			sr.SetSsrc(rtpStream->GetSsrc());
-			sr.SetNtpSec(1000);
-			sr.SetNtpFrac(0);
-			sr.SetRtpTs(90000);
-			rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUs());
+			const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket{
+				RTC::NEW_RTCP::SenderReportPacket::Factory(
+				  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
+			};
+
+			senderReportPacket->SetSsrc(rtpStream->GetSsrc());
+			senderReportPacket->SetNtp({ .seconds = 1000, .fractions = 0 });
+			senderReportPacket->SetRtpTimestamp(90000);
+
+			rtpStream->ReceiveRtcpSenderReportPacket(senderReportPacket.get(), shared.GetTimeUs());
 		}
 
 		// Set target layer to 0. This sets tsReferenceSpatialLayer = 0.
