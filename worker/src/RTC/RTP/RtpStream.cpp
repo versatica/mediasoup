@@ -134,7 +134,7 @@ namespace RTC
 
 			// If not a valid packet ignore it.
 			//
-			// NOTE: A retransmission asked for may be far older than the allowed
+			// NOTE: A requested retransmission may be far older than the allowed
 			// misorder, and it must neither be discarded nor taken as the start of a
 			// restarted stream.
 			if (!(IsRequestedRetransmission(packet) ? UpdateRecoveredSeq(packet) : UpdateSeq(packet)))
