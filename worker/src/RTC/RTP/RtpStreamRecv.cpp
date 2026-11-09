@@ -10,7 +10,7 @@
 #include "RTC/NEW_RTCP/packet/PliPacket.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
 #include "Utils.hpp"
-#include <cmath> // std::round()
+#include <cmath> // std::pow(), std::round()
 
 namespace RTC
 {

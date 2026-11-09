@@ -70,7 +70,7 @@ namespace RTC
 				 */
 				virtual void OnRtpStreamRestarted(RTP::RtpStreamRecv* rtpStream, const RTP::Packet* packet) = 0;
 				/**
-				 * The stream lost more packets than NACK can ask for, so it needs a key
+				 * The stream lost more packets than NACK can request, so it needs a key
 				 * frame.
 				 */
 				virtual void OnRtpStreamKeyFrameRequired(RTP::RtpStreamRecv* rtpStream) = 0;
