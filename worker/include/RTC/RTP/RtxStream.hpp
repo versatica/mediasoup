@@ -3,6 +3,8 @@
 
 #include "common.hpp"
 #include "FBS/rtxStream.h"
+#include "RTC/NEW_RTCP/packet/ReceiverReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTP/Packet.hpp"
@@ -101,18 +103,34 @@ namespace RTC
 				return this->packetsDiscarded;
 			}
 
-			bool ReceivePacket(const RTP::Packet* packet);
+			bool ReceivePacket(const RTP::Packet* packet, int64_t receivedAtUs);
 
 			RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 
 			void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
+
+			/**
+			 * Add a report block about this stream to the given Receiver Report
+			 * packet.
+			 *
+			 * @returns Whether it was added, which does not happen when this stream
+			 *   has received no RTP packet yet or none for
+			 *   `RTP::RtpStream::ReportBlockTimeoutMs`, when the packet already has
+			 *   the most report blocks it can count or when it does not fit. In all
+			 *   cases neither the packet nor this stream are touched.
+			 */
+			[[nodiscard]] bool AddRtcpReportBlock(RTC::NEW_RTCP::ReceiverReportPacket* receiverReportPacket);
+
+			void ReceiveRtcpSenderReportPacket(
+			  const RTC::NEW_RTCP::SenderReportPacket* senderReportPacket, int64_t receivedAtUs);
 
 		protected:
 			bool UpdateSeq(const RTP::Packet* packet);
 
 			uint32_t GetExpectedPackets() const
 			{
-				return (this->cycles + this->maxSeq) - this->baseSeq + 1;
+				return this->expectedPacketsBeforeSeqReset + (this->cycles + this->maxSeq) - this->baseSeq +
+				       1;
 			}
 
 		private:
@@ -124,9 +142,13 @@ namespace RTC
 			const Params params;
 			// Others.
 			//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
-			uint16_t maxSeq{ 0 };      // Highest seq. number seen.
-			uint32_t cycles{ 0 };      // Shifted count of seq. number cycles.
-			uint32_t baseSeq{ 0 };     // Base seq number.
+			uint16_t maxSeq{ 0 };  // Highest seq. number seen.
+			uint32_t cycles{ 0 };  // Shifted count of seq. number cycles.
+			uint32_t baseSeq{ 0 }; // Base seq number.
+			// Packets expected before the last sequence number re-sync, so the count
+			// goes on across it.
+			// NOTE: As wide as GetExpectedPackets(), which wraps along with it.
+			uint32_t expectedPacketsBeforeSeqReset{ 0 };
 			uint32_t badSeq{ 0 };      // Last 'bad' seq number + 1.
 			uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
 			int32_t packetsLost{ 0 };
@@ -149,6 +171,8 @@ namespace RTC
 			// Timing data of the most recent Sender Report received.
 			std::optional<SenderReportTiming> lastSenderReportTiming;
 			int32_t reportedPacketsLost{ 0 };
+			// Local time at which the last valid RTP packet arrived.
+			std::optional<int64_t> lastPacketReceivedAtUs;
 		};
 	} // namespace RTP
 } // namespace RTC

@@ -31,6 +31,11 @@ namespace RTC
 			 * Size of the RTP sequence number space, which is where it wraps around.
 			 */
 			static constexpr uint32_t RtpSeqMod{ 1 << 16 };
+			/**
+			 * How long a received stream may go without receiving any RTP packet
+			 * before RTCP Receiver Reports stop carrying a report block about it (ms).
+			 */
+			static constexpr int64_t ReportBlockTimeoutMs{ 8000 };
 
 		protected:
 			class Listener
@@ -247,15 +252,43 @@ namespace RTC
 		protected:
 			bool UpdateSeq(const RTP::Packet* packet);
 
+			/**
+			 * Same as `UpdateSeq()` but for a requested retransmission, recovered by RTX
+			 * or not, which never restarts the stream since it may be any requested
+			 * packet, however old.
+			 *
+			 * @returns Whether the packet is valid, which it is unless it is too far
+			 *   ahead of the highest sequence number seen.
+			 */
+			bool UpdateRecoveredSeq(const RTP::Packet* packet);
+
+			/**
+			 * Whether the given packet is a retransmission this stream requested, which
+			 * is then validated as a packet recovered by RTX.
+			 */
+			virtual bool IsRequestedRetransmission(const RTP::Packet* /*packet*/) const
+			{
+				return false;
+			}
+
 			void UpdateScore(uint8_t score);
 
 			void PacketRetransmitted(const RTP::Packet* packet);
 
 			void PacketRepaired(const RTP::Packet* packet);
 
+			/**
+			 * Whether at least a RTP packet has been received.
+			 */
+			bool IsStarted() const
+			{
+				return this->started;
+			}
+
 			uint32_t GetExpectedPackets() const
 			{
-				return (this->cycles + this->maxSeq) - this->baseSeq + 1;
+				return this->expectedPacketsBeforeSeqReset + (this->cycles + this->maxSeq) - this->baseSeq +
+				       1;
 			}
 
 		private:
@@ -278,6 +311,10 @@ namespace RTC
 			uint32_t cycles{ 0 };
 			// Base seq number.
 			uint32_t baseSeq{ 0 };
+			// Packets expected before the last sequence number re-sync, so the count
+			// goes on across it.
+			// NOTE: As wide as GetExpectedPackets(), which wraps along with it.
+			uint32_t expectedPacketsBeforeSeqReset{ 0 };
 			// Last 'bad' seq number + 1.
 			uint32_t badSeq{ 0 };
 			// Highest timestamp seen.
