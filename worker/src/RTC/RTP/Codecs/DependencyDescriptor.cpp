@@ -663,23 +663,30 @@ namespace RTC
 				return true;
 			}
 
-			uint32_t DependencyDescriptor::GetRewrittenBitCount() const
+			uint32_t DependencyDescriptor::GetRewrittenBitCount(bool withActiveDecodeTargets) const
 			{
 				MS_TRACE();
 
 				// Mandatory descriptor fields.
 				uint32_t bitCount{ 24 };
 
-				// Extended descriptor field flags.
-				bitCount += 5;
-
-				if (this->templateDependencyStructurePresent)
+				// Extended descriptor field flags, which are only written if the
+				// descriptor came with them or the bitmask needs them.
+				if (this->extendedDescriptorFieldsPresent || withActiveDecodeTargets)
 				{
-					bitCount += this->templateDependencyStructureEndOffset - TemplateDependencyStructureOffset;
-				}
+					bitCount += 5;
 
-				// Active decode targets bitmask, which we always write.
-				bitCount += this->templateDependencyStructure->decodeTargetCount;
+					if (this->templateDependencyStructurePresent)
+					{
+						bitCount +=
+						  this->templateDependencyStructureEndOffset - TemplateDependencyStructureOffset;
+					}
+
+					if (withActiveDecodeTargets)
+					{
+						bitCount += this->templateDependencyStructure->decodeTargetCount;
+					}
+				}
 
 				// Custom frame dependency fields.
 				bitCount += this->frameDependencyDefinitionEndOffset - this->frameDependencyDefinitionOffset;
@@ -691,7 +698,7 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				const auto bitCount = GetRewrittenBitCount();
+				const auto bitCount = GetRewrittenBitCount(/*withActiveDecodeTargets*/ true);
 
 				// The rewritten descriptor would not fit in the RTP header extension, so
 				// `Write()` will refuse to produce it and the descriptor will be forwarded
@@ -713,12 +720,13 @@ namespace RTC
 				return static_cast<uint8_t>((bitCount + 7) / 8);
 			}
 
-			uint8_t DependencyDescriptor::Write(uint32_t activeDecodeTargetsBitmask, uint8_t* buffer) const
+			uint8_t DependencyDescriptor::Write(const RewriteParams& params, uint8_t* buffer) const
 			{
 				MS_TRACE();
 
-				const auto* data        = this->bitReader.GetData();
-				const uint32_t bitCount = GetRewrittenBitCount();
+				const auto* data                   = this->bitReader.GetData();
+				const bool withActiveDecodeTargets = params.activeDecodeTargetsBitmask.has_value();
+				const uint32_t bitCount            = GetRewrittenBitCount(withActiveDecodeTargets);
 
 				if (bitCount > Consts::TwoBytesRtpExtensionMaxLength * 8)
 				{
@@ -733,28 +741,38 @@ namespace RTC
 
 				Utils::BitWriter writer(buffer, len);
 
-				// Mandatory descriptor fields, unchanged.
-				writer.PutBitRange(data, this->length, 0, 24);
+				// Mandatory descriptor fields, with the frame number as told and the rest
+				// just as they came.
+				writer.PutBitRange(data, this->length, 0, 8);
+				writer.PutBits(16, params.frameNumber.value_or(this->frameNumber));
 
-				// Extended descriptor field flags, with the active decode targets one set.
-				writer.PutBit(this->templateDependencyStructurePresent ? 1 : 0);
-				writer.PutBit(1);
-				writer.PutBit(this->customDecodeTargetIndicationsPresent ? 1 : 0);
-				writer.PutBit(this->customFrameDiffsPresent ? 1 : 0);
-				writer.PutBit(this->customChainsPresent ? 1 : 0);
-
-				// Template dependency structure, unchanged.
-				if (this->templateDependencyStructurePresent)
+				// Extended descriptor field flags, only written if the descriptor came
+				// with them or the active decode targets bitmask needs them.
+				if (this->extendedDescriptorFieldsPresent || withActiveDecodeTargets)
 				{
-					writer.PutBitRange(
-					  data,
-					  this->length,
-					  TemplateDependencyStructureOffset,
-					  this->templateDependencyStructureEndOffset);
-				}
+					writer.PutBit(this->templateDependencyStructurePresent ? 1 : 0);
+					writer.PutBit(withActiveDecodeTargets ? 1 : 0);
+					writer.PutBit(this->customDecodeTargetIndicationsPresent ? 1 : 0);
+					writer.PutBit(this->customFrameDiffsPresent ? 1 : 0);
+					writer.PutBit(this->customChainsPresent ? 1 : 0);
 
-				writer.PutBits(
-				  this->templateDependencyStructure->decodeTargetCount, activeDecodeTargetsBitmask);
+					// Template dependency structure, unchanged.
+					if (this->templateDependencyStructurePresent)
+					{
+						writer.PutBitRange(
+						  data,
+						  this->length,
+						  TemplateDependencyStructureOffset,
+						  this->templateDependencyStructureEndOffset);
+					}
+
+					if (withActiveDecodeTargets)
+					{
+						writer.PutBits(
+						  this->templateDependencyStructure->decodeTargetCount,
+						  params.activeDecodeTargetsBitmask.value());
+					}
+				}
 
 				// Custom frame dependency fields, unchanged.
 				writer.PutBitRange(
@@ -950,40 +968,64 @@ namespace RTC
 				return IsSwitchPointForDecodeTarget(static_cast<uint8_t>(this->spatialLayer), temporalLayer);
 			}
 
-			bool DependencyDescriptor::UpdateActiveDecodeTargets(
-			  uint32_t maxSpatialLayer, uint32_t maxTemporalLayer, RTP::Packet* packet)
+			bool DependencyDescriptor::Rewrite(const RewriteParams& params, RTP::Packet* packet)
 			{
 				MS_TRACE();
 
-				const auto activeDecodeTargetsBitmask = GetDecodeTargetsBitmask(
-				  static_cast<uint8_t>(maxSpatialLayer), static_cast<uint8_t>(maxTemporalLayer));
-
-				// Nothing to do if the endpoint is already told exactly this.
-				if (!this->rewritten && this->activeDecodeTargetsPresent && this->activeDecodeTargetsBitmask == activeDecodeTargetsBitmask)
+				// Nothing to change, so the endpoint is given the descriptor just as it
+				// was received, undoing a previous rewrite if any.
+				if (
+				  (!params.frameNumber.has_value() || params.frameNumber == this->frameNumber) &&
+				  (!params.activeDecodeTargetsBitmask.has_value() ||
+					 (this->activeDecodeTargetsPresent &&
+					  this->activeDecodeTargetsBitmask == params.activeDecodeTargetsBitmask)))
 				{
+					Restore(packet);
+
 					return true;
 				}
 
 				// NOTE: The buffer is reused across calls. `Write()` zeroes the bytes it
 				// fills and only those are read back, so nothing is left over from a
 				// previous one.
-				const auto len = Write(activeDecodeTargetsBitmask, RewriteBuffer);
+				auto len = Write(params, RewriteBuffer);
 
-				if (len == 0)
+				// NOTE: Marked as rewritten only once it's written, since the packet
+				// refuses a descriptor that doesn't fit and then keeps the one it had.
+				if (len != 0 && packet->UpdateDependencyDescriptor(RewriteBuffer, len))
 				{
-					return false;
+					this->rewritten = true;
+
+					return true;
 				}
 
-				// NOTE: Only once it's written, since the packet refuses a descriptor
-				// that doesn't fit and then keeps the one it had.
-				if (!packet->UpdateDependencyDescriptor(RewriteBuffer, len))
+				// It did not fit, which only the active decode targets bitmask can cause
+				// since everything else is rewritten in place. Drop it and keep the frame
+				// numbers going on, which the endpoint needs to decode anything at all,
+				// rather than lose both.
+				if (
+				  params.activeDecodeTargetsBitmask.has_value() && params.frameNumber.has_value() &&
+				  params.frameNumber != this->frameNumber)
 				{
-					return false;
+					auto paramsWithoutBitmask = params;
+
+					paramsWithoutBitmask.activeDecodeTargetsBitmask.reset();
+
+					len = Write(paramsWithoutBitmask, RewriteBuffer);
+
+					if (len != 0 && packet->UpdateDependencyDescriptor(RewriteBuffer, len))
+					{
+						MS_WARN_TAG(
+						  codec,
+						  "no room for the active decode targets bitmask, so only the frame numbers are rewritten");
+
+						this->rewritten = true;
+
+						return true;
+					}
 				}
 
-				this->rewritten = true;
-
-				return true;
+				return false;
 			}
 		} // namespace Codecs
 	} // namespace RTP

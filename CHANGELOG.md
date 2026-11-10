@@ -6,6 +6,7 @@
 - New RTCP: Use the new RTCP stack to generate PLI, FIR and NACK packets and RTCP fixes ([PR #2046](https://github.com/versatica/mediasoup/pull/2046)).
 - Worker: Complete Dependency Descriptor implementation ([PR #2015](https://github.com/versatica/mediasoup/pull/2015)).
 - Worker: Don’t take a template dependency structure older than the one in use ([PR #2047](https://github.com/versatica/mediasoup/pull/2047)).
+- Worker: Rewrite the Dependency Descriptor frame numbers across stream switches ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 ### 3.32.2
 

@@ -25,8 +25,7 @@ namespace RTC
 			{
 				struct EncodingData
 				{
-					uint32_t maxSpatialLayer{ 0 };
-					uint32_t maxTemporalLayer{ 0 };
+					Codecs::DependencyDescriptor::RewriteParams rewriteParams;
 				};
 
 				struct Encoder : public Codecs::PayloadDescriptor::Encoder
@@ -99,8 +98,16 @@ namespace RTC
 					       this->dependencyDescriptor->IsSwitchPointForTemporalLayer(temporalLayer);
 				}
 
-				void UpdateActiveDecodeTargets(
-				  uint16_t spatialLayer, uint16_t temporalLayer, RTP::Packet* packet);
+				/**
+				 * Bitmask of the decode targets the given maximum layers leave active.
+				 */
+				uint32_t GetDecodeTargetsBitmask(uint32_t maxSpatialLayer, uint32_t maxTemporalLayer) const
+				{
+					return this->dependencyDescriptor->GetDecodeTargetsBitmask(
+					  static_cast<uint8_t>(maxSpatialLayer), static_cast<uint8_t>(maxTemporalLayer));
+				}
+
+				bool Rewrite(const Codecs::DependencyDescriptor::RewriteParams& params, RTP::Packet* packet);
 
 				// Fields in the Dependency Descriptor extension.
 				const bool endOfFrame;

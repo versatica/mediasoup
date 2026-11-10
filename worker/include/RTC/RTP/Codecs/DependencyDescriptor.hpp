@@ -101,6 +101,31 @@ namespace RTC
 					std::optional<Utils::UnwrappedSequenceNumber<uint16_t>> unwrappedStructureFrameNumber;
 				};
 
+				/**
+				 * Changes to apply to the descriptor when writing it.
+				 *
+				 * NOTE: The frame number is fixed width, so moving it never changes the
+				 * length of the descriptor. Only the active decode targets bitmask may
+				 * make it longer than it came.
+				 */
+				struct RewriteParams
+				{
+					/**
+					 * Frame number to tell the endpoint, or no value to leave the one the
+					 * descriptor came with.
+					 *
+					 * The frame numbers of a stream switched to follow the ones already
+					 * sent rather than going back, which would make the endpoint drop the
+					 * key frame.
+					 */
+					std::optional<uint16_t> frameNumber{ std::nullopt };
+					/**
+					 * Decode targets to tell the endpoint are active, or no value to
+					 * leave the descriptor saying whatever it came with.
+					 */
+					std::optional<uint32_t> activeDecodeTargetsBitmask{ std::nullopt };
+				};
+
 			public:
 				bool startOfFrame{ false };
 				bool endOfFrame{ false };
@@ -135,15 +160,21 @@ namespace RTC
 				void Dump(int indentation = 0) const;
 
 				/**
-				 * Rewrites the descriptor of the given packet with the decode targets
-				 * that the given maximum layers leave active.
+				 * Rewrites the descriptor of the given packet with the given params,
+				 * and tells whether it carries the new info.
+				 *
+				 * NOTE: Writing the active decode targets bitmask makes the descriptor
+				 * longer than it came. `Producer::MangleRtpPacket()` reserves room for
+				 * it, so it fits unless the descriptor was already bigger than 250 bytes,
+				 * in which case writing it would exceed the maximum size of a 2 bytes RTP
+				 * header extension. In that case we opt for skipping the bitmask and
+				 * rewriting the frame number, so the endpoint can decode the frame.
 				 *
 				 * NOTE: The packet is given on every call rather than remembered, since
 				 * a packet shares its payload descriptor handler with its clones and
 				 * every Consumer of its Producer.
 				 */
-				bool UpdateActiveDecodeTargets(
-				  uint32_t maxSpatialLayer, uint32_t maxTemporalLayer, RTP::Packet* packet);
+				bool Rewrite(const RewriteParams& params, RTP::Packet* packet);
 
 				/**
 				 * Writes the descriptor back as it was received, undoing any rewrite.
@@ -170,14 +201,14 @@ namespace RTC
 				uint8_t GetMaxLength() const;
 
 				/**
-				 * Writes the descriptor into the given buffer with the given active decode
-				 * targets bitmask, and returns how many bytes it took.
+				 * Writes the descriptor into the given buffer with the given params,
+				 * and returns how many bytes it wrote, or 0 if it does not fit.
 				 *
 				 * Everything else is copied over from the descriptor as received,
 				 * including the template dependency structure and the custom frame
 				 * dependency fields, which are not parsed into any field of this class.
 				 */
-				uint8_t Write(uint32_t activeDecodeTargetsBitmask, uint8_t* buffer) const;
+				uint8_t Write(const RewriteParams& params, uint8_t* buffer) const;
 
 				/**
 				 * Whether decoding can start at this frame for the decode target formed
@@ -251,7 +282,7 @@ namespace RTC
 				bool ReadFrameDiffs();
 				bool ReadFrameDiffChains();
 				void ComputeDecodeTargetLayers() const;
-				uint32_t GetRewrittenBitCount() const;
+				uint32_t GetRewrittenBitCount(bool withActiveDecodeTargets) const;
 
 			private:
 				Utils::BitReader bitReader;

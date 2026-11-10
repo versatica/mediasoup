@@ -1067,6 +1067,17 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(dependencyDescriptor3);
 		REQUIRE(dependencyDescriptor3->activeDecodeTargetsBitmask == 0b0000000000000001);
 
+		// The Consumer of stream2 is then synced, as it is when its transport
+		// reconnects or it is given another stream, which makes the frames it is
+		// given follow the ones it already got rather than repeat them. Its
+		// retransmissions must carry that numbering and not the one of stream1,
+		// even though both share this packet and its payload descriptor handler.
+		context2.SyncRequired();
+
+		forwarded = packet3->ProcessPayload(std::addressof(context2), marker);
+
+		REQUIRE(forwarded);
+
 		packet3->SetSsrc(params2.ssrc);
 
 		// Whenever packet3 is Nacked on stream2, it must always be set a
@@ -1119,6 +1130,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		REQUIRE(dependencyDescriptor5);
 		REQUIRE(dependencyDescriptor5->activeDecodeTargetsBitmask == 0b0000000000000011);
+
+		// And each stream is given the frame number its own Consumer was left
+		// with, the synced one being a frame ahead of the other.
+		REQUIRE(dependencyDescriptor5->frameNumber == dependencyDescriptor4->frameNumber + 1);
 
 		// And the clone is left with the descriptor as it was received, which is
 		// 11 bytes long, rather than with the 4 bytes the rewritten one takes.
