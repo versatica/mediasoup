@@ -30,8 +30,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::ByePacket> packet{ RTC::RTCP::ByePacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::ByePacket> packet{ RTC::RTCP::ByePacket::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -176,8 +175,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::ByePacket> packet{ RTC::RTCP::ByePacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::ByePacket> packet{ RTC::RTCP::ByePacket::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -227,8 +225,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::ByePacket> packet{ RTC::RTCP::ByePacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::ByePacket> packet{ RTC::RTCP::ByePacket::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),

@@ -467,8 +467,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
-		REQUIRE(
-		  packet->GetMessageType() == RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::AFB);
+		REQUIRE(packet->GetMessageType() == RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::AFB);
 		REQUIRE(packet->GetSenderSsrc() == 0);
 		REQUIRE(packet->GetMediaSsrc() == 0);
 		REQUIRE(packet->GetBitrate() == 0);

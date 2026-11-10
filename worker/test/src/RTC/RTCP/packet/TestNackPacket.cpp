@@ -267,8 +267,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
-		REQUIRE(
-		  packet->GetMessageType() == RTC::RTCP::AnyTransportLayerFeedbackPacket::MessageType::NACK);
+		REQUIRE(packet->GetMessageType() == RTC::RTCP::AnyTransportLayerFeedbackPacket::MessageType::NACK);
 		REQUIRE(packet->GetSenderSsrc() == 0);
 		REQUIRE(packet->GetMediaSsrc() == 0);
 		REQUIRE(packet->GetNumberOfItems() == 0);

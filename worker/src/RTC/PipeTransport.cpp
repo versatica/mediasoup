@@ -764,9 +764,8 @@ namespace RTC
 			return;
 		}
 
-		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
-			RTC::RTCP::CompoundPacket::Parse(data, len)
-		};
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Parse(
+			data, len) };
 
 		if (!compoundPacket)
 		{

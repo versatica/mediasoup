@@ -52,8 +52,7 @@ namespace RTC
 			  uint8_t spatialLayer,
 			  bool isActive) = 0;
 			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
-			virtual void OnProducerSendRtcpPacket(
-			  RTC::Producer* producer, const RTC::RTCP::Packet* packet) = 0;
+			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, const RTC::RTCP::Packet* packet) = 0;
 			/**
 			 * Obtains the worst remote fraction lost of all the Consumers consuming the
 			 * given mapped SSRC of this Producer.
@@ -246,8 +245,7 @@ namespace RTC
 		void EmitTraceEventRtcpPliType(uint32_t ssrc) const;
 		void EmitTraceEventRtcpFirType(uint32_t ssrc) const;
 		void EmitTraceEventRtcpNackType() const;
-		void EmitTraceEventRtcpSenderReportType(
-		  const RTC::RTCP::SenderReportPacket* senderReportPacket) const;
+		void EmitTraceEventRtcpSenderReportType(const RTC::RTCP::SenderReportPacket* senderReportPacket) const;
 		void EmitTraceEvent(flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */

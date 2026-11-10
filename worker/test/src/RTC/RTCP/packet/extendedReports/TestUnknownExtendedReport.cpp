@@ -11,8 +11,7 @@ SCENARIO("RTCP XR Unknown Extended Report", "[serializable][rtcp][extendedreport
 
 	SECTION("UnknownExtendedReport::Parse() succeeds")
 	{
-		const auto checkExtendedReport =
-		  [](const RTC::RTCP::UnknownExtendedReport* extendedReport) -> void
+		const auto checkExtendedReport = [](const RTC::RTCP::UnknownExtendedReport* extendedReport) -> void
 		{
 			REQUIRE(extendedReport->HasUnknownValue() == true);
 			REQUIRE(extendedReport->GetUnknownValueLength() == 8);

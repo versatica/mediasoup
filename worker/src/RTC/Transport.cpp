@@ -1617,8 +1617,7 @@ namespace RTC
 		delete packet;
 	}
 
-	void Transport::ReceiveRtcpPacket(
-	  const RTC::RTCP::CompoundPacket* compoundPacket, int64_t receivedAtUs)
+	void Transport::ReceiveRtcpPacket(const RTC::RTCP::CompoundPacket* compoundPacket, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -2033,16 +2032,14 @@ namespace RTC
 
 			case RTC::RTCP::Packet::PacketType::RTPFB:
 			{
-				const auto* feedback =
-				  static_cast<const RTC::RTCP::AnyTransportLayerFeedbackPacket*>(packet);
+				const auto* feedback = static_cast<const RTC::RTCP::AnyTransportLayerFeedbackPacket*>(packet);
 				auto* const consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
 				// If no Consumer is found and this is neither a Transport Feedback nor a
 				// feedback for the probation SSRC, ignore it.
 				if (
 				  !consumer &&
-				  feedback->GetMessageType() !=
-				    RTC::RTCP::AnyTransportLayerFeedbackPacket::MessageType::TCC &&
+				  feedback->GetMessageType() != RTC::RTCP::AnyTransportLayerFeedbackPacket::MessageType::TCC &&
 				  feedback->GetMediaSsrc() != RTC::Consts::BweProbeRtpSsrc)
 				{
 					MS_DEBUG_TAG(
@@ -2103,8 +2100,7 @@ namespace RTC
 
 			case RTC::RTCP::Packet::PacketType::SR:
 			{
-				const auto* senderReportPacket =
-				  static_cast<const RTC::RTCP::SenderReportPacket*>(packet);
+				const auto* senderReportPacket = static_cast<const RTC::RTCP::SenderReportPacket*>(packet);
 				auto* const producer = this->rtpListener.GetProducer(senderReportPacket->GetSsrc());
 
 				if (!producer)
@@ -2510,10 +2506,10 @@ namespace RTC
 						  "DLRR sub-block does not fit in the RTCP compound packet");
 
 						dlrrExtendedReport->AddSubBlock(
-						  RTC::RTCP::DlrrExtendedReport::SubBlock{
-						    .ssrc                         = ssrc,
-						    .lastReceiverReport           = receivedReceiverReferenceTime.compactNtp,
-						    .delaySinceLastReceiverReport = dlrr });
+						  RTC::RTCP::DlrrExtendedReport::SubBlock{ .ssrc = ssrc,
+							                                         .lastReceiverReport =
+							                                           receivedReceiverReferenceTime.compactNtp,
+							                                         .delaySinceLastReceiverReport = dlrr });
 
 						answeredSsrcs.push_back(ssrc);
 					}
@@ -2579,8 +2575,7 @@ namespace RTC
 
 			if (!receiverReportPacket)
 			{
-				receiverReportPacket =
-				  compoundPacket->BuildPacketInPlace<RTC::RTCP::ReceiverReportPacket>();
+				receiverReportPacket = compoundPacket->BuildPacketInPlace<RTC::RTCP::ReceiverReportPacket>();
 
 				receiverReportPacket->SetSsrc(this->rtcpSsrc);
 
@@ -2620,12 +2615,12 @@ namespace RTC
 				const size_t sdesChunkLength = rtpStream->GetRtcpSdesChunkLength();
 				// The Sender Report, and the packets that follow the reports with the
 				// SDES chunk of this stream.
-				const size_t requiredLength = RTC::RTCP::SenderReportPacket::ComputeLengthFor(0) +
-				                              computeTrailingLength(
-				                                sdesChunksLength + sdesChunkLength,
-				                                senderReportRtpStreams.size() + 1,
-				                                numDlrrSubBlocks,
-				                                hasReceiverReports);
+				const size_t requiredLength =
+				  RTC::RTCP::SenderReportPacket::ComputeLengthFor(0) + computeTrailingLength(
+				                                                         sdesChunksLength + sdesChunkLength,
+				                                                         senderReportRtpStreams.size() + 1,
+				                                                         numDlrrSubBlocks,
+				                                                         hasReceiverReports);
 
 				// The chunk of this Transport counts if the compound packet carries an XR
 				// packet.
@@ -2683,8 +2678,7 @@ namespace RTC
 		// before either, since a new one is only started to add something to it.
 		if (rtcpDue && senderReportRtpStreams.empty() && !hasReceiverReportPacket)
 		{
-			receiverReportPacket =
-			  compoundPacket->BuildPacketInPlace<RTC::RTCP::ReceiverReportPacket>();
+			receiverReportPacket = compoundPacket->BuildPacketInPlace<RTC::RTCP::ReceiverReportPacket>();
 
 			receiverReportPacket->SetSsrc(this->rtcpSsrc);
 

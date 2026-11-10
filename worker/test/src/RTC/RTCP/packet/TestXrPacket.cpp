@@ -26,8 +26,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			const auto* const extendedReport1 =
 			  static_cast<const RTC::RTCP::RrtExtendedReport*>(packet->GetExtendedReportAt(0));
 
-			REQUIRE(
-			  packet->GetFirstExtendedReportOfType<RTC::RTCP::RrtExtendedReport>() == extendedReport1);
+			REQUIRE(packet->GetFirstExtendedReportOfType<RTC::RTCP::RrtExtendedReport>() == extendedReport1);
 			REQUIRE(extendedReport1->GetBuffer() == packet->GetBuffer() + 8);
 			REQUIRE(extendedReport1->GetLength() == 12);
 			REQUIRE(extendedReport1->GetType() == RTC::RTCP::ExtendedReport::BlockType::RRT);
@@ -56,8 +55,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			  static_cast<const RTC::RTCP::UnknownExtendedReport*>(packet->GetExtendedReportAt(2));
 
 			REQUIRE(
-			  packet->GetFirstExtendedReportOfType<RTC::RTCP::UnknownExtendedReport>() ==
-			  extendedReport3);
+			  packet->GetFirstExtendedReportOfType<RTC::RTCP::UnknownExtendedReport>() == extendedReport3);
 			REQUIRE(extendedReport3->GetBuffer() == packet->GetBuffer() + 36);
 			REQUIRE(extendedReport3->GetLength() == 8);
 			// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
@@ -98,8 +96,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -162,8 +159,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -211,8 +207,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -285,8 +280,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -752,8 +746,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 
 	SECTION("XrPacket::Factory() throws if the buffer is too small")
 	{
-		REQUIRE_THROWS_AS(
-		  RTC::RTCP::XrPacket::Factory(rtcpCommon::FactoryBuffer, 7), MediaSoupTypeError);
+		REQUIRE_THROWS_AS(RTC::RTCP::XrPacket::Factory(rtcpCommon::FactoryBuffer, 7), MediaSoupTypeError);
 	}
 
 	SECTION("XrPacket::ComputeLengthFor() succeeds")
@@ -772,8 +765,8 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		  { .ssrc = 2, .lastReceiverReport = 1002, .delaySinceLastReceiverReport = 2002 });
 		dlrrExtendedReport->Consolidate();
 
-		const size_t length = RTC::RTCP::XrPacket::ComputeLengthFor(
-		  RTC::RTCP::DlrrExtendedReport::ComputeLengthFor(2));
+		const size_t length =
+		  RTC::RTCP::XrPacket::ComputeLengthFor(RTC::RTCP::DlrrExtendedReport::ComputeLengthFor(2));
 
 		REQUIRE(length == 36);
 		REQUIRE(packet->GetLength() == length);

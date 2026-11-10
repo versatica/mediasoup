@@ -34,9 +34,8 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::RrtExtendedReport> extendedReport{
-			RTC::RTCP::RrtExtendedReport::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::RrtExtendedReport> extendedReport{ RTC::RTCP::RrtExtendedReport::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_EXTENDED_REPORT(
 		  /*extendedReport*/ extendedReport.get(),
@@ -150,10 +149,8 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::RrtExtendedReport> extendedReport{
-			RTC::RTCP::RrtExtendedReport::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
-		};
+		std::unique_ptr<RTC::RTCP::RrtExtendedReport> extendedReport{ RTC::RTCP::RrtExtendedReport::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
 
 		CHECK_RTCP_EXTENDED_REPORT(
 		  /*extendedReport*/ extendedReport.get(),

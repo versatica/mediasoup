@@ -49,8 +49,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::FirPacket> packet{ RTC::RTCP::FirPacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FirPacket> packet{ RTC::RTCP::FirPacket::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -131,8 +130,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::FirPacket> packet{ RTC::RTCP::FirPacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FirPacket> packet{ RTC::RTCP::FirPacket::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -264,8 +262,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
-		REQUIRE(
-		  packet->GetMessageType() == RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR);
+		REQUIRE(packet->GetMessageType() == RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR);
 		REQUIRE(packet->GetSenderSsrc() == 0);
 		REQUIRE(packet->GetMediaSsrc() == 0);
 		REQUIRE(packet->GetNumberOfItems() == 0);

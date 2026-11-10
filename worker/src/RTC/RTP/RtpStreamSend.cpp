@@ -353,8 +353,7 @@ namespace RTC
 			return Loss{ .lostPackets = reportedLostPackets, .expectedPackets = expectedPackets };
 		}
 
-		bool RtpStreamSend::AddRtcpSenderReportPacket(
-		  RTC::RTCP::CompoundPacket* compoundPacket, int64_t nowUs)
+		bool RtpStreamSend::AddRtcpSenderReportPacket(RTC::RTCP::CompoundPacket* compoundPacket, int64_t nowUs)
 		{
 			MS_TRACE();
 

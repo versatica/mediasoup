@@ -65,9 +65,8 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{
-			RTC::RTCP::SenderReportPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{ RTC::RTCP::SenderReportPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -142,9 +141,8 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{
-			RTC::RTCP::SenderReportPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{ RTC::RTCP::SenderReportPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -334,17 +332,16 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 
 	SECTION("SenderReportPacket::AddReportBlock() throws if there is no space in the buffer")
 	{
-		const RTC::RTCP::AnyReportPacket::ReportBlock reportBlock{ .ssrc               = 1111,
-		                                                               .fractionLost       = 0,
-		                                                               .totalLost          = 0,
-		                                                               .extendedHighestSeq = 0,
-		                                                               .jitter             = 0,
-		                                                               .lastSenderReport   = 0,
-		                                                               .delaySinceLastSenderReport = 0 };
+		const RTC::RTCP::AnyReportPacket::ReportBlock reportBlock{ .ssrc                       = 1111,
+		                                                           .fractionLost               = 0,
+		                                                           .totalLost                  = 0,
+		                                                           .extendedHighestSeq         = 0,
+		                                                           .jitter                     = 0,
+		                                                           .lastSenderReport           = 0,
+		                                                           .delaySinceLastSenderReport = 0 };
 
-		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{
-			RTC::RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer, 51)
-		};
+		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{ RTC::RTCP::SenderReportPacket::Factory(
+			rtcpCommon::FactoryBuffer, 51) };
 
 		REQUIRE(packet->GetLength() == 28);
 
@@ -366,10 +363,8 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 	{
 		REQUIRE(RTC::RTCP::SenderReportPacket::ComputeLengthFor(0) == 28);
 
-		const std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{
-			RTC::RTCP::SenderReportPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
-		};
+		const std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{ RTC::RTCP::SenderReportPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
 
 		packet->AddReportBlock({ .ssrc = 7777 });
 		packet->AddReportBlock({ .ssrc = 8888 });

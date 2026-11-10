@@ -580,8 +580,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		// 4 + (2 + 3) + (2 + 2) + 1, padded to 4 bytes.
 		REQUIRE(RTC::RTCP::SdesPacket::ComputeChunkLengthFor({ 3, 2 }) == 16);
 		REQUIRE(
-		  packet->GetLength() - lengthBefore ==
-		  RTC::RTCP::SdesPacket::ComputeChunkLengthFor({ 3, 2 }));
+		  packet->GetLength() - lengthBefore == RTC::RTCP::SdesPacket::ComputeChunkLengthFor({ 3, 2 }));
 	}
 
 	SECTION("SdesPacket::ComputeLengthFor() succeeds")

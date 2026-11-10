@@ -31,8 +31,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::PliPacket> packet{ RTC::RTCP::PliPacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::PliPacket> packet{ RTC::RTCP::PliPacket::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -99,8 +98,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::PliPacket> packet{ RTC::RTCP::PliPacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::PliPacket> packet{ RTC::RTCP::PliPacket::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -196,8 +194,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
-		REQUIRE(
-		  packet->GetMessageType() == RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI);
+		REQUIRE(packet->GetMessageType() == RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI);
 		REQUIRE(packet->GetSenderSsrc() == 0);
 		REQUIRE(packet->GetMediaSsrc() == 0);
 

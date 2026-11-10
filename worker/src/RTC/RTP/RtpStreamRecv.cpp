@@ -1272,8 +1272,7 @@ namespace RTC
 				{
 					sendPacket();
 
-					nackPacket.reset(
-					  RTC::RTCP::NackPacket::Factory(RtcpPacketBuffer, sizeof(RtcpPacketBuffer)));
+					nackPacket.reset(RTC::RTCP::NackPacket::Factory(RtcpPacketBuffer, sizeof(RtcpPacketBuffer)));
 
 					nackPacket->SetSenderSsrc(this->params.rtcpSenderSsrc);
 					nackPacket->SetMediaSsrc(GetSsrc());

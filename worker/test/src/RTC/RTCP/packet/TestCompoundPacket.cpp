@@ -63,9 +63,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
-			RTC::RTCP::CompoundPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_COMPOUND_PACKET(
 		  /*compoundPacket*/ compoundPacket.get(),
@@ -303,9 +302,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
-			RTC::RTCP::CompoundPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_COMPOUND_PACKET(
 		  /*compoundPacket*/ compoundPacket.get(),
@@ -423,8 +421,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(packet5->GetBuffer() == buffer + 88);
 			REQUIRE(packet5->GetLength() == 16);
 			REQUIRE(
-			  packet5->GetMessageType() ==
-			  RTC::RTCP::AnyTransportLayerFeedbackPacket::MessageType::NACK);
+			  packet5->GetMessageType() == RTC::RTCP::AnyTransportLayerFeedbackPacket::MessageType::NACK);
 			REQUIRE(packet5->GetSenderSsrc() == 7777);
 			REQUIRE(packet5->GetMediaSsrc() == 8888);
 			REQUIRE(packet5->GetNumberOfItems() == 1);
@@ -435,16 +432,14 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(packet6->GetBuffer() == buffer + 104);
 			REQUIRE(packet6->GetLength() == 12);
 			REQUIRE(
-			  packet6->GetMessageType() ==
-			  RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI);
+			  packet6->GetMessageType() == RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI);
 			REQUIRE(packet6->GetSenderSsrc() == 1001);
 			REQUIRE(packet6->GetMediaSsrc() == 1002);
 
 			REQUIRE(packet7->GetBuffer() == buffer + 116);
 			REQUIRE(packet7->GetLength() == 20);
 			REQUIRE(
-			  packet7->GetMessageType() ==
-			  RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR);
+			  packet7->GetMessageType() == RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR);
 			REQUIRE(packet7->GetSenderSsrc() == 1003);
 			REQUIRE(packet7->GetMediaSsrc() == 0);
 			REQUIRE(packet7->GetNumberOfItems() == 1);
@@ -455,8 +450,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(packet8->GetBuffer() == buffer + 136);
 			REQUIRE(packet8->GetLength() == 24);
 			REQUIRE(
-			  packet8->GetMessageType() ==
-			  RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::AFB);
+			  packet8->GetMessageType() == RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::AFB);
 			REQUIRE(packet8->GetSenderSsrc() == 1005);
 			REQUIRE(packet8->GetMediaSsrc() == 0);
 			REQUIRE(packet8->GetBitrate() == 522022);
@@ -478,9 +472,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(dlrrSubBlocks[0].delaySinceLastReceiverReport == 1012);
 		};
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
-			RTC::RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
-		};
+		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Factory(
+			rtcpCommon::FactoryBuffer, 1000) };
 
 		REQUIRE(compoundPacket->GetLength() == 0);
 		REQUIRE(compoundPacket->GetPacketsCount() == 0);
@@ -488,9 +481,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		/* Clone it while empty. */
 
-		const std::unique_ptr<RTC::RTCP::CompoundPacket> emptyClonedCompoundPacket{
-			compoundPacket->Clone(rtcpCommon::CloneBuffer, sizeof(rtcpCommon::CloneBuffer))
-		};
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> emptyClonedCompoundPacket{ compoundPacket->Clone(
+			rtcpCommon::CloneBuffer, sizeof(rtcpCommon::CloneBuffer)) };
 
 		REQUIRE(emptyClonedCompoundPacket->GetBuffer() == rtcpCommon::CloneBuffer);
 		REQUIRE(emptyClonedCompoundPacket->GetLength() == 0);
@@ -710,9 +702,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		};
 		// clang-format on
 
-		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
-			RTC::RTCP::CompoundPacket::Parse(buffer, sizeof(buffer))
-		};
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_COMPOUND_PACKET(
 		  /*compoundPacket*/ compoundPacket.get(),
@@ -805,9 +796,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
-			RTC::RTCP::CompoundPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_COMPOUND_PACKET(
 		  /*compoundPacket*/ compoundPacket.get(),
@@ -916,9 +906,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
-			RTC::RTCP::CompoundPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_COMPOUND_PACKET(
 		  /*compoundPacket*/ compoundPacket.get(),
@@ -1025,15 +1014,12 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(receivedRtpPackets[2].deltaTicks == 4);
 		};
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
-			RTC::RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
-		};
+		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Factory(
+			rtcpCommon::FactoryBuffer, 1000) };
 
 		// Transport-wide CC packet, length: 28 bytes (3 of them padding).
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet1{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer + 1000, 1000, /*includeDeltas*/ true)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet1{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer + 1000, 1000, /*includeDeltas*/ true) };
 
 		packet1->SetSenderSsrc(1111);
 		packet1->SetMediaSsrc(2222);
@@ -1104,9 +1090,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(rrtExtendedReport->GetNtp().fractions == 4444);
 		};
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
-			RTC::RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
-		};
+		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Factory(
+			rtcpCommon::FactoryBuffer, 1000) };
 
 		// BYE packet, length: 12 bytes.
 		std::unique_ptr<RTC::RTCP::ByePacket> packet1{ RTC::RTCP::ByePacket::Factory(
@@ -1166,9 +1151,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 	SECTION("CompoundPacket::AddPacket() throws and leaves the CompoundPacket as it was")
 	{
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
-			RTC::RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer, 16)
-		};
+		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Factory(
+			rtcpCommon::FactoryBuffer, 16) };
 
 		// XR packet with a RRT block, length: 20 bytes, which exceeds the compound
 		// packet buffer length.
@@ -1205,9 +1189,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 	SECTION(
 	  "CompoundPacket::BuildPacketInPlace() and AddPacket() throw if the CompoundPacket needs consolidation")
 	{
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
-			RTC::RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
-		};
+		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Factory(
+			rtcpCommon::FactoryBuffer, 1000) };
 
 		REQUIRE(compoundPacket->NeedsConsolidation() == false);
 

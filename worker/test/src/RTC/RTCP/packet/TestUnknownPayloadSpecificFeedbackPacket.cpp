@@ -124,8 +124,7 @@ SCENARIO("RTCP Unknown Payload-Specific Feedback Packet (206)", "[serializable][
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
-		REQUIRE(
-		  packet->GetMessageType() == RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::AFB);
+		REQUIRE(packet->GetMessageType() == RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::AFB);
 		REQUIRE(packet->HasUnknownMessageType() == true);
 		REQUIRE(packet->GetSenderSsrc() == 0xFA17FA17);
 		REQUIRE(packet->GetMediaSsrc() == 0);

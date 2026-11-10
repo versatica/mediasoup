@@ -394,10 +394,10 @@ SCENARIO("Transport", "[rtcp][transport]")
 						  RTC::RTCP::DlrrExtendedReport::SubBlockLength);
 
 						dlrrExtendedReport->AddSubBlock(
-						  RTC::RTCP::DlrrExtendedReport::SubBlock{
-						    .ssrc                         = ssrc,
-						    .lastReceiverReport           = receivedReceiverReferenceTime.compactNtp,
-						    .delaySinceLastReceiverReport = dlrr });
+						  RTC::RTCP::DlrrExtendedReport::SubBlock{ .ssrc = ssrc,
+							                                         .lastReceiverReport =
+							                                           receivedReceiverReferenceTime.compactNtp,
+							                                         .delaySinceLastReceiverReport = dlrr });
 
 						answeredSsrcs.push_back(ssrc);
 					}
@@ -463,8 +463,7 @@ SCENARIO("Transport", "[rtcp][transport]")
 
 			if (!receiverReportPacket)
 			{
-				receiverReportPacket =
-				  compoundPacket->BuildPacketInPlace<RTC::RTCP::ReceiverReportPacket>();
+				receiverReportPacket = compoundPacket->BuildPacketInPlace<RTC::RTCP::ReceiverReportPacket>();
 
 				receiverReportPacket->SetSsrc(RtcpSsrc);
 
@@ -495,12 +494,12 @@ SCENARIO("Transport", "[rtcp][transport]")
 				const size_t sdesChunkLength = rtpStream->GetRtcpSdesChunkLength();
 				// The Sender Report, and the packets that follow the reports with the
 				// SDES chunk of this stream.
-				const size_t requiredLength = RTC::RTCP::SenderReportPacket::ComputeLengthFor(0) +
-				                              computeTrailingLength(
-				                                sdesChunksLength + sdesChunkLength,
-				                                senderReportRtpStreams.size() + 1,
-				                                numDlrrSubBlocks,
-				                                hasReceiverReports);
+				const size_t requiredLength =
+				  RTC::RTCP::SenderReportPacket::ComputeLengthFor(0) + computeTrailingLength(
+				                                                         sdesChunksLength + sdesChunkLength,
+				                                                         senderReportRtpStreams.size() + 1,
+				                                                         numDlrrSubBlocks,
+				                                                         hasReceiverReports);
 
 				// The chunk of this Transport counts if the compound packet carries an XR
 				// packet.
@@ -547,8 +546,7 @@ SCENARIO("Transport", "[rtcp][transport]")
 		// before either, since a new one is only started to add something to it.
 		if (rtcpDue && senderReportRtpStreams.empty() && !hasReceiverReportPacket)
 		{
-			receiverReportPacket =
-			  compoundPacket->BuildPacketInPlace<RTC::RTCP::ReceiverReportPacket>();
+			receiverReportPacket = compoundPacket->BuildPacketInPlace<RTC::RTCP::ReceiverReportPacket>();
 
 			receiverReportPacket->SetSsrc(RtcpSsrc);
 
@@ -746,8 +744,7 @@ SCENARIO("Transport", "[rtcp][transport]")
 		std::vector<std::unique_ptr<RTC::RTP::RtpStreamRecv>> rtpStreams;
 		std::vector<RTC::RTP::RtpStreamRecv*> producerRtpStreams;
 
-		for (uint32_t ssrc{ 1000 }; ssrc < 1000 + RTC::RTCP::AnyReportPacket::MaxReportBlocks + 1;
-		     ++ssrc)
+		for (uint32_t ssrc{ 1000 }; ssrc < 1000 + RTC::RTCP::AnyReportPacket::MaxReportBlocks + 1; ++ssrc)
 		{
 			rtpStreams.push_back(createRtpStreamRecv(ssrc));
 			producerRtpStreams.push_back(rtpStreams.back().get());

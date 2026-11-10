@@ -26,8 +26,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	// delta.
 	static constexpr int64_t DeltaLimitUs{ 0xFF * RTC::RTCP::TransportWideCcPacket::DeltaTickUs };
 	// The reference time is expressed in multiples of this (in microseconds).
-	static constexpr int64_t BaseTimeTickUs{ RTC::RTCP::TransportWideCcPacket::DeltaTickUs *
-	                                         (1 << 8) };
+	static constexpr int64_t BaseTimeTickUs{ RTC::RTCP::TransportWideCcPacket::DeltaTickUs * (1 << 8) };
 	// Period (in microseconds) after which the reference time wraps around.
 	static constexpr int64_t BaseTimeWrapPeriodUs{ BaseTimeTickUs * (1 << 24) };
 
@@ -142,9 +141,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -237,9 +235,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -289,9 +286,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -336,9 +332,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -380,9 +375,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -432,9 +426,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -631,10 +624,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		// Dirty the buffer to check that Factory() writes zeros in the header.
 		std::memset(rtcpCommon::FactoryBuffer, 0xFF, sizeof(rtcpCommon::FactoryBuffer));
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -646,8 +637,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
-		REQUIRE(
-		  packet->GetMessageType() == RTC::RTCP::AnyTransportLayerFeedbackPacket::MessageType::TCC);
+		REQUIRE(packet->GetMessageType() == RTC::RTCP::AnyTransportLayerFeedbackPacket::MessageType::TCC);
 		REQUIRE(packet->GetSenderSsrc() == 0);
 		REQUIRE(packet->GetMediaSsrc() == 0);
 		REQUIRE(packet->GetBaseSequenceNumber() == 0);
@@ -767,10 +757,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ false)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ false) };
 
 		packet->SetBase(1, 1000);
 
@@ -802,8 +790,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	  "TransportWideCcPacket::AddReceivedRtpPacket() returns false if there is no space in the buffer")
 	{
 		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, 24, /*includeDeltas*/ true)
+			RTC::RTCP::TransportWideCcPacket::Factory(rtcpCommon::FactoryBuffer, 24, /*includeDeltas*/ true)
 		};
 
 		packet->SetBase(0, 0);
@@ -825,8 +812,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	SECTION("TransportWideCcPacket::Factory() throws if the buffer is too small")
 	{
 		REQUIRE_THROWS_AS(
-		  RTC::RTCP::TransportWideCcPacket::Factory(
-		    rtcpCommon::FactoryBuffer, 19, /*includeDeltas*/ true),
+		  RTC::RTCP::TransportWideCcPacket::Factory(rtcpCommon::FactoryBuffer, 19, /*includeDeltas*/ true),
 		  MediaSoupTypeError);
 	}
 
@@ -866,10 +852,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	{
 		REQUIRE(receivedSequenceNumbers.size() == receivedTimestampsUs.size());
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), includeDeltas)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), includeDeltas) };
 		std::vector<int64_t> expectedDeltasUs;
 
 		packet->SetBase(receivedSequenceNumbers[0], receivedTimestampsUs[0]);
@@ -1074,8 +1058,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		// With received small delta = S, received large delta = L, use input
 		// SSSSSSSSLSSSSSSSSSSSS. This will cause a 1:2 split at the L. After the
 		// split there will be two symbols in the symbol vector: SL.
-		static constexpr int64_t LargeDeltaUs{ RTC::RTCP::TransportWideCcPacket::DeltaTickUs *
-		                                       (1 << 8) };
+		static constexpr int64_t LargeDeltaUs{ RTC::RTCP::TransportWideCcPacket::DeltaTickUs * (1 << 8) };
 		static constexpr size_t NumPackets{ (3 * 7) + 1 };
 
 		std::vector<uint16_t> receivedSequenceNumbers;
@@ -1115,10 +1098,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		static constexpr int Samples{ 100 };
 		static constexpr int64_t TooSmallDeltaUs{ RTC::RTCP::TransportWideCcPacket::DeltaTickUs / 3 };
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true) };
 
 		packet->SetBase(0, 0);
 
@@ -1151,10 +1132,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	{
 		// A sequence number exactly half the sequence number space after the last
 		// added one is not considered higher than it.
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true) };
 
 		packet->SetBase(0, 0);
 
@@ -1186,9 +1165,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		REQUIRE(!packet->AddReceivedRtpPacket(0xFFFF, 3000));
 
 		// Too large delta.
-		static constexpr int64_t MaxPositiveTimeDeltaUs{
-			std::numeric_limits<int16_t>::max() * RTC::RTCP::TransportWideCcPacket::DeltaTickUs
-		};
+		static constexpr int64_t MaxPositiveTimeDeltaUs{ std::numeric_limits<int16_t>::max() *
+		                                                 RTC::RTCP::TransportWideCcPacket::DeltaTickUs };
 
 		packet.reset(
 		  RTC::RTCP::TransportWideCcPacket::Factory(
@@ -1201,9 +1179,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		REQUIRE(packet->AddReceivedRtpPacket(1, MaxPositiveTimeDeltaUs));
 
 		// Too large negative delta.
-		static constexpr int64_t MaxNegativeTimeDeltaUs{
-			std::numeric_limits<int16_t>::min() * RTC::RTCP::TransportWideCcPacket::DeltaTickUs
-		};
+		static constexpr int64_t MaxNegativeTimeDeltaUs{ std::numeric_limits<int16_t>::min() *
+		                                                 RTC::RTCP::TransportWideCcPacket::DeltaTickUs };
 		// Use a larger base time to avoid the base time plus the negative delta
 		// to be negative.
 		static constexpr int64_t BaseTimeUs{ 1000000000000 };
@@ -1223,10 +1200,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	{
 		static constexpr int64_t MaxBaseTimeUs{ BaseTimeWrapPeriodUs - BaseTimeTickUs };
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet1{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet1{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true) };
 
 		packet1->SetBase(0, MaxBaseTimeUs);
 
@@ -1239,10 +1214,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 
 		REQUIRE(parsedPacket1);
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet2{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::SerializeBuffer, sizeof(rtcpCommon::SerializeBuffer), /*includeDeltas*/ true)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet2{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::SerializeBuffer, sizeof(rtcpCommon::SerializeBuffer), /*includeDeltas*/ true) };
 
 		packet2->SetBase(1, MaxBaseTimeUs + BaseTimeTickUs);
 
@@ -1265,8 +1238,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		std::vector<uint8_t> buffer((1 << 16) * 4);
 
 		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  buffer.data(), buffer.size(), /*includeDeltas*/ true)
+			RTC::RTCP::TransportWideCcPacket::Factory(buffer.data(), buffer.size(), /*includeDeltas*/ true)
 		};
 
 		// Use a large base time to avoid hitting zero while filling the packet,
@@ -1301,8 +1273,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		for (const auto& receivedRtpPacket : receivedRtpPackets)
 		{
 			REQUIRE(
-			  receivedRtpPacket.deltaTicks * RTC::RTCP::TransportWideCcPacket::DeltaTickUs ==
-			  MinDeltaUs);
+			  receivedRtpPacket.deltaTicks * RTC::RTCP::TransportWideCcPacket::DeltaTickUs == MinDeltaUs);
 		}
 
 		REQUIRE(parsedPacket->GetBaseTimeUs() >= -MinDeltaUs * numReceivedRtpPackets);
@@ -1332,10 +1303,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true) };
 
 		packet->SetBase(0, 0);
 
@@ -1366,10 +1335,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		// correct split into multiple chunks.
 		for (int deltas{ 0 }; deltas <= OneBitVectorCapacity + 1; ++deltas)
 		{
-			std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-				RTC::RTCP::TransportWideCcPacket::Factory(
-				  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true)
-			};
+			std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Factory(
+				rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true) };
 
 			packet->SetBase(0, 0);
 
@@ -1397,10 +1364,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		static constexpr int64_t BaseTimestampUs{ 123456789 };
 		static constexpr uint8_t FeedbackPacketCount{ 90 };
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true) };
 
 		packet->SetBase(BaseSequenceNumber, BaseTimestampUs);
 		packet->SetFeedbackPacketCount(FeedbackPacketCount);
@@ -1438,10 +1403,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		static constexpr int64_t BaseTimestampUs{ 10000 };
 		static constexpr uint8_t FeedbackPacketCount{ 90 };
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true) };
 
 		packet->SetBase(BaseSequenceNumber, BaseTimestampUs);
 		packet->SetFeedbackPacketCount(FeedbackPacketCount);
@@ -1474,10 +1437,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		static constexpr uint16_t BaseSequenceNumber{ 1000 };
 		static constexpr uint8_t FeedbackPacketCount{ 90 };
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ false)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ false) };
 
 		packet->SetBase(BaseSequenceNumber, 10000);
 		packet->SetFeedbackPacketCount(FeedbackPacketCount);
@@ -1833,9 +1794,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-			RTC::RTCP::TransportWideCcPacket::Parse(buffer, sizeof(buffer))
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 		REQUIRE(packet->GetLength() == sizeof(buffer));
@@ -2034,10 +1994,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 
 		for (const auto& feedbackPacketMeta : feedbackPacketsMeta)
 		{
-			std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
-				RTC::RTCP::TransportWideCcPacket::Parse(
-				  feedbackPacketMeta.buffer.data(), feedbackPacketMeta.buffer.size())
-			};
+			std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{ RTC::RTCP::TransportWideCcPacket::Parse(
+				feedbackPacketMeta.buffer.data(), feedbackPacketMeta.buffer.size()) };
 
 			REQUIRE(packet);
 			REQUIRE(packet->GetBaseTimeUs() == feedbackPacketMeta.baseTimeUs);
@@ -2059,18 +2017,12 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	{
 		static constexpr int64_t MaxBaseTimeUs{ BaseTimeWrapPeriodUs - BaseTimeTickUs };
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet1{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true)
-		};
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet2{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::SerializeBuffer, sizeof(rtcpCommon::SerializeBuffer), /*includeDeltas*/ true)
-		};
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet3{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::CloneBuffer, sizeof(rtcpCommon::CloneBuffer), /*includeDeltas*/ true)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet1{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true) };
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet2{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::SerializeBuffer, sizeof(rtcpCommon::SerializeBuffer), /*includeDeltas*/ true) };
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet3{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::CloneBuffer, sizeof(rtcpCommon::CloneBuffer), /*includeDeltas*/ true) };
 
 		packet1->SetBase(0, MaxBaseTimeUs);
 		packet2->SetBase(0, MaxBaseTimeUs + BaseTimeTickUs);
@@ -2093,14 +2045,10 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		// time wraps around.
 		static constexpr int64_t LastTickUs{ BaseTimeWrapPeriodUs - BaseTimeTickUs };
 
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet1{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true)
-		};
-		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet2{
-			RTC::RTCP::TransportWideCcPacket::Factory(
-			  rtcpCommon::SerializeBuffer, sizeof(rtcpCommon::SerializeBuffer), /*includeDeltas*/ true)
-		};
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet1{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ true) };
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet2{ RTC::RTCP::TransportWideCcPacket::Factory(
+			rtcpCommon::SerializeBuffer, sizeof(rtcpCommon::SerializeBuffer), /*includeDeltas*/ true) };
 
 		packet1->SetBase(1000, LastTickUs);
 		packet2->SetBase(1001, LastTickUs + BaseTimeTickUs);

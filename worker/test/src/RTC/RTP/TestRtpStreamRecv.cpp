@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/NackGenerator.hpp"
 #include "RTC/RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/RTCP/packet/AnyReportPacket.hpp"
 #include "RTC/RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
@@ -8,7 +9,6 @@
 #include "RTC/RTCP/packet/ReceiverReportPacket.hpp"
 #include "RTC/RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
-#include "RTC/NackGenerator.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
@@ -40,8 +40,8 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 			{
 				case RTC::RTCP::Packet::PacketType::PSFB:
 				{
-					switch (dynamic_cast<const RTC::RTCP::AnyPayloadSpecificFeedbackPacket*>(packet)
-					          ->GetMessageType())
+					switch (
+					  dynamic_cast<const RTC::RTCP::AnyPayloadSpecificFeedbackPacket*>(packet)->GetMessageType())
 					{
 						case RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI:
 						{
@@ -75,8 +75,8 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 
 				case RTC::RTCP::Packet::PacketType::RTPFB:
 				{
-					switch (dynamic_cast<const RTC::RTCP::AnyTransportLayerFeedbackPacket*>(packet)
-					          ->GetMessageType())
+					switch (
+					  dynamic_cast<const RTC::RTCP::AnyTransportLayerFeedbackPacket*>(packet)->GetMessageType())
 					{
 						case RTC::RTCP::AnyTransportLayerFeedbackPacket::MessageType::NACK:
 						{

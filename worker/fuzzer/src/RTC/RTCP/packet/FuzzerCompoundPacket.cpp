@@ -238,8 +238,7 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 
 	RTC::RTCP::RembPacket::IsRemb(data, len);
 
-	RTC::RTCP::CompoundPacket* const compoundPacket =
-	  RTC::RTCP::CompoundPacket::Parse(data, len);
+	RTC::RTCP::CompoundPacket* const compoundPacket = RTC::RTCP::CompoundPacket::Parse(data, len);
 
 	if (!compoundPacket)
 	{

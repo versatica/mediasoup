@@ -37,14 +37,14 @@ namespace rtcpCommon
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define CHECK_RTCP_COMPOUND_PACKET(                                                                  \
-  /*const RTC::RTCP::CompoundPacket**/ compoundPacket,                                           \
+  /*const RTC::RTCP::CompoundPacket**/ compoundPacket,                                               \
   /*const uint8_t**/ buffer,                                                                         \
   /*size_t*/ bufferLength,                                                                           \
   /*size_t*/ length,                                                                                 \
   /*size_t*/ packetsCount)                                                                           \
 	do                                                                                                 \
 	{                                                                                                  \
-		REQUIRE(RTC::RTCP::Packet::IsRtcp(buffer, length) == true);                                  \
+		REQUIRE(RTC::RTCP::Packet::IsRtcp(buffer, length) == true);                                      \
 		REQUIRE(compoundPacket);                                                                         \
 		REQUIRE(compoundPacket->GetBuffer() != nullptr);                                                 \
 		const std::vector<uint8_t> originalBuffer(                                                       \
@@ -60,7 +60,7 @@ namespace rtcpCommon
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(compoundPacket->GetLength()) == true);                     \
 		REQUIRE(compoundPacket->GetPacketsCount() == packetsCount);                                      \
 		REQUIRE_THROWS_AS(                                                                               \
-		  const_cast<RTC::RTCP::CompoundPacket*>(compoundPacket)                                     \
+		  const_cast<RTC::RTCP::CompoundPacket*>(compoundPacket)                                         \
 		    ->Serialize(rtcpCommon::ThrowBuffer, length - 1),                                            \
 		  MediaSoupError);                                                                               \
 		REQUIRE_THROWS_AS(compoundPacket->Clone(rtcpCommon::ThrowBuffer, length - 1), MediaSoupError);   \
@@ -74,11 +74,11 @@ namespace rtcpCommon
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define CHECK_RTCP_PACKET(                                                                               \
-  /*RTC::RTCP::Packet**/ packet,                                                                     \
+  /*RTC::RTCP::Packet**/ packet,                                                                         \
   /*const uint8_t**/ buffer,                                                                             \
   /*size_t*/ bufferLength,                                                                               \
   /*size_t*/ length,                                                                                     \
-  /*RTC::RTCP::Packet::PacketType*/ packetType,                                                      \
+  /*RTC::RTCP::Packet::PacketType*/ packetType,                                                          \
   /*bool*/ unknownType,                                                                                  \
   /*bool*/ hasPadding,                                                                                   \
   /*uint8_t*/ paddingLength)                                                                             \
@@ -86,7 +86,7 @@ namespace rtcpCommon
 	{                                                                                                      \
 		if (buffer)                                                                                          \
 		{                                                                                                    \
-			REQUIRE(RTC::RTCP::Packet::IsRtcp(buffer, length) == true);                                    \
+			REQUIRE(RTC::RTCP::Packet::IsRtcp(buffer, length) == true);                                        \
 		}                                                                                                    \
 		REQUIRE(packet);                                                                                     \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                             \
@@ -122,11 +122,11 @@ namespace rtcpCommon
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define CHECK_RTCP_EXTENDED_REPORT(                                                                  \
-  /*RTC::RTCP::ExtendedReport**/ extendedReport,                                                 \
+  /*RTC::RTCP::ExtendedReport**/ extendedReport,                                                     \
   /*const uint8_t**/ buffer,                                                                         \
   /*size_t*/ bufferLength,                                                                           \
   /*size_t*/ length,                                                                                 \
-  /*RTC::RTCP::ExtendedReport::BlockType*/ blockType,                                            \
+  /*RTC::RTCP::ExtendedReport::BlockType*/ blockType,                                                \
   /*bool*/ unknownType)                                                                              \
 	do                                                                                                 \
 	{                                                                                                  \
