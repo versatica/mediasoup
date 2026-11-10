@@ -13,14 +13,13 @@ namespace RTC
 			/* Class methods. */
 
 			DependencyDescriptorPayloadDescriptor* DependencyDescriptorPayloadDescriptor::Parse(
-			  RTP::Packet* packet,
-			  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
+			  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
 			{
 				MS_TRACE();
 
 				std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor;
 
-				packet->ReadDependencyDescriptor(dependencyDescriptor, templateDependencyStructure);
+				packet->ReadDependencyDescriptor(dependencyDescriptor, dependencyDescriptorContext);
 
 				// The packet carries no Dependency Descriptor, so its codec must make do
 				// with its own payload descriptor.

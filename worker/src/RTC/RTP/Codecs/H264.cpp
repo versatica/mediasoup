@@ -102,8 +102,7 @@ namespace RTC
 			}
 
 			void H264::ProcessRtpPacket(
-			  RTP::Packet* packet,
-			  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
+			  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
 			{
 				MS_TRACE();
 
@@ -115,7 +114,7 @@ namespace RTC
 				// NOTE: The payload descriptor of the codec is parsed all the same, for
 				// the Consumers that did not and cannot be told the layers any other way.
 				auto* const dependencyDescriptorPayloadDescriptor =
-				  DependencyDescriptorPayloadDescriptor::Parse(packet, templateDependencyStructure);
+				  DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext);
 
 				// NOTE: The temporal layer is taken from the Dependency Descriptor, since
 				// H264 packets do not tell it and those Consumers must filter layers all

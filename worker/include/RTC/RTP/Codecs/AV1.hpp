@@ -23,9 +23,7 @@ namespace RTC
 
 			public:
 				static void ProcessRtpPacket(
-				  RTP::Packet* packet,
-				  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
-				    templateDependencyStructure);
+				  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext);
 
 			public:
 				class EncodingContext : public Codecs::EncodingContext

@@ -1085,8 +1085,7 @@ namespace RTC
 
 		bool Packet::ReadDependencyDescriptor(
 		  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor,
-		  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
-		    templateDependencyStructure) const
+		  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext) const
 		{
 			MS_TRACE();
 
@@ -1100,7 +1099,7 @@ namespace RTC
 			  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
 
 			auto* const value =
-			  Codecs::DependencyDescriptor::Parse(extenValue, extenLen, templateDependencyStructure);
+			  Codecs::DependencyDescriptor::Parse(extenValue, extenLen, dependencyDescriptorContext);
 
 			if (!value)
 			{
