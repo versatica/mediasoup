@@ -121,11 +121,11 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x60, 0x41, 0x4D, 0x14, 0x10, 0x20, 0x84, 0x26
 		};
 
-		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-		  templateDependencyStructure;
+		RTC::RTP::Codecs::DependencyDescriptor::Context
+		  dependencyDescriptorContext;
 		auto dependencyDescriptor = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    data, sizeof(data), templateDependencyStructure));
+		    data, sizeof(data), dependencyDescriptorContext));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->startOfFrame == true);
@@ -257,11 +257,10 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		};
 		// clang-format on
 
-		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-		  templateDependencyStructure;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 		auto dependencyDescriptor = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    data1, sizeof(data1), templateDependencyStructure));
+		    data1, sizeof(data1), dependencyDescriptorContext));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
@@ -276,7 +275,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		// clang-format on
 		dependencyDescriptor = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    data2, sizeof(data2), templateDependencyStructure));
+		    data2, sizeof(data2), dependencyDescriptorContext));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
@@ -297,7 +296,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
 
 		dependencyDescriptor = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
-		  RTC::RTP::Codecs::DependencyDescriptor::Parse(buffer, len, templateDependencyStructure));
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(buffer, len, dependencyDescriptorContext));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
@@ -328,20 +327,19 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		};
 		// clang-format on
 
-		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-		  templateDependencyStructure;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 		// NOTE: The key frame must be parsed first since it's what carries the
 		// template dependency structure the delta frame below needs.
 		auto keyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
+		    keyFrameData, sizeof(keyFrameData), dependencyDescriptorContext));
 
 		REQUIRE(keyFrame);
 
 		auto deltaFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    deltaFrameData, sizeof(deltaFrameData), templateDependencyStructure));
+		    deltaFrameData, sizeof(deltaFrameData), dependencyDescriptorContext));
 
 		REQUIRE(deltaFrame);
 
@@ -378,7 +376,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		// And it's told so rather than being given the descriptor of the first one.
 		auto rewritten = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    value.data(), value.size(), templateDependencyStructure));
+		    value.data(), value.size(), dependencyDescriptorContext));
 
 		REQUIRE(rewritten);
 		REQUIRE(rewritten->activeDecodeTargetsBitmask == 0b11);
@@ -403,18 +401,17 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		};
 		// clang-format on
 
-		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-		  templateDependencyStructure;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 		auto keyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
+		    keyFrameData, sizeof(keyFrameData), dependencyDescriptorContext));
 
 		REQUIRE(keyFrame);
 
 		auto deltaFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    deltaFrameData, sizeof(deltaFrameData), templateDependencyStructure));
+		    deltaFrameData, sizeof(deltaFrameData), dependencyDescriptorContext));
 
 		REQUIRE(deltaFrame);
 
@@ -452,29 +449,30 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		};
 		// clang-format on
 
-		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-		  templateDependencyStructure;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 		auto first = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
+		    keyFrameData, sizeof(keyFrameData), dependencyDescriptorContext));
 
 		REQUIRE(first);
 
 		const auto* firstStructure = first->templateDependencyStructure.get();
 
-		REQUIRE(firstStructure == templateDependencyStructure.get());
+		REQUIRE(firstStructure == dependencyDescriptorContext.templateDependencyStructure.get());
 
 		// A second key frame comes with its own structure.
 		auto second = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
+		    keyFrameData, sizeof(keyFrameData), dependencyDescriptorContext));
 
 		REQUIRE(second);
 
 		// Which is a brand new one, told apart from the previous one.
 		REQUIRE(second->templateDependencyStructure.get() != firstStructure);
-		REQUIRE(templateDependencyStructure.get() == second->templateDependencyStructure.get());
+		REQUIRE(
+		  dependencyDescriptorContext.templateDependencyStructure.get() ==
+		  second->templateDependencyStructure.get());
 
 		// And the first descriptor keeps the one it was parsed with alive.
 		REQUIRE(first->templateDependencyStructure.get() == firstStructure);
@@ -505,12 +503,11 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		};
 		// clang-format on
 
-		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-		  templateDependencyStructure;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 		auto keyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
+		    keyFrameData, sizeof(keyFrameData), dependencyDescriptorContext));
 
 		REQUIRE(keyFrame);
 
@@ -520,13 +517,13 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		// structure of every descriptor back to the stream, so afterwards this
 		// would watch whatever the delta frame holds rather than what it was given.
 		const std::weak_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure> watched{
-			templateDependencyStructure
+			dependencyDescriptorContext.templateDependencyStructure
 		};
-		const auto* installed = templateDependencyStructure.get();
+		const auto* installed = dependencyDescriptorContext.templateDependencyStructure.get();
 
 		auto deltaFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    deltaFrameData, sizeof(deltaFrameData), templateDependencyStructure));
+		    deltaFrameData, sizeof(deltaFrameData), dependencyDescriptorContext));
 
 		REQUIRE(deltaFrame);
 
@@ -539,10 +536,10 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		const auto newKeyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
+		    keyFrameData, sizeof(keyFrameData), dependencyDescriptorContext));
 
 		REQUIRE(newKeyFrame);
-		REQUIRE(templateDependencyStructure.get() != installed);
+		REQUIRE(dependencyDescriptorContext.templateDependencyStructure.get() != installed);
 
 		// The delta frame is the only one left holding it, and still reads it.
 		REQUIRE(!watched.expired());
@@ -595,20 +592,19 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		};
 		// clang-format on
 
-		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-		  templateDependencyStructure;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 		auto keyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
+		    keyFrameData, sizeof(keyFrameData), dependencyDescriptorContext));
 
 		REQUIRE(keyFrame);
-		REQUIRE(templateDependencyStructure->decodeTargetCount == 2);
-		REQUIRE(templateDependencyStructure->chainCount == 1);
+		REQUIRE(dependencyDescriptorContext.templateDependencyStructure->decodeTargetCount == 2);
+		REQUIRE(dependencyDescriptorContext.templateDependencyStructure->chainCount == 1);
 
 		auto deltaFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    deltaFrameData, sizeof(deltaFrameData), templateDependencyStructure));
+		    deltaFrameData, sizeof(deltaFrameData), dependencyDescriptorContext));
 
 		REQUIRE(deltaFrame);
 		REQUIRE(deltaFrame->frameNumber == 232);
@@ -642,7 +638,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		// The rewritten descriptor is still a valid one.
 		auto rewritten = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
-		  RTC::RTP::Codecs::DependencyDescriptor::Parse(buffer, len, templateDependencyStructure));
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(buffer, len, dependencyDescriptorContext));
 
 		REQUIRE(rewritten);
 		REQUIRE(rewritten->frameNumber == 232);
@@ -662,12 +658,11 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		};
 		// clang-format on
 
-		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-		  templateDependencyStructure;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 		auto keyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
+		    keyFrameData, sizeof(keyFrameData), dependencyDescriptorContext));
 
 		REQUIRE(keyFrame);
 		REQUIRE(keyFrame->isKeyFrame);
@@ -684,7 +679,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		// The rewritten key frame must carry the very same structure, so that the
 		// endpoint goes on resolving the templates of the frames that follow.
-		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure> rewrittenStructure;
+		RTC::RTP::Codecs::DependencyDescriptor::Context rewrittenStructure;
 
 		auto rewritten = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(buffer, len, rewrittenStructure));
@@ -696,17 +691,24 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(rewritten->activeDecodeTargetsBitmask == 0b01);
 		REQUIRE(rewritten->decodeTargetProtectedBy == keyFrame->decodeTargetProtectedBy);
 
-		REQUIRE(rewrittenStructure->spatialLayers == structure->spatialLayers);
-		REQUIRE(rewrittenStructure->temporalLayers == structure->temporalLayers);
-		REQUIRE(rewrittenStructure->templateIdOffset == structure->templateIdOffset);
-		REQUIRE(rewrittenStructure->decodeTargetCount == structure->decodeTargetCount);
-		REQUIRE(rewrittenStructure->chainCount == structure->chainCount);
-		REQUIRE(rewrittenStructure->templateLayers.size() == structure->templateLayers.size());
+		REQUIRE(rewrittenStructure.templateDependencyStructure->spatialLayers == structure->spatialLayers);
+		REQUIRE(
+		  rewrittenStructure.templateDependencyStructure->temporalLayers == structure->temporalLayers);
+		REQUIRE(
+		  rewrittenStructure.templateDependencyStructure->templateIdOffset == structure->templateIdOffset);
+		REQUIRE(
+		  rewrittenStructure.templateDependencyStructure->decodeTargetCount ==
+		  structure->decodeTargetCount);
+		REQUIRE(rewrittenStructure.templateDependencyStructure->chainCount == structure->chainCount);
+		REQUIRE(
+		  rewrittenStructure.templateDependencyStructure->templateLayers.size() ==
+		  structure->templateLayers.size());
 
 		for (size_t idx{ 0 }; idx < structure->templateLayers.size(); ++idx)
 		{
-			const auto& templateLayer          = structure->templateLayers[idx];
-			const auto& rewrittenTemplateLayer = rewrittenStructure->templateLayers[idx];
+			const auto& templateLayer = structure->templateLayers[idx];
+			const auto& rewrittenTemplateLayer =
+			  rewrittenStructure.templateDependencyStructure->templateLayers[idx];
 
 			REQUIRE(rewrittenTemplateLayer.spatialLayer == templateLayer.spatialLayer);
 			REQUIRE(rewrittenTemplateLayer.temporalLayer == templateLayer.temporalLayer);
@@ -714,5 +716,73 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			REQUIRE(rewrittenTemplateLayer.frameDiffs == templateLayer.frameDiffs);
 			REQUIRE(rewrittenTemplateLayer.frameDiffChains == templateLayer.frameDiffChains);
 		}
+	}
+
+	/**
+	 * A retransmitted or reordered packet of an old key frame carries the
+	 * structure that key frame came with. Taking it would leave every following
+	 * packet of the stream parsed with outdated templates, this is, with wrong
+	 * layers and wrong decode target indications, until the next key frame.
+	 */
+	SECTION("a template dependency structure older than the one in use is ignored")
+	{
+		// Key frame of an L1T2 stream, frame number 232.
+		// clang-format off
+		uint8_t oldKeyFrame[] =
+		{
+			0x80, 0x00, 0xE8, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C,
+		};
+
+		// The same one, frame number 242.
+		uint8_t newKeyFrame[] =
+		{
+			0x80, 0x00, 0xF2, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C,
+		};
+
+		// And frame number 252, in a packet that is not the first one of its frame.
+		uint8_t newestKeyFrameNotStartOfFrame[] =
+		{
+			0x00, 0x00, 0xFC, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C,
+		};
+		// clang-format on
+
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
+
+		const auto parse = [&dependencyDescriptorContext](uint8_t* data, size_t len)
+		{
+			return std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+			  RTC::RTP::Codecs::DependencyDescriptor::Parse(data, len, dependencyDescriptorContext));
+		};
+
+		REQUIRE(parse(oldKeyFrame, sizeof(oldKeyFrame)));
+
+		const auto* oldStructure = dependencyDescriptorContext.templateDependencyStructure.get();
+
+		// A newer key frame hands its own structure over.
+		REQUIRE(parse(newKeyFrame, sizeof(newKeyFrame)));
+
+		const auto* newStructure = dependencyDescriptorContext.templateDependencyStructure.get();
+
+		REQUIRE(newStructure != oldStructure);
+
+		/*
+		 * And the old key frame coming late does not, even though it is parsed
+		 * fine and the packet is still forwarded.
+		 */
+		REQUIRE(parse(oldKeyFrame, sizeof(oldKeyFrame)));
+		REQUIRE(dependencyDescriptorContext.templateDependencyStructure.get() == newStructure);
+
+		// Neither does a newer one that is not in the first packet of its frame.
+		REQUIRE(parse(newestKeyFrameNotStartOfFrame, sizeof(newestKeyFrameNotStartOfFrame)));
+		REQUIRE(dependencyDescriptorContext.templateDependencyStructure.get() == newStructure);
 	}
 }

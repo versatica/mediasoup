@@ -14,8 +14,7 @@ namespace RTC
 			/* Class methods. */
 
 			void AV1::ProcessRtpPacket(
-			  RTP::Packet* packet,
-			  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
+			  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
 			{
 				MS_TRACE();
 
@@ -23,7 +22,7 @@ namespace RTC
 				// packet, so without it the packet gets no payload descriptor handler at
 				// all and is forwarded as it comes.
 				auto* const payloadDescriptor =
-				  DependencyDescriptorPayloadDescriptor::Parse(packet, templateDependencyStructure);
+				  DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext);
 
 				if (!payloadDescriptor)
 				{

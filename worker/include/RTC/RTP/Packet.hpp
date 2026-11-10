@@ -543,8 +543,7 @@ namespace RTC
 
 			bool ReadDependencyDescriptor(
 			  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor,
-			  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
-			    templateDependencyStructure) const;
+			  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext) const;
 
 			bool UpdateDependencyDescriptor(const uint8_t* data, size_t len);
 

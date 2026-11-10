@@ -3,7 +3,8 @@
 ### NEXT
 
 - Worker: Complete Dependency Descriptor implementation ([PR #2015](https://github.com/versatica/mediasoup/pull/2015)).
-- New RTCP stack ([task #XXXX](https://github.com/versatica/mediasoup/issues/XXXX)).
+- Worker: Don’t take a template dependency structure older than the one in use ([PR #2047](https://github.com/versatica/mediasoup/pull/2047)).
+- New RTCP stack ([task #2049](https://github.com/versatica/mediasoup/issues/2049)).
 
 ### 0.33.2
 

@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_CODECS_DEPENDENCY_DESCRIPTOR_HPP
 
 #include "common.hpp"
+#include "Utils/UnwrappedSequenceNumber.hpp"
 #include "Utils.hpp"
 #include <ankerl/unordered_dense.h>
 
@@ -73,6 +74,33 @@ namespace RTC
 					std::vector<DecodeTargetLayer> decodeTargetLayers;
 				};
 
+				/**
+				 * What parsing the descriptors of a stream takes: the template
+				 * dependency structure in use and which frame brought it.
+				 *
+				 * NOTE: The frame is kept so that a descriptor of an older one, which a
+				 * retransmission or a reordered packet may carry, does not replace the
+				 * structure in use with an outdated one, leaving every following packet
+				 * parsed with the wrong templates until the next key frame.
+				 */
+				struct Context
+				{
+					/**
+					 * Template dependency structure the descriptors of the stream are
+					 * parsed with.
+					 */
+					std::shared_ptr<TemplateDependencyStructure> templateDependencyStructure;
+					/**
+					 * Orders the frames of the stream despite their number wrapping around.
+					 * Given every frame, not just the ones that bring a structure.
+					 */
+					Utils::UnwrappedSequenceNumber<uint16_t>::Unwrapper frameNumberUnwrapper;
+					/**
+					 * Frame that brought the structure in use, if any yet.
+					 */
+					std::optional<Utils::UnwrappedSequenceNumber<uint16_t>> unwrappedStructureFrameNumber;
+				};
+
 			public:
 				bool startOfFrame{ false };
 				bool endOfFrame{ false };
@@ -97,10 +125,7 @@ namespace RTC
 				bool isKeyFrame{ false };
 
 			public:
-				static DependencyDescriptor* Parse(
-				  const uint8_t* data,
-				  size_t len,
-				  std::shared_ptr<TemplateDependencyStructure>& templateDependencyStructure);
+				static DependencyDescriptor* Parse(const uint8_t* data, size_t len, Context& context);
 
 				DependencyDescriptor(
 				  const uint8_t* data,
@@ -237,6 +262,7 @@ namespace RTC
 				// Where things are within the descriptor as received, so that the parts
 				// that are not parsed can be copied over verbatim when rewriting.
 				bool extendedDescriptorFieldsPresent{ false };
+				bool templateDependencyStructurePresent{ false };
 				bool activeDecodeTargetsPresent{ false };
 				bool customDecodeTargetIndicationsPresent{ false };
 				bool customFrameDiffsPresent{ false };

@@ -341,7 +341,7 @@ namespace RTC
 			// Process the packet at codec level.
 			if (packet->GetPayloadType() == GetPayloadType())
 			{
-				RTP::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->templateDependencyStructure);
+				RTP::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->dependencyDescriptorContext);
 			}
 
 			// Tell the listener if this packet made the stream restart, now that it
@@ -537,7 +537,7 @@ namespace RTC
 			// Process the packet at codec level.
 			if (packet->GetPayloadType() == GetPayloadType())
 			{
-				RTP::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->templateDependencyStructure);
+				RTP::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->dependencyDescriptorContext);
 			}
 
 			// Mark the packet as retransmitted.
