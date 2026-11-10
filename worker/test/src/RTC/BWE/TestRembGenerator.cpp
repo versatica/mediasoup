@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "RTC/BWE/RembGenerator.hpp"
-#include "RTC/NEW_RTCP/packet/RembPacket.hpp"
+#include "RTC/RTCP/packet/RembPacket.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
@@ -8,6 +8,7 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 {
 	struct TestRemb
 	{
+		const uint32_t senderSsrc;
 		const int64_t bitrate;
 		const std::vector<uint32_t> ssrcs;
 	};
@@ -16,9 +17,12 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	{
 	public:
 		void OnRembGeneratorSendPacket(
-		  RTC::BWE::RembGenerator* /*rembGenerator*/, const RTC::NEW_RTCP::RembPacket* packet) override
+		  RTC::BWE::RembGenerator* /*rembGenerator*/, const RTC::RTCP::RembPacket* packet) override
 		{
-			this->rembs.push_back(TestRemb{ .bitrate = packet->GetBitrate(), .ssrcs = packet->GetSsrcs() });
+			this->rembs.push_back(
+			  TestRemb{ .senderSsrc = packet->GetSenderSsrc(),
+				          .bitrate    = packet->GetBitrate(),
+				          .ssrcs      = packet->GetSsrcs() });
 		}
 
 	public:
@@ -33,7 +37,8 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	SECTION("the first estimation is announced right away")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		rembGenerator.OnReceiveBitrateChanged(BaseTimeMs, ssrcs, 12345);
 
@@ -42,10 +47,24 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 		REQUIRE(listener.rembs.at(0).ssrcs == ssrcs);
 	}
 
+	SECTION("the REMB carries the sender SSRC given in the options")
+	{
+		TestRembGeneratorListener listener;
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener),
+		  RTC::BWE::RembGenerator::RembGeneratorOptions{ .rtcpSenderSsrc = 1234 });
+
+		rembGenerator.OnReceiveBitrateChanged(BaseTimeMs, ssrcs, 12345);
+
+		REQUIRE(listener.rembs.size() == 1);
+		REQUIRE(listener.rembs.at(0).senderSsrc == 1234);
+	}
+
 	SECTION("an estimation that barely drops waits")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		rembGenerator.OnReceiveBitrateChanged(BaseTimeMs, ssrcs, 12346);
 
@@ -66,7 +85,8 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	SECTION("an estimation that drops a lot is announced right away")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		rembGenerator.OnReceiveBitrateChanged(BaseTimeMs, ssrcs, 2345);
 		rembGenerator.OnReceiveBitrateChanged(BaseTimeMs + 1, ssrcs, 1234);
@@ -79,7 +99,8 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	SECTION("an estimation that rises waits")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		rembGenerator.OnReceiveBitrateChanged(BaseTimeMs, ssrcs, 1234);
 		rembGenerator.OnReceiveBitrateChanged(BaseTimeMs + 100, ssrcs, 2345);
@@ -95,7 +116,8 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	SECTION("setting a cap announces it")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		rembGenerator.SetMaxIncomingBitrate(BaseTimeMs, 1234);
 
@@ -108,7 +130,8 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	SECTION("a cap that cannot be expressed is ignored")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		rembGenerator.SetMaxIncomingBitrate(BaseTimeMs, 1000);
 
@@ -131,7 +154,8 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	SECTION("the lowest of the cap and the estimation is announced")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		rembGenerator.OnReceiveBitrateChanged(BaseTimeMs, ssrcs, 1234);
 
@@ -152,7 +176,8 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	SECTION("a cap that needs no telling is not told at the next packet either")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		rembGenerator.OnReceiveBitrateChanged(BaseTimeMs, ssrcs, 1234);
 
@@ -173,7 +198,8 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	SECTION("a cap is not announced while the estimation keeps going out")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		rembGenerator.SetMaxIncomingBitrate(BaseTimeMs, 1000);
 
@@ -200,7 +226,8 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	SECTION("removing the cap is announced four times")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		rembGenerator.SetMaxIncomingBitrate(BaseTimeMs, 1000);
 
@@ -242,7 +269,8 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	SECTION("a cap in force is announced again")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		rembGenerator.SetMaxIncomingBitrate(BaseTimeMs, 1000);
 
@@ -261,7 +289,8 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	SECTION("a cap set again stops announcing that it was removed")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		rembGenerator.SetMaxIncomingBitrate(BaseTimeMs, 1000);
 		rembGenerator.SetMaxIncomingBitrate(BaseTimeMs + 1, std::nullopt);
@@ -286,14 +315,15 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	SECTION("more ssrcs than the packet can count are dropped")
 	{
 		TestRembGeneratorListener listener;
-		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+		RTC::BWE::RembGenerator rembGenerator(
+		  std::addressof(listener), RTC::BWE::RembGenerator::RembGeneratorOptions{});
 
 		// One more than fits, since the field that counts them is a single byte.
 		std::vector<uint32_t> manySsrcs;
 
-		manySsrcs.reserve(RTC::NEW_RTCP::RembPacket::MaxSsrcs + 1);
+		manySsrcs.reserve(RTC::RTCP::RembPacket::MaxSsrcs + 1);
 
-		for (uint32_t ssrc{ 1 }; ssrc <= RTC::NEW_RTCP::RembPacket::MaxSsrcs + 1; ++ssrc)
+		for (uint32_t ssrc{ 1 }; ssrc <= RTC::RTCP::RembPacket::MaxSsrcs + 1; ++ssrc)
 		{
 			manySsrcs.push_back(ssrc);
 		}
@@ -301,6 +331,6 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 		rembGenerator.OnReceiveBitrateChanged(BaseTimeMs, manySsrcs, 12345);
 
 		REQUIRE(listener.rembs.size() == 1);
-		REQUIRE(listener.rembs.at(0).ssrcs.size() == RTC::NEW_RTCP::RembPacket::MaxSsrcs);
+		REQUIRE(listener.rembs.at(0).ssrcs.size() == RTC::RTCP::RembPacket::MaxSsrcs);
 	}
 }

@@ -33,12 +33,12 @@ namespace RTC
 		/* Instance methods. */
 
 		TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGenerator(
-		  Listener* listener, SharedInterface* shared, size_t maxRtcpPacketLen)
-		  : maxRtcpPacketLen(maxRtcpPacketLen),
-		    listener(listener),
+		  Listener* listener, SharedInterface* shared, TransportWideCcFeedbackGeneratorOptions options)
+		  : listener(listener),
 		    shared(shared),
+		    options(options),
 		    sendPeriodicTimer(shared->CreateTimer(this, "transport-wide-cc-feedback-generator-send")),
-		    packetBuffer(std::make_unique<uint8_t[]>(maxRtcpPacketLen)),
+		    packetBuffer(std::make_unique<uint8_t[]>(options.maxRtcpPacketLen)),
 		    incomingDataCounter(shared, /*ignorePaddingOnlyPackets*/ false, IncomingBitrateWindowMs),
 		    sendIntervalMs(DefaultSendIntervalMs)
 		{
@@ -272,9 +272,10 @@ namespace RTC
 			// is about to go out, since who has sent last may still change while this
 			// one is being filled.
 			this->packet.reset(
-			  RTC::NEW_RTCP::TransportWideCcPacket::Factory(
-			    this->packetBuffer.get(), this->maxRtcpPacketLen, /*includeDeltas*/ true));
+			  RTC::RTCP::TransportWideCcPacket::Factory(
+			    this->packetBuffer.get(), this->options.maxRtcpPacketLen, /*includeDeltas*/ true));
 
+			this->packet->SetSenderSsrc(this->options.rtcpSenderSsrc);
 			this->packet->SetFeedbackPacketCount(feedbackPacketCount);
 		}
 

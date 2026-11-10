@@ -3,16 +3,15 @@
 
 #include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
-#include "RTC/NEW_RTCP/packet/Packet.hpp"
-#include "RTC/NEW_RTCP/packet/ReceiverReportPacket.hpp"
-#include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
-#include "RTC/NEW_RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/NackGenerator.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
-#include "RTC/RTCP/SenderReport.hpp"
-#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
+#include "RTC/RTCP/packet/ReceiverReportPacket.hpp"
+#include "RTC/RTCP/packet/SenderReportPacket.hpp"
+#include "RTC/RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RateCalculator.hpp"
+#include "Utils.hpp"
 #include <vector>
 
 namespace RTC
@@ -45,7 +44,7 @@ namespace RTC
 			{
 			public:
 				virtual void OnRtpStreamSendRtcpPacket(
-				  RTP::RtpStreamRecv* rtpStream, const RTC::NEW_RTCP::Packet* packet) = 0;
+				  RTP::RtpStreamRecv* rtpStream, const RTC::RTCP::Packet* packet) = 0;
 				/**
 				 * Obtains the worst remote fraction lost of all the RtpStreamSend
 				 * streams consuming this RtpStreamRecv.
@@ -185,20 +184,18 @@ namespace RTC
 
 			bool ReceiveRtxPacket(RTP::Packet* packet, int64_t receivedAtUs);
 
-			RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
-
-			RTC::RTCP::ReceiverReport* GetRtxRtcpReceiverReport();
-
-			void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
-
-			void ReceiveRtxRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
-
 			/**
-			 * @returns Round trip time just measured (ms), or no value if this report
-			 *   refers to no Receiver Reference Time to measure it against.
+			 * Whether this stream has something to tell in a report block, which is
+			 * what `AddRtcpReportBlock()` requires.
 			 */
-			std::optional<float> ReceiveRtcpXrDelaySinceLastRr(
-			  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs);
+			[[nodiscard]] bool HasRtcpReportBlock(int64_t nowUs) const
+			{
+				// Nothing to report about if no RTP packet has been received yet, or if
+				// none has been received for too long.
+				return this->lastPacketReceivedAtUs.has_value() &&
+				       Utils::Time::TimeUsToMs(nowUs - this->lastPacketReceivedAtUs.value()) <
+				         RTC::Consts::RtcpReportBlockTimeoutMs;
+			}
 
 			/**
 			 * Add a report block about this stream to the given Receiver Report
@@ -206,11 +203,21 @@ namespace RTC
 			 *
 			 * @returns Whether it was added, which does not happen when this stream
 			 *   has received no RTP packet yet or none for
-			 *   `RTP::RtpStream::ReportBlockTimeoutMs`, when the packet already has
+			 *   `RTC::Consts::RtcpReportBlockTimeoutMs`, when the packet already has
 			 *   the most report blocks it can count or when it does not fit. In all
 			 *   cases neither the packet nor this stream are touched.
 			 */
-			[[nodiscard]] bool AddRtcpReportBlock(RTC::NEW_RTCP::ReceiverReportPacket* receiverReportPacket);
+			[[nodiscard]] bool AddRtcpReportBlock(
+			  RTC::RTCP::ReceiverReportPacket* receiverReportPacket, int64_t nowUs);
+
+			/**
+			 * Whether the RTX stream of this stream has something to tell in a report
+			 * block, which is what `AddRtxRtcpReportBlock()` requires.
+			 */
+			[[nodiscard]] bool HasRtxRtcpReportBlock(int64_t nowUs) const
+			{
+				return HasRtx() && this->rtxStream->HasRtcpReportBlock(nowUs);
+			}
 
 			/**
 			 * Add a report block about the RTX stream of this stream to the given
@@ -218,24 +225,31 @@ namespace RTC
 			 *
 			 * @returns Whether it was added, which does not happen when this stream
 			 *   has no RTX stream, when the RTX stream has received no RTP packet yet
-			 *   or none for `RTP::RtpStream::ReportBlockTimeoutMs`, when the packet
+			 *   or none for `RTC::Consts::RtcpReportBlockTimeoutMs`, when the packet
 			 *   already has the most report blocks it can count or when it does not
 			 *   fit. In all cases neither the packet nor the RTX stream are touched.
 			 */
-			[[nodiscard]] bool AddRtxRtcpReportBlock(RTC::NEW_RTCP::ReceiverReportPacket* receiverReportPacket);
+			[[nodiscard]] bool AddRtxRtcpReportBlock(
+			  RTC::RTCP::ReceiverReportPacket* receiverReportPacket, int64_t nowUs);
 
 			void ReceiveRtcpSenderReportPacket(
-			  const RTC::NEW_RTCP::SenderReportPacket* senderReportPacket, int64_t receivedAtUs);
+			  const RTC::RTCP::SenderReportPacket* senderReportPacket, int64_t receivedAtUs);
 
 			void ReceiveRtxRtcpSenderReportPacket(
-			  const RTC::NEW_RTCP::SenderReportPacket* senderReportPacket, int64_t receivedAtUs);
+			  const RTC::RTCP::SenderReportPacket* senderReportPacket, int64_t receivedAtUs);
 
 			/**
 			 * @returns Round trip time just measured (ms), or no value if this DLRR
 			 *   sub-block refers to no Receiver Reference Time to measure it against.
 			 */
 			std::optional<float> ReceiveRtcpDlrrSubBlock(
-			  const RTC::NEW_RTCP::DlrrExtendedReport::SubBlock& subBlock, int64_t receivedAtUs);
+			  const RTC::RTCP::DlrrExtendedReport::SubBlock& subBlock, int64_t receivedAtUs);
+
+			/**
+			 * Tell this stream the round trip time of the Transport, which is what it
+			 * waits for a requested retransmission.
+			 */
+			void UpdateRttMs(int64_t rttMs);
 
 			/**
 			 * Local time at which the last RTCP Sender Report arrived.

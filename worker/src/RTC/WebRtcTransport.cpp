@@ -788,7 +788,7 @@ namespace RTC
 		}
 
 		const uint8_t* data = packet->GetBuffer();
-		auto len            = packet->GetLength();
+		size_t len          = packet->GetLength();
 
 		if (!this->srtpSendSession->EncryptRtp(std::addressof(data), std::addressof(len)))
 		{
@@ -806,38 +806,7 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	void WebRtcTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
-	{
-		MS_TRACE();
-
-		if (!IsConnected())
-		{
-			return;
-		}
-
-		const uint8_t* data = packet->GetData();
-		auto len            = packet->GetSize();
-
-		// Ensure there is sending SRTP session.
-		if (!this->srtpSendSession)
-		{
-			MS_WARN_DEV("ignoring RTCP packet due to non sending SRTP session");
-
-			return;
-		}
-
-		if (!this->srtpSendSession->EncryptRtcp(std::addressof(data), std::addressof(len)))
-		{
-			return;
-		}
-
-		this->iceServer->GetSelectedTuple()->Send(data, len);
-
-		// Increase send transmission.
-		RTC::Transport::DataSent(len);
-	}
-
-	void WebRtcTransport::SendRtcpPacket(const RTC::NEW_RTCP::Packet* packet)
+	void WebRtcTransport::SendRtcpPacket(const RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -847,7 +816,7 @@ namespace RTC
 		}
 
 		const uint8_t* data = packet->GetBuffer();
-		auto len            = packet->GetLength();
+		size_t len          = packet->GetLength();
 
 		// Ensure there is sending SRTP session.
 		if (!this->srtpSendSession)
@@ -868,7 +837,7 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	void WebRtcTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
+	void WebRtcTransport::SendRtcpCompoundPacket(const RTC::RTCP::CompoundPacket* compoundPacket)
 	{
 		MS_TRACE();
 
@@ -877,10 +846,8 @@ namespace RTC
 			return;
 		}
 
-		packet->Serialize(RTC::RTCP::SerializationBuffer);
-
-		const uint8_t* data = packet->GetData();
-		auto len            = packet->GetSize();
+		const uint8_t* data = compoundPacket->GetBuffer();
+		size_t len          = compoundPacket->GetLength();
 
 		// Ensure there is sending SRTP session.
 		if (!this->srtpSendSession)
@@ -1156,9 +1123,10 @@ namespace RTC
 			return;
 		}
 
-		auto* packet = RTC::RTCP::Packet::Parse(data, len);
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Parse(
+			data, len) };
 
-		if (!packet)
+		if (!compoundPacket)
 		{
 			MS_WARN_TAG(rtcp, "received data is not a valid RTCP compound or single packet");
 
@@ -1166,7 +1134,7 @@ namespace RTC
 		}
 
 		// Pass the packet to the parent transport.
-		RTC::Transport::ReceiveRtcpPacket(packet, receivedAtUs);
+		RTC::Transport::ReceiveRtcpPacket(compoundPacket.get(), receivedAtUs);
 	}
 
 	void WebRtcTransport::OnUdpSocketPacketReceived(
@@ -1292,7 +1260,6 @@ namespace RTC
 
 		MS_DEBUG_TAG(ice, "ICE selected tuple");
 
-		// Notify the Node WebRtcTransport.
 		auto tuple = this->iceServer->GetSelectedTuple()->FillBuffer(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder());
 
@@ -1316,7 +1283,6 @@ namespace RTC
 
 		MS_DEBUG_TAG(ice, "ICE connected");
 
-		// Notify the Node WebRtcTransport.
 		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::IceState::CONNECTED);
@@ -1343,7 +1309,6 @@ namespace RTC
 
 		MS_DEBUG_TAG(ice, "ICE completed");
 
-		// Notify the Node WebRtcTransport.
 		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::IceState::COMPLETED);
@@ -1370,7 +1335,6 @@ namespace RTC
 
 		MS_DEBUG_TAG(ice, "ICE disconnected");
 
-		// Notify the Node WebRtcTransport.
 		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::IceState::DISCONNECTED);
@@ -1394,7 +1358,6 @@ namespace RTC
 
 		MS_DEBUG_TAG(dtls, "DTLS connecting");
 
-		// Notify the Node WebRtcTransport.
 		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::DtlsState::CONNECTING);
@@ -1439,7 +1402,6 @@ namespace RTC
 			this->srtpRecvSession = std::make_unique<RTC::SrtpSession>(
 			  RTC::SrtpSession::Type::INBOUND, srtpCryptoSuite, srtpRemoteKey, srtpRemoteKeyLen);
 
-			// Notify the Node WebRtcTransport.
 			auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotificationDirect(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::WebRtcTransport::DtlsState::CONNECTED,
@@ -1468,7 +1430,6 @@ namespace RTC
 
 		MS_WARN_TAG(dtls, "DTLS failed");
 
-		// Notify the Node WebRtcTransport.
 		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::DtlsState::FAILED);
@@ -1486,7 +1447,6 @@ namespace RTC
 
 		MS_WARN_TAG(dtls, "DTLS remotely closed");
 
-		// Notify the Node WebRtcTransport.
 		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::DtlsState::CLOSED);

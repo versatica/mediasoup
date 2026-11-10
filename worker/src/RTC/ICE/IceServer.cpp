@@ -553,15 +553,22 @@ namespace RTC
 
 			if (response->GetClass() == RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE)
 			{
-				MS_DEBUG_DEV("ignoring received STUN successs response", responseType.c_str());
+				MS_DEBUG_DEV("ignoring received STUN success response");
 			}
 			else
 			{
+// For debugging purposes.
+#if MS_LOG_DEV_LEVEL == 3
 				static thread_local std::string_view errorReasonPhrase;
 
-				response->GetErrorCode(errorReasonPhrase);
+				const uint16_t errorCode = response->GetErrorCode(errorReasonPhrase);
 
-				MS_DEBUG_DEV("ignoring received STUN error response [errorCode:%" PRIu16 ", reasonPhrase:\"%.*s\""], static_cast<int>(errorReasonPhrase.size()), errorReasonPhrase.data());
+				MS_DEBUG_DEV(
+				  "ignoring received STUN error response [errorCode:%" PRIu16 ", reasonPhrase:\"%.*s\"]",
+				  errorCode,
+				  static_cast<int>(errorReasonPhrase.size()),
+				  errorReasonPhrase.data());
+#endif
 			}
 
 			// Nothig else to do. We just ignore STUN responses because we do not

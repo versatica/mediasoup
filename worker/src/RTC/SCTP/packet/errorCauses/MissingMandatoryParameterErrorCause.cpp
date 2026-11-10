@@ -132,10 +132,10 @@ namespace RTC
 
 				MS_DUMP_CLEAN(
 				  indentation,
-				  "  - idx: %" PRIu32 ", parameter type: %s (%" PRIu16 ")",
+				  "  - idx: %" PRIu32 ", parameter type: %" PRIu16 " (%s)",
 				  idx,
-				  Parameter::ParameterTypeToString(parameterType).c_str(),
-				  static_cast<uint16_t>(parameterType));
+				  static_cast<uint16_t>(parameterType),
+				  Parameter::ParameterTypeToString(parameterType).c_str());
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::MissingMandatoryParameterErrorCause>");
 		}

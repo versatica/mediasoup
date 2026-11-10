@@ -1,14 +1,11 @@
 #include "common.hpp"
-#include "RTC/NEW_RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
-#include "RTC/NEW_RTCP/packet/AnyReportPacket.hpp"
-#include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
-#include "RTC/NEW_RTCP/packet/ExtendedReport.hpp"
-#include "RTC/NEW_RTCP/packet/NackPacket.hpp"
-#include "RTC/NEW_RTCP/packet/Packet.hpp"
-#include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
-#include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
-#include "RTC/NEW_RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
-#include "RTC/NEW_RTCP/packet/extendedReports/RrtExtendedReport.hpp"
+#include "RTC/RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
+#include "RTC/RTCP/packet/AnyReportPacket.hpp"
+#include "RTC/RTCP/packet/CompoundPacket.hpp"
+#include "RTC/RTCP/packet/NackPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
+#include "RTC/RTCP/packet/SdesPacket.hpp"
+#include "RTC/RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/RTP/Codecs/AV1.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/Codecs/VP8.hpp"
@@ -17,10 +14,12 @@
 #include "RTC/RTP/PacketUtils.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamSend.hpp"
-#include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp"
+#include "test/include/RTC/RTCP/rtcpCommon.hpp"
+#include "test/include/RTC/RTP/rtpCommon.hpp"
 #include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcpy()
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -33,9 +32,14 @@
 
 SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 {
+	rtpCommon::ResetBuffers();
+
 	constexpr std::string_view RetransmissionTimerLabel{ "rtp-stream-send-retransmissions" };
 	// Id the AV1 section below gives to the Dependency Descriptor extension.
 	constexpr uint8_t DependencyDescriptorId{ 12 };
+	// Length of the slice of `rtpCommon::FactoryBuffer` each RTP packet is built
+	// on, so that the packets alive at once in a section do not overlap.
+	constexpr size_t RtpPacketBufferLength{ 1500 };
 
 	class TestRtpStreamListener : public RTC::RTP::RtpStreamSend::Listener
 	{
@@ -71,10 +75,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		std::vector<std::vector<uint8_t>> retransmittedDependencyDescriptors;
 	};
 
-	const auto createRtpPacket = [](uint8_t* buffer, size_t len, uint16_t seq, uint32_t timestamp)
-	  -> std::unique_ptr<RTC::RTP::Packet>
+	// Build a RTP packet with no payload on the given slice of
+	// `rtpCommon::FactoryBuffer`.
+	const auto createRtpPacket =
+	  [](size_t slice, uint16_t seq, uint32_t timestamp) -> std::unique_ptr<RTC::RTP::Packet>
 	{
-		auto* const packet = RTC::RTP::Packet::Parse(buffer, len);
+		REQUIRE((slice + 1) * RtpPacketBufferLength <= sizeof(rtpCommon::FactoryBuffer));
+
+		std::unique_ptr<RTC::RTP::Packet> packet(
+		  RTC::RTP::Packet::Factory(
+		    rtpCommon::FactoryBuffer + (slice * RtpPacketBufferLength), RtpPacketBufferLength));
 
 		REQUIRE(packet);
 
@@ -82,7 +92,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);
 
-		return std::unique_ptr<RTC::RTP::Packet>(packet);
+		return packet;
 	};
 
 	const auto sendRtpPacket =
@@ -217,43 +227,24 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		return true;
 	};
 
-	// clang-format off
-	uint8_t rtpBuffer1[] =
-	{
-		0b10000000, 0b01111011, 0b01010010, 0b00001110,
-		0b01011011, 0b01101011, 0b11001010, 0b10110101,
-		0, 0, 0, 2
-	};
-	// clang-format on
-
-	uint8_t rtpBuffer2[1500];
-	uint8_t rtpBuffer3[1500];
-	uint8_t rtpBuffer4[1500];
-	uint8_t rtpBuffer5[1500];
-
-	std::memcpy(rtpBuffer2, rtpBuffer1, sizeof(rtpBuffer1));
-	std::memcpy(rtpBuffer3, rtpBuffer1, sizeof(rtpBuffer1));
-	std::memcpy(rtpBuffer4, rtpBuffer1, sizeof(rtpBuffer1));
-	std::memcpy(rtpBuffer5, rtpBuffer1, sizeof(rtpBuffer1));
-
 	SECTION("receive NACK and get retransmitted packets")
 	{
 		// packet1 [seq:21006, timestamp:1533790901]
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
+		const auto packet1(createRtpPacket(0, 21006, 1533790901));
 
 		// packet2 [seq:21007, timestamp:1533790901]
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
+		const auto packet2(createRtpPacket(1, 21007, 1533790901));
 
 		packet2->SetMarker(true);
 
 		// packet3 [seq:21008, timestamp:1533793871]
-		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533793871));
+		const auto packet3(createRtpPacket(2, 21008, 1533793871));
 
 		// packet4 [seq:21009, timestamp:1533793871]
-		const auto packet4(createRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533793871));
+		const auto packet4(createRtpPacket(3, 21009, 1533793871));
 
 		// packet5 [seq:21010, timestamp:1533796931]
-		const auto packet5(createRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533796931));
+		const auto packet5(createRtpPacket(4, 21010, 1533796931));
 
 		packet5->SetMarker(true);
 
@@ -310,9 +301,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet5.get());
 
 		// Create a NACK item that request for all the packets.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params.ssrc);
 		nackPacket->AddItem(21006, 0b0000000000001111);
@@ -353,19 +343,19 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	SECTION("receive NACK and get zero retransmitted packets if useNack is not set")
 	{
 		// packet1 [seq:21006, timestamp:1533790901]
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
+		const auto packet1(createRtpPacket(0, 21006, 1533790901));
 
 		// packet2 [seq:21007, timestamp:1533790901]
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
+		const auto packet2(createRtpPacket(1, 21007, 1533790901));
 
 		// packet3 [seq:21008, timestamp:1533793871]
-		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533793871));
+		const auto packet3(createRtpPacket(2, 21008, 1533793871));
 
 		// packet4 [seq:21009, timestamp:1533793871]
-		const auto packet4(createRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533793871));
+		const auto packet4(createRtpPacket(3, 21009, 1533793871));
 
 		// packet5 [seq:21010, timestamp:1533796931]
-		const auto packet5(createRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533796931));
+		const auto packet5(createRtpPacket(4, 21010, 1533796931));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -420,9 +410,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet5.get());
 
 		// Create a NACK item that request for all the packets.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params.ssrc);
 		nackPacket->AddItem(21006, 0b0000000000001111);
@@ -443,19 +432,19 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	SECTION("receive NACK and get zero retransmitted packets for audio")
 	{
 		// packet1 [seq:21006, timestamp:1533790901]
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
+		const auto packet1(createRtpPacket(0, 21006, 1533790901));
 
 		// packet2 [seq:21007, timestamp:1533790901]
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
+		const auto packet2(createRtpPacket(1, 21007, 1533790901));
 
 		// packet3 [seq:21008, timestamp:1533793871]
-		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533793871));
+		const auto packet3(createRtpPacket(2, 21008, 1533793871));
 
 		// packet4 [seq:21009, timestamp:1533793871]
-		const auto packet4(createRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533793871));
+		const auto packet4(createRtpPacket(3, 21009, 1533793871));
 
 		// packet5 [seq:21010, timestamp:1533796931]
-		const auto packet5(createRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533796931));
+		const auto packet5(createRtpPacket(4, 21010, 1533796931));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -510,9 +499,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet5.get());
 
 		// Create a NACK item that request for all the packets.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params.ssrc);
 		nackPacket->AddItem(21006, 0b0000000000001111);
@@ -530,10 +518,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	SECTION("receive NACK in different RtpStreamSend instances and get retransmitted packets")
 	{
 		// packet1 [seq:21006, timestamp:1533790901]
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
+		const auto packet1(createRtpPacket(0, 21006, 1533790901));
 
 		// packet2 [seq:21007, timestamp:1533790901]
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
+		const auto packet2(createRtpPacket(1, 21007, 1533790901));
 
 		// Create two RtpStreamSend instances.
 		TestRtpStreamListener testRtpStreamListener1;
@@ -575,9 +563,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet2.get());
 
 		// Create a NACK item that request for all the packets.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params1.ssrc);
 		nackPacket->AddItem(21006, 0b0000000000000001);
@@ -616,41 +603,39 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("retransmitted packets are correctly encoded [VP8]")
 	{
+		// VP8 payload descriptors with pictureId 1, 2 and 3.
 		// clang-format off
-		uint8_t rtpBuffer1[] =
+		const uint8_t payload1[] =
 		{
-			0x80, 0x7b, 0x52, 0x0e,
-			0x5b, 0x6b, 0xca, 0xb5,
-			0x00, 0x00, 0x00, 0x02,
 			0x80, 0xe0, 0x80, 0x01,
 			0xe8, 0x40, 0x7a, 0xd8
 		};
-		uint8_t rtpBuffer2[] =
+		const uint8_t payload2[] =
 		{
-			0x80, 0x7b, 0x52, 0x0e,
-			0x5b, 0x6b, 0xca, 0xb5,
-			0x00, 0x00, 0x00, 0x02,
 			0x80, 0xe0, 0x80, 0x02,
 			0xe9, 0x40, 0x7a, 0xd8
 		};
-		uint8_t rtpBuffer3[] =
+		const uint8_t payload3[] =
 		{
-			0x80, 0x7b, 0x52, 0x0e,
-			0x5b, 0x6b, 0xca, 0xb5,
-			0x00, 0x00, 0x00, 0x02,
 			0x80, 0xe0, 0x80, 0x03,
 			0xea, 0x40, 0x7a, 0xd8
 		};
 		// clang-format on
 
 		// packet1 [seq:1, timestamp:1]
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 1, 1));
+		const auto packet1(createRtpPacket(0, 1, 1));
+
+		packet1->SetPayload(payload1, sizeof(payload1));
 
 		// packet2 [seq:2, timestamp:1]
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 2, 1));
+		const auto packet2(createRtpPacket(1, 2, 1));
+
+		packet2->SetPayload(payload2, sizeof(payload2));
 
 		// packet3 [seq:3, timestamp:1]
-		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 3, 1));
+		const auto packet3(createRtpPacket(2, 3, 1));
+
+		packet3->SetPayload(payload3, sizeof(payload3));
 
 		// Create two RtpStreamSend instances.
 		TestRtpStreamListener testRtpStreamListener1;
@@ -773,9 +758,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet3.get());
 
 		// Create a NACK item that requests the third packet.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params1.ssrc);
 		nackPacket->AddItem(3, 0b0000000000000000);
@@ -864,19 +848,12 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		 *	</DependencyDescriptor>
 		 */
 		// clang-format off
-		uint8_t rtpBuffer1[] =
+		uint8_t dependencyDescriptorValue1[] =
 		{
-			0x90, 0x2D, 0x56, 0xA5,
-			0x8D, 0x76, 0xF5, 0x02,
-			0xDD, 0xD5, 0x4C, 0xB9,
-			0xBE, 0xDE, 0x00, 0x07,
-			0x22, 0x89, 0xDF, 0xFE,
-			0x31, 0x00, 0x07, 0x40,
-			0x31, 0xCE, 0x80, 0x00,
-			0x01, 0x80, 0x01, 0x1E,
-			0xA8, 0x51, 0x41, 0x01,
-			0x0C, 0x13, 0xFC, 0x0B,
-			0x3C, 0x00, 0x00, 0x00
+			0x80, 0x00, 0x01, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C
 		};
 
 		/*
@@ -890,16 +867,9 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		 * 	 spatialLayer: 0
 		 * 	</DependencyDescriptor>
 		 */
-		uint8_t rtpBuffer2[] =
+		uint8_t dependencyDescriptorValue2[] =
 		{
-			0x90, 0xAD, 0x56, 0xA9,
-			0x8D, 0x77, 0x02, 0xB8,
-			0xDD, 0xD5, 0x4C, 0xB9,
-			0xBE, 0xDE, 0x00, 0x04,
-			0x22, 0x8A, 0x07, 0xAB,
-			0x31, 0x00, 0x18, 0x40,
-			0x31, 0xC2, 0xC2, 0x00,
-			0x02, 0x00, 0x00, 0x00
+			0xC2, 0x00, 0x02
 		};
 
 		/*
@@ -907,43 +877,57 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		 * 	 startOfFrame: false
 		 * 	 endOfFrame: true
 		 * 	 frameDependencyTemplateId: 0
-		 * 	 frameNumber: 1
+		 * 	 frameNumber: 3
 		 * 	 templateId: 0
 		 * 	 spatialLayer: 0
 		 * 	 temporalLayer: 0
 		 * 	</DependencyDescriptor>
 		 */
-		uint8_t rtpBuffer3[] =
+		uint8_t dependencyDescriptorValue3[] =
 		{
-			0x90, 0xAD, 0x56, 0xA8,
-			0x8D, 0x76, 0xF5, 0x02,
-			0xDD, 0xD5, 0x4C, 0xB9,
-			0xBE, 0xDE, 0x00, 0x04,
-			0x22, 0x8A, 0x03, 0xE5,
-			0xD0, 0x00, 0x31, 0x00,
-			0x17, 0xC2, 0x40, 0x00,
-			0x03, 0x40, 0x31, 0x00
+			0x40, 0x00, 0x03
 		};
 		// clang-format on
 
 		RTC::RTP::HeaderExtensionIds headerExtensionIds{};
 
-		headerExtensionIds.dependencyDescriptor = 12;
+		headerExtensionIds.dependencyDescriptor = DependencyDescriptorId;
+
+		// Write the given Dependency Descriptor into the packet as its only
+		// extension.
+		const auto setDependencyDescriptor =
+		  [&headerExtensionIds](RTC::RTP::Packet* packet, uint8_t* value, size_t len) -> void
+		{
+			const std::vector<RTC::RTP::Packet::Extension> extensions{
+				{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
+				 DependencyDescriptorId, static_cast<uint8_t>(len),
+				 value }
+			};
+
+			REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
+
+			packet->AssignExtensionIds(headerExtensionIds);
+		};
 
 		// packet1 [seq:1, timestamp:1]
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 1, 1));
+		const auto packet1(createRtpPacket(0, 1, 1));
 
-		packet1->AssignExtensionIds(headerExtensionIds);
+		setDependencyDescriptor(
+		  packet1.get(), dependencyDescriptorValue1, sizeof(dependencyDescriptorValue1));
 
 		// packet2 [seq:2, timestamp:1]
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 2, 1));
+		const auto packet2(createRtpPacket(1, 2, 1));
 
-		packet2->AssignExtensionIds(headerExtensionIds);
+		packet2->SetMarker(true);
+		setDependencyDescriptor(
+		  packet2.get(), dependencyDescriptorValue2, sizeof(dependencyDescriptorValue2));
 
 		// packet3 [seq:3, timestamp:1]
-		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 3, 1));
+		const auto packet3(createRtpPacket(2, 3, 1));
 
-		packet3->AssignExtensionIds(headerExtensionIds);
+		packet3->SetMarker(true);
+		setDependencyDescriptor(
+		  packet3.get(), dependencyDescriptorValue3, sizeof(dependencyDescriptorValue3));
 
 		// Create two RtpStreamSend instances.
 		TestRtpStreamListener testRtpStreamListener1;
@@ -1080,9 +1064,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		}
 
 		// Create a NACK item that requests the third packet.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params1.ssrc);
 		nackPacket->AddItem(3, 0b0000000000000000);
@@ -1136,8 +1119,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  RTC::RTP::RtpStreamSend::MaxRetransmissionDelayForVideoMs * clockRate / 1000;
 		const uint32_t secondTs = firstTs + diffTs;
 
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, firstTs));
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, secondTs - 1));
+		const auto packet1(createRtpPacket(0, 21006, firstTs));
+		const auto packet2(createRtpPacket(1, 21007, secondTs - 1));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -1167,9 +1150,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet2.get());
 
 		// Create a NACK item that request for all the packets.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params1.ssrc);
 		nackPacket->AddItem(21006, 0b0000000000000001);
@@ -1203,9 +1185,9 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Send a third packet so it will clean old packets from the buffer.
 		const uint32_t thirdTs = firstTs + (2 * diffTs);
 
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, firstTs));
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, secondTs));
-		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, thirdTs));
+		const auto packet1(createRtpPacket(0, 21006, firstTs));
+		const auto packet2(createRtpPacket(1, 21007, secondTs));
+		const auto packet3(createRtpPacket(2, 21008, thirdTs));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -1240,9 +1222,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet3.get());
 
 		// Create a NACK item that requests for all packets.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params1.ssrc);
 		nackPacket->AddItem(21006, 0b0000000000000001);
@@ -1269,16 +1250,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	{
 		// This scenario reproduce the "too bad sequence number" and "bad sequence
 		// number" scenarios in RtpStream::UpdateSeq().
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 50001, 1000001));
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 50002, 1000002));
+		const auto packet1(createRtpPacket(0, 50001, 1000001));
+		const auto packet2(createRtpPacket(1, 50002, 1000002));
 
 		// Third packet has bad sequence number (its seq is more than MaxDropout=3000
 		// older than current max seq) and will be dropped.
-		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 40003, 1000003));
+		const auto packet3(createRtpPacket(2, 40003, 1000003));
 
 		// Forth packet has seq=badSeq+1 so will be accepted and will trigger a
 		// stream reset.
-		const auto packet4(createRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 40004, 1000004));
+		const auto packet4(createRtpPacket(3, 40004, 1000004));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -1317,9 +1298,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet4.get());
 
 		// Create a NACK item that requests for packets 1 and 2.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket2(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket2(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket2->SetMediaSsrc(params1.ssrc);
 		nackPacket2->AddItem(50001, 0b0000000000000001);
@@ -1332,8 +1312,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("packets stored too long ago don't get retransmitted even if no newer packet arrived")
 	{
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
+		const auto packet1(createRtpPacket(0, 21006, 1533790901));
+		const auto packet2(createRtpPacket(1, 21007, 1533790901));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -1370,9 +1350,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		nowUs += RTC::RTP::RtpStreamSend::MaxRetransmissionDelayForVideoMs * 1000;
 
 		// Create a NACK item that requests for both packets.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params.ssrc);
 		nackPacket->AddItem(21006, 0b0000000000000001);
@@ -1388,10 +1367,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("pending retransmissions not retransmitted don't count towards the limit per iteration")
 	{
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
+		const auto packet1(createRtpPacket(0, 21006, 1533790901));
 		// No packet with seq 21007 is ever stored.
-		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533790901));
-		const auto packet4(createRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533790901));
+		const auto packet3(createRtpPacket(2, 21008, 1533790901));
+		const auto packet4(createRtpPacket(3, 21009, 1533790901));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -1425,9 +1404,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet4.get());
 
 		// Create a NACK item that requests for seqs 21006 to 21009.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params.ssrc);
 		nackPacket->AddItem(21006, 0b0000000000000111);
@@ -1450,10 +1428,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("packet requested again while pending is not queued twice")
 	{
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
-		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533790901));
-		const auto packet4(createRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533790901));
+		const auto packet1(createRtpPacket(0, 21006, 1533790901));
+		const auto packet2(createRtpPacket(1, 21007, 1533790901));
+		const auto packet3(createRtpPacket(2, 21008, 1533790901));
+		const auto packet4(createRtpPacket(3, 21009, 1533790901));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -1492,8 +1470,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet4.get());
 
 		// Create a NACK item that requests for all the packets.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket1(
-		  RTC::NEW_RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, 1000));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket1(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, 1000));
 
 		nackPacket1->SetMediaSsrc(params.ssrc);
 		nackPacket1->AddItem(21006, 0b0000000000000111);
@@ -1505,8 +1483,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 2);
 
 		// Create a NACK item that requests for the third packet, still pending.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket2(
-		  RTC::NEW_RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer + 1000, 1000));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket2(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer + 1000, 1000));
 
 		nackPacket2->SetMediaSsrc(params.ssrc);
 		nackPacket2->AddItem(21008, 0b0000000000000000);
@@ -1532,9 +1510,9 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("pausing the stream discards pending retransmissions")
 	{
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
-		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533790901));
+		const auto packet1(createRtpPacket(0, 21006, 1533790901));
+		const auto packet2(createRtpPacket(1, 21007, 1533790901));
+		const auto packet3(createRtpPacket(2, 21008, 1533790901));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -1568,9 +1546,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet3.get());
 
 		// Create a NACK item that requests for all the packets.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params.ssrc);
 		nackPacket->AddItem(21006, 0b0000000000000011);
@@ -1589,17 +1566,17 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("resetting the seq number of the stream discards pending retransmissions")
 	{
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 50001, 1000001));
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 50002, 1000002));
-		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 50003, 1000003));
+		const auto packet1(createRtpPacket(0, 50001, 1000001));
+		const auto packet2(createRtpPacket(1, 50002, 1000002));
+		const auto packet3(createRtpPacket(2, 50003, 1000003));
 
 		// Fourth packet has bad sequence number (its seq is more than MaxDropout=3000
 		// older than current max seq) and will be dropped.
-		const auto packet4(createRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 40004, 1000004));
+		const auto packet4(createRtpPacket(3, 40004, 1000004));
 
 		// Fifth packet has seq=badSeq+1 so will be accepted and will trigger a
 		// stream reset.
-		const auto packet5(createRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 40005, 1000005));
+		const auto packet5(createRtpPacket(4, 40005, 1000005));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -1633,9 +1610,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet3.get());
 
 		// Create a NACK item that requests for the first three packets.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params.ssrc);
 		nackPacket->AddItem(50001, 0b0000000000000011);
@@ -1664,11 +1640,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("packets requested by several NACK items are queued in order and only once")
 	{
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
-		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
-		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533790901));
-		const auto packet4(createRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533790901));
-		const auto packet5(createRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533790901));
+		const auto packet1(createRtpPacket(0, 21006, 1533790901));
+		const auto packet2(createRtpPacket(1, 21007, 1533790901));
+		const auto packet3(createRtpPacket(2, 21008, 1533790901));
+		const auto packet4(createRtpPacket(3, 21009, 1533790901));
+		const auto packet5(createRtpPacket(4, 21010, 1533790901));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -1713,9 +1689,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		// Create a NACK with a first item that requests for packets 3, 4 and 5 and
 		// a second one that requests for packets 1 and 4.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params.ssrc);
 		nackPacket->AddItem(21008, 0b0000000000000011);
@@ -1742,7 +1717,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// RTT assumed while no Receiver Report has told the real one.
 		constexpr int64_t DefaultRttMs{ 100 };
 
-		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
+		const auto packet1(createRtpPacket(0, 21006, 1533790901));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -1766,9 +1741,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet1.get());
 
 		// Create a NACK item that requests for the packet.
-		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-		  RTC::NEW_RTCP::NackPacket::Factory(
-		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+		const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+		  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		nackPacket->SetMediaSsrc(params.ssrc);
 		nackPacket->AddItem(21006, 0b0000000000000000);
@@ -1796,7 +1770,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("duplicated packets are discarded")
 	{
-		const auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 50001, 1000001));
+		const auto packet(createRtpPacket(0, 50001, 1000001));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -1827,7 +1801,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	SECTION("packets are not discarded a seq cycle after the timestamp goes back")
 	{
 		// Scenario based on https://github.com/versatica/mediasoup/issues/2000.
-		const auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 1000, 1000000000));
+		const auto packet(createRtpPacket(0, 1000, 1000000000));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -1899,7 +1873,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			RTC::RTP::RtpStreamSend stream(
 			  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
-			const auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, PacketTs));
+			const auto packet(createRtpPacket(0, 21006, PacketTs));
 
 			sendRtpPacket(
 			  {
@@ -1907,14 +1881,14 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
       },
 			  packet.get());
 
-			const std::unique_ptr<RTC::NEW_RTCP::CompoundPacket> compoundPacket(
-			  RTC::NEW_RTCP::CompoundPacket::Factory(
+			const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket(
+			  RTC::RTCP::CompoundPacket::Factory(
 			    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 			REQUIRE(stream.AddRtcpSenderReportPacket(compoundPacket.get(), PacketAtUs + 1000000));
 
 			const auto* const report =
-			  compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::SenderReportPacket>();
+			  compoundPacket->GetFirstPacketOfType<RTC::RTCP::SenderReportPacket>();
 
 			REQUIRE(report);
 			REQUIRE(report->GetRtpTimestamp() == PacketTs + params.clockRate);
@@ -1925,7 +1899,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			RTC::RTP::RtpStreamSend stream(
 			  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
-			const auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, PacketTs));
+			const auto packet(createRtpPacket(0, 21006, PacketTs));
 
 			packet->SetCaptureAtUs(PacketAtUs - 500000);
 
@@ -1935,14 +1909,14 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
       },
 			  packet.get());
 
-			const std::unique_ptr<RTC::NEW_RTCP::CompoundPacket> compoundPacket(
-			  RTC::NEW_RTCP::CompoundPacket::Factory(
+			const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket(
+			  RTC::RTCP::CompoundPacket::Factory(
 			    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 			REQUIRE(stream.AddRtcpSenderReportPacket(compoundPacket.get(), PacketAtUs + 1000000));
 
 			const auto* const report =
-			  compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::SenderReportPacket>();
+			  compoundPacket->GetFirstPacketOfType<RTC::RTCP::SenderReportPacket>();
 
 			REQUIRE(report);
 			REQUIRE(report->GetRtpTimestamp() == PacketTs + ((1500 * params.clockRate) / 1000));
@@ -1954,7 +1928,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			RTC::RTP::RtpStreamSend stream(
 			  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
-			const auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, PacketTs));
+			const auto packet(createRtpPacket(0, 21006, PacketTs));
 
 			packet->SetCaptureAtUs(PacketAtUs + 3000000);
 
@@ -1964,14 +1938,14 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
       },
 			  packet.get());
 
-			const std::unique_ptr<RTC::NEW_RTCP::CompoundPacket> compoundPacket(
-			  RTC::NEW_RTCP::CompoundPacket::Factory(
+			const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket(
+			  RTC::RTCP::CompoundPacket::Factory(
 			    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 			REQUIRE(stream.AddRtcpSenderReportPacket(compoundPacket.get(), PacketAtUs + 1000000));
 
 			const auto* const report =
-			  compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::SenderReportPacket>();
+			  compoundPacket->GetFirstPacketOfType<RTC::RTCP::SenderReportPacket>();
 
 			REQUIRE(report);
 			REQUIRE(report->GetRtpTimestamp() == PacketTs);
@@ -1997,7 +1971,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
-		const auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, PacketTs));
+		// Nothing to report until a packet is sent.
+		REQUIRE(!stream.HasRtcpSenderReport(PacketAtUs));
+
+		const auto packet(createRtpPacket(0, 21006, PacketTs));
 
 		sendRtpPacket(
 		  {
@@ -2005,16 +1982,20 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
     },
 		  packet.get());
 
-		const std::unique_ptr<RTC::NEW_RTCP::CompoundPacket> compoundPacket(
-		  RTC::NEW_RTCP::CompoundPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket(
+		  RTC::RTCP::CompoundPacket::Factory(
 		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 		// Right at the limit the Sender Report is still generated.
+		REQUIRE(stream.HasRtcpSenderReport(
+		  PacketAtUs + (RTC::RTP::RtpStreamSend::MaxSenderReportReferenceAgeMs * 1000)));
 		REQUIRE(stream.AddRtcpSenderReportPacket(
 		  compoundPacket.get(),
 		  PacketAtUs + (RTC::RTP::RtpStreamSend::MaxSenderReportReferenceAgeMs * 1000)));
 
 		// Past the limit it is not.
+		REQUIRE(!stream.HasRtcpSenderReport(
+		  PacketAtUs + ((RTC::RTP::RtpStreamSend::MaxSenderReportReferenceAgeMs + 1) * 1000)));
 		REQUIRE(!stream.AddRtcpSenderReportPacket(
 		  compoundPacket.get(),
 		  PacketAtUs + ((RTC::RTP::RtpStreamSend::MaxSenderReportReferenceAgeMs + 1) * 1000)));
@@ -2040,7 +2021,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
-		const auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, PacketTs));
+		const auto packet(createRtpPacket(0, 21006, PacketTs));
 
 		sendRtpPacket(
 		  {
@@ -2049,15 +2030,77 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet.get());
 
 		// One byte short of a Sender Report.
-		const std::unique_ptr<RTC::NEW_RTCP::CompoundPacket> compoundPacket(
-		  RTC::NEW_RTCP::CompoundPacket::Factory(
-		    rtcpCommon::FactoryBuffer, RTC::NEW_RTCP::SenderReportPacket::SenderReportHeaderLength - 1));
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket(
+		  RTC::RTCP::CompoundPacket::Factory(
+		    rtcpCommon::FactoryBuffer, RTC::RTCP::SenderReportPacket::SenderReportHeaderLength - 1));
 
 		REQUIRE(!stream.AddRtcpSenderReportPacket(compoundPacket.get(), PacketAtUs + 1000000));
 		REQUIRE(compoundPacket->GetPacketsCount() == 0);
 		REQUIRE(compoundPacket->GetLength() == 0);
 		// Nothing was announced, so nothing is taken note of either.
 		REQUIRE(!stream.GetSenderReportMapping().has_value());
+	}
+
+	SECTION("Sender Report octet count only counts payload bytes")
+	{
+		// Instant reported by the mocked clock, and hence the one at which packets are seen.
+		constexpr int64_t PacketAtUs{ 1000 * 1000 };
+		constexpr uint32_t PacketTs{ 1533790901 };
+
+		TestRtpStreamListener testRtpStreamListener;
+
+		RTC::RTP::RtpStream::Params params;
+
+		params.ssrc          = 1111;
+		params.clockRate     = 90000;
+		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+		std::string mid;
+
+		RTC::RTP::RtpStreamSend stream(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
+
+		const auto payloadAndPaddingPacket(createRtpPacket(0, 21006, PacketTs));
+
+		payloadAndPaddingPacket->SetPayload(rtpCommon::DataBuffer, 10);
+		payloadAndPaddingPacket->SetPaddingLength(4);
+
+		const auto payloadOnlyPacket(createRtpPacket(1, 21007, PacketTs));
+
+		payloadOnlyPacket->SetPayload(rtpCommon::DataBuffer, 20);
+
+		const auto paddingOnlyPacket(createRtpPacket(2, 21008, PacketTs));
+
+		paddingOnlyPacket->SetPaddingLength(8);
+
+		sendRtpPacket(
+		  {
+		    { std::addressof(stream), params.ssrc }
+    },
+		  payloadAndPaddingPacket.get());
+		sendRtpPacket(
+		  {
+		    { std::addressof(stream), params.ssrc }
+    },
+		  payloadOnlyPacket.get());
+		sendRtpPacket(
+		  {
+		    { std::addressof(stream), params.ssrc }
+    },
+		  paddingOnlyPacket.get());
+
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket(
+		  RTC::RTCP::CompoundPacket::Factory(
+		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+
+		REQUIRE(stream.AddRtcpSenderReportPacket(compoundPacket.get(), PacketAtUs + 1000000));
+
+		const auto* const report = compoundPacket->GetFirstPacketOfType<RTC::RTCP::SenderReportPacket>();
+
+		REQUIRE(report);
+		REQUIRE(report->GetPacketCount() == 3);
+		// RTP headers and padding are left out.
+		REQUIRE(report->GetOctetCount() == 10 + 20);
 	}
 
 	SECTION("RTT is computed from Receiver Reports")
@@ -2078,7 +2121,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto receiveReceiverReport =
 		  [&](int64_t receivedAtUs, uint32_t lastSr, uint32_t dlsr) -> std::optional<float>
 		{
-			const RTC::NEW_RTCP::AnyReportPacket::ReportBlock reportBlock{
+			const RTC::RTCP::AnyReportPacket::ReportBlock reportBlock{
 				.ssrc = params.ssrc, .lastSenderReport = lastSr, .delaySinceLastSenderReport = dlsr
 			};
 
@@ -2150,7 +2193,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 					continue;
 				}
 
-				const auto packet(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), seq, 1000));
+				const auto packet(createRtpPacket(0, seq, 1000));
 
 				sendRtpPacket(
 				  {
@@ -2163,9 +2206,9 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto receiveReceiverReport =
 		  [&](uint32_t lastSeq, int32_t totalLost) -> std::optional<RTC::RTP::RtpStreamSend::Loss>
 		{
-			const RTC::NEW_RTCP::AnyReportPacket::ReportBlock reportBlock{ .ssrc      = params.ssrc,
-			                                                               .totalLost = totalLost,
-			                                                               .extendedHighestSeq = lastSeq };
+			const RTC::RTCP::AnyReportPacket::ReportBlock reportBlock{ .ssrc               = params.ssrc,
+			                                                           .totalLost          = totalLost,
+			                                                           .extendedHighestSeq = lastSeq };
 
 			const auto result = stream.ReceiveRtcpReportBlock(reportBlock, nowUs);
 
@@ -2348,7 +2391,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		{
 			for (uint16_t seq{ firstSeq }; seq <= lastSeq; ++seq)
 			{
-				const auto packet(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), seq, 1000));
+				const auto packet(createRtpPacket(0, seq, 1000));
 
 				sendRtpPacket(
 				  {
@@ -2361,9 +2404,9 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto receiveReceiverReport =
 		  [&](RTC::RTP::RtpStreamSend& stream, uint32_t lastSeq, int32_t totalLost) -> void
 		{
-			const RTC::NEW_RTCP::AnyReportPacket::ReportBlock reportBlock{ .ssrc      = params.ssrc,
-			                                                               .totalLost = totalLost,
-			                                                               .extendedHighestSeq = lastSeq };
+			const RTC::RTCP::AnyReportPacket::ReportBlock reportBlock{ .ssrc               = params.ssrc,
+			                                                           .totalLost          = totalLost,
+			                                                           .extendedHighestSeq = lastSeq };
 
 			stream.ReceiveRtcpReportBlock(reportBlock, nowUs);
 		};
@@ -2377,9 +2420,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 			// The remote endpoint misses the first eight packets and the first five of
 			// them are retransmitted.
-			const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-			  RTC::NEW_RTCP::NackPacket::Factory(
-			    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+			const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+			  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 			nackPacket->SetMediaSsrc(params.ssrc);
 			nackPacket->AddItem(1, 0b0000000000001111);
@@ -2413,9 +2455,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 			// The remote endpoint misses the first three packets and all of them are
 			// retransmitted.
-			const std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket(
-			  RTC::NEW_RTCP::NackPacket::Factory(
-			    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
+			const std::unique_ptr<RTC::RTCP::NackPacket> nackPacket(
+			  RTC::RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)));
 
 			nackPacket->SetMediaSsrc(params.ssrc);
 			nackPacket->AddItem(1, 0b0000000000000011);
@@ -2453,68 +2494,14 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
-		stream.ReceiveRtcpKeyFrameRequest(
-		  RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI);
-		stream.ReceiveRtcpKeyFrameRequest(
-		  RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI);
-		stream.ReceiveRtcpKeyFrameRequest(
-		  RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR);
+		stream.ReceiveRtcpKeyFrameRequest(RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI);
+		stream.ReceiveRtcpKeyFrameRequest(RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI);
+		stream.ReceiveRtcpKeyFrameRequest(RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR);
 		// Not a key frame request, so it counts as neither.
-		stream.ReceiveRtcpKeyFrameRequest(
-		  RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::AFB);
+		stream.ReceiveRtcpKeyFrameRequest(RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::AFB);
 
 		REQUIRE(stream.GetPliCount() == 2);
 		REQUIRE(stream.GetFirCount() == 1);
-	}
-
-	SECTION("DLRR sub-block tells the latest Receiver Reference Time and the delay since it arrived")
-	{
-		TestRtpStreamListener testRtpStreamListener;
-
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
-
-		RTC::RTP::RtpStreamSend stream(
-		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
-
-		const std::unique_ptr<RTC::NEW_RTCP::DlrrExtendedReport> dlrrExtendedReport(
-		  RTC::NEW_RTCP::DlrrExtendedReport::Factory(rtcpCommon::FactoryBuffer, 1000));
-
-		// Nothing to report until a Receiver Reference Time arrives.
-		REQUIRE(!stream.AddRtcpDlrrSubBlock(dlrrExtendedReport.get(), 1000000));
-		REQUIRE(dlrrExtendedReport->GetNumberOfSubBlocks() == 0);
-
-		const std::unique_ptr<RTC::NEW_RTCP::RrtExtendedReport> rrtExtendedReport(
-		  RTC::NEW_RTCP::RrtExtendedReport::Factory(rtcpCommon::FactoryBuffer + 1000, 1000));
-
-		rrtExtendedReport->SetNtp({ .seconds = 0x12345678, .fractions = 0x9ABCDEF0 });
-
-		stream.ReceiveRtcpRrtExtendedReport(rrtExtendedReport.get(), 1000000);
-
-		// One second and a half later.
-		REQUIRE(stream.AddRtcpDlrrSubBlock(dlrrExtendedReport.get(), 2500000));
-		REQUIRE(dlrrExtendedReport->GetNumberOfSubBlocks() == 1);
-
-		const auto subBlock = dlrrExtendedReport->GetSubBlocks().at(0);
-
-		REQUIRE(subBlock.ssrc == params.ssrc);
-		// The middle 32 bits of the NTP timestamp.
-		REQUIRE(subBlock.lastReceiverReport == 0x56789ABC);
-		// In units of 1/65536 seconds.
-		REQUIRE(subBlock.delaySinceLastReceiverReport == 65536 + 32768);
-
-		// A DLRR Extended Report with no room left is left untouched.
-		const std::unique_ptr<RTC::NEW_RTCP::DlrrExtendedReport> fullDlrrExtendedReport(
-		  RTC::NEW_RTCP::DlrrExtendedReport::Factory(
-		    rtcpCommon::FactoryBuffer + 2000, RTC::NEW_RTCP::ExtendedReport::ExtendedReportHeaderLength));
-
-		REQUIRE(!stream.AddRtcpDlrrSubBlock(fullDlrrExtendedReport.get(), 2500000));
-		REQUIRE(fullDlrrExtendedReport->GetNumberOfSubBlocks() == 0);
 	}
 
 	SECTION("SDES chunk carries the CNAME and takes the length it announces")
@@ -2537,8 +2524,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// (1), padded to 4 bytes.
 		REQUIRE(stream.GetRtcpSdesChunkLength() == 20);
 
-		const std::unique_ptr<RTC::NEW_RTCP::SdesPacket> sdesPacket(
-		  RTC::NEW_RTCP::SdesPacket::Factory(rtcpCommon::FactoryBuffer, 1000));
+		const std::unique_ptr<RTC::RTCP::SdesPacket> sdesPacket(
+		  RTC::RTCP::SdesPacket::Factory(rtcpCommon::FactoryBuffer, 1000));
 
 		const size_t lengthBefore = sdesPacket->GetLength();
 
@@ -2549,30 +2536,30 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		REQUIRE(items.size() == 1);
 		REQUIRE(items.at(0).ssrc == params.ssrc);
-		REQUIRE(items.at(0).type == RTC::NEW_RTCP::SdesPacket::ItemType::CNAME);
+		REQUIRE(items.at(0).type == RTC::RTCP::SdesPacket::ItemType::CNAME);
 		REQUIRE(items.at(0).value == "test-cname");
 
 		// A SDES packet with no room for the whole chunk is left untouched.
-		const std::unique_ptr<RTC::NEW_RTCP::SdesPacket> shortSdesPacket(
-		  RTC::NEW_RTCP::SdesPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::SdesPacket> shortSdesPacket(
+		  RTC::RTCP::SdesPacket::Factory(
 		    rtcpCommon::FactoryBuffer + 1000,
-		    RTC::NEW_RTCP::Packet::CommonHeaderLength + stream.GetRtcpSdesChunkLength() - 4));
+		    RTC::RTCP::Packet::CommonHeaderLength + stream.GetRtcpSdesChunkLength() - 4));
 
 		REQUIRE(!stream.AddRtcpSdesChunk(shortSdesPacket.get()));
 		REQUIRE(shortSdesPacket->GetNumberOfChunks() == 0);
-		REQUIRE(shortSdesPacket->GetLength() == RTC::NEW_RTCP::Packet::CommonHeaderLength);
+		REQUIRE(shortSdesPacket->GetLength() == RTC::RTCP::Packet::CommonHeaderLength);
 
 		// So is a SDES packet that already has the most chunks it can count.
-		const std::unique_ptr<RTC::NEW_RTCP::SdesPacket> fullSdesPacket(
-		  RTC::NEW_RTCP::SdesPacket::Factory(rtcpCommon::FactoryBuffer + 2000, 1000));
+		const std::unique_ptr<RTC::RTCP::SdesPacket> fullSdesPacket(
+		  RTC::RTCP::SdesPacket::Factory(rtcpCommon::FactoryBuffer + 2000, 1000));
 
-		for (uint32_t ssrc{ 1 }; ssrc <= RTC::NEW_RTCP::SdesPacket::MaxChunks; ++ssrc)
+		for (uint32_t ssrc{ 1 }; ssrc <= RTC::RTCP::SdesPacket::MaxChunks; ++ssrc)
 		{
 			fullSdesPacket->AddChunk(ssrc);
 		}
 
 		REQUIRE(!stream.AddRtcpSdesChunk(fullSdesPacket.get()));
-		REQUIRE(fullSdesPacket->GetNumberOfChunks() == RTC::NEW_RTCP::SdesPacket::MaxChunks);
+		REQUIRE(fullSdesPacket->GetNumberOfChunks() == RTC::RTCP::SdesPacket::MaxChunks);
 	}
 
 #ifdef PERFORMANCE_TEST
@@ -2599,8 +2586,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		for (size_t i = 0; i < iterations; i++)
 		{
 			// Create packet.
-			const std::unique_ptr<RTC::RTP::Packet> packet(
-			  RTC::RTP::Packet::Parse(rtpBuffer1, sizeof(rtpBuffer1)));
+			const auto packet(createRtpPacket(0, 21006, 1533790901));
 
 			packet->SetSsrc(1111);
 
@@ -2624,8 +2610,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			const std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
 
 			// Create packet.
-			const std::unique_ptr<RTC::RTP::Packet> packet(
-			  RTC::RTP::Packet::Parse(rtpBuffer1, sizeof(rtpBuffer1)));
+			const auto packet(createRtpPacket(0, 21006, 1533790901));
 
 			packet->SetSsrc(1111);
 

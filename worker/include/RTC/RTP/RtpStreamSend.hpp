@@ -5,25 +5,17 @@
 #include "FBS/rtpStream.h"
 #include "Utils/UnwrappedSequenceNumber.hpp"
 #include "handles/TimerHandleInterface.hpp"
-#include "RTC/NEW_RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
-#include "RTC/NEW_RTCP/packet/AnyReportPacket.hpp"
-#include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
-#include "RTC/NEW_RTCP/packet/NackPacket.hpp"
-#include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
-#include "RTC/NEW_RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
-#include "RTC/NEW_RTCP/packet/extendedReports/RrtExtendedReport.hpp"
-#include "RTC/RTCP/Feedback.hpp"
-#include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
-#include "RTC/RTCP/Sdes.hpp"
-#include "RTC/RTCP/SenderReport.hpp"
-#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
-#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
+#include "RTC/RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
+#include "RTC/RTCP/packet/AnyReportPacket.hpp"
+#include "RTC/RTCP/packet/CompoundPacket.hpp"
+#include "RTC/RTCP/packet/NackPacket.hpp"
+#include "RTC/RTCP/packet/SdesPacket.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RetransmissionBuffer.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "SharedInterface.hpp"
+#include "Utils.hpp"
 #include <flatbuffers/flatbuffer_builder.h>
 #include <ankerl/unordered_dense.h>
 #include <deque>
@@ -141,24 +133,6 @@ namespace RTC
 				  RTP::RtpStreamSend* rtpStream, RTP::Packet* packet) = 0;
 			};
 
-		private:
-			/**
-			 * Data of a received Receiver Reference Time Extended Report needed to
-			 * report LRR and DLRR back in a Delay Since Last Receiver Report Extended
-			 * Report.
-			 */
-			struct ReceiverReferenceTime
-			{
-				/**
-				 * Middle 32 bits out of 64 in the NTP timestamp of the Receiver Reference Time.
-				 */
-				uint32_t compactNtp;
-				/**
-				 * Local time at which the Receiver Reference Time arrived.
-				 */
-				int64_t receivedAtUs;
-			};
-
 		public:
 			RtpStreamSend(
 			  RTP::RtpStreamSend::Listener* listener,
@@ -176,38 +150,34 @@ namespace RTC
 
 			ReceivePacketResult ReceivePacket(RTP::Packet* packet);
 
-			void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
-
-			void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
-
-			/**
-			 * @returns What this Receiver Report says about the link.
-			 */
-			ReceiverReportResult ReceiveRtcpReceiverReport(
-			  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
-
-			void ReceiveRtcpXrReceiverReferenceTime(
-			  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs);
-
-			void ReceiveRtcpNackPacket(const RTC::NEW_RTCP::NackPacket* nackPacket);
+			void ReceiveRtcpNackPacket(const RTC::RTCP::NackPacket* nackPacket);
 
 			void ReceiveRtcpKeyFrameRequest(
-			  RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType messageType);
+			  RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType messageType);
 
 			/**
-			 * @returns What this Receiver Report says about the link.
+			 * @returns What this report block says about the link.
 			 */
 			ReceiverReportResult ReceiveRtcpReportBlock(
-			  const RTC::NEW_RTCP::AnyReportPacket::ReportBlock& reportBlock, int64_t receivedAtUs);
+			  const RTC::RTCP::AnyReportPacket::ReportBlock& reportBlock, int64_t receivedAtUs);
 
-			void ReceiveRtcpRrtExtendedReport(
-			  const RTC::NEW_RTCP::RrtExtendedReport* rrtExtendedReport, int64_t receivedAtUs);
+			/**
+			 * Whether this stream has something recent enough to tell in a Sender
+			 * Report, which is what `AddRtcpSenderReportPacket()` requires.
+			 */
+			[[nodiscard]] bool HasRtcpSenderReport(int64_t nowUs) const
+			{
+				if (this->transmissionCounter.GetPacketCount() == 0)
+				{
+					return false;
+				}
 
-			RTC::RTCP::SenderReport* GetRtcpSenderReport(int64_t nowUs);
-
-			RTC::RTCP::DelaySinceLastRr::SsrcInfo* GetRtcpXrDelaySinceLastRrSsrcInfo(int64_t nowUs);
-
-			RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
+				// A stream that stopped sending cannot tell where its RTP timeline is
+				// now, and extrapolating would claim RTP timestamps of packets never
+				// sent.
+				return Utils::Time::TimeUsToMs(nowUs - this->maxPacketAtUs) <=
+				       RtpStreamSend::MaxSenderReportReferenceAgeMs;
+			}
 
 			/**
 			 * Add a Sender Report packet about this stream to the given compound
@@ -218,18 +188,7 @@ namespace RTC
 			 *   compound packet. In both cases the compound packet is left untouched.
 			 */
 			[[nodiscard]] bool AddRtcpSenderReportPacket(
-			  RTC::NEW_RTCP::CompoundPacket* compoundPacket, int64_t nowUs);
-
-			/**
-			 * Add a DLRR sub-block about this stream to the given DLRR Extended
-			 * Report.
-			 *
-			 * @returns Whether it was added, which does not happen when no Receiver
-			 *   Reference Time Extended Report was ever received or when it does not
-			 *   fit. In both cases the DLRR Extended Report is left untouched.
-			 */
-			[[nodiscard]] bool AddRtcpDlrrSubBlock(
-			  RTC::NEW_RTCP::DlrrExtendedReport* dlrrExtendedReport, int64_t nowUs);
+			  RTC::RTCP::CompoundPacket* compoundPacket, int64_t nowUs);
 
 			/**
 			 * Add a SDES chunk with the CNAME of this stream to the given SDES packet.
@@ -238,7 +197,7 @@ namespace RTC
 			 *   already has the most chunks it can count or when it does not fit. In
 			 *   both cases the SDES packet is left untouched.
 			 */
-			[[nodiscard]] bool AddRtcpSdesChunk(RTC::NEW_RTCP::SdesPacket* sdesPacket) const;
+			[[nodiscard]] bool AddRtcpSdesChunk(RTC::RTCP::SdesPacket* sdesPacket) const;
 
 			/**
 			 * Length (in bytes) of the SDES chunk `AddRtcpSdesChunk()` adds.
@@ -273,21 +232,6 @@ namespace RTC
 			void UpdateUnsentSeqNumbers(uint16_t seq);
 
 			/**
-			 * Work out how much of what the Receiver Report reports as lost really was
-			 * lost on the way to the remote endpoint, and take note of it.
-			 *
-			 * @returns What this link lost and what it was expected to deliver since
-			 *   the previous Receiver Report, or no value if this one measures no
-			 *   interval at all.
-			 *
-			 * @remarks
-			 * - What it returns, and what it takes note of in `fractionLost` and
-			 *   `packetsLost`, is held at zero and at the packets expected, since none
-			 *   of them may go backwards.
-			 */
-			std::optional<Loss> UpdateSendLoss(RTC::RTCP::ReceiverReport* report);
-
-			/**
 			 * Determine how much of what the Receiver Report reports as lost really
 			 * was lost on the way to the remote endpoint, and take note of it.
 			 *
@@ -300,7 +244,7 @@ namespace RTC
 			 *   `packetsLost`, is held at zero and at the packets expected, since none
 			 *   of them may go backwards.
 			 */
-			std::optional<Loss> UpdateSendLoss(const RTC::NEW_RTCP::AnyReportPacket::ReportBlock& reportBlock);
+			std::optional<Loss> UpdateSendLoss(const RTC::RTCP::AnyReportPacket::ReportBlock& reportBlock);
 
 			/**
 			 * Forget everything measured over a numbering that is not in use anymore.
@@ -323,6 +267,9 @@ namespace RTC
 			const std::string mid;
 			uint16_t rtxSeq{ 0 };
 			RTC::RtpDataCounter transmissionCounter;
+			// Payload bytes of everything sent, leaving out RTP headers and padding,
+			// which is what the octet count of a Sender Report tells.
+			uint64_t sentPayloadBytes{ 0 };
 			std::unique_ptr<RTP::RetransmissionBuffer> retransmissionBuffer;
 			// Sequence numbers requested by received NACKs and not retransmitted yet,
 			// in the order they were requested.
@@ -333,8 +280,6 @@ namespace RTC
 			// Timer to retransmit the pending retransmissions spaced in time. Only
 			// created if NACK is enabled.
 			const std::unique_ptr<TimerHandleInterface> retransmissionTimer;
-			// Timing data of the most recent Receiver Reference Time received.
-			std::optional<ReceiverReferenceTime> lastReceiverReferenceTime;
 			// Unwraps the sequence numbers of what is sent, so that comparing them
 			// against the ones a Receiver Report names needs no wrapping arithmetic.
 			Utils::UnwrappedSequenceNumber<uint16_t>::Unwrapper seqUnwrapper;

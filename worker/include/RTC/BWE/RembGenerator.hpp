@@ -2,7 +2,7 @@
 #define MS_RTC_BWE_REMB_GENERATOR_HPP
 
 #include "common.hpp"
-#include "RTC/NEW_RTCP/packet/RembPacket.hpp"
+#include "RTC/RTCP/packet/RembPacket.hpp"
 #include <array>
 #include <vector>
 
@@ -33,11 +33,19 @@ namespace RTC
 				 *   returns.
 				 */
 				virtual void OnRembGeneratorSendPacket(
-				  RembGenerator* rembGenerator, const RTC::NEW_RTCP::RembPacket* packet) = 0;
+				  RembGenerator* rembGenerator, const RTC::RTCP::RembPacket* packet) = 0;
+			};
+
+			struct RembGeneratorOptions
+			{
+				/**
+				 * Sender SSRC of the REMB packets.
+				 */
+				uint32_t rtcpSenderSsrc{ 0 };
 			};
 
 		public:
-			explicit RembGenerator(Listener* listener);
+			RembGenerator(Listener* listener, RembGeneratorOptions options);
 
 			RembGenerator(const RembGenerator&)            = delete;
 			RembGenerator& operator=(const RembGenerator&) = delete;
@@ -79,6 +87,7 @@ namespace RTC
 		private:
 			// Passed by argument.
 			Listener* const listener;
+			const RembGeneratorOptions options;
 			// Others.
 			// Instant the latest REMB was sent at, or no value until one is.
 			std::optional<int64_t> lastRembSentAtMs;
@@ -95,7 +104,7 @@ namespace RTC
 			// can carry.
 			alignas(4) std::array<
 			  uint8_t,
-			  RTC::NEW_RTCP::RembPacket::ComputeLengthFor(RTC::NEW_RTCP::RembPacket::MaxSsrcs)> packetBuffer{};
+			  RTC::RTCP::RembPacket::ComputeLengthFor(RTC::RTCP::RembPacket::MaxSsrcs)> packetBuffer{};
 		};
 	} // namespace BWE
 } // namespace RTC

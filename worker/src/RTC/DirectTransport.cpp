@@ -124,9 +124,11 @@ namespace RTC
 					return;
 				}
 
-				auto* packet = RTC::RTCP::Packet::Parse(body->data()->data(), len);
+				const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
+					RTC::RTCP::CompoundPacket::Parse(body->data()->data(), len)
+				};
 
-				if (!packet)
+				if (!compoundPacket)
 				{
 					MS_WARN_TAG(rtcp, "received data is not a valid RTCP compound or single packet");
 
@@ -134,7 +136,7 @@ namespace RTC
 				}
 
 				// Pass the packet to the parent transport.
-				RTC::Transport::ReceiveRtcpPacket(packet, notification->receivedAtUs);
+				RTC::Transport::ReceiveRtcpPacket(compoundPacket.get(), notification->receivedAtUs);
 
 				break;
 			}
@@ -201,32 +203,10 @@ namespace RTC
 		RTC::Transport::DataSent(packet->GetLength());
 	}
 
-	void DirectTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
+	void DirectTransport::SendRtcpPacket(const RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
-		// Notify the Node DirectTransport.
-		const auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(
-		  packet->GetData(), packet->GetSize());
-
-		auto notification = FBS::DirectTransport::CreateRtcpNotification(
-		  this->shared->GetChannelNotifier()->GetBufferBuilder(), data);
-
-		this->shared->GetChannelNotifier()->Emit(
-		  this->id,
-		  FBS::Notification::Event::DIRECTTRANSPORT_RTCP,
-		  FBS::Notification::Body::DirectTransport_RtcpNotification,
-		  notification);
-
-		// Increase send transmission.
-		RTC::Transport::DataSent(packet->GetSize());
-	}
-
-	void DirectTransport::SendRtcpPacket(const RTC::NEW_RTCP::Packet* packet)
-	{
-		MS_TRACE();
-
-		// Notify the Node DirectTransport.
 		const auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(
 		  packet->GetBuffer(), packet->GetLength());
 
@@ -243,14 +223,12 @@ namespace RTC
 		RTC::Transport::DataSent(packet->GetLength());
 	}
 
-	void DirectTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
+	void DirectTransport::SendRtcpCompoundPacket(const RTC::RTCP::CompoundPacket* compoundPacket)
 	{
 		MS_TRACE();
 
-		packet->Serialize(RTC::RTCP::SerializationBuffer);
-
 		const auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(
-		  packet->GetData(), packet->GetSize());
+		  compoundPacket->GetBuffer(), compoundPacket->GetLength());
 
 		auto notification = FBS::DirectTransport::CreateRtcpNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), data);
@@ -260,6 +238,9 @@ namespace RTC
 		  FBS::Notification::Event::DIRECTTRANSPORT_RTCP,
 		  FBS::Notification::Body::DirectTransport_RtcpNotification,
 		  notification);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(compoundPacket->GetLength());
 	}
 
 	void DirectTransport::SendMessage(
@@ -267,7 +248,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Notify the Node DirectTransport.
 		auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(
 		  message.GetPayload().data(), message.GetPayloadLength());
 

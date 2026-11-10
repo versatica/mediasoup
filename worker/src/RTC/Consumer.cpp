@@ -11,7 +11,6 @@
 #include "RTC/SimpleProducerStreamManager.hpp"
 #include "RTC/SimulcastProducerStreamManager.hpp"
 #include "RTC/SvcProducerStreamManager.hpp"
-#include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger/RtpPacket.hpp"
 #endif
@@ -1447,56 +1446,11 @@ namespace RTC
 		}
 	}
 
-	std::vector<RTC::RTCP::CompoundPacket::SendStreamItems> Consumer::GetRtcp(int64_t nowUs)
+	void Consumer::SetRtcpSentAtUs(int64_t sentAtUs)
 	{
 		MS_TRACE();
 
-		// NOTE: The interval is in milliseconds, being it given to a timer, so the
-		// elapsed time is truncated here.
-		const int64_t elapsedMs = (nowUs - this->lastRtcpSentAtUs) / 1000;
-
-		// Special condition for pipe consumer since this method will be called in a
-		// loop for each stream.
-		if (this->pipe)
-		{
-			if (nowUs != this->lastRtcpSentAtUs && static_cast<float>(elapsedMs * 1.15) < this->maxRtcpIntervalMs)
-			{
-				return {};
-			}
-		}
-		else if (static_cast<float>(elapsedMs * 1.15) < this->maxRtcpIntervalMs)
-		{
-			return {};
-		}
-
-		std::vector<RTC::RTCP::CompoundPacket::SendStreamItems> sendStreamItems;
-
-		for (auto* rtpStream : this->rtpStreams)
-		{
-			auto* const report = rtpStream->GetRtcpSenderReport(nowUs);
-
-			if (!report)
-			{
-				continue;
-			}
-
-			// Build SDES chunk for this sender.
-			auto* const sdesChunk = rtpStream->GetRtcpSdesChunk();
-
-			auto* const delaySinceLastRrSsrcInfo = rtpStream->GetRtcpXrDelaySinceLastRrSsrcInfo(nowUs);
-
-			sendStreamItems.push_back(
-			  {
-			    .senderReport = std::unique_ptr<RTC::RTCP::SenderReport>(report),
-			    .sdesChunk    = std::unique_ptr<RTC::RTCP::SdesChunk>(sdesChunk),
-			    .delaySinceLastRrSsrcInfo =
-			      std::unique_ptr<RTC::RTCP::DelaySinceLastRr::SsrcInfo>(delaySinceLastRrSsrcInfo),
-			  });
-		}
-
-		this->lastRtcpSentAtUs = nowUs;
-
-		return sendStreamItems;
+		this->lastRtcpSentAtUs = sentAtUs;
 	}
 
 	uint8_t Consumer::GetWorstRemoteFractionLost(uint32_t /*mappedSsrc*/) const
@@ -1520,7 +1474,7 @@ namespace RTC
 		return worstRemoteFractionLost;
 	}
 
-	void Consumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
+	void Consumer::ReceiveRtcpNackPacket(const RTC::RTCP::NackPacket* nackPacket)
 	{
 		MS_TRACE();
 
@@ -1530,13 +1484,14 @@ namespace RTC
 		}
 
 		// May emit 'trace' event.
-		EmitTraceEventNackType();
+		EmitTraceEventRtcpNackType();
 
 		RTC::RTP::RtpStreamSend* rtpStream;
 
 		if (this->pipe)
 		{
-			auto ssrc = nackPacket->GetMediaSsrc();
+			const uint32_t ssrc = nackPacket->GetMediaSsrc();
+
 			rtpStream = this->mapSsrcRtpStream.at(ssrc);
 		}
 		else
@@ -1544,10 +1499,11 @@ namespace RTC
 			rtpStream = this->mapSsrcRtpStream.begin()->second;
 		}
 
-		rtpStream->ReceiveNack(nackPacket);
+		rtpStream->ReceiveRtcpNackPacket(nackPacket);
 	}
 
-	void Consumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc)
+	void Consumer::ReceiveRtcpKeyFrameRequest(
+	  RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType messageType, uint32_t ssrc)
 	{
 		MS_TRACE();
 
@@ -1558,16 +1514,16 @@ namespace RTC
 
 		switch (messageType)
 		{
-			case RTC::RTCP::FeedbackPs::MessageType::PLI:
+			case RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI:
 			{
-				EmitTraceEventPliType(ssrc);
+				EmitTraceEventRtcpPliType(ssrc);
 
 				break;
 			}
 
-			case RTC::RTCP::FeedbackPs::MessageType::FIR:
+			case RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR:
 			{
-				EmitTraceEventFirType(ssrc);
+				EmitTraceEventRtcpFirType(ssrc);
 
 				break;
 			}
@@ -1575,17 +1531,17 @@ namespace RTC
 			default:;
 		}
 
-		auto* rtpStream = this->mapSsrcRtpStream.at(ssrc);
+		auto* const rtpStream = this->mapSsrcRtpStream.at(ssrc);
 
-		rtpStream->ReceiveKeyFrameRequest(messageType);
+		rtpStream->ReceiveRtcpKeyFrameRequest(messageType);
 
 		if (IsActive())
 		{
 			if (this->pipe)
 			{
-				for (auto& consumableRtpEncoding : this->consumableRtpEncodings)
+				for (const auto& consumableRtpEncoding : this->consumableRtpEncodings)
 				{
-					auto mappedSsrc = consumableRtpEncoding.ssrc;
+					const uint32_t mappedSsrc = consumableRtpEncoding.ssrc;
 
 					this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
 				}
@@ -1597,25 +1553,14 @@ namespace RTC
 		}
 	}
 
-	RTC::RTP::RtpStreamSend::ReceiverReportResult Consumer::ReceiveRtcpReceiverReport(
-	  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs)
+	RTC::RTP::RtpStreamSend::ReceiverReportResult Consumer::ReceiveRtcpReportBlock(
+	  const RTC::RTCP::AnyReportPacket::ReportBlock& reportBlock, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
-		auto* rtpStream = this->mapSsrcRtpStream.at(report->GetSsrc());
+		auto* const rtpStream = this->mapSsrcRtpStream.at(reportBlock.ssrc);
 
-		return rtpStream->ReceiveRtcpReceiverReport(report, receivedAtUs);
-	}
-
-	void Consumer::ReceiveRtcpXrReceiverReferenceTime(
-	  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs)
-	{
-		MS_TRACE();
-
-		for (auto* rtpStream : this->rtpStreams)
-		{
-			rtpStream->ReceiveRtcpXrReceiverReferenceTime(report, receivedAtUs);
-		}
+		return rtpStream->ReceiveRtcpReportBlock(reportBlock, receivedAtUs);
 	}
 
 	int64_t Consumer::GetTransmissionRate(int64_t nowMs)
@@ -1911,7 +1856,7 @@ namespace RTC
 		}
 	}
 
-	void Consumer::EmitTraceEventPliType(uint32_t ssrc) const
+	void Consumer::EmitTraceEventRtcpPliType(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -1934,7 +1879,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	void Consumer::EmitTraceEventFirType(uint32_t ssrc) const
+	void Consumer::EmitTraceEventRtcpFirType(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -1957,7 +1902,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	void Consumer::EmitTraceEventNackType() const
+	void Consumer::EmitTraceEventRtcpNackType() const
 	{
 		MS_TRACE();
 

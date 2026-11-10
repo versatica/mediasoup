@@ -4,8 +4,7 @@
 #include "common.hpp"
 #include "RTC/BWE/BweTypes.hpp"
 #include "RTC/BWE/SendPacketHistory.hpp"
-#include "RTC/NEW_RTCP/packet/TransportWideCcPacket.hpp"
-#include "RTC/RTCP/FeedbackRtpTransport.hpp"
+#include "RTC/RTCP/packet/TransportWideCcPacket.hpp"
 
 namespace RTC
 {
@@ -39,21 +38,10 @@ namespace RTC
 			 * @param receivedAtUs - Time at which the feedback was received.
 			 * @returns What the feedback reports about the packets that were sent, in
 			 *   the order it reports them, or no value if it reports on no packet the
-			 *   history still holds.
-			 */
-			std::optional<Types::TransportPacketsFeedback> ProcessTransportWideCcFeedback(
-			  const RTCP::FeedbackRtpTransportPacket* feedback, int64_t receivedAtUs);
-
-			/**
-			 * Process a transport wide cc feedback.
-			 *
-			 * @param receivedAtUs - Time at which the feedback was received.
-			 * @returns What the feedback reports about the packets that were sent, in
-			 *   the order it reports them, or no value if it reports on no packet the
 			 *   history still holds or carries no receive deltas.
 			 */
 			std::optional<Types::TransportPacketsFeedback> ProcessTransportWideCcFeedback(
-			  const RTC::NEW_RTCP::TransportWideCcPacket* feedback, int64_t receivedAtUs);
+			  const RTC::RTCP::TransportWideCcPacket* feedback, int64_t receivedAtUs);
 
 		private:
 			SendPacketHistory* const sendPacketHistory;

@@ -445,7 +445,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Notify the Node DataConsumer.
 		auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), bufferedAmount);
 

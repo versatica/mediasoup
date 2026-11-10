@@ -3,13 +3,11 @@
 
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "Logger.hpp"
-#include "RTC/Consts.hpp"
-#include "RTC/NEW_RTCP/packet/AnyReportPacket.hpp"
-#include "RTC/NEW_RTCP/packet/FirPacket.hpp"
-#include "RTC/NEW_RTCP/packet/NackPacket.hpp"
-#include "RTC/NEW_RTCP/packet/PliPacket.hpp"
+#include "RTC/RTCP/packet/AnyReportPacket.hpp"
+#include "RTC/RTCP/packet/FirPacket.hpp"
+#include "RTC/RTCP/packet/NackPacket.hpp"
+#include "RTC/RTCP/packet/PliPacket.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
-#include "Utils.hpp"
 #include <cmath> // std::pow(), std::round()
 
 namespace RTC
@@ -582,246 +580,22 @@ namespace RTC
 			return false;
 		}
 
-		RTC::RTCP::ReceiverReport* RtpStreamRecv::GetRtcpReceiverReport()
+		bool RtpStreamRecv::AddRtcpReportBlock(
+		  RTC::RTCP::ReceiverReportPacket* receiverReportPacket, int64_t nowUs)
 		{
 			MS_TRACE();
 
-			// Nothing to report about if no RTP packet has been received yet, or if
-			// none has been received for too long.
-			if (
-			  !this->lastPacketReceivedAtUs.has_value() ||
-			  this->shared->GetTimeUs() - this->lastPacketReceivedAtUs.value() >=
-			    RTP::RtpStream::ReportBlockTimeoutMs * 1000)
-			{
-				return nullptr;
-			}
-
-			// Ask the listener for the worst remote fraction lost.
-			const uint8_t worstRemoteFractionLost =
-			  this->params.useInBandFec ? static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)
-			                                ->OnRtpStreamNeedWorstRemoteFractionLost(this)
-				                          : 0;
-
-			if (worstRemoteFractionLost > 0)
-			{
-				MS_DEBUG_TAG(rtcp, "using worst remote fraction lost:%" PRIu8, worstRemoteFractionLost);
-			}
-
-			auto* const report = new RTC::RTCP::ReceiverReport();
-
-			report->SetSsrc(GetSsrc());
-
-			const int32_t prevPacketsLost = this->packetsLost;
-
-			// Calculate packets expected and lost.
-			const auto expectedPackets = GetExpectedPackets();
-
-			// NOTE: The expected count is the extended sequence number arithmetic of RFC
-			// 3550, so it wraps at 32 bits, whereas the received one does not wrap at
-			// all. Each subtraction below is therefore made in the width that keeps it
-			// right: this one truncates the received count so that both wrap together,
-			// and the interval further down is taken in full width, where it is exact.
-			const auto receivedPackets =
-			  static_cast<uint32_t>(this->mediaTransmissionCounter.GetPacketCount());
-
-			if (expectedPackets > receivedPackets)
-			{
-				this->packetsLost = static_cast<int32_t>(expectedPackets - receivedPackets);
-			}
-			else
-			{
-				this->packetsLost = 0;
-			}
-
-			// Calculate fraction lost.
-			//
-			// NOTE: The expected count wraps at 32 bits, so the difference is taken in
-			// that width.
-			const int64_t expectedInterval = static_cast<int32_t>(expectedPackets - this->expectedPrior);
-
-			this->expectedPrior = expectedPackets;
-
-			const auto receivedInterval =
-			  static_cast<int64_t>(this->mediaTransmissionCounter.GetPacketCount() - this->receivedPrior);
-
-			this->receivedPrior = this->mediaTransmissionCounter.GetPacketCount();
-
-			const int64_t lostInterval = expectedInterval - receivedInterval;
-
-			if (expectedInterval <= 0 || lostInterval <= 0)
-			{
-				this->fractionLost = 0;
-			}
-			else
-			{
-				// A fixed point number with 8 bits of fraction, so a whole interval lost
-				// gives 256, one more than the field can hold.
-				this->fractionLost =
-				  static_cast<uint8_t>(std::min<int64_t>((lostInterval << 8) / expectedInterval, 255));
-			}
-
-			// Worst remote fraction lost is not worse than local one.
-			if (worstRemoteFractionLost <= this->fractionLost)
-			{
-				this->reportedPacketsLost += (this->packetsLost - prevPacketsLost);
-
-				report->SetTotalLost(this->reportedPacketsLost);
-				report->SetFractionLost(this->fractionLost);
-			}
-			else
-			{
-				// Recalculate packetsLost.
-				//
-				// NOTE: Clamped as the fraction lost above, since the difference read as
-				// signed may come out negative.
-				const auto newLostInterval = static_cast<uint32_t>(
-				  (worstRemoteFractionLost * std::max<int64_t>(expectedInterval, 0)) >> 8);
-
-				this->reportedPacketsLost += newLostInterval;
-
-				report->SetTotalLost(this->reportedPacketsLost);
-				report->SetFractionLost(worstRemoteFractionLost);
-			}
-
-			// Fill the rest of the report.
-			report->SetLastSeq(static_cast<uint32_t>(this->maxSeq) + this->cycles);
-			report->SetJitter(this->jitter);
-
-			if (this->lastSenderReportTiming.has_value())
-			{
-				const auto& senderReportTiming = this->lastSenderReportTiming.value();
-				// Get delay in microseconds.
-				const int64_t delayUs = this->shared->GetTimeUs() - senderReportTiming.receivedAtUs;
-				// Express delay in units of 1/65536 seconds.
-				auto dlsr = static_cast<uint32_t>((delayUs / 1000000) << 16);
-
-				dlsr |= static_cast<uint32_t>(((delayUs % 1000000) * 65536) / 1000000);
-
-				report->SetDelaySinceLastSenderReport(dlsr);
-				report->SetLastSenderReport(senderReportTiming.compactNtp);
-			}
-			else
-			{
-				report->SetDelaySinceLastSenderReport(0);
-				report->SetLastSenderReport(0);
-			}
-
-			return report;
-		}
-
-		RTC::RTCP::ReceiverReport* RtpStreamRecv::GetRtxRtcpReceiverReport()
-		{
-			MS_TRACE();
-
-			if (HasRtx())
-			{
-				return this->rtxStream->GetRtcpReceiverReport();
-			}
-
-			return nullptr;
-		}
-
-		void RtpStreamRecv::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs)
-		{
-			MS_TRACE();
-
-			// Update info about last Sender Report.
-			//
-			// NOTE: A sender with no wall clock may report a zeroed NTP timestamp, which
-			// gives nothing to store.
-			if (report->GetNtpSec() != 0 || report->GetNtpFrac() != 0)
-			{
-				const Utils::Time::Ntp ntp{ .seconds   = report->GetNtpSec(),
-				                            .fractions = report->GetNtpFrac() };
-
-				this->lastSenderReportTiming = SenderReportTiming{
-					.compactNtp   = Utils::Time::NtpToCompactNtp(ntp),
-					.receivedAtUs = receivedAtUs,
-				};
-
-				this->lastSenderReportMapping = RTP::RtpStream::SenderReportMapping{
-					.ntpUs = Utils::Time::NtpToTimeUs(ntp),
-					.ts    = report->GetRtpTs(),
-				};
-			}
-
-			// Update the score with the current RR.
-			UpdateScore();
-		}
-
-		void RtpStreamRecv::ReceiveRtxRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs)
-		{
-			MS_TRACE();
-
-			if (HasRtx())
-			{
-				this->rtxStream->ReceiveRtcpSenderReport(report, receivedAtUs);
-			}
-		}
-
-		std::optional<float> RtpStreamRecv::ReceiveRtcpXrDelaySinceLastRr(
-		  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs)
-		{
-			MS_TRACE();
-
-			/* Calculate RTT. */
-
-			// Get the NTP representation of the time at which the report arrived, which
-			// is what the round trip is measured against.
-			const auto ntp = Utils::Time::TimeUsToNtp(receivedAtUs + this->shared->GetNtpOffsetUs());
-
-			// Get the compact NTP representation of the arrival time.
-			uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
-
-			compactNtp |= (ntp.fractions & 0xFFFF0000) >> 16;
-
-			const uint32_t lastRr = ssrcInfo->GetLastReceiverReport();
-			const uint32_t dlrr   = ssrcInfo->GetDelaySinceLastReceiverReport();
-
-			// If no Receiver Extended Report was received by the remote endpoint yet,
-			// the Sender Extended Report carries no RTT, so the last one is kept and
-			// nothing new is reported.
-			if (lastRr == 0)
-			{
-				return std::nullopt;
-			}
-
-			// NOTE: The subtraction wraps around along with the compact NTP
-			// representation, which is what the conversion expects.
-			const float measuredRttMs =
-			  static_cast<float>(Utils::Time::CompactNtpRttToTimeUs(compactNtp - dlrr - lastRr)) / 1000;
-
-			this->rttMs = measuredRttMs;
-
-			// Tell it to the NackGenerator.
-			if (this->params.useNack)
-			{
-				this->nackGenerator->UpdateRttMs(static_cast<int64_t>(measuredRttMs));
-			}
-
-			return measuredRttMs;
-		}
-
-		bool RtpStreamRecv::AddRtcpReportBlock(RTC::NEW_RTCP::ReceiverReportPacket* receiverReportPacket)
-		{
-			MS_TRACE();
-
-			// Nothing to report about if no RTP packet has been received yet, or if
-			// none has been received for too long.
-			if (
-			  !this->lastPacketReceivedAtUs.has_value() ||
-			  this->shared->GetTimeUs() - this->lastPacketReceivedAtUs.value() >=
-			    RTP::RtpStream::ReportBlockTimeoutMs * 1000)
+			if (!HasRtcpReportBlock(nowUs))
 			{
 				return false;
 			}
 
-			if (receiverReportPacket->GetNumberOfReportBlocks() == RTC::NEW_RTCP::AnyReportPacket::MaxReportBlocks)
+			if (receiverReportPacket->GetNumberOfReportBlocks() == RTC::RTCP::AnyReportPacket::MaxReportBlocks)
 			{
 				return false;
 			}
 
-			if (receiverReportPacket->GetAvailableLength() < RTC::NEW_RTCP::AnyReportPacket::ReportBlockLength)
+			if (receiverReportPacket->GetAvailableLength() < RTC::RTCP::AnyReportPacket::ReportBlockLength)
 			{
 				return false;
 			}
@@ -837,7 +611,7 @@ namespace RTC
 				MS_DEBUG_TAG(rtcp, "using worst remote fraction lost:%" PRIu8, worstRemoteFractionLost);
 			}
 
-			RTC::NEW_RTCP::AnyReportPacket::ReportBlock reportBlock{ .ssrc = GetSsrc() };
+			RTC::RTCP::AnyReportPacket::ReportBlock reportBlock{ .ssrc = GetSsrc() };
 
 			const int32_t prevPacketsLost = this->packetsLost;
 
@@ -920,7 +694,7 @@ namespace RTC
 				const auto& senderReportTiming = this->lastSenderReportTiming.value();
 
 				// Get delay in microseconds.
-				const int64_t delayUs = this->shared->GetTimeUs() - senderReportTiming.receivedAtUs;
+				const int64_t delayUs = nowUs - senderReportTiming.receivedAtUs;
 
 				// Express delay in units of 1/65536 seconds.
 				auto dlsr = static_cast<uint32_t>((delayUs / 1000000) << 16);
@@ -941,20 +715,21 @@ namespace RTC
 			return true;
 		}
 
-		bool RtpStreamRecv::AddRtxRtcpReportBlock(RTC::NEW_RTCP::ReceiverReportPacket* receiverReportPacket)
+		bool RtpStreamRecv::AddRtxRtcpReportBlock(
+		  RTC::RTCP::ReceiverReportPacket* receiverReportPacket, int64_t nowUs)
 		{
 			MS_TRACE();
 
 			if (HasRtx())
 			{
-				return this->rtxStream->AddRtcpReportBlock(receiverReportPacket);
+				return this->rtxStream->AddRtcpReportBlock(receiverReportPacket, nowUs);
 			}
 
 			return false;
 		}
 
 		void RtpStreamRecv::ReceiveRtcpSenderReportPacket(
-		  const RTC::NEW_RTCP::SenderReportPacket* senderReportPacket, int64_t receivedAtUs)
+		  const RTC::RTCP::SenderReportPacket* senderReportPacket, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
@@ -982,7 +757,7 @@ namespace RTC
 		}
 
 		void RtpStreamRecv::ReceiveRtxRtcpSenderReportPacket(
-		  const RTC::NEW_RTCP::SenderReportPacket* senderReportPacket, int64_t receivedAtUs)
+		  const RTC::RTCP::SenderReportPacket* senderReportPacket, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
@@ -993,7 +768,7 @@ namespace RTC
 		}
 
 		std::optional<float> RtpStreamRecv::ReceiveRtcpDlrrSubBlock(
-		  const RTC::NEW_RTCP::DlrrExtendedReport::SubBlock& subBlock, int64_t receivedAtUs)
+		  const RTC::RTCP::DlrrExtendedReport::SubBlock& subBlock, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
@@ -1025,13 +800,17 @@ namespace RTC
 
 			this->rttMs = measuredRttMs;
 
-			// Tell it to the NackGenerator.
+			return measuredRttMs;
+		}
+
+		void RtpStreamRecv::UpdateRttMs(int64_t rttMs)
+		{
+			MS_TRACE();
+
 			if (this->params.useNack)
 			{
-				this->nackGenerator->UpdateRttMs(static_cast<int64_t>(measuredRttMs));
+				this->nackGenerator->UpdateRttMs(rttMs);
 			}
-
-			return measuredRttMs;
 		}
 
 		std::optional<int64_t> RtpStreamRecv::GetRemoteCaptureAtUsFromAbsCaptureTime(uint32_t ts) const
@@ -1117,12 +896,10 @@ namespace RTC
 			{
 				MS_DEBUG_2TAGS(rtcp, rtx, "sending PLI [ssrc:%" PRIu32 "]", GetSsrc());
 
-				const std::unique_ptr<RTC::NEW_RTCP::PliPacket> pliPacket{ RTC::NEW_RTCP::PliPacket::Factory(
+				const std::unique_ptr<RTC::RTCP::PliPacket> pliPacket{ RTC::RTCP::PliPacket::Factory(
 					RtcpPacketBuffer, sizeof(RtcpPacketBuffer)) };
 
-				// Sender SSRC should be 0 since there is no media sender involved, but
-				// some implementations like gstreamer will fail to process it otherwise.
-				pliPacket->SetSenderSsrc(GetSsrc());
+				pliPacket->SetSenderSsrc(this->params.rtcpSenderSsrc);
 				pliPacket->SetMediaSsrc(GetSsrc());
 
 				this->pliCount++;
@@ -1135,12 +912,10 @@ namespace RTC
 			{
 				MS_DEBUG_2TAGS(rtcp, rtx, "sending FIR [ssrc:%" PRIu32 "]", GetSsrc());
 
-				const std::unique_ptr<RTC::NEW_RTCP::FirPacket> firPacket{ RTC::NEW_RTCP::FirPacket::Factory(
+				const std::unique_ptr<RTC::RTCP::FirPacket> firPacket{ RTC::RTCP::FirPacket::Factory(
 					RtcpPacketBuffer, sizeof(RtcpPacketBuffer)) };
 
-				// Sender SSRC should be 0 since there is no media sender involved, but
-				// some implementations like gstreamer will fail to process it otherwise.
-				firPacket->SetSenderSsrc(GetSsrc());
+				firPacket->SetSenderSsrc(this->params.rtcpSenderSsrc);
 				firPacket->SetMediaSsrc(GetSsrc());
 				firPacket->AddItem(GetSsrc(), ++this->firSeqNumber);
 
@@ -1449,9 +1224,10 @@ namespace RTC
 			  seqNumbers[0],
 			  seqNumbers.size());
 
-			std::unique_ptr<RTC::NEW_RTCP::NackPacket> nackPacket{ RTC::NEW_RTCP::NackPacket::Factory(
+			std::unique_ptr<RTC::RTCP::NackPacket> nackPacket{ RTC::RTCP::NackPacket::Factory(
 				RtcpPacketBuffer, sizeof(RtcpPacketBuffer)) };
 
+			nackPacket->SetSenderSsrc(this->params.rtcpSenderSsrc);
 			nackPacket->SetMediaSsrc(GetSsrc());
 
 			size_t numPacketsRequested{ 0 };
@@ -1492,12 +1268,13 @@ namespace RTC
 
 				// If the item does not fit in the packet, send the packet and start a
 				// new one.
-				if (nackPacket->GetAvailableLength() < RTC::NEW_RTCP::NackPacket::NackItemLength)
+				if (nackPacket->GetAvailableLength() < RTC::RTCP::NackPacket::NackItemLength)
 				{
 					sendPacket();
 
-					nackPacket.reset(
-					  RTC::NEW_RTCP::NackPacket::Factory(RtcpPacketBuffer, sizeof(RtcpPacketBuffer)));
+					nackPacket.reset(RTC::RTCP::NackPacket::Factory(RtcpPacketBuffer, sizeof(RtcpPacketBuffer)));
+
+					nackPacket->SetSenderSsrc(this->params.rtcpSenderSsrc);
 					nackPacket->SetMediaSsrc(GetSsrc());
 
 					numPacketsRequested = 0;
