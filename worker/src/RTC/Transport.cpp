@@ -2175,22 +2175,34 @@ namespace RTC
 									continue;
 								}
 
-								// The sender of the XR packet is the one the round trip was
-								// measured with.
+								// The round trip is the one of the path to the remote endpoint,
+								// whatever SSRC it sends the XR packet with.
 								auto* const producer = this->rtpListener.GetProducer(xrPacket->GetSsrc());
+								std::optional<float> rttMs;
 
-								if (!producer)
+								// The XR packet comes with the SSRC of a stream of a Producer, which
+								// keeps the round trip time as measured on it.
+								if (producer)
 								{
-									MS_DEBUG_TAG(
-									  rtcp,
-									  "no Producer found for received DLRR sub-block [ssrc:%" PRIu32 "]",
-									  xrPacket->GetSsrc());
-
-									continue;
+									rttMs =
+									  producer->ReceiveRtcpDlrrSubBlock(xrPacket->GetSsrc(), subBlock, receivedAtUs);
 								}
+								// Otherwise it comes with a SSRC that the remote endpoint only uses
+								// for RTCP. If no Receiver Reference Time from this Transport has
+								// reached the remote endpoint yet, there is nothing to measure.
+								else if (subBlock.lastReceiverReport != 0)
+								{
+									const Utils::Time::Ntp ntp =
+									  Utils::Time::TimeUsToNtp(receivedAtUs + this->shared->GetNtpOffsetUs());
+									const uint32_t compactNtp = Utils::Time::NtpToCompactNtp(ntp);
 
-								const auto rttMs =
-								  producer->ReceiveRtcpDlrrSubBlock(xrPacket->GetSsrc(), subBlock, receivedAtUs);
+									// NOTE: The subtraction wraps around along with the compact NTP
+									// representation, which is what the conversion expects.
+									rttMs = static_cast<float>(Utils::Time::CompactNtpRttToTimeUs(
+									          compactNtp - subBlock.delaySinceLastReceiverReport -
+									          subBlock.lastReceiverReport)) /
+									        1000;
+								}
 
 								if (rttMs.has_value())
 								{
