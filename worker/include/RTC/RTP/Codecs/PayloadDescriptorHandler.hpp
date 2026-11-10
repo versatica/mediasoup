@@ -347,12 +347,12 @@ namespace RTC
 				 * Maps the frame ids of the stream being processed to the ones being
 				 * forwarded, so that they never go back across a stream switch.
 				 *
-				 * NOTE: `Drop()` must never be called on it. The frame diffs and the
-				 * chain diffs of a descriptor are distances to other frame ids, so closing
-				 * a gap would point them at the wrong frames and leave them undecodable.
-				 *
-				 * NOTE: For the same reason it may only be synced at a frame that
-				 * references none, this is, a key frame.
+				 * @remarks
+				 * - `Drop()` must never be called on it. The frame diffs and the chain
+				 *   diffs of a descriptor are distances to other frame ids, so closing a
+				 *   gap would point them at the wrong frames and leave them undecodable.
+				 * - For the same reason it may only be synced at a frame that references
+				 *   none, this is, a key frame.
 				 */
 				SeqManager<uint16_t> forwardedFrameIdManager;
 

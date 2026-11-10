@@ -104,9 +104,10 @@ namespace RTC
 				/**
 				 * Changes to apply to the descriptor when writing it.
 				 *
-				 * NOTE: The frame number is fixed width, so moving it never changes the
-				 * length of the descriptor. Only the active decode targets bitmask may
-				 * make it longer than it came.
+				 * @remarks
+				 * - The frame number is fixed width, so moving it never changes the
+				 *   length of the descriptor. Only the active decode targets bitmask may
+				 *   make it longer than it came.
 				 */
 				struct RewriteParams
 				{
@@ -163,16 +164,16 @@ namespace RTC
 				 * Rewrites the descriptor of the given packet with the given params,
 				 * and tells whether it carries the new info.
 				 *
-				 * NOTE: Writing the active decode targets bitmask makes the descriptor
-				 * longer than it came. `Producer::MangleRtpPacket()` reserves room for
-				 * it, so it fits unless the descriptor was already bigger than 250 bytes,
-				 * in which case writing it would exceed the maximum size of a 2 bytes RTP
-				 * header extension. In that case we opt for skipping the bitmask and
-				 * rewriting the frame number, so the endpoint can decode the frame.
-				 *
-				 * NOTE: The packet is given on every call rather than remembered, since
-				 * a packet shares its payload descriptor handler with its clones and
-				 * every Consumer of its Producer.
+				 * @remarks
+				 * - Writing the active decode targets bitmask makes the descriptor longer
+				 *   than it came. `Producer::MangleRtpPacket()` reserves room for it, so
+				 *   it fits unless the descriptor was already bigger than 250 bytes, in
+				 *   which case writing it would exceed the maximum size of a 2 bytes RTP
+				 *   header extension. In that case we opt for skipping the bitmask and
+				 *   rewriting the frame number, so the endpoint can decode the frame.
+				 * - The packet is given on every call rather than remembered, since a
+				 *   packet shares its payload descriptor handler with its clones and every
+				 *   Consumer of its Producer.
 				 */
 				bool Rewrite(const RewriteParams& params, RTP::Packet* packet);
 

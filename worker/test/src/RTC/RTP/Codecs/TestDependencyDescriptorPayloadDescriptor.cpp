@@ -971,7 +971,7 @@ SCENARIO(
 
 		REQUIRE(handler->Process(std::addressof(context), packet.get(), marker));
 
-		return { std::move(packet), std::move(handler) };
+		return { .packet = std::move(packet), .handler = std::move(handler) };
 	};
 
 	SECTION("the frames of a stream switched to follow the ones already sent")
