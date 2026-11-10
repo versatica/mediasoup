@@ -145,7 +145,7 @@ namespace RTC
 			 * Maximum duration of the backoff timeout. If no value is given, no
 			 * limit is set.
 			 */
-			std::optional<int64_t> timerMaxBackoffTimeoutMs{ std::nullopt };
+			std::optional<int64_t> timerMaxBackoffTimeoutMs;
 
 			/**
 			 * Hearbeat interval (on idle connections only). Set to zero to disable.
@@ -302,13 +302,13 @@ namespace RTC
 			 * received before the lifetime has expired. This is only available if
 			 * the peer supports Partial Reliability Extension (RFC 3758).
 			 */
-			std::optional<int64_t> lifetimeMs{ std::nullopt };
+			std::optional<int64_t> lifetimeMs;
 
 			/**
 			 * If set, limits the number of retransmissions. This is only available
 			 * if the peer supports Partial Reliability Extension (RFC 3758).
 			 */
-			std::optional<uint16_t> maxRetransmissions{ std::nullopt };
+			std::optional<uint16_t> maxRetransmissions;
 
 			/**
 			 * If set, will generate lifecycle events for this message. See e.g.
@@ -316,7 +316,7 @@ namespace RTC
 			 * value is decided by the application and the library will provide it to
 			 * all lifecycle callbacks.
 			 */
-			std::optional<uint64_t> lifecycleId{ std::nullopt };
+			std::optional<uint64_t> lifecycleId;
 		};
 	} // namespace SCTP
 } // namespace RTC
