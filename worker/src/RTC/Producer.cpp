@@ -812,7 +812,7 @@ namespace RTC
 
 		if (it == this->mapMappedSsrcSsrc.end())
 		{
-			MS_WARN_2TAGS(rtcp, rtx, "given mappedSsrc not found, ignoring");
+			MS_DEBUG_2TAGS(rtcp, rtx, "given mappedSsrc not found, ignoring");
 
 			return;
 		}
