@@ -14,12 +14,13 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
-#include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/RTCP/packet/AnyReportPacket.hpp"
+#include "RTC/RTCP/packet/CompoundPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/Producer.hpp"
-#include "RTC/RTCP/CompoundPacket.hpp"
-#include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RemoteCaptureTimeEstimator.hpp"
 #include "RTC/RtpListener.hpp"
@@ -156,6 +157,23 @@ namespace RTC
 			bool bwe{ false };
 		};
 
+		/**
+		 * RTCP Receiver Reference Time Extended Report received from a remote
+		 * SSRC, to be answered with a DLRR sub-block.
+		 */
+		struct ReceivedReceiverReferenceTime
+		{
+			/**
+			 * Middle 32 bits of its NTP timestamp, which the DLRR sub-block returns
+			 * as LRR.
+			 */
+			uint32_t compactNtp;
+			/**
+			 * Instant at which it was received.
+			 */
+			int64_t receivedAtUs;
+		};
+
 	public:
 		Transport(
 		  SharedInterface* shared,
@@ -200,7 +218,8 @@ namespace RTC
 			this->sendTransmission.Update(len, this->shared->GetTimeMs());
 		}
 		virtual void ReceiveRtpPacket(RTC::RTP::Packet* packet, int64_t receivedAtUs) final;
-		virtual void ReceiveRtcpPacket(RTC::RTCP::Packet* packet, int64_t receivedAtUs) final;
+		virtual void ReceiveRtcpPacket(
+		  const RTC::RTCP::CompoundPacket* compoundPacket, int64_t receivedAtUs) final;
 		virtual void ReceiveSctpData(const uint8_t* data, size_t len, int64_t receivedAtUs) final;
 		virtual void SendSctpMessage(
 		  RTC::DataConsumer* dataConsumer,
@@ -237,11 +256,12 @@ namespace RTC
 		virtual size_t GetPacketOverhead() const = 0;
 		virtual void SendRtpPacket(
 		  RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) = 0;
-		virtual void HandleRtcpPacket(RTC::RTCP::Packet* packet, int64_t receivedAtUs) final;
+		virtual void HandleRtcpPacket(const RTC::RTCP::Packet* packet, int64_t receivedAtUs) final;
+		virtual void HandleRtcpReportBlocks(
+		  const RTC::RTCP::AnyReportPacket* reportPacket, int64_t receivedAtUs) final;
 		virtual void SendRtcp(int64_t nowUs) final;
-		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
-		virtual void SendRtcpPacket(const RTC::NEW_RTCP::Packet* packet)       = 0;
-		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
+		virtual void SendRtcpPacket(const RTC::RTCP::Packet* packet)                         = 0;
+		virtual void SendRtcpCompoundPacket(const RTC::RTCP::CompoundPacket* compoundPacket) = 0;
 		virtual void SendMessage(
 		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onMessageQueuedCallback cb = {}) = 0;
 		virtual bool SendData(const uint8_t* data, size_t len) = 0;
@@ -320,7 +340,7 @@ namespace RTC
 		  uint8_t spatialLayer,
 		  bool isActive) override;
 		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) override;
-		void OnProducerSendRtcpPacket(RTC::Producer* producer, const RTC::NEW_RTCP::Packet* packet) override;
+		void OnProducerSendRtcpPacket(RTC::Producer* producer, const RTC::RTCP::Packet* packet) override;
 		uint8_t OnProducerNeedWorstRemoteFractionLost(RTC::Producer* producer, uint32_t mappedSsrc) override;
 		std::optional<int64_t> OnProducerNeedLocalCaptureAtUs(
 		  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts) override;
@@ -381,7 +401,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RttCalculator::Listener. */
 	public:
-		void OnRttCalculatorRttUpdated(RTC::RttCalculator* rttCalculator, int64_t avgRttMs) override;
+		void OnRttCalculatorRttUpdated(
+		  RTC::RttCalculator* rttCalculator, int64_t avgRttMs, int64_t maxRttMs) override;
 
 		/* Pure virtual methods inherited from RTC::BWE::SenderTransportCongestionController::Listener. */
 	public:
@@ -397,7 +418,7 @@ namespace RTC
 	public:
 		void OnReceiverTransportCongestionControllerSendRtcpPacket(
 		  RTC::BWE::ReceiverTransportCongestionController* receiverTransportCongestionController,
-		  const RTC::NEW_RTCP::Packet* packet) override;
+		  const RTC::RTCP::Packet* packet) override;
 
 		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
@@ -454,6 +475,15 @@ namespace RTC
 		RTC::BWE::BitrateAllocator bitrateAllocator;
 		// Round trip time of this Transport, out of what its RTP streams measure.
 		RTC::RttCalculator rttCalculator;
+		// RTCP Receiver Reference Time Extended Reports received and not yet
+		// answered with a DLRR sub-block, keyed by the SSRC of the XR packet that
+		// carried each one.
+		ankerl::unordered_dense::map<uint32_t, ReceivedReceiverReferenceTime> receivedReceiverReferenceTimes;
+		// SSRC of the RTCP this Transport sends on its own behalf: Receiver Reports,
+		// Extended Reports and the feedback it generates.
+		const uint32_t rtcpSsrc;
+		// CNAME of rtcpSsrc.
+		const std::string rtcpCname;
 		bool sendSupportsTransportCc{ false };
 		bool sendSupportsRemb{ false };
 		bool recvSupportsTransportCc{ false };

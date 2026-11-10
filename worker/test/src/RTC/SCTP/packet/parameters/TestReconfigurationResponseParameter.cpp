@@ -45,6 +45,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		REQUIRE(
 		  parameter->GetResult() ==
 		  RTC::SCTP::ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED);
+		REQUIRE(parameter->HasUnknownResult() == false);
 		REQUIRE(parameter->HasNextTsns() == true);
 		REQUIRE(parameter->GetSenderNextTsn() == 1111111111);
 		REQUIRE(parameter->GetReceiverNextTsn() == 2222222222);
@@ -184,6 +185,41 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		delete clonedParameter;
 	}
 
+	SECTION("ReconfigurationResponseParameter::Parse() with unknown result succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// Type:16 (RECONFIGURATION-RESPONSE), Length: 12
+			0x00, 0x10, 0x00, 0x0C,
+			// Re-configuration Request Sequence Number: 287454020
+			0x11, 0x22, 0x33, 0x44,
+			// Result: 7 (unknown)
+			0x00, 0x00, 0x00, 0x07
+		};
+		// clang-format on
+
+		auto* parameter = RTC::SCTP::ReconfigurationResponseParameter::Parse(buffer, sizeof(buffer));
+
+		CHECK_SCTP_PARAMETER(
+		  /*parameter*/ parameter,
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 12,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::RECONFIGURATION_RESPONSE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
+
+		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 287454020);
+		REQUIRE(
+		  parameter->GetResult() ==
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		  static_cast<RTC::SCTP::ReconfigurationResponseParameter::Result>(7));
+		REQUIRE(parameter->HasUnknownResult() == true);
+
+		delete parameter;
+	}
+
 	SECTION("ReconfigurationResponseParameter::Parse() fails")
 	{
 		// Wrong length field.
@@ -261,6 +297,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 111000);
 		REQUIRE(
 		  parameter->GetResult() == RTC::SCTP::ReconfigurationResponseParameter::Result::IN_PROGRESS);
+		REQUIRE(parameter->HasUnknownResult() == false);
 		REQUIRE(parameter->HasNextTsns() == true);
 		REQUIRE(parameter->GetSenderNextTsn() == 100000000);
 		REQUIRE(parameter->GetReceiverNextTsn() == 200000000);

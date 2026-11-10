@@ -2,9 +2,8 @@
 
 ### NEXT
 
-- New RTCP: Use the new RTCP stack to generate BWE RTCP packets ([PR #2039](https://github.com/versatica/mediasoup/pull/2039)).
-- New RTCP: Use the new RTCP stack to generate PLI, FIR and NACK packets and RTCP fixes ([PR #2046](https://github.com/versatica/mediasoup/pull/2046)).
 - Worker: Complete Dependency Descriptor implementation ([PR #2015](https://github.com/versatica/mediasoup/pull/2015)).
+- New RTCP stack ([task #XXXX](https://github.com/versatica/mediasoup/issues/XXXX)).
 
 ### 0.33.2
 

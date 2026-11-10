@@ -1,5 +1,5 @@
 #include "fuzzer/include/RTC/RTP/FuzzerRtpStreamSend.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/packet/AnyReportPacket.hpp"
 #include "RTC/RTP/PacketUtils.hpp"
 #include "Utils.hpp"
 #include "mocks/include/MockShared.hpp"
@@ -59,17 +59,23 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 			result.retransmissionBufferItem->sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet);
 		}
 
-		// Feed a 'random' Receiver Report, which is what the loss of the stream is
-		// worked out from.
-		RTC::RTCP::ReceiverReport report;
+		// Feed a 'random' report block, which is what the loss of the stream is
+		// computed from.
+		// NOTE: Total lost is signed on purpose, since a duplicate makes a remote
+		// endpoint report fewer packets lost than it reported before.
+		const RTC::RTCP::AnyReportPacket::ReportBlock reportBlock{
+			.ssrc                       = params.ssrc,
+			.fractionLost               = 0,
+			.totalLost                  = static_cast<int16_t>(Utils::Byte::Get2Bytes(data, offset + 10)),
+			.extendedHighestSeq         = Utils::Byte::Get4Bytes(data, offset + 6),
+			.jitter                     = 0,
+			.lastSenderReport           = 0,
+			.delaySinceLastSenderReport = 0
+		};
 
-		report.SetSsrc(params.ssrc);
-		report.SetLastSeq(Utils::Byte::Get4Bytes(data, offset + 6));
-		// NOTE: Signed on purpose, since a duplicate makes a remote endpoint report
-		// fewer packets lost than it reported before.
-		report.SetTotalLost(static_cast<int16_t>(Utils::Byte::Get2Bytes(data, offset + 10)));
+		stream->ReceiveRtcpReportBlock(reportBlock, shared.GetTimeUs());
 
-		stream->ReceiveRtcpReceiverReport(std::addressof(report), shared.GetTimeUs());
+		static_cast<void>(stream->HasRtcpSenderReport(shared.GetTimeUs()));
 
 		len -= 12;
 		offset += 12;

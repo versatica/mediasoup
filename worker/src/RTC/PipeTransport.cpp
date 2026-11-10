@@ -520,7 +520,7 @@ namespace RTC
 		}
 
 		const uint8_t* data = packet->GetBuffer();
-		auto len            = packet->GetLength();
+		size_t len          = packet->GetLength();
 
 		if (HasSrtp() && !this->srtpSendSession->EncryptRtp(std::addressof(data), std::addressof(len)))
 		{
@@ -538,30 +538,7 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	void PipeTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
-	{
-		MS_TRACE();
-
-		if (!IsConnected())
-		{
-			return;
-		}
-
-		const uint8_t* data = packet->GetData();
-		auto len            = packet->GetSize();
-
-		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(std::addressof(data), std::addressof(len)))
-		{
-			return;
-		}
-
-		this->tuple->Send(data, len);
-
-		// Increase send transmission.
-		RTC::Transport::DataSent(len);
-	}
-
-	void PipeTransport::SendRtcpPacket(const RTC::NEW_RTCP::Packet* packet)
+	void PipeTransport::SendRtcpPacket(const RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -571,7 +548,7 @@ namespace RTC
 		}
 
 		const uint8_t* data = packet->GetBuffer();
-		auto len            = packet->GetLength();
+		size_t len          = packet->GetLength();
 
 		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(std::addressof(data), std::addressof(len)))
 		{
@@ -584,7 +561,7 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	void PipeTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
+	void PipeTransport::SendRtcpCompoundPacket(const RTC::RTCP::CompoundPacket* compoundPacket)
 	{
 		MS_TRACE();
 
@@ -593,10 +570,8 @@ namespace RTC
 			return;
 		}
 
-		packet->Serialize(RTC::RTCP::SerializationBuffer);
-
-		const uint8_t* data = packet->GetData();
-		auto len            = packet->GetSize();
+		const uint8_t* data = compoundPacket->GetBuffer();
+		size_t len          = compoundPacket->GetLength();
 
 		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(std::addressof(data), std::addressof(len)))
 		{
@@ -789,9 +764,11 @@ namespace RTC
 			return;
 		}
 
-		auto* packet = RTC::RTCP::Packet::Parse(data, len);
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
+			RTC::RTCP::CompoundPacket::Parse(data, len)
+		};
 
-		if (!packet)
+		if (!compoundPacket)
 		{
 			MS_WARN_TAG(rtcp, "received data is not a valid RTCP compound or single packet");
 
@@ -799,7 +776,7 @@ namespace RTC
 		}
 
 		// Pass the packet to the parent transport.
-		RTC::Transport::ReceiveRtcpPacket(packet, receivedAtUs);
+		RTC::Transport::ReceiveRtcpPacket(compoundPacket.get(), receivedAtUs);
 	}
 
 	void PipeTransport::OnSctpDataReceived(

@@ -551,6 +551,21 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// An unknown result is a parse failure. The request is left as it is, so
+			// the timer keeps running and retransmits it.
+			if (receivedReconfigurationResponseParameter->HasUnknownResult())
+			{
+				MS_DEBUG_TAG(
+				  sctp,
+				  "invalid Reconfiguration Response result [result:%" PRIu32 "]",
+				  static_cast<uint32_t>(receivedReconfigurationResponseParameter->GetResult()));
+
+				this->associationListenerDeferrer.OnAssociationError(
+				  Types::ErrorKind::PARSE_FAILED, "invalid Reconfiguration Response result");
+
+				return;
+			}
+
 			if (
 			  this->currentRequest.has_value() && this->currentRequest->HasBeenSent() &&
 			  receivedReconfigurationResponseParameter->GetReconfigurationResponseSequenceNumber() ==
@@ -599,8 +614,9 @@ namespace RTC
 					{
 						MS_WARN_TAG(
 						  sctp,
-						  "reset stream error [reqSeqNbr:%" PRIu32 ", result:%s]",
+						  "reset stream error [reqSeqNbr:%" PRIu32 ", result:%" PRIu32 " (%s)]",
 						  this->currentRequest->GetReqSeqNbr(),
+						  static_cast<uint32_t>(receivedReconfigurationResponseParameter->GetResult()),
 						  ReconfigurationResponseParameter::ResultToString(
 						    receivedReconfigurationResponseParameter->GetResult())
 						    .c_str());

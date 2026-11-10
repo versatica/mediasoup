@@ -64,10 +64,12 @@ namespace RTC
 		}
 
 		int64_t sumRttMs{ 0 };
+		int64_t maxRttMs{ 0 };
 
 		for (const auto& measurement : this->measurements)
 		{
 			sumRttMs += measurement.rttMs;
+			maxRttMs = std::max(maxRttMs, measurement.rttMs);
 		}
 
 		const int64_t windowRttMs = sumRttMs / static_cast<int64_t>(this->measurements.size());
@@ -85,7 +87,7 @@ namespace RTC
 
 		this->lastRttMs = this->avgRttMs;
 
-		this->listener->OnRttCalculatorRttUpdated(this, this->avgRttMs.value());
+		this->listener->OnRttCalculatorRttUpdated(this, this->avgRttMs.value(), maxRttMs);
 	}
 
 	void RttCalculator::OnTimer(TimerHandleInterface* timer)

@@ -14,9 +14,14 @@ namespace RTC
 		  Listener* listener, SharedInterface* shared, ReceiverTransportCongestionControllerOptions options)
 		  : listener(listener),
 		    shared(shared),
-		    transportWideCcFeedbackGenerator(this, shared, options.maxRtcpPacketLen),
+		    transportWideCcFeedbackGenerator(
+		      this,
+		      shared,
+		      TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{
+		        .maxRtcpPacketLen = options.maxRtcpPacketLen, .rtcpSenderSsrc = options.rtcpSenderSsrc }),
 		    remoteBitrateEstimator(this),
-		    rembGenerator(this)
+		    rembGenerator(
+		      this, RembGenerator::RembGeneratorOptions{ .rtcpSenderSsrc = options.rtcpSenderSsrc })
 		{
 			MS_TRACE();
 		}
@@ -90,7 +95,7 @@ namespace RTC
 
 		void ReceiverTransportCongestionController::OnTransportWideCcFeedbackGeneratorSendPacket(
 		  TransportWideCcFeedbackGenerator* /*transportWideCcFeedbackGenerator*/,
-		  const RTC::NEW_RTCP::TransportWideCcPacket* packet)
+		  const RTC::RTCP::TransportWideCcPacket* packet)
 		{
 			MS_TRACE();
 
@@ -108,7 +113,7 @@ namespace RTC
 		}
 
 		void ReceiverTransportCongestionController::OnRembGeneratorSendPacket(
-		  RembGenerator* /*rembGenerator*/, const RTC::NEW_RTCP::RembPacket* packet)
+		  RembGenerator* /*rembGenerator*/, const RTC::RTCP::RembPacket* packet)
 		{
 			MS_TRACE();
 

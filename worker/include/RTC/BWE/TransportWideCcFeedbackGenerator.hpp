@@ -3,7 +3,8 @@
 
 #include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
-#include "RTC/NEW_RTCP/packet/TransportWideCcPacket.hpp"
+#include "RTC/Consts.hpp"
+#include "RTC/RTCP/packet/TransportWideCcPacket.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/SeqManager.hpp"
@@ -44,12 +45,24 @@ namespace RTC
 				 */
 				virtual void OnTransportWideCcFeedbackGeneratorSendPacket(
 				  TransportWideCcFeedbackGenerator* transportWideCcFeedbackGenerator,
-				  const RTC::NEW_RTCP::TransportWideCcPacket* packet) = 0;
+				  const RTC::RTCP::TransportWideCcPacket* packet) = 0;
+			};
+
+			struct TransportWideCcFeedbackGeneratorOptions
+			{
+				/**
+				 * Largest an RTCP packet may be on this transport (bytes).
+				 */
+				size_t maxRtcpPacketLen{ RTC::Consts::OutgoingRtcpPacketMaxSize };
+				/**
+				 * Sender SSRC of the feedback packets.
+				 */
+				uint32_t rtcpSenderSsrc{ 0 };
 			};
 
 		public:
 			TransportWideCcFeedbackGenerator(
-			  Listener* listener, SharedInterface* shared, size_t maxRtcpPacketLen);
+			  Listener* listener, SharedInterface* shared, TransportWideCcFeedbackGeneratorOptions options);
 			~TransportWideCcFeedbackGenerator() override = default;
 
 			TransportWideCcFeedbackGenerator(const TransportWideCcFeedbackGenerator&)            = delete;
@@ -119,18 +132,16 @@ namespace RTC
 			void OnTimer(TimerHandleInterface* timer) override;
 
 		private:
-			// Largest an RTCP packet may be on this transport (bytes).
-			const size_t maxRtcpPacketLen;
-
 			// Passed by argument.
 			Listener* const listener;
 			SharedInterface* const shared;
+			const TransportWideCcFeedbackGeneratorOptions options;
 			// Allocated by this.
 			const std::unique_ptr<TimerHandleInterface> sendPeriodicTimer;
 			// Buffer every feedback packet is built in, as long as an RTCP packet may
 			// be on this transport.
 			const std::unique_ptr<uint8_t[]> packetBuffer;
-			std::unique_ptr<RTC::NEW_RTCP::TransportWideCcPacket> packet;
+			std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet;
 			// Bitrate coming in, which is what decides how often feedback is emitted.
 			RTC::RtpDataCounter incomingDataCounter;
 			// How often feedback is emitted (ms).

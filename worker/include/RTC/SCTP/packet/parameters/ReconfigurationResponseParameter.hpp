@@ -38,7 +38,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			// NOLINTNEXTLINE(performance-enum-siz)
+			// NOLINTNEXTLINE(performance-enum-size)
 			enum class Result : uint32_t
 			{
 				SUCCESS_NOTHING_TO_DO             = 0x00000000,
@@ -109,6 +109,32 @@ namespace RTC
 			Result GetResult() const
 			{
 				return static_cast<Result>(Utils::Byte::Get4Bytes(GetBuffer(), 8));
+			}
+
+			/**
+			 * Whether the Result field holds a value that is not defined in the
+			 * `Result` enum.
+			 */
+			bool HasUnknownResult() const
+			{
+				switch (GetResult())
+				{
+					case Result::SUCCESS_NOTHING_TO_DO:
+					case Result::SUCCESS_PERFORMED:
+					case Result::DENIED:
+					case Result::ERROR_WRONG_SSN:
+					case Result::ERROR_REQUEST_ALREADY_IN_PROGRESS:
+					case Result::ERROR_BAD_SEQUENCE_NUMBER:
+					case Result::IN_PROGRESS:
+					{
+						return false;
+					}
+
+					default:
+					{
+						return true;
+					}
+				}
 			}
 
 			void SetResult(Result result);

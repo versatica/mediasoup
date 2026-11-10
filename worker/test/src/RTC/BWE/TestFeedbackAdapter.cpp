@@ -1,8 +1,8 @@
 #include "common.hpp"
 #include "RTC/BWE/FeedbackAdapter.hpp"
 #include "RTC/BWE/SendPacketHistory.hpp"
-#include "RTC/NEW_RTCP/packet/TransportWideCcPacket.hpp"
-#include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp"
+#include "RTC/RTCP/packet/TransportWideCcPacket.hpp"
+#include "test/include/RTC/RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
@@ -45,12 +45,12 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	                              uint16_t baseSequenceNumber,
 	                              int64_t baseTimeUs,
 	                              const std::vector<std::pair<uint16_t, int64_t>>& receivedPackets)
-	  -> std::unique_ptr<RTC::NEW_RTCP::TransportWideCcPacket>
+	  -> std::unique_ptr<RTC::RTCP::TransportWideCcPacket>
 	{
 		REQUIRE(feedbackBufferOffset + RtcpMtu <= sizeof(rtcpCommon::FactoryBuffer));
 
-		std::unique_ptr<RTC::NEW_RTCP::TransportWideCcPacket> feedback(
-		  RTC::NEW_RTCP::TransportWideCcPacket::Factory(
+		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> feedback(
+		  RTC::RTCP::TransportWideCcPacket::Factory(
 		    rtcpCommon::FactoryBuffer + feedbackBufferOffset, RtcpMtu, /*includeDeltas*/ true));
 
 		feedbackBufferOffset += RtcpMtu;
@@ -347,9 +347,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 
 	SECTION("the base time wrapping around does not break the timeline")
 	{
-		constexpr int64_t FirstBaseTimeUs{ RTC::NEW_RTCP::TransportWideCcPacket::TimeWrapPeriodUs -
-		                                   RTC::NEW_RTCP::TransportWideCcPacket::BaseTimeTickUs };
-		constexpr int64_t SecondBaseTimeUs{ RTC::NEW_RTCP::TransportWideCcPacket::TimeWrapPeriodUs };
+		constexpr int64_t FirstBaseTimeUs{ RTC::RTCP::TransportWideCcPacket::TimeWrapPeriodUs -
+		                                   RTC::RTCP::TransportWideCcPacket::BaseTimeTickUs };
+		constexpr int64_t SecondBaseTimeUs{ RTC::RTCP::TransportWideCcPacket::TimeWrapPeriodUs };
 		constexpr int64_t ElapsedUs{ SecondBaseTimeUs - FirstBaseTimeUs };
 
 		RTC::BWE::SendPacketHistory sendPacketHistory;
@@ -582,8 +582,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 
 		// It tells that the packet arrived, but not when.
-		const std::unique_ptr<RTC::NEW_RTCP::TransportWideCcPacket> feedback(
-		  RTC::NEW_RTCP::TransportWideCcPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::TransportWideCcPacket> feedback(
+		  RTC::RTCP::TransportWideCcPacket::Factory(
 		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ false));
 
 		feedback->SetBase(0, RemoteTimeUs);

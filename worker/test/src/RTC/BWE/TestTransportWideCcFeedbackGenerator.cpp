@@ -1,7 +1,6 @@
 #include "common.hpp"
 #include "RTC/BWE/TransportWideCcFeedbackGenerator.hpp"
-#include "RTC/Consts.hpp"
-#include "RTC/NEW_RTCP/packet/TransportWideCcPacket.hpp"
+#include "RTC/RTCP/packet/TransportWideCcPacket.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
@@ -35,7 +34,7 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	public:
 		void OnTransportWideCcFeedbackGeneratorSendPacket(
 		  RTC::BWE::TransportWideCcFeedbackGenerator* /*transportWideCcFeedbackGenerator*/,
-		  const RTC::NEW_RTCP::TransportWideCcPacket* packet) override
+		  const RTC::RTCP::TransportWideCcPacket* packet) override
 		{
 			const int64_t baseTimeUs = packet->GetBaseTimeUs();
 
@@ -52,15 +51,17 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 						                  .received      = deltaSinceBaseUs.has_value(),
 						                  .timestampUs = deltaSinceBaseUs.has_value()
 						                                   ? baseTimeUs + deltaSinceBaseUs.value() -
-						                                       RTC::NEW_RTCP::TransportWideCcPacket::TimeWrapPeriodUs
+						                                       RTC::RTCP::TransportWideCcPacket::TimeWrapPeriodUs
 						                                   : 0 });
 			  });
 
+			this->senderSsrcs.push_back(packet->GetSenderSsrc());
 			this->baseSequenceNumbers.push_back(packet->GetBaseSequenceNumber());
 			this->feedbacks.push_back(statuses);
 		}
 
 	public:
+		std::vector<uint32_t> senderSsrcs;
 		std::vector<uint16_t> baseSequenceNumbers;
 		std::vector<std::vector<TestPacketStatus>> feedbacks;
 	};
@@ -172,7 +173,9 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	{
 		TestTransportWideCcFeedbackGeneratorListener listener;
 		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
-		  std::addressof(listener), std::addressof(shared), RTC::Consts::OutgoingRtcpPacketMaxSize);
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{});
 
 		static constexpr int64_t FeedbackSendIntervalUs{ 100 * 1000 };
 
@@ -312,7 +315,9 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	{
 		TestTransportWideCcFeedbackGeneratorListener listener;
 		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
-		  std::addressof(listener), std::addressof(shared), RTC::Consts::OutgoingRtcpPacketMaxSize);
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{});
 
 		feedPacket(transportWideCcFeedbackGenerator, 12, 1000000, DefaultPayloadSize);
 
@@ -357,7 +362,9 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	{
 		TestTransportWideCcFeedbackGeneratorListener listener;
 		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
-		  std::addressof(listener), std::addressof(shared), RTC::Consts::OutgoingRtcpPacketMaxSize);
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{});
 
 		feedPacket(transportWideCcFeedbackGenerator, 1, 1000000, DefaultPayloadSize);
 		feedPacket(transportWideCcFeedbackGenerator, 2, 1000000, DefaultPayloadSize);
@@ -400,7 +407,9 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	{
 		TestTransportWideCcFeedbackGeneratorListener listener;
 		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
-		  std::addressof(listener), std::addressof(shared), RTC::Consts::OutgoingRtcpPacketMaxSize);
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{});
 
 		feedPacket(transportWideCcFeedbackGenerator, 1, 1000000, DefaultPayloadSize);
 		feedPacket(transportWideCcFeedbackGenerator, 2, 1000000, DefaultPayloadSize);
@@ -439,7 +448,9 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	{
 		TestTransportWideCcFeedbackGeneratorListener listener;
 		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
-		  std::addressof(listener), std::addressof(shared), RTC::Consts::OutgoingRtcpPacketMaxSize);
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{});
 
 		feedPacket(transportWideCcFeedbackGenerator, 10, 1000000, DefaultPayloadSize);
 		// Ahead of the one above by more than half the sequence space, so it goes
@@ -476,7 +487,9 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	{
 		TestTransportWideCcFeedbackGeneratorListener listener;
 		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
-		  std::addressof(listener), std::addressof(shared), RTC::Consts::OutgoingRtcpPacketMaxSize);
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{});
 
 		feedPacket(transportWideCcFeedbackGenerator, 1, 1000000, DefaultPayloadSize);
 		// Nine seconds later, which no delta of a feedback packet can express.
@@ -508,7 +521,10 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 
 		TestTransportWideCcFeedbackGeneratorListener listener;
 		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
-		  std::addressof(listener), std::addressof(shared), MaxRtcpPacketLen);
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{
+		    .maxRtcpPacketLen = MaxRtcpPacketLen });
 
 		TestResults expectedResults(2);
 
@@ -562,11 +578,36 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		REQUIRE(RTC::BWE::TransportWideCcFeedbackGenerator::ComputeSendIntervalMs(0) == 250);
 	}
 
+	SECTION("the feedback carries the sender SSRC given in the options")
+	{
+		TestTransportWideCcFeedbackGeneratorListener listener;
+		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{
+		    .rtcpSenderSsrc = 1234 });
+
+		feedPacket(transportWideCcFeedbackGenerator, 1, BaseTimeUs, 1000);
+
+		auto* timer = shared.GetTimer(TimerLabel);
+
+		REQUIRE(timer);
+
+		nowUs = timer->GetExpiresAtMs() * 1000;
+
+		REQUIRE(timer->EvaluateHasExpired());
+
+		REQUIRE(listener.senderSsrcs.size() == 1);
+		REQUIRE(listener.senderSsrcs.at(0) == 1234);
+	}
+
 	SECTION("nothing is sent periodically until a packet carrying the extension arrives")
 	{
 		TestTransportWideCcFeedbackGeneratorListener listener;
 		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
-		  std::addressof(listener), std::addressof(shared), RTC::Consts::OutgoingRtcpPacketMaxSize);
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{});
 
 		auto* timer = shared.GetTimer(TimerLabel);
 
@@ -589,7 +630,9 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	{
 		TestTransportWideCcFeedbackGeneratorListener listener;
 		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
-		  std::addressof(listener), std::addressof(shared), RTC::Consts::OutgoingRtcpPacketMaxSize);
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{});
 
 		// A thousand bytes every 20 ms is around 400 kbps, well past what the
 		// shortest interval covers.
@@ -613,7 +656,9 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	{
 		TestTransportWideCcFeedbackGeneratorListener listener;
 		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
-		  std::addressof(listener), std::addressof(shared), RTC::Consts::OutgoingRtcpPacketMaxSize);
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{});
 
 		// Two hundred and fifty bytes every 100 ms is around 20 kbps, well below
 		// what the longest interval covers.

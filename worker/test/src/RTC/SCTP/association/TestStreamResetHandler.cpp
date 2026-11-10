@@ -463,6 +463,62 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 		REQUIRE(test.associationListener.HasStreamsResetFailedForStreamId(42) == true);
 	}
 
+	SECTION("a response with an unknown result returns an error and keeps the request")
+	{
+		TestStreamResetHandler test;
+
+		test.streamResetHandler.ResetStreams(std::vector<uint16_t>{ 42 });
+
+		REQUIRE(test.streamResetHandler.ShouldSendStreamResetRequest() == true);
+
+		const auto packet = test.tcbContext.CreatePacket();
+
+		REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == true);
+
+		const auto* parameter =
+		  packet->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>()
+		    ->GetFirstParameterOfType<RTC::SCTP::OutgoingSsnResetRequestParameter>();
+
+		REQUIRE(parameter);
+
+		const uint32_t reqSeqNbr = parameter->GetReconfigurationRequestSequenceNumber();
+
+		// Build a RE-CONFIG response with an unknown result.
+		std::vector<uint8_t> responseBuffer1(test.sctpOptions.mtu);
+		const std::unique_ptr<RTC::SCTP::ReConfigChunk> responseChunk1{ RTC::SCTP::ReConfigChunk::Factory(
+			responseBuffer1.data(), responseBuffer1.size()) };
+
+		auto* response1 =
+		  responseChunk1->BuildParameterInPlace<RTC::SCTP::ReconfigurationResponseParameter>();
+
+		response1->SetReconfigurationResponseSequenceNumber(reqSeqNbr);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		response1->SetResult(static_cast<RTC::SCTP::ReconfigurationResponseParameter::Result>(7));
+		response1->Consolidate();
+
+		test.HandleReceivedReConfigChunk(responseChunk1.get());
+
+		REQUIRE(test.associationListener.HasErrored() == true);
+		REQUIRE(test.associationListener.HasStreamsResetPerformedForStreamId(42) == false);
+		REQUIRE(test.associationListener.HasStreamsResetFailedForStreamId(42) == false);
+
+		// The request is still pending, so a valid response to it completes it.
+		std::vector<uint8_t> responseBuffer2(test.sctpOptions.mtu);
+		const std::unique_ptr<RTC::SCTP::ReConfigChunk> responseChunk2{ RTC::SCTP::ReConfigChunk::Factory(
+			responseBuffer2.data(), responseBuffer2.size()) };
+
+		auto* response2 =
+		  responseChunk2->BuildParameterInPlace<RTC::SCTP::ReconfigurationResponseParameter>();
+
+		response2->SetReconfigurationResponseSequenceNumber(reqSeqNbr);
+		response2->SetResult(RTC::SCTP::ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED);
+		response2->Consolidate();
+
+		test.HandleReceivedReConfigChunk(responseChunk2.get());
+
+		REQUIRE(test.associationListener.HasStreamsResetPerformedForStreamId(42) == true);
+	}
+
 	SECTION("an incoming stream reset request returns nothing performed")
 	{
 		TestStreamResetHandler test;

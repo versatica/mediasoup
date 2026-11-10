@@ -21,7 +21,7 @@ namespace RTC
 	 *   not every endpoint sends.
 	 * - What it reports is not the latest measurement but an average over the
 	 *   recent ones, smoothed against the previous report, so that a single
-	 *   outlier does not move it much.
+	 *   outlier does not move it much, along with the highest of the recent ones.
 	 * - It reports on its own too, since a measurement ageing out of the window
 	 *   moves the average as much as a new one arriving does.
 	 */
@@ -51,8 +51,11 @@ namespace RTC
 			 * The round trip time of the transport has moved.
 			 *
 			 * @param avgRttMs - What it is now.
+			 * @param maxRttMs - Highest measurement within the window, which is what
+			 *   waiting for a retransmission must take into account.
 			 */
-			virtual void OnRttCalculatorRttUpdated(RttCalculator* rttCalculator, int64_t avgRttMs) = 0;
+			virtual void OnRttCalculatorRttUpdated(
+			  RttCalculator* rttCalculator, int64_t avgRttMs, int64_t maxRttMs) = 0;
 		};
 
 	public:

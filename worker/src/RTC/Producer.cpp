@@ -5,10 +5,9 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/Consts.hpp"
-#include "RTC/NEW_RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
-#include "RTC/NEW_RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
+#include "RTC/RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
+#include "RTC/RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
-#include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger/RtpPacket.hpp"
 #endif
@@ -28,10 +27,12 @@ namespace RTC
 	  SharedInterface* shared,
 	  const std::string& id,
 	  RTC::Producer::Listener* listener,
+	  uint32_t rtcpSsrc,
 	  const FBS::Transport::ProduceRequest* data)
 	  : id(id),
 	    shared(shared),
 	    listener(listener),
+	    rtcpSsrc(rtcpSsrc),
 	    keyFrameRequestManager(
 	      RTC::Media::Kind(data->kind()) == RTC::Media::Kind::VIDEO
 	        ? std::make_unique<RTC::KeyFrameRequestManager>(this, shared, data->keyFrameRequestDelay())
@@ -723,97 +724,79 @@ namespace RTC
 		return result;
 	}
 
-	void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs)
+	void Producer::ReceiveRtcpSenderReportPacket(
+	  const RTC::RTCP::SenderReportPacket* senderReportPacket, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
-		auto it = this->mapSsrcRtpStream.find(report->GetSsrc());
+		const uint32_t ssrc = senderReportPacket->GetSsrc();
+		const auto it       = this->mapSsrcRtpStream.find(ssrc);
 
 		if (it != this->mapSsrcRtpStream.end())
 		{
-			auto* rtpStream  = it->second;
-			const bool first = !rtpStream->GetSenderReportMapping().has_value();
+			auto* const rtpStream = it->second;
+			const bool first      = !rtpStream->GetSenderReportMapping().has_value();
 
-			rtpStream->ReceiveRtcpSenderReport(report, receivedAtUs);
+			rtpStream->ReceiveRtcpSenderReportPacket(senderReportPacket, receivedAtUs);
 
 			this->listener->OnProducerRtcpSenderReport(this, rtpStream, first);
 
-			EmitTraceEventSrType(report);
+			EmitTraceEventRtcpSenderReportType(senderReportPacket);
 
 			return;
 		}
 
 		// If not found, check with RTX.
-		auto it2 = this->mapRtxSsrcRtpStream.find(report->GetSsrc());
+		const auto it2 = this->mapRtxSsrcRtpStream.find(ssrc);
 
 		if (it2 != this->mapRtxSsrcRtpStream.end())
 		{
-			auto* rtpStream = it2->second;
+			auto* const rtpStream = it2->second;
 
-			rtpStream->ReceiveRtxRtcpSenderReport(report, receivedAtUs);
+			rtpStream->ReceiveRtxRtcpSenderReportPacket(senderReportPacket, receivedAtUs);
 
 			return;
 		}
 
-		MS_DEBUG_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", report->GetSsrc());
+		MS_DEBUG_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", ssrc);
 	}
 
-	std::optional<float> Producer::ReceiveRtcpXrDelaySinceLastRr(
-	  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs)
+	std::optional<float> Producer::ReceiveRtcpDlrrSubBlock(
+	  uint32_t ssrc, const RTC::RTCP::DlrrExtendedReport::SubBlock& subBlock, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
-		auto it = this->mapSsrcRtpStream.find(ssrcInfo->GetSsrc());
+		const auto it = this->mapSsrcRtpStream.find(ssrc);
 
 		if (it == this->mapSsrcRtpStream.end())
 		{
-			MS_WARN_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", ssrcInfo->GetSsrc());
+			MS_WARN_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", ssrc);
 
 			return std::nullopt;
 		}
 
-		auto* rtpStream = it->second;
+		auto* const rtpStream = it->second;
 
-		return rtpStream->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo, receivedAtUs);
+		return rtpStream->ReceiveRtcpDlrrSubBlock(subBlock, receivedAtUs);
 	}
 
-	std::vector<std::unique_ptr<RTC::RTCP::ReceiverReport>> Producer::GetRtcp(int64_t nowUs)
+	void Producer::UpdateRttMs(int64_t rttMs)
 	{
 		MS_TRACE();
 
-		// NOTE: The interval is in milliseconds, being it given to a timer, so the
-		// elapsed time is truncated here.
-		const int64_t elapsedMs = (nowUs - this->lastRtcpSentAtUs) / 1000;
-
-		if (static_cast<float>(elapsedMs * 1.15) < this->maxRtcpIntervalMs)
-		{
-			return {};
-		}
-
-		std::vector<std::unique_ptr<RTC::RTCP::ReceiverReport>> receiverReports;
-
-		for (auto& kv : this->mapSsrcRtpStream)
+		for (const auto& kv : this->mapSsrcRtpStream)
 		{
 			auto* const rtpStream = kv.second;
 
-			auto* const report = rtpStream->GetRtcpReceiverReport();
-
-			if (report)
-			{
-				receiverReports.emplace_back(report);
-			}
-
-			auto* const rtxReport = rtpStream->GetRtxRtcpReceiverReport();
-
-			if (rtxReport)
-			{
-				receiverReports.emplace_back(rtxReport);
-			}
+			rtpStream->UpdateRttMs(rttMs);
 		}
+	}
 
-		this->lastRtcpSentAtUs = nowUs;
+	void Producer::SetRtcpSentAtUs(int64_t sentAtUs)
+	{
+		MS_TRACE();
 
-		return receiverReports;
+		this->lastRtcpSentAtUs = sentAtUs;
 	}
 
 	void Producer::RequestKeyFrame(uint32_t mappedSsrc)
@@ -1108,6 +1091,7 @@ namespace RTC
 		params.clockRate      = mediaCodec.clockRate;
 		params.rid            = encoding.rid;
 		params.cname          = this->rtpParameters.rtcp.cname;
+		params.rtcpSenderSsrc = this->rtcpSsrc;
 		params.spatialLayers  = encoding.spatialLayers;
 		params.temporalLayers = encoding.temporalLayers;
 		params.ksvc           = encoding.ksvc;
@@ -1652,7 +1636,7 @@ namespace RTC
 		}
 	}
 
-	void Producer::EmitTraceEventPliType(uint32_t ssrc) const
+	void Producer::EmitTraceEventRtcpPliType(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -1675,7 +1659,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	void Producer::EmitTraceEventFirType(uint32_t ssrc) const
+	void Producer::EmitTraceEventRtcpFirType(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -1698,7 +1682,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	void Producer::EmitTraceEventNackType() const
+	void Producer::EmitTraceEventRtcpNackType() const
 	{
 		MS_TRACE();
 
@@ -1716,7 +1700,8 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	void Producer::EmitTraceEventSrType(RTC::RTCP::SenderReport* report) const
+	void Producer::EmitTraceEventRtcpSenderReportType(
+	  const RTC::RTCP::SenderReportPacket* senderReportPacket) const
 	{
 		MS_TRACE();
 
@@ -1725,14 +1710,16 @@ namespace RTC
 			return;
 		}
 
+		const Utils::Time::Ntp ntp = senderReportPacket->GetNtp();
+
 		auto traceInfo = FBS::Producer::CreateSrTraceInfo(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
-		  report->GetSsrc(),
-		  report->GetNtpSec(),
-		  report->GetNtpFrac(),
-		  report->GetRtpTs(),
-		  report->GetPacketCount(),
-		  report->GetOctetCount());
+		  senderReportPacket->GetSsrc(),
+		  ntp.seconds,
+		  ntp.fractions,
+		  senderReportPacket->GetRtpTimestamp(),
+		  senderReportPacket->GetPacketCount(),
+		  senderReportPacket->GetOctetCount());
 
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
@@ -1772,31 +1759,31 @@ namespace RTC
 	}
 
 	void Producer::OnRtpStreamSendRtcpPacket(
-	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::NEW_RTCP::Packet* packet)
+	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
 		switch (packet->GetType())
 		{
-			case RTC::NEW_RTCP::Packet::PacketType::PSFB:
+			case RTC::RTCP::Packet::PacketType::PSFB:
 			{
 				const auto* const feedbackPacket =
-				  static_cast<const RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket*>(packet);
+				  static_cast<const RTC::RTCP::AnyPayloadSpecificFeedbackPacket*>(packet);
 
 				switch (feedbackPacket->GetMessageType())
 				{
-					case RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI:
+					case RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI:
 					{
 						// May emit 'trace' event.
-						EmitTraceEventPliType(feedbackPacket->GetMediaSsrc());
+						EmitTraceEventRtcpPliType(feedbackPacket->GetMediaSsrc());
 
 						break;
 					}
 
-					case RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR:
+					case RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR:
 					{
 						// May emit 'trace' event.
-						EmitTraceEventFirType(feedbackPacket->GetMediaSsrc());
+						EmitTraceEventRtcpFirType(feedbackPacket->GetMediaSsrc());
 
 						break;
 					}
@@ -1807,17 +1794,17 @@ namespace RTC
 				break;
 			}
 
-			case RTC::NEW_RTCP::Packet::PacketType::RTPFB:
+			case RTC::RTCP::Packet::PacketType::RTPFB:
 			{
 				const auto* const feedbackPacket =
-				  static_cast<const RTC::NEW_RTCP::AnyTransportLayerFeedbackPacket*>(packet);
+				  static_cast<const RTC::RTCP::AnyTransportLayerFeedbackPacket*>(packet);
 
 				switch (feedbackPacket->GetMessageType())
 				{
-					case RTC::NEW_RTCP::AnyTransportLayerFeedbackPacket::MessageType::NACK:
+					case RTC::RTCP::AnyTransportLayerFeedbackPacket::MessageType::NACK:
 					{
 						// May emit 'trace' event.
-						EmitTraceEventNackType();
+						EmitTraceEventRtcpNackType();
 
 						break;
 					}

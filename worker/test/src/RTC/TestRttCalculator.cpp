@@ -13,13 +13,16 @@ SCENARIO("RttCalculator", "[rttcalculator]")
 	class TestRttCalculatorListener : public RTC::RttCalculator::Listener
 	{
 	public:
-		void OnRttCalculatorRttUpdated(RTC::RttCalculator* /*rttCalculator*/, int64_t avgRttMs) override
+		void OnRttCalculatorRttUpdated(
+		  RTC::RttCalculator* /*rttCalculator*/, int64_t avgRttMs, int64_t maxRttMs) override
 		{
 			this->avgRttsMs.push_back(avgRttMs);
+			this->maxRttsMs.push_back(maxRttMs);
 		}
 
 	public:
 		std::vector<int64_t> avgRttsMs;
+		std::vector<int64_t> maxRttsMs;
 	};
 
 	int64_t nowUs{ BaseTimeUs };
@@ -129,6 +132,30 @@ SCENARIO("RttCalculator", "[rttcalculator]")
 		REQUIRE(timer->EvaluateHasExpired());
 
 		REQUIRE(listener.avgRttsMs == std::vector<int64_t>{ 100, 100, 97, 91 });
+	}
+
+	SECTION("the highest measurement within the window goes along with the average")
+	{
+		TestRttCalculatorListener listener;
+		RTC::RttCalculator rttCalculator(std::addressof(listener), std::addressof(shared));
+
+		auto* timer = shared.GetTimer(TimerLabel);
+
+		REQUIRE(timer);
+
+		rttCalculator.AddRtt(100, shared.GetTimeMs());
+
+		advanceNowMs(1000);
+
+		// Both are within the window, and the first one is the highest.
+		rttCalculator.AddRtt(40, shared.GetTimeMs());
+
+		advanceNowMs(1000);
+
+		// The first one ages out, leaving only the 40.
+		REQUIRE(timer->EvaluateHasExpired());
+
+		REQUIRE(listener.maxRttsMs == std::vector<int64_t>{ 100, 100, 40 });
 	}
 
 	SECTION("two measurements taken at the same instant both count")

@@ -58,8 +58,6 @@ namespace RTC
 			{ Chunk::ChunkType::OPERATION_ERROR,   "OPERATION-ERROR"   },
 			{ Chunk::ChunkType::COOKIE_ECHO,       "COOKIE-ECHO"       },
 			{ Chunk::ChunkType::COOKIE_ACK,        "COOKIE-ACK"        },
-			{ Chunk::ChunkType::ECNE,              "ECNE"              },
-			{ Chunk::ChunkType::CWR,               "CWR"               },
 			{ Chunk::ChunkType::SHUTDOWN_COMPLETE, "SHUTDOWN-COMPLETE" },
 			{ Chunk::ChunkType::FORWARD_TSN,       "FORWARD-TSN"       },
 			{ Chunk::ChunkType::RE_CONFIG,         "RE-CONFIG"         },

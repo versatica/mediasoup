@@ -77,7 +77,8 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  re-config: %s", this->reConfig ? "yes" : "no");
 			MS_DUMP_CLEAN(
 			  indentation,
-			  "  zero checksum alternate error detection method: %s",
+			  "  zero checksum alternate error detection method: 0x%08" PRIX32 " (%s)",
+			  static_cast<uint32_t>(this->zeroChecksumAlternateErrorDetectionMethod),
 			  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethodToString(
 			    this->zeroChecksumAlternateErrorDetectionMethod)
 			    .c_str());

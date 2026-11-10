@@ -8,12 +8,10 @@
 #include "FBS/transport.h"
 #include "RTC/BWE/BitrateAllocator.hpp"
 #include "RTC/ConsumerTypes.hpp"
+#include "RTC/RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
+#include "RTC/RTCP/packet/AnyReportPacket.hpp"
+#include "RTC/RTCP/packet/NackPacket.hpp"
 #include "RTC/ProducerStreamManager.hpp"
-#include "RTC/RTCP/CompoundPacket.hpp"
-#include "RTC/RTCP/Feedback.hpp"
-#include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
-#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
@@ -21,6 +19,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SeqManager.hpp"
 #include "SharedInterface.hpp"
+#include "Utils.hpp"
 #include <ankerl/unordered_dense.h>
 #include <bitset>
 #include <map>
@@ -149,6 +148,11 @@ namespace RTC
 			return this->rtxSsrcs;
 		}
 
+		const std::vector<RTC::RTP::RtpStreamSend*>& GetRtpStreams() const
+		{
+			return this->rtpStreams;
+		}
+
 		bool IsActive() const override
 		{
 			// clang-format off
@@ -221,29 +225,38 @@ namespace RTC
 		void SendRtpPacket(RTC::RTP::Packet* packet, std::shared_ptr<RTC::RTP::Packet>& sharedPacket);
 
 		/**
-		 * What each RTP stream of this Consumer reports in a RTCP compound packet,
-		 * if it is time to report.
+		 * Whether it is time for the RTP streams of this Consumer to report in a
+		 * RTCP compound packet.
 		 */
-		std::vector<RTC::RTCP::CompoundPacket::SendStreamItems> GetRtcp(int64_t nowUs);
+		[[nodiscard]] bool IsRtcpDue(int64_t nowUs) const
+		{
+			const int64_t elapsedMs = Utils::Time::TimeUsToMs(nowUs - this->lastRtcpSentAtUs);
+
+			return static_cast<float>(elapsedMs * 1.15) >= this->maxRtcpIntervalMs;
+		}
+
+		/**
+		 * Record the instant at which the RTP streams of this Consumer last
+		 * reported in a RTCP compound packet.
+		 */
+		void SetRtcpSentAtUs(int64_t sentAtUs);
 
 		/**
 		 * Worst remote fraction lost among the RTP streams of this Consumer.
 		 */
 		uint8_t GetWorstRemoteFractionLost(uint32_t mappedSsrc) const;
 
-		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
+		void ReceiveRtcpNackPacket(const RTC::RTCP::NackPacket* nackPacket);
 
-		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc);
+		void ReceiveRtcpKeyFrameRequest(
+		  RTC::RTCP::AnyPayloadSpecificFeedbackPacket::MessageType messageType, uint32_t ssrc);
 
 		/**
-		 * @returns What this Receiver Report says about the link to the remote
+		 * @returns What this report block says about the link to the remote
 		 *   endpoint.
 		 */
-		RTC::RTP::RtpStreamSend::ReceiverReportResult ReceiveRtcpReceiverReport(
-		  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
-
-		void ReceiveRtcpXrReceiverReferenceTime(
-		  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs);
+		RTC::RTP::RtpStreamSend::ReceiverReportResult ReceiveRtcpReportBlock(
+		  const RTC::RTCP::AnyReportPacket::ReportBlock& reportBlock, int64_t receivedAtUs);
 
 		int64_t GetTransmissionRate(int64_t nowMs);
 
@@ -260,11 +273,11 @@ namespace RTC
 	private:
 		void EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx = false) const;
 
-		void EmitTraceEventPliType(uint32_t ssrc) const;
+		void EmitTraceEventRtcpPliType(uint32_t ssrc) const;
 
-		void EmitTraceEventFirType(uint32_t ssrc) const;
+		void EmitTraceEventRtcpFirType(uint32_t ssrc) const;
 
-		void EmitTraceEventNackType() const;
+		void EmitTraceEventRtcpNackType() const;
 
 		void EmitTraceEvent(flatbuffers::Offset<FBS::Consumer::TraceNotification>& notification) const;
 

@@ -81,9 +81,10 @@ namespace RTC
 				Chunk* chunk{ nullptr }; // NOLINT(misc-const-correctness)
 
 				MS_DEBUG_DEV(
-				  "parsing SCTP chunk [ptr:%zu, type:%" PRIu8 "]",
+				  "parsing SCTP chunk [ptr:%zu, type:%" PRIu8 " (%s)]",
 				  ptr - buffer,
-				  static_cast<uint8_t>(chunkType));
+				  static_cast<uint8_t>(chunkType),
+				  Chunk::ChunkTypeToString(chunkType).c_str());
 
 				switch (chunkType)
 				{

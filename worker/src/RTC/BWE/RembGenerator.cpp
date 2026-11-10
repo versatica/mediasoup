@@ -25,7 +25,8 @@ namespace RTC
 
 		/* Instance methods. */
 
-		RembGenerator::RembGenerator(Listener* listener) : listener(listener)
+		RembGenerator::RembGenerator(Listener* listener, RembGeneratorOptions options)
+		  : listener(listener), options(options)
 		{
 			MS_TRACE();
 		}
@@ -154,21 +155,22 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const std::unique_ptr<RTC::NEW_RTCP::RembPacket> packet{ RTC::NEW_RTCP::RembPacket::Factory(
+			const std::unique_ptr<RTC::RTCP::RembPacket> packet{ RTC::RTCP::RembPacket::Factory(
 				this->packetBuffer.data(), this->packetBuffer.size()) };
 
+			packet->SetSenderSsrc(this->options.rtcpSenderSsrc);
 			packet->SetBitrate(bitrate);
 
-			if (ssrcs.size() > RTC::NEW_RTCP::RembPacket::MaxSsrcs)
+			if (ssrcs.size() > RTC::RTCP::RembPacket::MaxSsrcs)
 			{
 				MS_WARN_TAG(
 				  bwe,
 				  "ignoring SSRCs that don't fit in a REMB [ssrcs:%zu, max:%zu]",
 				  ssrcs.size(),
-				  RTC::NEW_RTCP::RembPacket::MaxSsrcs);
+				  RTC::RTCP::RembPacket::MaxSsrcs);
 			}
 
-			const size_t numSsrcs = std::min(ssrcs.size(), RTC::NEW_RTCP::RembPacket::MaxSsrcs);
+			const size_t numSsrcs = std::min(ssrcs.size(), RTC::RTCP::RembPacket::MaxSsrcs);
 
 			for (size_t idx{ 0 }; idx < numSsrcs; ++idx)
 			{
