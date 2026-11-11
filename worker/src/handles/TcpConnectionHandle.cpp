@@ -218,7 +218,7 @@ void TcpConnectionHandle::Write(
 	written    = uv_try_write(reinterpret_cast<uv_stream_t*>(this->uvHandle), buffers, 2);
 
 	// All the data was written. Done.
-	if (written == static_cast<int>(totalLen))
+	if (std::cmp_equal(written, totalLen))
 	{
 		// Update sent bytes.
 		this->sentBytes += written;
@@ -251,7 +251,7 @@ void TcpConnectionHandle::Write(
 	writeData->req.data = static_cast<void*>(writeData);
 
 	// If the first buffer was not entirely written then splice it.
-	if (static_cast<size_t>(written) < len1)
+	if (std::cmp_less(written, len1))
 	{
 		std::memcpy(
 		  writeData->store, data1 + static_cast<size_t>(written), len1 - static_cast<size_t>(written));

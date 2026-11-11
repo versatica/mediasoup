@@ -175,7 +175,7 @@ namespace RTC
 				MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
 				// Filter temporal layers higher than the target one.
-				if (this->payloadDescriptor->temporalLayer > context->GetTargetTemporalLayer())
+				if (std::cmp_greater(this->payloadDescriptor->temporalLayer, context->GetTargetTemporalLayer()))
 				{
 					return false;
 				}
@@ -184,7 +184,7 @@ namespace RTC
 				context->SetCurrentSpatialLayer(0);
 
 				// Update/fix current temporal layer.
-				if (this->payloadDescriptor->temporalLayer > context->GetCurrentTemporalLayer())
+				if (std::cmp_greater(this->payloadDescriptor->temporalLayer, context->GetCurrentTemporalLayer()))
 				{
 					context->SetCurrentTemporalLayer(this->payloadDescriptor->temporalLayer);
 				}

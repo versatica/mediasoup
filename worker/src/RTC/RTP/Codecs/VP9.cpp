@@ -278,7 +278,9 @@ namespace RTC
 						// In full SVC we do not need a keyframe.
 						else
 						{
-							if (packetSpatialLayer == context->GetTargetSpatialLayer() && this->payloadDescriptor->e)
+							if (
+							  std::cmp_equal(packetSpatialLayer, context->GetTargetSpatialLayer()) &&
+							  this->payloadDescriptor->e)
 							{
 								MS_DEBUG_DEV(
 								  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
@@ -336,7 +338,9 @@ namespace RTC
 					// Downgrade current temporal layer if needed.
 					else if (context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer())
 					{
-						if (packetTemporalLayer == context->GetTargetTemporalLayer() && this->payloadDescriptor->e)
+						if (
+						  std::cmp_equal(packetTemporalLayer, context->GetTargetTemporalLayer()) &&
+						  this->payloadDescriptor->e)
 						{
 							MS_DEBUG_DEV(
 							  "downgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
@@ -362,7 +366,7 @@ namespace RTC
 				}
 
 				// Set marker bit if needed.
-				if (packetSpatialLayer == tmpSpatialLayer && this->payloadDescriptor->e)
+				if (std::cmp_equal(packetSpatialLayer, tmpSpatialLayer) && this->payloadDescriptor->e)
 				{
 					marker = true;
 				}

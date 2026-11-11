@@ -198,7 +198,10 @@ RTC::WebRtcServer* Worker::AssertAndGetWebRtcServerById(
 		MS_THROW_NOT_FOUND_ERROR("WebRtcServer not found [method:%s]", method.c_str());
 	}
 
-	return it->second;
+	// NOLINTNEXTLINE(misc-const-correctness)
+	RTC::WebRtcServer* webRtcServer = it->second;
+
+	return webRtcServer;
 }
 
 RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId, const std::string& method) const
@@ -212,14 +215,17 @@ RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId, const s
 		MS_THROW_NOT_FOUND_ERROR("Router not found [method:%s]", method.c_str());
 	}
 
-	return it->second;
+	// NOLINTNEXTLINE(misc-const-correctness)
+	RTC::Router* router = it->second;
+
+	return router;
 }
 
 void Worker::CheckNoWebRtcServer(const std::string& webRtcServerId, const std::string& method) const
 {
 	MS_TRACE();
 
-	if (this->mapWebRtcServers.find(webRtcServerId) != this->mapWebRtcServers.end())
+	if (this->mapWebRtcServers.contains(webRtcServerId))
 	{
 		MS_THROW_ERROR(
 		  "a WebRtcServer with same webRtcServerId already exists [method:%s]", method.c_str());
@@ -230,7 +236,7 @@ void Worker::CheckNoRouter(const std::string& routerId, const std::string& metho
 {
 	MS_TRACE();
 
-	if (this->mapRouters.find(routerId) != this->mapRouters.end())
+	if (this->mapRouters.contains(routerId))
 	{
 		MS_THROW_ERROR("a Router with same routerId already exists [method:%s]", method.c_str());
 	}

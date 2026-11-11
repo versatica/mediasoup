@@ -79,7 +79,7 @@ namespace RTC
 				this->requestedList.insert(seq);
 
 				// Remove old ones so we don't accumulate requested packets.
-				auto it = this->requestedList.lower_bound(this->lastSeq - MaxPacketAge);
+				const auto it = this->requestedList.lower_bound(this->lastSeq - MaxPacketAge);
 
 				if (it != this->requestedList.begin())
 				{
@@ -121,7 +121,7 @@ namespace RTC
 
 		// Remove old keyframes.
 		{
-			auto it = this->keyFrameList.lower_bound(seq - MaxPacketAge);
+			const auto it = this->keyFrameList.lower_bound(seq - MaxPacketAge);
 
 			if (it != this->keyFrameList.begin())
 			{
@@ -131,7 +131,7 @@ namespace RTC
 
 		if (isRecovered)
 		{
-			const auto inserted = this->recoveredList.insert(seq).second;
+			const bool inserted = this->recoveredList.insert(seq).second;
 
 			// Packet already recovered, ignore it.
 			if (!inserted)
@@ -140,7 +140,7 @@ namespace RTC
 			}
 
 			// Remove old ones so we don't accumulate recovered packets.
-			auto it = this->recoveredList.lower_bound(seq - MaxPacketAge);
+			const auto it = this->recoveredList.lower_bound(seq - MaxPacketAge);
 
 			if (it != this->recoveredList.begin())
 			{
@@ -183,11 +183,11 @@ namespace RTC
 		MS_TRACE();
 
 		// Remove old packets.
-		auto it = this->nackList.lower_bound(seqEnd - MaxPacketAge);
+		const auto it = this->nackList.lower_bound(seqEnd - MaxPacketAge);
 
 		this->nackList.erase(this->nackList.begin(), it);
 
-		auto requestedIt = this->requestedList.lower_bound(seqEnd - MaxPacketAge);
+		const auto requestedIt = this->requestedList.lower_bound(seqEnd - MaxPacketAge);
 
 		this->requestedList.erase(this->requestedList.begin(), requestedIt);
 
@@ -196,14 +196,13 @@ namespace RTC
 		// clear it and request a keyframe.
 		const uint16_t numNewNacks = seqEnd - seqStart;
 
-		if (static_cast<uint16_t>(this->nackList.size()) + numNewNacks > MaxNackPackets)
+		if (this->nackList.size() + numNewNacks > MaxNackPackets)
 		{
-			while (RemoveNackItemsUntilKeyFrame() &&
-			       static_cast<uint16_t>(this->nackList.size()) + numNewNacks > MaxNackPackets)
+			while (RemoveNackItemsUntilKeyFrame() && this->nackList.size() + numNewNacks > MaxNackPackets)
 			{
 			}
 
-			if (static_cast<uint16_t>(this->nackList.size()) + numNewNacks > MaxNackPackets)
+			if (this->nackList.size() + numNewNacks > MaxNackPackets)
 			{
 				MS_WARN_TAG(
 				  rtx, "NACK list full, clearing it and requesting a key frame [seqEnd:%" PRIu16 "]", seqEnd);
@@ -225,10 +224,10 @@ namespace RTC
 
 		for (uint16_t seq = seqStart; seq != seqEnd; ++seq)
 		{
-			MS_ASSERT(this->nackList.find(seq) == this->nackList.end(), "packet already in the NACK list");
+			MS_ASSERT(!this->nackList.contains(seq), "packet already in the NACK list");
 
 			// Do not send NACK for packets that are already recovered by RTX.
-			if (this->recoveredList.find(seq) != this->recoveredList.end())
+			if (this->recoveredList.contains(seq))
 			{
 				continue;
 			}
@@ -249,7 +248,7 @@ namespace RTC
 
 		while (!this->keyFrameList.empty())
 		{
-			auto it = this->nackList.lower_bound(*this->keyFrameList.begin());
+			const auto it = this->nackList.lower_bound(*this->keyFrameList.begin());
 
 			if (it != this->nackList.begin())
 			{

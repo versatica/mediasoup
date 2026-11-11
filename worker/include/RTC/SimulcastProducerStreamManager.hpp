@@ -50,7 +50,9 @@ namespace RTC
 				return false;
 			}
 
-			return it->second == this->currentSpatialLayer;
+			const int16_t spatialLayer = it->second;
+
+			return spatialLayer == this->currentSpatialLayer;
 		}
 
 		bool IsActive() const override;

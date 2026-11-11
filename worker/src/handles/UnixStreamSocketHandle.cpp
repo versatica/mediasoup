@@ -225,7 +225,7 @@ void UnixStreamSocketHandle::Write(const uint8_t* data, size_t len)
 	  uv_try_write(reinterpret_cast<uv_stream_t*>(this->uvHandle), std::addressof(buffer), 1);
 
 	// All the data was written. Done.
-	if (written == static_cast<int>(len))
+	if (std::cmp_equal(written, len))
 	{
 		return;
 	}

@@ -34,7 +34,7 @@ namespace RTC
 		// Build mapMappedSsrcSpatialLayer and reserve producerRtpStreams.
 		for (size_t idx{ 0 }; idx < this->consumableRtpEncodings.size(); ++idx)
 		{
-			auto& encoding = this->consumableRtpEncodings[idx];
+			const auto& encoding = this->consumableRtpEncodings[idx];
 
 			this->mapMappedSsrcSpatialLayer[encoding.ssrc] = static_cast<int16_t>(idx);
 		}
@@ -109,7 +109,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapMappedSsrcSpatialLayer.find(mappedSsrc);
+		const auto it = this->mapMappedSsrcSpatialLayer.find(mappedSsrc);
 
 		MS_ASSERT(it != this->mapMappedSsrcSpatialLayer.end(), "unknown mappedSsrc");
 
@@ -123,7 +123,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapMappedSsrcSpatialLayer.find(mappedSsrc);
+		const auto it = this->mapMappedSsrcSpatialLayer.find(mappedSsrc);
 
 		MS_ASSERT(it != this->mapMappedSsrcSpatialLayer.end(), "unknown mappedSsrc");
 

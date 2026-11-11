@@ -995,7 +995,7 @@ namespace RTC
 		written =
 		  BIO_write(this->sslBioFromNetwork, static_cast<const void*>(data), static_cast<int>(len));
 
-		if (written != static_cast<int>(len))
+		if (std::cmp_not_equal(written, len))
 		{
 			MS_WARN_TAG(
 			  dtls,
@@ -1071,7 +1071,7 @@ namespace RTC
 				return false;
 			}
 		}
-		else if (written != static_cast<int>(len))
+		else if (std::cmp_not_equal(written, len))
 		{
 			MS_WARN_TAG(
 			  dtls, "OpenSSL SSL_write() wrote less (%d bytes) than given data (%zu bytes)", written, len);
@@ -1469,6 +1469,7 @@ namespace RTC
 
 		BUF_MEM* mem;
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast)
 		BIO_get_mem_ptr(bio, std::addressof(mem));
 
 		if (!mem || !mem->data || mem->length == 0)

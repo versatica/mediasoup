@@ -504,7 +504,9 @@ namespace RTC
 
 				if (it != this->attributes.end())
 				{
-					return std::addressof(it->second);
+					const StunPacket::Attribute& attribute = it->second;
+
+					return std::addressof(attribute);
 				}
 
 				return nullptr;

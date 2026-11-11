@@ -808,7 +808,7 @@ namespace RTC
 			return;
 		}
 
-		auto it = this->mapMappedSsrcSsrc.find(mappedSsrc);
+		const auto it = this->mapMappedSsrcSsrc.find(mappedSsrc);
 
 		if (it == this->mapMappedSsrcSsrc.end())
 		{
@@ -844,7 +844,7 @@ namespace RTC
 
 		// If stream found in media ssrcs map, return it.
 		{
-			auto it = this->mapSsrcRtpStream.find(ssrc);
+			const auto it = this->mapSsrcRtpStream.find(ssrc);
 
 			if (it != this->mapSsrcRtpStream.end())
 			{
@@ -856,7 +856,7 @@ namespace RTC
 
 		// If stream found in RTX ssrcs map, return it.
 		{
-			auto it = this->mapRtxSsrcRtpStream.find(ssrc);
+			const auto it = this->mapRtxSsrcRtpStream.find(ssrc);
 
 			if (it != this->mapRtxSsrcRtpStream.end())
 			{
@@ -885,7 +885,7 @@ namespace RTC
 			}
 			else if (isRtxPacket && encoding.hasRtx && encoding.rtx.ssrc == ssrc)
 			{
-				auto it = this->mapSsrcRtpStream.find(encoding.ssrc);
+				const auto it = this->mapSsrcRtpStream.find(encoding.ssrc);
 
 				// Ignore if no stream has been created yet for the corresponding encoding.
 				if (it == this->mapSsrcRtpStream.end())
@@ -1063,9 +1063,7 @@ namespace RTC
 
 		const uint32_t ssrc = packet->GetSsrc();
 
-		MS_ASSERT(
-		  this->mapSsrcRtpStream.find(ssrc) == this->mapSsrcRtpStream.end(),
-		  "RtpStream with given SSRC already exists");
+		MS_ASSERT(!this->mapSsrcRtpStream.contains(ssrc), "RtpStream with given SSRC already exists");
 		MS_ASSERT(
 		  !this->rtpStreamByEncodingIdx[encodingIdx],
 		  "RtpStream for given encoding index already exists");
@@ -1189,7 +1187,7 @@ namespace RTC
 		// Mangle the payload type.
 		{
 			const uint8_t payloadType = packet->GetPayloadType();
-			auto it                   = this->rtpMapping.codecs.find(payloadType);
+			const auto it             = this->rtpMapping.codecs.find(payloadType);
 
 			if (it == this->rtpMapping.codecs.end())
 			{
@@ -1870,7 +1868,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapSsrcRtpStream.find(ssrc);
+		const auto it = this->mapSsrcRtpStream.find(ssrc);
 
 		if (it == this->mapSsrcRtpStream.end())
 		{

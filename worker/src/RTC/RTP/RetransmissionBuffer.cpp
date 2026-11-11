@@ -610,7 +610,7 @@ namespace RTC
 
 			const int64_t diffTs = newestTimestamp - timestamp;
 
-			return static_cast<uint32_t>(diffTs * 1000 / this->clockRate) > this->maxRetransmissionDelayMs;
+			return diffTs * 1000 / this->clockRate > this->maxRetransmissionDelayMs;
 		}
 	} // namespace RTP
 } // namespace RTC

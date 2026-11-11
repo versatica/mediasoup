@@ -58,7 +58,7 @@ void DepLibSRTP::ClassInit()
 	MS_TRACE();
 
 	{
-		const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
+		const std::scoped_lock lock(GlobalSyncMutex);
 
 		if (GlobalInstances == 0)
 		{
@@ -81,7 +81,8 @@ void DepLibSRTP::ClassDestroy()
 	MS_TRACE();
 
 	{
-		const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
+		const std::scoped_lock lock(GlobalSyncMutex);
+
 		--GlobalInstances;
 
 		if (GlobalInstances == 0)
@@ -97,12 +98,14 @@ const std::string& DepLibSRTP::GetErrorString(srtp_err_status_t code)
 
 	static const std::string UnknownError("unknown libsrtp error");
 
-	auto it = DepLibSRTP::ErrorCode2String.find(code);
+	const auto it = DepLibSRTP::ErrorCode2String.find(code);
 
 	if (it == DepLibSRTP::ErrorCode2String.end())
 	{
 		return UnknownError;
 	}
 
-	return it->second;
+	const std::string& errorString = it->second;
+
+	return errorString;
 }

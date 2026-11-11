@@ -149,7 +149,7 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("not an audio Producer");
 		}
 
-		if (this->mapProducerSpeakers.find(producer->id) != this->mapProducerSpeakers.end())
+		if (this->mapProducerSpeakers.contains(producer->id))
 		{
 			MS_THROW_ERROR("Producer already in map");
 		}
@@ -161,7 +161,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapProducerSpeakers.find(producer->id);
+		const auto it = this->mapProducerSpeakers.find(producer->id);
 
 		if (it == this->mapProducerSpeakers.end())
 		{
@@ -172,7 +172,7 @@ namespace RTC
 
 		delete producerSpeaker;
 
-		this->mapProducerSpeakers.erase(producer->id);
+		this->mapProducerSpeakers.erase(it);
 
 		if (producer->id == this->dominantId)
 		{
@@ -186,7 +186,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapProducerSpeakers.find(producer->id);
+		const auto it = this->mapProducerSpeakers.find(producer->id);
 
 		if (it != this->mapProducerSpeakers.end())
 		{
@@ -200,7 +200,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapProducerSpeakers.find(producer->id);
+		const auto it = this->mapProducerSpeakers.find(producer->id);
 
 		if (it != this->mapProducerSpeakers.end())
 		{
@@ -229,7 +229,7 @@ namespace RTC
 
 		const uint8_t volume = 127 - level;
 
-		auto it = this->mapProducerSpeakers.find(producer->id);
+		const auto it = this->mapProducerSpeakers.find(producer->id);
 
 		if (it != this->mapProducerSpeakers.end())
 		{
@@ -522,8 +522,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const int8_t minLevel = this->minLevel + SubunitLengthN1;
-		bool changed          = false;
+		const uint32_t minLevel = this->minLevel + SubunitLengthN1;
+		bool changed            = false;
 
 		for (uint32_t i = 0; i < ImmediateBuffLen; ++i)
 		{
@@ -591,12 +591,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (level == MinLevel)
+		if (std::cmp_equal(level, MinLevel))
 		{
 			return;
 		}
 
-		if ((this->minLevel == MinLevel) || (this->minLevel > level))
+		if ((this->minLevel == MinLevel) || std::cmp_greater(this->minLevel, level))
 		{
 			this->minLevel              = level;
 			this->nextMinLevel          = MinLevel;

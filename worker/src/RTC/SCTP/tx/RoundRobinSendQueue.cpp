@@ -84,7 +84,9 @@ namespace RTC
 				return this->defaultPriority;
 			}
 
-			return it->second.GetPriority();
+			const OutgoingStream& stream = it->second;
+
+			return stream.GetPriority();
 		}
 
 		void RoundRobinSendQueue::SetStreamPriority(uint16_t streamId, uint16_t priority)
