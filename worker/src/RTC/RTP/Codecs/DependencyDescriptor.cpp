@@ -194,7 +194,7 @@ namespace RTC
 						{
 							if (!fdiffs.empty())
 							{
-								fdiffs += ",";
+								fdiffs += ',';
 							}
 
 							fdiffs += std::to_string(fdiff);
@@ -205,7 +205,7 @@ namespace RTC
 						{
 							if (!fdiffChains.empty())
 							{
-								fdiffChains += ",";
+								fdiffChains += ',';
 							}
 
 							fdiffChains += std::to_string(fdiffChain);
