@@ -7,7 +7,7 @@
 namespace
 {
 	alignas(4) thread_local uint8_t DataBuffer[65536];
-}
+} // namespace
 
 void FuzzerUtils::Fuzz(const uint8_t* data, size_t len)
 {
