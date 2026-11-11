@@ -62,12 +62,12 @@ namespace RTC
 			}
 
 			// NOLINTNEXTLINE(readability-make-member-function-const)
-			void DependencyDescriptorPayloadDescriptor::UpdateActiveDecodeTargets(
-			  uint16_t spatialLayer, uint16_t temporalLayer, RTP::Packet* packet)
+			bool DependencyDescriptorPayloadDescriptor::Rewrite(
+			  const Codecs::DependencyDescriptor::RewriteParams& params, RTP::Packet* packet)
 			{
 				MS_TRACE();
 
-				this->dependencyDescriptor->UpdateActiveDecodeTargets(spatialLayer, temporalLayer, packet);
+				return this->dependencyDescriptor->Rewrite(params, packet);
 			}
 
 			void DependencyDescriptorPayloadDescriptor::Encoder::Encode(
@@ -75,8 +75,7 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				payloadDescriptor->UpdateActiveDecodeTargets(
-				  this->encodingData.maxSpatialLayer, this->encodingData.maxTemporalLayer, packet);
+				payloadDescriptor->Rewrite(this->encodingData.rewriteParams, packet);
 			}
 
 			DependencyDescriptorPayloadDescriptorHandler::DependencyDescriptorPayloadDescriptorHandler(
@@ -105,6 +104,25 @@ namespace RTC
 				MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
 				const auto frameNumber = this->payloadDescriptor->frameNumber;
+
+				// The packet flow restarts here, with frames that another encoder may have
+				// numbered on its own.
+				if (context->syncRequired)
+				{
+					// Against the inputs rather than the outputs, which say the same since
+					// this manager never drops, and needs no access to its base.
+					//
+					// NOTE: Minus one, so that this very frame and not the next one comes
+					// out right after the last one given.
+					if (!RTC::SeqManager<uint16_t>::IsSeqHigherThan(
+					      frameNumber, context->forwardedFrameIdManager.GetMaxInput()))
+					{
+						context->forwardedFrameIdManager.Sync(static_cast<uint16_t>(frameNumber - 1));
+					}
+
+					context->syncRequired = false;
+				}
+
 				// A reordered packet must be judged by the layers its frame was given
 				// rather than by the current ones, which may have changed since. Letting
 				// it through on the new layers would forward a frame whose references
@@ -325,8 +343,6 @@ namespace RTC
 				// above the current layers are filtered out on purpose and it would
 				// otherwise take their absence for loss.
 				//
-				// NOTE: The encoding data is stored so that retransmissions of this packet
-				// carry the same bitmask.
 				// NOTE: When the spatial layers are not filtered here they all are
 				// forwarded, so the endpoint must be told that every decode target of
 				// the stream is active rather than only those of one spatial layer.
@@ -336,12 +352,20 @@ namespace RTC
 
 				const auto maxTemporalLayer = static_cast<uint32_t>(context->GetCurrentTemporalLayer());
 
-				this->payloadDescriptor->UpdateActiveDecodeTargets(maxSpatialLayer, maxTemporalLayer, packet);
+				uint16_t forwardedFrameNumber;
 
-				// Leave the Consumer how this packet was rewritten for it.
+				context->forwardedFrameIdManager.Input(frameNumber, forwardedFrameNumber);
+
+				const Codecs::DependencyDescriptor::RewriteParams rewriteParams{
+					.frameNumber = forwardedFrameNumber,
+					.activeDecodeTargetsBitmask =
+					  this->payloadDescriptor->GetDecodeTargetsBitmask(maxSpatialLayer, maxTemporalLayer)
+				};
+
+				this->payloadDescriptor->Rewrite(rewriteParams, packet);
+
 				auto encoder = std::make_unique<DependencyDescriptorPayloadDescriptor::Encoder>(
-				  DependencyDescriptorPayloadDescriptor::EncodingData{
-				    .maxSpatialLayer = maxSpatialLayer, .maxTemporalLayer = maxTemporalLayer });
+				  DependencyDescriptorPayloadDescriptor::EncodingData{ .rewriteParams = rewriteParams });
 
 				encoder->preferDependencyDescriptor = context->PrefersDependencyDescriptor();
 
