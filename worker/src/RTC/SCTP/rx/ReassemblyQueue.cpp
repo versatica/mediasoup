@@ -144,6 +144,10 @@ namespace RTC
 
 				this->queuedBytes += ForwardTsnCost(skippedStreams.size());
 
+				// NOTE: This should not be needed but clang-tidy fails to understand
+				// this optional was already checked above and nothing could unset it
+				// in between.
+				// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 				this->deferredResetStreams->deferredActions.emplace_back(
 				  [this,
 					 newCumulativeTsn,
@@ -255,7 +259,12 @@ namespace RTC
 			return (1 + numStreams) * 4;
 		}
 
+#if MS_LOG_DEV_LEVEL == 3
 		void ReassemblyQueue::AddReassembledMessage(std::span<const Types::UnwrappedTsn> tsns, Message message)
+#else
+		void ReassemblyQueue::AddReassembledMessage(
+		  std::span<const Types::UnwrappedTsn> /*tsns*/, Message message)
+#endif
 		{
 			MS_TRACE();
 

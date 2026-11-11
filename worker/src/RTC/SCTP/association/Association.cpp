@@ -16,7 +16,7 @@
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 #include "Utils.hpp"
-#include <limits>  // std::numeric_limits()
+#include <limits>  // std::numeric_limits
 #include <sstream> // std::ostringstream
 #include <string>
 #include <type_traits> // std::is_same_v
@@ -2674,8 +2674,9 @@ namespace RTC
 
 				// The Measure of Staleness is expressed in microseconds.
 				staleCookieErrorCause->SetMeasureOfStaleness(
-				  stalenessUs > std::numeric_limits<uint32_t>::max() ? std::numeric_limits<uint32_t>::max()
-					                                                   : static_cast<uint32_t>(stalenessUs));
+				  std::cmp_greater(stalenessUs, std::numeric_limits<uint32_t>::max())
+				    ? std::numeric_limits<uint32_t>::max()
+						: static_cast<uint32_t>(stalenessUs));
 
 				staleCookieErrorCause->Consolidate();
 				operationErrorChunk->Consolidate();
