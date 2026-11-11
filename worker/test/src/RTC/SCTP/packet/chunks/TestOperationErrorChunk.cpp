@@ -93,6 +93,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[serializable][sctp][chunk]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*causeCode*/ static_cast<RTC::SCTP::ErrorCause::ErrorCauseCode>(49159),
 		  /*unknownCode*/ true);
 
@@ -162,6 +163,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[serializable][sctp][chunk]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*causeCode*/ static_cast<RTC::SCTP::ErrorCause::ErrorCauseCode>(49159),
 		  /*unknownCode*/ true);
 
@@ -236,6 +238,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[serializable][sctp][chunk]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*causeCode*/ static_cast<RTC::SCTP::ErrorCause::ErrorCauseCode>(49159),
 		  /*unknownCode*/ true);
 

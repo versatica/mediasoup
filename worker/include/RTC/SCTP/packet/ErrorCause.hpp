@@ -136,6 +136,7 @@ namespace RTC
 
 			virtual ErrorCauseCode GetCode() const final
 			{
+				// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 				return static_cast<ErrorCauseCode>(ntohs(static_cast<uint16_t>(GetHeaderPointer()->code)));
 			}
 
