@@ -2676,7 +2676,7 @@ namespace RTC
 				staleCookieErrorCause->SetMeasureOfStaleness(
 				  std::cmp_greater(stalenessUs, std::numeric_limits<uint32_t>::max())
 				    ? std::numeric_limits<uint32_t>::max()
-					                                                   : static_cast<uint32_t>(stalenessUs));
+						: static_cast<uint32_t>(stalenessUs));
 
 				staleCookieErrorCause->Consolidate();
 				operationErrorChunk->Consolidate();
