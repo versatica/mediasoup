@@ -37,7 +37,7 @@ namespace RTC
 		const auto& sctpParameters = dataProducer->GetSctpStreamParameters();
 
 		// Add entries into the streamIdTable.
-		auto streamId = sctpParameters.streamId;
+		const uint16_t streamId = sctpParameters.streamId;
 
 		if (!this->streamIdTable.contains(streamId))
 		{

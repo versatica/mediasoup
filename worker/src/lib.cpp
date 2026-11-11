@@ -85,9 +85,9 @@ extern "C" int mediasoup_worker_run(
 #endif
 
 	// Create a Shared singleton.
-	const std::unique_ptr<Shared> shared{ new Shared(
-		/*channelMessageRegistrator*/ new Channel::ChannelMessageRegistrator(),
-		/*channelNotifier*/ new Channel::ChannelNotifier(channel.get())) };
+	const std::unique_ptr<Shared> shared = std::make_unique<Shared>(
+	  /*channelMessageRegistrator*/ new Channel::ChannelMessageRegistrator(),
+	  /*channelNotifier*/ new Channel::ChannelNotifier(channel.get()));
 
 	// Initialize the Logger.
 	Logger::ClassInit(channel.get());

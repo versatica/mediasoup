@@ -172,7 +172,7 @@ namespace RTC
 
 		delete producerSpeaker;
 
-		this->mapProducerSpeakers.erase(producer->id);
+		this->mapProducerSpeakers.erase(it);
 
 		if (producer->id == this->dominantId)
 		{
