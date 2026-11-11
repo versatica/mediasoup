@@ -365,7 +365,7 @@ namespace RTC
 				/**
 				 * Newest frame number seen, to tell reordered packets apart.
 				 */
-				std::optional<uint16_t> maxFrameId{ std::nullopt };
+				std::optional<uint16_t> maxFrameId;
 
 			private:
 				/**

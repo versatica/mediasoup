@@ -14,6 +14,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 - A member that the constructor normalizes, validates or computes before assigning keeps its default initializer in the `.hpp` and is assigned in the body.
 - A member that not every constructor sets (several constructors, or a default constructor) keeps its default initializer.
 - A member whose initial value is a constant that does not depend on any argument gets that value as its initializer in the `.hpp`, not in the initializer list.
+- A `std::optional` member that starts empty gets no initializer at all: `std::optional<uint16_t> frameNumber;`, never `{ std::nullopt }`, which is what it already is.
 - The initializer list follows the declaration order of the members. Never reorder members to fit the initializer list.
 
 ## `const` members

@@ -119,12 +119,12 @@ namespace RTC
 					 * sent rather than going back, which would make the endpoint drop the
 					 * key frame.
 					 */
-					std::optional<uint16_t> frameNumber{ std::nullopt };
+					std::optional<uint16_t> frameNumber;
 					/**
 					 * Decode targets to tell the endpoint are active, or no value to
 					 * leave the descriptor saying whatever it came with.
 					 */
-					std::optional<uint32_t> activeDecodeTargetsBitmask{ std::nullopt };
+					std::optional<uint32_t> activeDecodeTargetsBitmask;
 				};
 
 			public:
@@ -143,7 +143,7 @@ namespace RTC
 				 */
 				std::shared_ptr<TemplateDependencyStructure> templateDependencyStructure;
 				std::vector<uint8_t> decodeTargetProtectedBy;
-				std::optional<uint32_t> activeDecodeTargetsBitmask{ std::nullopt };
+				std::optional<uint32_t> activeDecodeTargetsBitmask;
 				// Calculated.
 				uint8_t temporalLayer{ 0 };
 				uint8_t spatialLayer{ 0 };
