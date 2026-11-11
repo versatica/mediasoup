@@ -83,14 +83,16 @@ namespace RTC
 
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = ReconfigurationResponseParameter::Result2String.find(result);
+			const auto it = ReconfigurationResponseParameter::Result2String.find(result);
 
 			if (it == ReconfigurationResponseParameter::Result2String.end())
 			{
 				return Unknown;
 			}
 
-			return it->second;
+			const std::string& resultString = it->second;
+
+			return resultString;
 		}
 
 		ReconfigurationResponseParameter* ReconfigurationResponseParameter::ParseStrict(

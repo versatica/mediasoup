@@ -41,14 +41,16 @@ namespace RTC
 
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = Parameter::ParameterType2String.find(parameterType);
+			const auto it = Parameter::ParameterType2String.find(parameterType);
 
 			if (it == Parameter::ParameterType2String.end())
 			{
 				return Unknown;
 			}
 
-			return it->second;
+			const std::string& parameterTypeString = it->second;
+
+			return parameterTypeString;
 		}
 
 		bool Parameter::IsParameter(

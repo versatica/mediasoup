@@ -76,7 +76,10 @@ namespace mocks
 
 			if (it != this->timers.end())
 			{
-				return it->second;
+				// NOLINTNEXTLINE(misc-const-correctness)
+				MockTimerHandle* timer = it->second;
+
+				return timer;
 			}
 			else
 			{
@@ -90,7 +93,10 @@ namespace mocks
 
 			if (it != this->backoffTimers.end())
 			{
-				return it->second;
+				// NOLINTNEXTLINE(misc-const-correctness)
+				MockBackoffTimerHandle* backoffTimer = it->second;
+
+				return backoffTimer;
 			}
 			else
 			{

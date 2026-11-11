@@ -1893,7 +1893,7 @@ namespace RTC
 				//
 				// NOTE: `UpdateDependencyDescriptor()` relies on this to tell the room it
 				// may grow into from the extensions that follow.
-				if (len < currentLen)
+				if (std::cmp_less(len, currentLen))
 				{
 					std::memset(extension->value + len, 0, currentLen - len);
 				}

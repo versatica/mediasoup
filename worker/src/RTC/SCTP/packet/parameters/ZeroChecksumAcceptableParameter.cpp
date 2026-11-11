@@ -99,7 +99,7 @@ namespace RTC
 
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod2String.find(
+			const auto it = ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod2String.find(
 			  alternateErrorDetectionMethod);
 
 			if (it == ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod2String.end())
@@ -107,7 +107,9 @@ namespace RTC
 				return Unknown;
 			}
 
-			return it->second;
+			const std::string& alternateErrorDetectionMethodString = it->second;
+
+			return alternateErrorDetectionMethodString;
 		}
 
 		/* Instance methods. */

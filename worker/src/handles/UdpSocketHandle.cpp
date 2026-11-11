@@ -156,7 +156,7 @@ void UdpSocketHandle::Send(
 	const int sent  = uv_udp_try_send(this->uvHandle, std::addressof(buffer), 1, addr);
 
 	// Entire datagram was sent. Done.
-	if (sent == static_cast<int>(len))
+	if (std::cmp_equal(sent, len))
 	{
 		// Update sent bytes.
 		this->sentBytes += sent;

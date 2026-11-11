@@ -1742,7 +1742,10 @@ namespace RTC
 			MS_THROW_NOT_FOUND_ERROR("Producer not found [method:%s]", method.c_str());
 		}
 
-		return it->second;
+		// NOLINTNEXTLINE(misc-const-correctness)
+		RTC::Producer* producer = it->second;
+
+		return producer;
 	}
 
 	RTC::Consumer* Transport::AssertAndGetConsumerById(
@@ -1757,7 +1760,10 @@ namespace RTC
 			MS_THROW_NOT_FOUND_ERROR("Consumer not found [method:%s]", method.c_str());
 		}
 
-		return it->second;
+		// NOLINTNEXTLINE(misc-const-correctness)
+		RTC::Consumer* consumer = it->second;
+
+		return consumer;
 	}
 
 	RTC::Consumer* Transport::GetConsumerByMediaSsrc(uint32_t ssrc) const
@@ -1804,7 +1810,10 @@ namespace RTC
 			MS_THROW_NOT_FOUND_ERROR("DataProducer not found [method:%s]", method.c_str());
 		}
 
-		return it->second;
+		// NOLINTNEXTLINE(misc-const-correctness)
+		RTC::DataProducer* dataProducer = it->second;
+
+		return dataProducer;
 	}
 
 	RTC::DataConsumer* Transport::AssertAndGetDataConsumerById(
@@ -1819,7 +1828,10 @@ namespace RTC
 			MS_THROW_NOT_FOUND_ERROR("DataConsumer not found [method:%s]", method.c_str());
 		}
 
-		return it->second;
+		// NOLINTNEXTLINE(misc-const-correctness)
+		RTC::DataConsumer* dataConsumer = it->second;
+
+		return dataConsumer;
 	}
 
 	RTC::DataConsumer* Transport::GetSctpDataConsumerByStreamId(uint16_t streamId) const
@@ -1833,7 +1845,10 @@ namespace RTC
 			return nullptr;
 		}
 
-		return it->second;
+		// NOLINTNEXTLINE(misc-const-correctness)
+		RTC::DataConsumer* dataConsumer = it->second;
+
+		return dataConsumer;
 	}
 
 	void Transport::CheckNoProducer(const std::string& producerId, const std::string& method) const

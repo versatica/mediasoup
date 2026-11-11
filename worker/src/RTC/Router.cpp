@@ -450,12 +450,15 @@ namespace RTC
 
 		const auto it = this->mapTransports.find(transportId);
 
-		if (this->mapTransports.find(transportId) == this->mapTransports.end())
+		if (it == this->mapTransports.end())
 		{
 			MS_THROW_NOT_FOUND_ERROR("Transport not found [method:%s]", method.c_str());
 		}
 
-		return it->second;
+		// NOLINTNEXTLINE(misc-const-correctness)
+		RTC::Transport* transport = it->second;
+
+		return transport;
 	}
 
 	RTC::RtpObserver* Router::AssertAndGetRtpObserverById(
@@ -465,12 +468,15 @@ namespace RTC
 
 		const auto it = this->mapRtpObservers.find(rtpObserverId);
 
-		if (this->mapRtpObservers.find(rtpObserverId) == this->mapRtpObservers.end())
+		if (it == this->mapRtpObservers.end())
 		{
 			MS_THROW_NOT_FOUND_ERROR("RtpObserver not found [method:%s]", method.c_str());
 		}
 
-		return it->second;
+		// NOLINTNEXTLINE(misc-const-correctness)
+		RTC::RtpObserver* rtpObserver = it->second;
+
+		return rtpObserver;
 	}
 
 	void Router::CheckNoTransport(const std::string& transportId, const std::string& method) const
@@ -498,10 +504,10 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		  this->mapProducerConsumers.find(producer) == this->mapProducerConsumers.end(),
+		  !this->mapProducerConsumers.contains(producer),
 		  "Producer already present in mapProducerConsumers");
 
-		if (this->mapProducers.find(producer->id) != this->mapProducers.end())
+		if (this->mapProducers.contains(producer->id))
 		{
 			MS_THROW_ERROR("Producer already present in mapProducers [producerId:%s]", producer->id.c_str());
 		}
@@ -516,9 +522,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto mapProducerConsumersIt    = this->mapProducerConsumers.find(producer);
-		auto mapProducersIt            = this->mapProducers.find(producer->id);
-		auto mapProducerRtpObserversIt = this->mapProducerRtpObservers.find(producer);
+		const auto mapProducerConsumersIt    = this->mapProducerConsumers.find(producer);
+		const auto mapProducersIt            = this->mapProducers.find(producer->id);
+		const auto mapProducerRtpObserversIt = this->mapProducerRtpObservers.find(producer);
 
 		MS_ASSERT(
 		  mapProducerConsumersIt != this->mapProducerConsumers.end(),
@@ -743,21 +749,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto mapProducersIt = this->mapProducers.find(producerId);
+		const auto mapProducersIt = this->mapProducers.find(producerId);
 
 		if (mapProducersIt == this->mapProducers.end())
 		{
 			MS_THROW_NOT_FOUND_ERROR("Producer not found [producerId:%s]", producerId.c_str());
 		}
 
-		auto* producer              = mapProducersIt->second;
-		auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
+		auto* producer                    = mapProducersIt->second;
+		const auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
 
 		MS_ASSERT(
 		  mapProducerConsumersIt != this->mapProducerConsumers.end(),
 		  "Producer not present in mapProducerConsumers");
 		MS_ASSERT(
-		  this->mapConsumerProducer.find(consumer) == this->mapConsumerProducer.end(),
+		  !this->mapConsumerProducer.contains(consumer),
 		  "Consumer already present in mapConsumerProducer");
 
 		// Update the Consumer status based on the Producer status.
@@ -794,21 +800,22 @@ namespace RTC
 		// remains alive, so the entry in mapProducerConsumers still exists and must
 		// be removed.
 
-		auto mapConsumerProducerIt = this->mapConsumerProducer.find(consumer);
+		const auto mapConsumerProducerIt = this->mapConsumerProducer.find(consumer);
 
 		MS_ASSERT(
 		  mapConsumerProducerIt != this->mapConsumerProducer.end(),
 		  "Consumer not present in mapConsumerProducer");
 
 		// Get the associated Producer.
-		auto* producer = mapConsumerProducerIt->second;
+		auto* producer                    = mapConsumerProducerIt->second;
+		const auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
 
 		MS_ASSERT(
-		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		  mapProducerConsumersIt != this->mapProducerConsumers.end(),
 		  "Producer not present in mapProducerConsumers");
 
 		// Remove the Consumer from the set of Consumers of the Producer.
-		auto& consumers = this->mapProducerConsumers.at(producer);
+		auto& consumers = mapProducerConsumersIt->second;
 
 		consumers.erase(consumer);
 
@@ -825,7 +832,7 @@ namespace RTC
 		// Producer was closed, so the entry in mapProducerConsumers has already been
 		// removed.
 
-		auto mapConsumerProducerIt = this->mapConsumerProducer.find(consumer);
+		const auto mapConsumerProducerIt = this->mapConsumerProducer.find(consumer);
 
 		MS_ASSERT(
 		  mapConsumerProducerIt != this->mapConsumerProducer.end(),
@@ -850,11 +857,10 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		  this->mapDataProducerDataConsumers.find(dataProducer) ==
-		    this->mapDataProducerDataConsumers.end(),
+		  !this->mapDataProducerDataConsumers.contains(dataProducer),
 		  "DataProducer already present in mapDataProducerDataConsumers");
 
-		if (this->mapDataProducers.find(dataProducer->id) != this->mapDataProducers.end())
+		if (this->mapDataProducers.contains(dataProducer->id))
 		{
 			MS_THROW_ERROR(
 			  "DataProducer already present in mapDataProducers [dataProducerId:%s]",
@@ -870,8 +876,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto mapDataProducerDataConsumersIt = this->mapDataProducerDataConsumers.find(dataProducer);
-		auto mapDataProducersIt             = this->mapDataProducers.find(dataProducer->id);
+		const auto mapDataProducerDataConsumersIt = this->mapDataProducerDataConsumers.find(dataProducer);
+		const auto mapDataProducersIt = this->mapDataProducers.find(dataProducer->id);
 
 		MS_ASSERT(
 		  mapDataProducerDataConsumersIt != this->mapDataProducerDataConsumers.end(),
@@ -997,21 +1003,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto mapDataProducersIt = this->mapDataProducers.find(dataProducerId);
+		const auto mapDataProducersIt = this->mapDataProducers.find(dataProducerId);
 
 		if (mapDataProducersIt == this->mapDataProducers.end())
 		{
 			MS_THROW_NOT_FOUND_ERROR("DataProducer not found [dataProducerId:%s]", dataProducerId.c_str());
 		}
 
-		auto* dataProducer                  = mapDataProducersIt->second;
-		auto mapDataProducerDataConsumersIt = this->mapDataProducerDataConsumers.find(dataProducer);
+		auto* dataProducer = mapDataProducersIt->second;
+		const auto mapDataProducerDataConsumersIt = this->mapDataProducerDataConsumers.find(dataProducer);
 
 		MS_ASSERT(
 		  mapDataProducerDataConsumersIt != this->mapDataProducerDataConsumers.end(),
 		  "DataProducer not present in mapDataProducerDataConsumers");
 		MS_ASSERT(
-		  this->mapDataConsumerDataProducer.find(dataConsumer) == this->mapDataConsumerDataProducer.end(),
+		  !this->mapDataConsumerDataProducer.contains(dataConsumer),
 		  "DataConsumer already present in mapDataConsumerDataProducer");
 
 		// Update the DataConsumer status based on the DataProducer status.
@@ -1036,7 +1042,7 @@ namespace RTC
 		// remains alive, so the entry in mapDataProducerDataConsumers still exists and must
 		// be removed.
 
-		auto mapDataConsumerDataProducerIt = this->mapDataConsumerDataProducer.find(dataConsumer);
+		const auto mapDataConsumerDataProducerIt = this->mapDataConsumerDataProducer.find(dataConsumer);
 
 		MS_ASSERT(
 		  mapDataConsumerDataProducerIt != this->mapDataConsumerDataProducer.end(),
@@ -1044,14 +1050,14 @@ namespace RTC
 
 		// Get the associated DataProducer.
 		auto* dataProducer = mapDataConsumerDataProducerIt->second;
+		const auto mapDataProducerDataConsumersIt = this->mapDataProducerDataConsumers.find(dataProducer);
 
 		MS_ASSERT(
-		  this->mapDataProducerDataConsumers.find(dataProducer) !=
-		    this->mapDataProducerDataConsumers.end(),
+		  mapDataProducerDataConsumersIt != this->mapDataProducerDataConsumers.end(),
 		  "DataProducer not present in mapDataProducerDataConsumers");
 
 		// Remove the DataConsumer from the set of DataConsumers of the DataProducer.
-		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
+		auto& dataConsumers = mapDataProducerDataConsumersIt->second;
 
 		dataConsumers.erase(dataConsumer);
 
@@ -1069,7 +1075,7 @@ namespace RTC
 		// DataProducer was closed, so the entry in mapDataProducerDataConsumers has already
 		// been removed.
 
-		auto mapDataConsumerDataProducerIt = this->mapDataConsumerDataProducer.find(dataConsumer);
+		const auto mapDataConsumerDataProducerIt = this->mapDataConsumerDataProducer.find(dataConsumer);
 
 		MS_ASSERT(
 		  mapDataConsumerDataProducerIt != this->mapDataConsumerDataProducer.end(),
@@ -1083,9 +1089,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapTransports.find(transport->id) != this->mapTransports.end(),
-		  "Transport not present in mapTransports");
+		MS_ASSERT(this->mapTransports.contains(transport->id), "Transport not present in mapTransports");
 
 		// Tell the Transport to close all its Producers and Consumers so it will
 		// notify us about their closures.
@@ -1126,6 +1130,7 @@ namespace RTC
 			MS_THROW_NOT_FOUND_ERROR("Producer not found");
 		}
 
+		// NOLINTNEXTLINE(misc-const-correctness)
 		RTC::Producer* producer = it->second;
 
 		return producer;

@@ -39,7 +39,7 @@ namespace RTC
 		// Add entries into the streamIdTable.
 		auto streamId = sctpParameters.streamId;
 
-		if (this->streamIdTable.find(streamId) == this->streamIdTable.end())
+		if (!this->streamIdTable.contains(streamId))
 		{
 			this->streamIdTable[streamId] = dataProducer;
 		}
@@ -56,7 +56,9 @@ namespace RTC
 		// Remove from the listener table all entries pointing to the DataProducer.
 		for (auto it = this->streamIdTable.begin(); it != this->streamIdTable.end();)
 		{
-			if (it->second == dataProducer)
+			const RTC::DataProducer* tableDataProducer = it->second;
+
+			if (tableDataProducer == dataProducer)
 			{
 				it = this->streamIdTable.erase(it);
 			}
@@ -71,7 +73,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->streamIdTable.find(streamId);
+		const auto it = this->streamIdTable.find(streamId);
 
 		if (it != this->streamIdTable.end())
 		{

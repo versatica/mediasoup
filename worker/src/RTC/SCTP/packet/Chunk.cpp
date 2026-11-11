@@ -74,14 +74,16 @@ namespace RTC
 
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = Chunk::ChunkType2String.find(chunkType);
+			const auto it = Chunk::ChunkType2String.find(chunkType);
 
 			if (it == Chunk::ChunkType2String.end())
 			{
 				return Unknown;
 			}
 
-			return it->second;
+			const std::string& chunkTypeString = it->second;
+
+			return chunkTypeString;
 		}
 
 		bool Chunk::IsChunk(

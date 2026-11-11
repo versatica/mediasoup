@@ -38,14 +38,16 @@ namespace RTC
 
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = ErrorCause::ErrorCauseCode2String.find(causeCode);
+			const auto it = ErrorCause::ErrorCauseCode2String.find(causeCode);
 
 			if (it == ErrorCause::ErrorCauseCode2String.end())
 			{
 				return Unknown;
 			}
 
-			return it->second;
+			const std::string& causeCodeString = it->second;
+
+			return causeCodeString;
 		}
 
 		bool ErrorCause::IsErrorCause(

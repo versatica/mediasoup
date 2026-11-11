@@ -302,8 +302,8 @@ namespace RTC
 					// - Temporal layer is higher than target.
 					// - Temporal layer is higher than current and sync flag is not set.
 					if (
-					  this->payloadDescriptor->tlIndex > context->GetTargetTemporalLayer() ||
-					  (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer() &&
+					  std::cmp_greater(this->payloadDescriptor->tlIndex, context->GetTargetTemporalLayer()) ||
+					  (std::cmp_greater(this->payloadDescriptor->tlIndex, context->GetCurrentTemporalLayer()) &&
 						 !this->payloadDescriptor->y))
 					{
 						context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
@@ -342,7 +342,9 @@ namespace RTC
 				context->SetCurrentSpatialLayer(0);
 
 				// Update/fix current temporal layer.
-				if (this->payloadDescriptor->hasTlIndex && this->payloadDescriptor->tlIndex == context->GetTargetTemporalLayer())
+				if (
+				  this->payloadDescriptor->hasTlIndex &&
+				  std::cmp_equal(this->payloadDescriptor->tlIndex, context->GetTargetTemporalLayer()))
 				{
 					context->SetCurrentTemporalLayer(this->payloadDescriptor->tlIndex);
 				}
@@ -357,7 +359,7 @@ namespace RTC
 				}
 
 				// Do not send tlIndex higher than current one.
-				if (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer())
+				if (std::cmp_greater(this->payloadDescriptor->tlIndex, context->GetCurrentTemporalLayer()))
 				{
 					return false;
 				}

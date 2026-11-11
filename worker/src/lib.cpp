@@ -21,7 +21,7 @@
 #include <cstring> // std::strerror()
 #include <string>
 #ifndef _WIN32
-#include <signal.h> // NOLINT(modernize-deprecated-headers) sigaction(), sigfillset()
+#include <signal.h> // NOLINT(modernize-deprecated-headers,hicpp-deprecated-headers) sigaction(), sigfillset()
 #endif
 #endif
 
@@ -85,7 +85,7 @@ extern "C" int mediasoup_worker_run(
 #endif
 
 	// Create a Shared singleton.
-	std::unique_ptr<Shared> shared{ new Shared(
+	const std::unique_ptr<Shared> shared{ new Shared(
 		/*channelMessageRegistrator*/ new Channel::ChannelMessageRegistrator(),
 		/*channelNotifier*/ new Channel::ChannelNotifier(channel.get())) };
 

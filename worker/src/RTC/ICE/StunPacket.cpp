@@ -1236,7 +1236,7 @@ namespace RTC
 			  (data && len) || (!data && !len),
 			  "data and len must either both have a value or both be empty/zero");
 
-			if (this->attributes.find(type) != this->attributes.end())
+			if (this->attributes.contains(type))
 			{
 				MS_THROW_ERROR(
 				  "cannot store new attribute with type %" PRIu16

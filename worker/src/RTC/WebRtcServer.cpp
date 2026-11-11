@@ -480,7 +480,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapTupleWebRtcTransport.find(tuple->GetTupleKey());
+		const auto it = this->mapTupleWebRtcTransport.find(tuple->GetTupleKey());
 
 		if (it == this->mapTupleWebRtcTransport.end())
 		{
@@ -498,9 +498,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->webRtcTransports.find(webRtcTransport) == this->webRtcTransports.end(),
-		  "WebRtcTransport already handled");
+		MS_ASSERT(!this->webRtcTransports.contains(webRtcTransport), "WebRtcTransport already handled");
 
 		this->webRtcTransports.insert(webRtcTransport);
 	}
@@ -509,9 +507,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->webRtcTransports.find(webRtcTransport) != this->webRtcTransports.end(),
-		  "WebRtcTransport not handled");
+		const auto it = this->webRtcTransports.find(webRtcTransport);
+
+		MS_ASSERT(it != this->webRtcTransports.end(), "WebRtcTransport not handled");
 
 		// NOTE: If WebRtcServer is closing then do not remove the transport from
 		// the set since it would modify the set while the WebRtcServer destructor
@@ -519,7 +517,7 @@ namespace RTC
 		// See: https://github.com/versatica/mediasoup/pull/1369#issuecomment-2044672247
 		if (!this->closing)
 		{
-			this->webRtcTransports.erase(webRtcTransport);
+			this->webRtcTransports.erase(it);
 		}
 	}
 
@@ -529,8 +527,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		  this->mapLocalIceUsernameFragmentWebRtcTransport.find(usernameFragment) ==
-		    this->mapLocalIceUsernameFragmentWebRtcTransport.end(),
+		  !this->mapLocalIceUsernameFragmentWebRtcTransport.contains(usernameFragment),
 		  "local ICE username fragment already exists in the table");
 
 		this->mapLocalIceUsernameFragmentWebRtcTransport[usernameFragment] = webRtcTransport;
@@ -541,12 +538,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		const auto it = this->mapLocalIceUsernameFragmentWebRtcTransport.find(usernameFragment);
+
 		MS_ASSERT(
-		  this->mapLocalIceUsernameFragmentWebRtcTransport.find(usernameFragment) !=
-		    this->mapLocalIceUsernameFragmentWebRtcTransport.end(),
+		  it != this->mapLocalIceUsernameFragmentWebRtcTransport.end(),
 		  "local ICE username fragment not found in the table");
 
-		this->mapLocalIceUsernameFragmentWebRtcTransport.erase(usernameFragment);
+		this->mapLocalIceUsernameFragmentWebRtcTransport.erase(it);
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportTransportTupleAdded(
@@ -571,7 +569,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapTupleWebRtcTransport.find(tuple->GetTupleKey());
+		const auto it = this->mapTupleWebRtcTransport.find(tuple->GetTupleKey());
 
 		if (it == this->mapTupleWebRtcTransport.end())
 		{
@@ -609,7 +607,7 @@ namespace RTC
 		// mapTupleWebRtcTransport because this event may be called after the tuple
 		// was removed from it.
 
-		auto it = this->mapTupleWebRtcTransport.find(tuple.GetTupleKey());
+		const auto it = this->mapTupleWebRtcTransport.find(tuple.GetTupleKey());
 
 		if (it == this->mapTupleWebRtcTransport.end())
 		{

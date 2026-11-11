@@ -71,7 +71,7 @@ namespace RTC
 
 			if (ssrc != 0)
 			{
-				if (this->ssrcTable.find(ssrc) == this->ssrcTable.end())
+				if (!this->ssrcTable.contains(ssrc))
 				{
 					this->ssrcTable[ssrc] = producer;
 				}
@@ -88,7 +88,7 @@ namespace RTC
 
 			if (ssrc != 0)
 			{
-				if (this->ssrcTable.find(ssrc) == this->ssrcTable.end())
+				if (!this->ssrcTable.contains(ssrc))
 				{
 					this->ssrcTable[ssrc] = producer;
 				}
@@ -106,7 +106,7 @@ namespace RTC
 		{
 			const auto& mid = rtpParameters.mid;
 
-			if (this->midTable.find(mid) == this->midTable.end())
+			if (!this->midTable.contains(mid))
 			{
 				this->midTable[mid] = producer;
 			}
@@ -128,7 +128,7 @@ namespace RTC
 				continue;
 			}
 
-			if (this->ridTable.find(rid) == this->ridTable.end())
+			if (!this->ridTable.contains(rid))
 			{
 				this->ridTable[rid] = producer;
 			}
@@ -150,7 +150,9 @@ namespace RTC
 
 		for (auto it = this->ssrcTable.begin(); it != this->ssrcTable.end();)
 		{
-			if (it->second == producer)
+			const RTC::Producer* tableProducer = it->second;
+
+			if (tableProducer == producer)
 			{
 				it = this->ssrcTable.erase(it);
 			}
@@ -162,7 +164,9 @@ namespace RTC
 
 		for (auto it = this->midTable.begin(); it != this->midTable.end();)
 		{
-			if (it->second == producer)
+			const RTC::Producer* tableProducer = it->second;
+
+			if (tableProducer == producer)
 			{
 				it = this->midTable.erase(it);
 			}
@@ -174,7 +178,9 @@ namespace RTC
 
 		for (auto it = this->ridTable.begin(); it != this->ridTable.end();)
 		{
-			if (it->second == producer)
+			const RTC::Producer* tableProducer = it->second;
+
+			if (tableProducer == producer)
 			{
 				it = this->ridTable.erase(it);
 			}
@@ -191,7 +197,7 @@ namespace RTC
 
 		// First lookup into the SSRC table.
 		{
-			auto it = this->ssrcTable.find(packet->GetSsrc());
+			const auto it = this->ssrcTable.find(packet->GetSsrc());
 
 			if (it != this->ssrcTable.end())
 			{
@@ -210,7 +216,7 @@ namespace RTC
 		{
 			hasMid = true;
 
-			auto it = this->midTable.find(mid);
+			const auto it = this->midTable.find(mid);
 
 			if (it != this->midTable.end())
 			{
@@ -224,17 +230,6 @@ namespace RTC
 				  packet->GetSsrc(),
 				  producer->id.c_str());
 
-				// NOTE: Here we may override an existing key with same SSRC but it's ok.
-				if (this->ssrcTable.find(packet->GetSsrc()) != this->ssrcTable.end())
-				{
-					MS_WARN_TAG(
-					  rtp,
-					  "a Producer with ssrc %" PRIu32
-					  " already exists in the ssrcTable, overriding it anyway [mid:%s]",
-					  packet->GetSsrc(),
-					  mid.c_str());
-				}
-
 				this->ssrcTable[packet->GetSsrc()] = producer;
 
 				return producer;
@@ -245,7 +240,7 @@ namespace RTC
 		// have MID extension.
 		if (!hasMid && packet->ReadRid(rid))
 		{
-			auto it = this->ridTable.find(rid);
+			const auto it = this->ridTable.find(rid);
 
 			if (it != this->ridTable.end())
 			{
@@ -258,17 +253,6 @@ namespace RTC
 				  rid.c_str(),
 				  packet->GetSsrc(),
 				  producer->id.c_str());
-
-				// NOTE: Here we may override an existing key with same SSRC but it's ok.
-				if (this->ssrcTable.find(packet->GetSsrc()) != this->ssrcTable.end())
-				{
-					MS_WARN_TAG(
-					  rtp,
-					  "a Producer with ssrc %" PRIu32
-					  " already exists in the ssrcTable, overriding it anyway  [rid:%s]",
-					  packet->GetSsrc(),
-					  rid.c_str());
-				}
 
 				this->ssrcTable[packet->GetSsrc()] = producer;
 
@@ -284,7 +268,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Lookup into the SSRC table.
-		auto it = this->ssrcTable.find(ssrc);
+		const auto it = this->ssrcTable.find(ssrc);
 
 		if (it != this->ssrcTable.end())
 		{
