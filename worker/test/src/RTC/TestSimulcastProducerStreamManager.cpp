@@ -1,14 +1,14 @@
 #include "common.hpp"
 #include "RTC/ConsumerTypes.hpp"
-#include "RTC/NEW_RTCP/packet/Packet.hpp"
-#include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
+#include "RTC/RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SimulcastProducerStreamManager.hpp"
 #include "Utils.hpp"
-#include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp"
+#include "test/include/RTC/RTCP/rtcpCommon.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include "mocks/include/MockShared.hpp"
 
@@ -71,7 +71,7 @@ namespace
 		}
 
 		void OnRtpStreamSendRtcpPacket(
-		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::NEW_RTCP::Packet* /*packet*/) override
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::RTCP::Packet* /*packet*/) override
 		{
 		}
 
@@ -270,8 +270,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	  [](RTC::RTP::RtpStreamRecv* rtpStream, int64_t captureAtUs, uint32_t rtpTs) -> void
 	{
 		const auto ntp = Utils::Time::TimeUsToNtp(captureAtUs);
-		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket{
-			RTC::NEW_RTCP::SenderReportPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::SenderReportPacket> senderReportPacket{
+			RTC::RTCP::SenderReportPacket::Factory(
 			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
 		};
 
@@ -914,8 +914,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// Provide Sender Reports for both streams so that they get a score. Both tell
 		// that RTP timestamp 90000 was captured at the same instant, which is what makes
 		// them alignable to each other.
-		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket0{
-			RTC::NEW_RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		const std::unique_ptr<RTC::RTCP::SenderReportPacket> senderReportPacket0{
+			RTC::RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
 		};
 
 		senderReportPacket0->SetSsrc(MappedSsrc0);
@@ -924,8 +924,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		rtpStream0->ReceiveRtcpSenderReportPacket(senderReportPacket0.get(), shared.GetTimeUs());
 
-		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket1{
-			RTC::NEW_RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer + 1000, 1000)
+		const std::unique_ptr<RTC::RTCP::SenderReportPacket> senderReportPacket1{
+			RTC::RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer + 1000, 1000)
 		};
 
 		senderReportPacket1->SetSsrc(MappedSsrc1);
@@ -1332,8 +1332,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// yet, so it cannot be aligned to layer 0 and the target stays at layer 0.
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 10);
 
-		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket0{
-			RTC::NEW_RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		const std::unique_ptr<RTC::RTCP::SenderReportPacket> senderReportPacket0{
+			RTC::RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
 		};
 
 		senderReportPacket0->SetSsrc(MappedSsrc0);
@@ -1354,8 +1354,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 10);
 
-		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket1{
-			RTC::NEW_RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer + 1000, 1000)
+		const std::unique_ptr<RTC::RTCP::SenderReportPacket> senderReportPacket1{
+			RTC::RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer + 1000, 1000)
 		};
 
 		senderReportPacket1->SetSsrc(MappedSsrc1);
@@ -2156,8 +2156,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 			packet->SetSsrc(rtpStream->GetSsrc());
 			feedRtpStreamRecv(rtpStream, packet.get(), 10);
 
-			const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket{
-				RTC::NEW_RTCP::SenderReportPacket::Factory(
+			const std::unique_ptr<RTC::RTCP::SenderReportPacket> senderReportPacket{
+				RTC::RTCP::SenderReportPacket::Factory(
 				  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
 			};
 

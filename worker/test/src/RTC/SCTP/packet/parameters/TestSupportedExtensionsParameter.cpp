@@ -39,11 +39,13 @@ SCENARIO("Supported Extensions Parameter (32776)", "[serializable][sctp][paramet
 
 		REQUIRE(parameter->GetNumberOfChunkTypes() == 3);
 		REQUIRE(parameter->GetChunkTypeAt(0) == RTC::SCTP::Chunk::ChunkType::RE_CONFIG);
-		REQUIRE(parameter->GetChunkTypeAt(1) == RTC::SCTP::Chunk::ChunkType::ECNE);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		REQUIRE(parameter->GetChunkTypeAt(1) == static_cast<RTC::SCTP::Chunk::ChunkType>(0x0C));
 		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		REQUIRE(parameter->GetChunkTypeAt(2) == static_cast<RTC::SCTP::Chunk::ChunkType>(0x42));
 		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::RE_CONFIG) == true);
-		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::ECNE) == true);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		REQUIRE(parameter->IncludesChunkType(static_cast<RTC::SCTP::Chunk::ChunkType>(0x0C)) == true);
 		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		REQUIRE(parameter->IncludesChunkType(static_cast<RTC::SCTP::Chunk::ChunkType>(0x42)) == true);
 		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::I_DATA) == false);
@@ -65,11 +67,13 @@ SCENARIO("Supported Extensions Parameter (32776)", "[serializable][sctp][paramet
 
 		REQUIRE(parameter->GetNumberOfChunkTypes() == 3);
 		REQUIRE(parameter->GetChunkTypeAt(0) == RTC::SCTP::Chunk::ChunkType::RE_CONFIG);
-		REQUIRE(parameter->GetChunkTypeAt(1) == RTC::SCTP::Chunk::ChunkType::ECNE);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		REQUIRE(parameter->GetChunkTypeAt(1) == static_cast<RTC::SCTP::Chunk::ChunkType>(0x0C));
 		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		REQUIRE(parameter->GetChunkTypeAt(2) == static_cast<RTC::SCTP::Chunk::ChunkType>(0x42));
 		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::RE_CONFIG) == true);
-		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::ECNE) == true);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		REQUIRE(parameter->IncludesChunkType(static_cast<RTC::SCTP::Chunk::ChunkType>(0x0C)) == true);
 		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		REQUIRE(parameter->IncludesChunkType(static_cast<RTC::SCTP::Chunk::ChunkType>(0x42)) == true);
 		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::I_DATA) == false);
@@ -94,11 +98,14 @@ SCENARIO("Supported Extensions Parameter (32776)", "[serializable][sctp][paramet
 
 		REQUIRE(clonedParameter->GetNumberOfChunkTypes() == 3);
 		REQUIRE(clonedParameter->GetChunkTypeAt(0) == RTC::SCTP::Chunk::ChunkType::RE_CONFIG);
-		REQUIRE(clonedParameter->GetChunkTypeAt(1) == RTC::SCTP::Chunk::ChunkType::ECNE);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		REQUIRE(clonedParameter->GetChunkTypeAt(1) == static_cast<RTC::SCTP::Chunk::ChunkType>(0x0C));
 		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		REQUIRE(clonedParameter->GetChunkTypeAt(2) == static_cast<RTC::SCTP::Chunk::ChunkType>(0x42));
 		REQUIRE(clonedParameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::RE_CONFIG) == true);
-		REQUIRE(clonedParameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::ECNE) == true);
+		REQUIRE(
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		  clonedParameter->IncludesChunkType(static_cast<RTC::SCTP::Chunk::ChunkType>(0x0C)) == true);
 		REQUIRE(
 		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  clonedParameter->IncludesChunkType(static_cast<RTC::SCTP::Chunk::ChunkType>(0x42)) == true);
@@ -123,14 +130,16 @@ SCENARIO("Supported Extensions Parameter (32776)", "[serializable][sctp][paramet
 
 		REQUIRE(parameter->GetNumberOfChunkTypes() == 0);
 		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::RE_CONFIG) == false);
-		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::ECNE) == false);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		REQUIRE(parameter->IncludesChunkType(static_cast<RTC::SCTP::Chunk::ChunkType>(0x0C)) == false);
 		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		REQUIRE(parameter->IncludesChunkType(static_cast<RTC::SCTP::Chunk::ChunkType>(0x42)) == false);
 
 		/* Modify it. */
 
 		parameter->AddChunkType(RTC::SCTP::Chunk::ChunkType::RE_CONFIG);
-		parameter->AddChunkType(RTC::SCTP::Chunk::ChunkType::CWR);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		parameter->AddChunkType(static_cast<RTC::SCTP::Chunk::ChunkType>(0x0D));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
@@ -143,9 +152,11 @@ SCENARIO("Supported Extensions Parameter (32776)", "[serializable][sctp][paramet
 
 		REQUIRE(parameter->GetNumberOfChunkTypes() == 2);
 		REQUIRE(parameter->GetChunkTypeAt(0) == RTC::SCTP::Chunk::ChunkType::RE_CONFIG);
-		REQUIRE(parameter->GetChunkTypeAt(1) == RTC::SCTP::Chunk::ChunkType::CWR);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		REQUIRE(parameter->GetChunkTypeAt(1) == static_cast<RTC::SCTP::Chunk::ChunkType>(0x0D));
 		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::RE_CONFIG) == true);
-		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::CWR) == true);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		REQUIRE(parameter->IncludesChunkType(static_cast<RTC::SCTP::Chunk::ChunkType>(0x0D)) == true);
 
 		parameter->AddChunkType(RTC::SCTP::Chunk::ChunkType::OPERATION_ERROR);
 		parameter->AddChunkType(RTC::SCTP::Chunk::ChunkType::COOKIE_ACK);
@@ -163,13 +174,15 @@ SCENARIO("Supported Extensions Parameter (32776)", "[serializable][sctp][paramet
 
 		REQUIRE(parameter->GetNumberOfChunkTypes() == 5);
 		REQUIRE(parameter->GetChunkTypeAt(0) == RTC::SCTP::Chunk::ChunkType::RE_CONFIG);
-		REQUIRE(parameter->GetChunkTypeAt(1) == RTC::SCTP::Chunk::ChunkType::CWR);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		REQUIRE(parameter->GetChunkTypeAt(1) == static_cast<RTC::SCTP::Chunk::ChunkType>(0x0D));
 		REQUIRE(parameter->GetChunkTypeAt(2) == RTC::SCTP::Chunk::ChunkType::OPERATION_ERROR);
 		REQUIRE(parameter->GetChunkTypeAt(3) == RTC::SCTP::Chunk::ChunkType::COOKIE_ACK);
 		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		REQUIRE(parameter->GetChunkTypeAt(4) == static_cast<RTC::SCTP::Chunk::ChunkType>(99));
 		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::RE_CONFIG) == true);
-		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::CWR) == true);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		REQUIRE(parameter->IncludesChunkType(static_cast<RTC::SCTP::Chunk::ChunkType>(0x0D)) == true);
 		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::OPERATION_ERROR) == true);
 		REQUIRE(parameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::COOKIE_ACK) == true);
 		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
@@ -193,13 +206,16 @@ SCENARIO("Supported Extensions Parameter (32776)", "[serializable][sctp][paramet
 
 		REQUIRE(parsedParameter->GetNumberOfChunkTypes() == 5);
 		REQUIRE(parsedParameter->GetChunkTypeAt(0) == RTC::SCTP::Chunk::ChunkType::RE_CONFIG);
-		REQUIRE(parsedParameter->GetChunkTypeAt(1) == RTC::SCTP::Chunk::ChunkType::CWR);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		REQUIRE(parsedParameter->GetChunkTypeAt(1) == static_cast<RTC::SCTP::Chunk::ChunkType>(0x0D));
 		REQUIRE(parsedParameter->GetChunkTypeAt(2) == RTC::SCTP::Chunk::ChunkType::OPERATION_ERROR);
 		REQUIRE(parsedParameter->GetChunkTypeAt(3) == RTC::SCTP::Chunk::ChunkType::COOKIE_ACK);
 		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		REQUIRE(parsedParameter->GetChunkTypeAt(4) == static_cast<RTC::SCTP::Chunk::ChunkType>(99));
 		REQUIRE(parsedParameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::RE_CONFIG) == true);
-		REQUIRE(parsedParameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::CWR) == true);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		REQUIRE(
+		  parsedParameter->IncludesChunkType(static_cast<RTC::SCTP::Chunk::ChunkType>(0x0D)) == true);
 		REQUIRE(parsedParameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::OPERATION_ERROR) == true);
 		REQUIRE(parsedParameter->IncludesChunkType(RTC::SCTP::Chunk::ChunkType::COOKIE_ACK) == true);
 		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)

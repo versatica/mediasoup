@@ -7,7 +7,8 @@
 #include "RTC/ICE/IceCandidate.hpp"
 #include "RTC/ICE/IceServer.hpp"
 #include "RTC/ICE/StunPacket.hpp"
-#include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/RTCP/packet/CompoundPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
@@ -96,9 +97,8 @@ namespace RTC
 		size_t GetPacketOverhead() const override;
 		void MayRunDtlsTransport();
 		void SendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) override;
-		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
-		void SendRtcpPacket(const RTC::NEW_RTCP::Packet* packet) override;
-		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
+		void SendRtcpPacket(const RTC::RTCP::Packet* packet) override;
+		void SendRtcpCompoundPacket(const RTC::RTCP::CompoundPacket* compoundPacket) override;
 		void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
 		  RTC::SCTP::Message message,

@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "RTC/ConsumerTypes.hpp"
-#include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/SvcProducerStreamManager.hpp"
@@ -64,7 +64,7 @@ namespace
 		}
 
 		void OnRtpStreamSendRtcpPacket(
-		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::NEW_RTCP::Packet* /*packet*/) override
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::RTCP::Packet* /*packet*/) override
 		{
 		}
 

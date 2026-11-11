@@ -330,7 +330,7 @@ namespace RTC
 			uint64_t rtxBytesCount{ 0 };
 			// If set, fast recovery is enabled until this TSN has been cumulative
 			// acked.
-			std::optional<Types::UnwrappedTsn> fastRecoveryExitTsn{ std::nullopt };
+			std::optional<Types::UnwrappedTsn> fastRecoveryExitTsn;
 			// The send queue.
 			SendQueueInterface& sendQueue;
 			// All the outstanding data chunks that are in-flight and that have not

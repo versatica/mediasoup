@@ -2,7 +2,7 @@
 #include "FBS/rtpParameters.h"
 #include "FBS/transport.h"
 #include "RTC/Consumer.hpp"
-#include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
@@ -31,7 +31,7 @@ namespace
 		}
 
 		void OnRtpStreamSendRtcpPacket(
-		  RTC::RTP::RtpStreamRecv* rtpStream, const RTC::NEW_RTCP::Packet* packet) override
+		  RTC::RTP::RtpStreamRecv* rtpStream, const RTC::RTCP::Packet* packet) override
 		{
 		}
 

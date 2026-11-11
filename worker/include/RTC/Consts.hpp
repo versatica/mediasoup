@@ -118,6 +118,25 @@ namespace RTC
 		constexpr int64_t MaxVideoRtcpIntervalMs{ 1000 };
 
 		/**
+		 * How long a received stream may go without receiving any RTP packet
+		 * before RTCP Receiver Reports stop carrying a report block about it (ms).
+		 */
+		constexpr int64_t RtcpReportBlockTimeoutMs{ 8000 };
+
+		/**
+		 * Maximum number of received RTCP Receiver Reference Time Extended
+		 * Reports, one per remote SSRC, kept until they are answered with a DLRR
+		 * sub-block. Those beyond it are discarded.
+		 */
+		constexpr size_t MaxNumberOfRtcpReceiverReferenceTimes{ 300 };
+
+		/**
+		 * Maximum number of sub-blocks in a RTCP Delay Since Last Receiver Report
+		 * Extended Report.
+		 */
+		constexpr size_t MaxRtcpDelaySinceLastReceiverReportSubBlocks{ 50 };
+
+		/**
 		 * SSRC of the RTP stream the probing packets are sent on.
 		 *
 		 * @remarks

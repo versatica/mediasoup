@@ -1,11 +1,11 @@
 #include "common.hpp"
-#include "RTC/NEW_RTCP/packet/Packet.hpp"
-#include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
+#include "RTC/RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RemoteCaptureTimeEstimator.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
-#include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp"
+#include "test/include/RTC/RTCP/rtcpCommon.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -31,7 +31,7 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		}
 
 		void OnRtpStreamSendRtcpPacket(
-		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::NEW_RTCP::Packet* /*packet*/) override
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::RTCP::Packet* /*packet*/) override
 		{
 		}
 
@@ -84,8 +84,8 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 	{
 		nowUs = LocalBaseUs + (idx * 1000000);
 
-		const std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> senderReportPacket{
-			RTC::NEW_RTCP::SenderReportPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::SenderReportPacket> senderReportPacket{
+			RTC::RTCP::SenderReportPacket::Factory(
 			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
 		};
 

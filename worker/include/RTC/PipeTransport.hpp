@@ -4,7 +4,8 @@
 #include "common.hpp"
 #include "FBS/pipeTransport.h"
 #include "handles/SendCallbacks.hpp"
-#include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/RTCP/packet/CompoundPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
@@ -55,9 +56,8 @@ namespace RTC
 		size_t GetPacketOverhead() const override;
 		bool HasSrtp() const;
 		void SendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) override;
-		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
-		void SendRtcpPacket(const RTC::NEW_RTCP::Packet* packet) override;
-		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
+		void SendRtcpPacket(const RTC::RTCP::Packet* packet) override;
+		void SendRtcpCompoundPacket(const RTC::RTCP::CompoundPacket* compoundPacket) override;
 		void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
 		  RTC::SCTP::Message message,

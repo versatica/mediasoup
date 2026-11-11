@@ -5,15 +5,15 @@
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
-#include "RTC/NEW_RTCP/packet/Packet.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
-#include "RTC/RTCP/SenderReport.hpp"
-#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
+#include "RTC/RTCP/packet/SenderReportPacket.hpp"
+#include "RTC/RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "SharedInterface.hpp"
+#include "Utils.hpp"
 #include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
@@ -52,8 +52,7 @@ namespace RTC
 			  uint8_t spatialLayer,
 			  bool isActive) = 0;
 			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
-			virtual void OnProducerSendRtcpPacket(
-			  RTC::Producer* producer, const RTC::NEW_RTCP::Packet* packet) = 0;
+			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, const RTC::RTCP::Packet* packet) = 0;
 			/**
 			 * Obtains the worst remote fraction lost of all the Consumers consuming the
 			 * given mapped SSRC of this Producer.
@@ -127,10 +126,15 @@ namespace RTC
 		};
 
 	public:
+		/**
+		 * @param rtcpSsrc - SSRC of the RTCP the Transport sends on its own behalf,
+		 *   which is the sender SSRC of the feedback about the RTP streams.
+		 */
 		Producer(
 		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::Producer::Listener* listener,
+		  uint32_t rtcpSsrc,
 		  const FBS::Transport::ProduceRequest* data);
 		~Producer() override;
 
@@ -178,18 +182,36 @@ namespace RTC
 			return std::addressof(this->rtpStreamScores);
 		}
 		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RTP::Packet* packet, int64_t receivedAtUs);
-		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
+		void ReceiveRtcpSenderReportPacket(
+		  const RTC::RTCP::SenderReportPacket* senderReportPacket, int64_t receivedAtUs);
 		/**
-		 * @returns Round trip time just measured (ms), or no value if this report
-		 *   refers to no Receiver Reference Time to measure it against.
+		 * @param ssrc - SSRC of the XR packet that carried the DLRR sub-block.
+		 *
+		 * @returns Round trip time just measured (ms), or no value if this DLRR
+		 *   sub-block refers to no Receiver Reference Time to measure it against.
 		 */
-		std::optional<float> ReceiveRtcpXrDelaySinceLastRr(
-		  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs);
+		std::optional<float> ReceiveRtcpDlrrSubBlock(
+		  uint32_t ssrc, const RTC::RTCP::DlrrExtendedReport::SubBlock& subBlock, int64_t receivedAtUs);
 		/**
-		 * Receiver Reports of the RTP streams of this Producer, if it is time to
-		 * report.
+		 * Tell the RTP streams of this Producer the round trip time of the
+		 * Transport, which is what they wait for a requested retransmission.
 		 */
-		std::vector<std::unique_ptr<RTC::RTCP::ReceiverReport>> GetRtcp(int64_t nowUs);
+		void UpdateRttMs(int64_t rttMs);
+		/**
+		 * Whether it is time for the RTP streams of this Producer to report in a
+		 * RTCP compound packet.
+		 */
+		[[nodiscard]] bool IsRtcpDue(int64_t nowUs) const
+		{
+			const int64_t elapsedMs = Utils::Time::TimeUsToMs(nowUs - this->lastRtcpSentAtUs);
+
+			return static_cast<float>(elapsedMs * 1.15) >= this->maxRtcpIntervalMs;
+		}
+		/**
+		 * Record the instant at which the RTP streams of this Producer last
+		 * reported in a RTCP compound packet.
+		 */
+		void SetRtcpSentAtUs(int64_t sentAtUs);
 		void RequestKeyFrame(uint32_t mappedSsrc);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
@@ -220,17 +242,17 @@ namespace RTC
 		  RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream, bool maxPacketTsChanged);
 		void EmitScore() const;
 		void EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx = false) const;
-		void EmitTraceEventPliType(uint32_t ssrc) const;
-		void EmitTraceEventFirType(uint32_t ssrc) const;
-		void EmitTraceEventNackType() const;
-		void EmitTraceEventSrType(RTC::RTCP::SenderReport* report) const;
+		void EmitTraceEventRtcpPliType(uint32_t ssrc) const;
+		void EmitTraceEventRtcpFirType(uint32_t ssrc) const;
+		void EmitTraceEventRtcpNackType() const;
+		void EmitTraceEventRtcpSenderReportType(const RTC::RTCP::SenderReportPacket* senderReportPacket) const;
 		void EmitTraceEvent(flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
 		void OnRtpStreamScore(RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamSendRtcpPacket(
-		  RTC::RTP::RtpStreamRecv* rtpStream, const RTC::NEW_RTCP::Packet* packet) override;
+		  RTC::RTP::RtpStreamRecv* rtpStream, const RTC::RTCP::Packet* packet) override;
 		uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* rtpStream) override;
 		void OnRtpStreamSpatialLayerActivityChanged(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive) override;
@@ -249,6 +271,7 @@ namespace RTC
 		// Passed by argument.
 		SharedInterface* const shared;
 		RTC::Producer::Listener* const listener;
+		const uint32_t rtcpSsrc;
 		// Allocated by this.
 		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamRecv*> mapSsrcRtpStream;
 		const std::unique_ptr<RTC::KeyFrameRequestManager> keyFrameRequestManager;
