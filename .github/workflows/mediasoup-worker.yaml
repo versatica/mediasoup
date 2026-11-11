@@ -5,10 +5,30 @@ on:
     branches: [v3]
     paths:
       - 'worker/**'
+      - '!worker/**/*.md'
+      - '!worker/.clang-tidy'
+      - '!worker/.clangd'
+      - '!worker/Dockerfile*'
+      - '!worker/deps/**'
+      - '!worker/fuzzer/new-corpus/**'
+      - '!worker/fuzzer/reports/**'
+      - '!worker/scripts/get-dep.sh'
+      - '!worker/scripts/run-fuzzer.sh'
+      - '!worker/subprojects/.clang-tidy'
       - '.github/workflows/mediasoup-worker.yaml'
   pull_request:
     paths:
       - 'worker/**'
+      - '!worker/**/*.md'
+      - '!worker/.clang-tidy'
+      - '!worker/.clangd'
+      - '!worker/Dockerfile*'
+      - '!worker/deps/**'
+      - '!worker/fuzzer/new-corpus/**'
+      - '!worker/fuzzer/reports/**'
+      - '!worker/scripts/get-dep.sh'
+      - '!worker/scripts/run-fuzzer.sh'
+      - '!worker/subprojects/.clang-tidy'
       - '.github/workflows/mediasoup-worker.yaml'
   workflow_dispatch:
 
@@ -248,6 +268,9 @@ jobs:
 
       - name: invoke -r worker mediasoup-worker
         run: invoke -r worker mediasoup-worker
+
+      - name: invoke -r worker libmediasoup-worker
+        run: invoke -r worker libmediasoup-worker
 
       # NOTE: Sanitizer tests run before the regular ones since they report
       # issues (such as misaligned accesses) with file and line, whereas the
