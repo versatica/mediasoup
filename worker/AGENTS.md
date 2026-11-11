@@ -25,6 +25,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 
 ## Ownership
 
+- New code avoids manual memory management: no `new`/`delete` on raw pointers. Whatever is allocated, or returned as an owning raw pointer by a factory (`Parse()`, `Clone()`, `Factory()`...), goes straight into a `std::unique_ptr` (`const` unless it is later `reset()`), created with `std::make_unique()` when it is our own allocation. This applies everywhere: classes, functions, tests and fuzzers.
 - An object owned by a class is held in a `std::unique_ptr`, never as a raw pointer with `new`/`delete`.
 - If it is created once in the constructor and never replaced, the `std::unique_ptr` is `const` and is created in the initializer list (a ternary is fine when it is optional and the condition is known at construction).
 - If it is created lazily, conditionally with complex logic, or replaced during the object's life, the `std::unique_ptr` is not `const` and is set with `reset()` or `std::make_unique()`.
@@ -72,7 +73,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 
 - Code is split into paragraphs with blank lines, one per step: a declaration is not glued to the first thing done with it, an action is not glued to the assert/`REQUIRE` that checks it, and a check is not glued to the next action. What belongs to the same step stays together: several consecutive calls on the same object, the assignments that fill its fields, or several consecutive `REQUIRE`s.
 - A declaration that carries its own comment is a paragraph: it is separated by a blank line from the next commented declaration.
-- Everything that can be `const` is `const`, including `const auto` locals and `const T&` parameters. But never replace an explicit type with `auto` when the right-hand side does not show the type.
+- Everything that can be `const` is `const`, including `const auto` locals and `const T&` parameters. But never replace an explicit type with `auto` when the right-hand side does not show the type. Exception: iterators and similar types whose spelled-out name adds nothing for the reader can be `auto` (`auto chunkIt = packet->ChunksBegin()`, `auto it = map.find(key)`, `auto [it, inserted] = map.emplace(...)`).
 - Value getters are named `GetXxx()`. Boolean getters are named `IsXxx()` / `HasXxx()`.
 - Never `&foo` to take an address: use `std::addressof(foo)`.
 - Never reach through an iterator (`it->second.field`): bind a named reference or copy first.

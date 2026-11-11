@@ -3,13 +3,7 @@
 
 void FuzzerRtcRtpCodecsH264::Fuzz(const uint8_t* data, size_t len)
 {
-	const RTC::RTP::Codecs::H264::PayloadDescriptor* descriptor =
-	  RTC::RTP::Codecs::H264::Parse(data, len);
-
-	if (!descriptor)
-	{
-		return;
-	}
-
-	delete descriptor;
+	const std::unique_ptr<const RTC::RTP::Codecs::H264::PayloadDescriptor> descriptor{
+		RTC::RTP::Codecs::H264::Parse(data, len)
+	};
 }

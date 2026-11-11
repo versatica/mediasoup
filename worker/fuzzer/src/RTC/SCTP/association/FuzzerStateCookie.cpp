@@ -31,7 +31,7 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 		}
 	}
 
-	RTC::SCTP::StateCookie* stateCookie = RTC::SCTP::StateCookie::Parse(DataBuffer, len);
+	std::unique_ptr<RTC::SCTP::StateCookie> stateCookie{ RTC::SCTP::StateCookie::Parse(DataBuffer, len) };
 
 	if (!stateCookie)
 	{
@@ -56,9 +56,10 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 	stateCookie->GetTieTag();
 	stateCookie->GetRemoteCapabilities();
 
-	auto* clonedStateCookie = stateCookie->Clone(StateCookieCloneBuffer, len);
+	const std::unique_ptr<RTC::SCTP::StateCookie> clonedStateCookie{ stateCookie->Clone(
+		StateCookieCloneBuffer, len) };
 
-	delete stateCookie;
+	stateCookie.reset();
 
 	clonedStateCookie->GetLocalVerificationTag();
 	clonedStateCookie->GetRemoteVerificationTag();
@@ -69,6 +70,4 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 	clonedStateCookie->GetRemoteCapabilities();
 
 	clonedStateCookie->Serialize(StateCookieSerializeBuffer, len);
-
-	delete clonedStateCookie;
 }

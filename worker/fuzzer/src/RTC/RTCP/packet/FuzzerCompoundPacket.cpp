@@ -238,28 +238,28 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 
 	RTC::RTCP::RembPacket::IsRemb(data, len);
 
-	RTC::RTCP::CompoundPacket* const compoundPacket = RTC::RTCP::CompoundPacket::Parse(data, len);
+	std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Parse(
+		data, len) };
 
 	if (!compoundPacket)
 	{
 		return;
 	}
 
-	fuzzPackets(compoundPacket);
+	fuzzPackets(compoundPacket.get());
 
 	compoundPacket->Serialize(CompoundPacketSerializeBuffer, len);
 
-	fuzzPackets(compoundPacket);
+	fuzzPackets(compoundPacket.get());
 
-	auto* const clonedCompoundPacket = compoundPacket->Clone(CompoundPacketCloneBuffer, len);
+	const std::unique_ptr<RTC::RTCP::CompoundPacket> clonedCompoundPacket{ compoundPacket->Clone(
+		CompoundPacketCloneBuffer, len) };
 
-	delete compoundPacket;
+	compoundPacket.reset();
 
-	fuzzPackets(clonedCompoundPacket);
+	fuzzPackets(clonedCompoundPacket.get());
 
 	clonedCompoundPacket->Serialize(CompoundPacketSerializeBuffer, len);
 
-	fuzzPackets(clonedCompoundPacket);
-
-	delete clonedCompoundPacket;
+	fuzzPackets(clonedCompoundPacket.get());
 }

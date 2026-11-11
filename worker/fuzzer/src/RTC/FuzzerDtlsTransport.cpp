@@ -15,15 +15,16 @@ namespace
 		                                      return 1000 * 1000;
 	                                      });
 
+	// DtlsTransport Listener instance. It's reset every time the DtlsTransport
+	// singletonDTLS is reset.
+	thread_local std::unique_ptr<FuzzerRtcDtlsTransport::DtlsTransportListener>
+	  // NOLINTNEXTLINE(readability-identifier-naming)
+	  dtlsTransportListenerSingleton{ nullptr };
+
 	// DtlsTransport instance. It's reset every time DTLS handshake fails or DTLS
 	// is closed.
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	thread_local RTC::DtlsTransport* dtlsTransportSingleton{ nullptr };
-
-	// DtlsTransport Listener instance. It's reset every time the DtlsTransport
-	// singletonDTLS is reset.
-	// NOLINTNEXTLINE(readability-identifier-naming)
-	thread_local FuzzerRtcDtlsTransport::DtlsTransportListener* dtlsTransportListenerSingleton{ nullptr };
+	thread_local std::unique_ptr<RTC::DtlsTransport> dtlsTransportSingleton{ nullptr };
 } // namespace
 
 void FuzzerRtcDtlsTransport::Fuzz(const uint8_t* data, size_t len)
@@ -37,11 +38,10 @@ void FuzzerRtcDtlsTransport::Fuzz(const uint8_t* data, size_t len)
 	{
 		MS_DEBUG_DEV("no DtlsTransport singleton, creating it");
 
-		delete dtlsTransportListenerSingleton;
-		dtlsTransportListenerSingleton = new DtlsTransportListener();
+		dtlsTransportListenerSingleton = std::make_unique<DtlsTransportListener>();
 
-		dtlsTransportSingleton =
-		  new RTC::DtlsTransport(dtlsTransportListenerSingleton, std::addressof(shared));
+		dtlsTransportSingleton = std::make_unique<RTC::DtlsTransport>(
+		  dtlsTransportListenerSingleton.get(), std::addressof(shared));
 
 		RTC::DtlsTransport::Role localRole;
 		RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
@@ -79,8 +79,7 @@ void FuzzerRtcDtlsTransport::Fuzz(const uint8_t* data, size_t len)
 	{
 		MS_DEBUG_DEV("DtlsTransport singleton state is 'failed' or 'closed', unsetting it");
 
-		delete dtlsTransportSingleton;
-		dtlsTransportSingleton = nullptr;
+		dtlsTransportSingleton.reset();
 	}
 	else
 	{
