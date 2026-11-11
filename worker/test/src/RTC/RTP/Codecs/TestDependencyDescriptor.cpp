@@ -288,7 +288,9 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		uint8_t buffer[RTC::Consts::TwoBytesRtpExtensionMaxLength];
 
-		const auto len = dependencyDescriptor->Write(bitmask, buffer);
+		const auto len = dependencyDescriptor->Write(
+		  RTC::RTP::Codecs::DependencyDescriptor::RewriteParams{ .activeDecodeTargetsBitmask = bitmask },
+		  buffer);
 
 		REQUIRE(len > 0);
 
@@ -355,7 +357,10 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(getDependencyDescriptor(packet.get()).size() == sizeof(deltaFrameData));
 
 		// First Consumer, which just wants decode target 0, grows into the room.
-		REQUIRE(deltaFrame->UpdateActiveDecodeTargets(0, 0, packet.get()));
+		REQUIRE(deltaFrame->Rewrite(
+		  RTC::RTP::Codecs::DependencyDescriptor::RewriteParams{
+		    .activeDecodeTargetsBitmask = deltaFrame->GetDecodeTargetsBitmask(0, 0) },
+		  packet.get()));
 		REQUIRE(getDependencyDescriptor(packet.get()).size() == reservedLength);
 
 		// Once it's sent the packet is restored for the next Consumer.
@@ -368,7 +373,10 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(std::memcmp(restored.data(), deltaFrameData, sizeof(deltaFrameData)) == 0);
 
 		// And the next Consumer still grows into the room left behind it.
-		REQUIRE(deltaFrame->UpdateActiveDecodeTargets(0, 1, packet.get()));
+		REQUIRE(deltaFrame->Rewrite(
+		  RTC::RTP::Codecs::DependencyDescriptor::RewriteParams{
+		    .activeDecodeTargetsBitmask = deltaFrame->GetDecodeTargetsBitmask(0, 1) },
+		  packet.get()));
 		REQUIRE(getDependencyDescriptor(packet.get()).size() == reservedLength);
 
 		const auto value = getDependencyDescriptor(packet.get());
@@ -421,7 +429,10 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		const auto packet = createPacket(deltaFrameData, sizeof(deltaFrameData), sizeof(deltaFrameData));
 
 		// So the rewritten descriptor doesn't fit and the received one is kept.
-		REQUIRE(!deltaFrame->UpdateActiveDecodeTargets(0, 0, packet.get()));
+		REQUIRE(!deltaFrame->Rewrite(
+		  RTC::RTP::Codecs::DependencyDescriptor::RewriteParams{
+		    .activeDecodeTargetsBitmask = deltaFrame->GetDecodeTargetsBitmask(0, 0) },
+		  packet.get()));
 		REQUIRE(getDependencyDescriptor(packet.get()).size() == sizeof(deltaFrameData));
 
 		// And since nothing was written there is nothing to undo either.
@@ -431,6 +442,82 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		REQUIRE(value.size() == sizeof(deltaFrameData));
 		REQUIRE(std::memcmp(value.data(), deltaFrameData, sizeof(deltaFrameData)) == 0);
+	}
+
+	// When the rewrite does not fit, one of the two has to go, and they are not
+	// equally bad to lose: a frame number that goes back stalls the endpoint
+	// until the next key frame, while a bitmask that is not written just leaves
+	// it expecting the decode targets being filtered out and taking their
+	// absence for loss.
+	SECTION("the active decode targets are dropped rather than the whole rewrite")
+	{
+		// Key frame carrying the template dependency structure of an L1T2 stream,
+		// and a delta frame numbered 232.
+		// clang-format off
+		uint8_t keyFrameData[] =
+		{
+			0x80, 0x00, 0xE8, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C,
+		};
+
+		uint8_t deltaFrameData[] =
+		{
+			0x00, 0x00, 0xE8,
+		};
+		// clang-format on
+
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
+
+		auto keyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    keyFrameData, sizeof(keyFrameData), dependencyDescriptorContext));
+
+		REQUIRE(keyFrame);
+
+		auto deltaFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    deltaFrameData, sizeof(deltaFrameData), dependencyDescriptorContext));
+
+		REQUIRE(deltaFrame);
+
+		// No room was made, so only a descriptor as long as the one received fits.
+		const auto packet = createPacket(deltaFrameData, sizeof(deltaFrameData), sizeof(deltaFrameData));
+
+		REQUIRE(deltaFrame->GetMaxLength() > sizeof(deltaFrameData));
+
+		// The bitmask does not fit, but moving the frames of this Consumer along
+		// does, since the frame number is rewritten in place.
+		REQUIRE(deltaFrame->Rewrite(
+		  RTC::RTP::Codecs::DependencyDescriptor::RewriteParams{
+		    .frameNumber                = 232 + 100,
+		    .activeDecodeTargetsBitmask = deltaFrame->GetDecodeTargetsBitmask(0, 0) },
+		  packet.get()));
+
+		// So the descriptor is just as long as it came.
+		REQUIRE(getDependencyDescriptor(packet.get()).size() == sizeof(deltaFrameData));
+
+		const auto value = getDependencyDescriptor(packet.get());
+
+		auto forwarded = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    value.data(), value.size(), dependencyDescriptorContext));
+
+		REQUIRE(forwarded);
+
+		// Carrying the frame number this Consumer is being given, and no word
+		// about the active decode targets.
+		REQUIRE(forwarded->frameNumber == 232 + 100);
+		REQUIRE(!forwarded->activeDecodeTargetsBitmask.has_value());
+
+		// And it is still undone for the next Consumer.
+		deltaFrame->Restore(packet.get());
+
+		const auto restored = getDependencyDescriptor(packet.get());
+
+		REQUIRE(restored.size() == sizeof(deltaFrameData));
+		REQUIRE(std::memcmp(restored.data(), deltaFrameData, sizeof(deltaFrameData)) == 0);
 	}
 
 	// Descriptors are rewritten long after being parsed, for instance when
@@ -616,7 +703,9 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		uint8_t buffer[RTC::Consts::TwoBytesRtpExtensionMaxLength];
 
 		// Writing the very bitmask it came with must give the very same descriptor.
-		auto len = deltaFrame->Write(0b11, buffer);
+		auto len = deltaFrame->Write(
+		  RTC::RTP::Codecs::DependencyDescriptor::RewriteParams{ .activeDecodeTargetsBitmask = 0b11 },
+		  buffer);
 
 		REQUIRE(len == sizeof(deltaFrameData));
 		REQUIRE(std::memcmp(buffer, deltaFrameData, len) == 0);
@@ -631,7 +720,9 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		};
 		// clang-format on
 
-		len = deltaFrame->Write(0b01, buffer);
+		len = deltaFrame->Write(
+		  RTC::RTP::Codecs::DependencyDescriptor::RewriteParams{ .activeDecodeTargetsBitmask = 0b01 },
+		  buffer);
 
 		REQUIRE(len == sizeof(rewrittenData));
 		REQUIRE(std::memcmp(buffer, rewrittenData, len) == 0);
@@ -672,7 +763,9 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		uint8_t buffer[RTC::Consts::TwoBytesRtpExtensionMaxLength];
 
 		// Only decode target 0 is kept.
-		const auto len = keyFrame->Write(0b01, buffer);
+		const auto len = keyFrame->Write(
+		  RTC::RTP::Codecs::DependencyDescriptor::RewriteParams{ .activeDecodeTargetsBitmask = 0b01 },
+		  buffer);
 
 		REQUIRE(len != 0);
 		REQUIRE(len == keyFrame->GetMaxLength());

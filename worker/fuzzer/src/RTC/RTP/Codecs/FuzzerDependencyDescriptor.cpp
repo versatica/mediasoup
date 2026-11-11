@@ -25,7 +25,15 @@ void FuzzerRtcRtpCodecsDependencyDescriptor::Fuzz(const uint8_t* data, size_t le
 		for (uint8_t maxTemporalLayer{ 0 }; maxTemporalLayer < 4; ++maxTemporalLayer)
 		{
 			descriptor->Write(
-			  descriptor->GetDecodeTargetsBitmask(maxSpatialLayer, maxTemporalLayer), buffer);
+			  RTC::RTP::Codecs::DependencyDescriptor::RewriteParams{
+			    .activeDecodeTargetsBitmask =
+			      descriptor->GetDecodeTargetsBitmask(maxSpatialLayer, maxTemporalLayer) },
+			  buffer);
 		}
 	}
+
+	// And with the frame number alone, the fallback when the bitmask does not fit,
+	// which counts and writes a different set of bits.
+	descriptor->Write(
+	  RTC::RTP::Codecs::DependencyDescriptor::RewriteParams{ .frameNumber = 0xFFFF }, buffer);
 }

@@ -119,10 +119,14 @@ namespace
 	 * extension is then shrunk back to the length the descriptor really has, so
 	 * that the room stays behind it as padding.
 	 */
-	std::unique_ptr<RTC::RTP::Packet> createPacket(const uint8_t* data, uint8_t len, uint8_t reservedLen)
+	std::unique_ptr<RTC::RTP::Packet> createPacket(
+	  const uint8_t* data,
+	  uint8_t len,
+	  uint8_t reservedLen,
+	  uint8_t* buffer     = rtpCommon::FactoryBuffer,
+	  size_t bufferLength = sizeof(rtpCommon::FactoryBuffer))
 	{
-		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
-			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(buffer, bufferLength) };
 
 		REQUIRE(packet);
 
@@ -140,6 +144,20 @@ namespace
 		return packet;
 	}
 
+	/**
+	 * The bytes of the Dependency Descriptor the packet carries, this is, what
+	 * the endpoint is given.
+	 */
+	std::vector<uint8_t> getDependencyDescriptor(const RTC::RTP::Packet* packet)
+	{
+		uint8_t len;
+		const uint8_t* value = packet->GetExtensionValue(DependencyDescriptorId, len);
+
+		REQUIRE(value);
+
+		return { value, value + len };
+	}
+
 	struct ProcessResult
 	{
 		bool forwarded{ false };
@@ -152,6 +170,12 @@ namespace
 		 * packet was not forwarded or when nothing was written into it.
 		 */
 		std::optional<uint32_t> announced;
+		/**
+		 * The frame number the packet ends up carrying, which is not the one it
+		 * came with once the frames of the Consumer have been moved past those of
+		 * a stream it was given before.
+		 */
+		std::optional<uint16_t> forwardedFrameNumber;
 	};
 
 	/**
@@ -197,7 +221,8 @@ namespace
 			REQUIRE(packet->ReadDependencyDescriptor(forwarded, structure));
 			REQUIRE(forwarded);
 
-			result.announced = forwarded->activeDecodeTargetsBitmask;
+			result.announced            = forwarded->activeDecodeTargetsBitmask;
+			result.forwardedFrameNumber = forwarded->frameNumber;
 		}
 
 		return result;
@@ -872,5 +897,203 @@ SCENARIO("the Dependency Descriptor numbers frames with 16 bits", "[rtp][codecs]
 		// 5 has rolled over the newest one seen, so it is newer rather than older.
 		REQUIRE(context.IsOldFrameId(65529));
 		REQUIRE(!context.IsOldFrameId(5));
+	}
+}
+
+SCENARIO(
+  "forward the Dependency Descriptor of a simulcast Consumer across stream switches",
+  "[rtp][codecs][dependency-descriptor][simulcast]")
+{
+	RTC::RTP::Codecs::EncodingContext::Params params;
+
+	// A simulcast Consumer is given one of several streams, so its spatial layer
+	// is chosen by picking the stream and its target spatial layer is never set.
+	params.spatialLayers  = 3;
+	params.temporalLayers = 3;
+	params.simulcast      = true;
+
+	RTC::RTP::Codecs::EncodingContext context(
+	  params, RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength);
+
+	context.SetTargetTemporalLayer(2);
+	context.SetCurrentTemporalLayer(2);
+
+	// Each stream of a simulcast Producer is a separate encoder, so each one is
+	// parsed with a context of its own, just as `RtpStreamRecv` holds one per
+	// incoming SSRC.
+	RTC::RTP::Codecs::DependencyDescriptor::Context streamA;
+	RTC::RTP::Codecs::DependencyDescriptor::Context streamB;
+
+	// The captured key frame is frame 79 and the delta frames that follow it are
+	// frames 94 to 105, so replaying the capture against a fresh context is a
+	// stream whose encoder numbers its frames well below the ones already sent.
+	constexpr uint16_t KeyFrameNumber{ 79 };
+	constexpr uint16_t LastDeltaFrameNumber{ 105 };
+
+	auto processKeyFrame = [&](RTC::RTP::Codecs::DependencyDescriptor::Context& streamContext)
+	{
+		return processFrame(KeyFrameData, sizeof(KeyFrameData), streamContext, context);
+	};
+
+	auto processDeltaFrame =
+	  [&](RTC::RTP::Codecs::DependencyDescriptor::Context& streamContext, size_t index)
+	{
+		return processFrame(DeltaFrames[index].data(), DeltaFrames[index].size(), streamContext, context);
+	};
+
+	// A retransmission is encoded long after the packet was sent, so the packet
+	// and the handler that rewrote it must both outlive the frames that follow.
+	struct Forwarded
+	{
+		std::unique_ptr<RTC::RTP::Packet> packet;
+		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler> handler;
+	};
+
+	auto forward = [&](
+	                 const uint8_t* data,
+	                 size_t len,
+	                 RTC::RTP::Codecs::DependencyDescriptor::Context& streamContext,
+	                 uint8_t* buffer,
+	                 size_t bufferLength) -> Forwarded
+	{
+		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(data, len, streamContext));
+
+		REQUIRE(dependencyDescriptor);
+
+		auto packet = createPacket(
+		  data, static_cast<uint8_t>(len), dependencyDescriptor->GetMaxLength(), buffer, bufferLength);
+
+		auto handler = std::make_unique<RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler>(
+		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(dependencyDescriptor));
+
+		bool marker{ false };
+
+		REQUIRE(handler->Process(std::addressof(context), packet.get(), marker));
+
+		return { .packet = std::move(packet), .handler = std::move(handler) };
+	};
+
+	SECTION("the frames of a stream switched to follow the ones already sent")
+	{
+		// The Consumer is given stream A, whose frames it gets as they come.
+		context.SyncRequired();
+
+		auto result = processKeyFrame(streamA);
+
+		REQUIRE(result.forwarded);
+		REQUIRE(result.forwardedFrameNumber == KeyFrameNumber);
+
+		for (size_t index{ 0 }; index < DeltaFrames.size(); ++index)
+		{
+			result = processDeltaFrame(streamA, index);
+
+			REQUIRE(result.forwarded);
+		}
+
+		REQUIRE(result.forwardedFrameNumber == LastDeltaFrameNumber);
+
+		// And is then switched to stream B, which starts over at a key frame the
+		// endpoint would drop for being older than the one that brought the
+		// structure it holds.
+		context.SyncRequired();
+
+		result = processKeyFrame(streamB);
+
+		REQUIRE(result.forwarded);
+		REQUIRE(result.forwardedFrameNumber == LastDeltaFrameNumber + 1);
+
+		// The frames of stream B go on from there, keeping the distances they
+		// came with so that the frame diffs of their descriptors still point at
+		// the frames they did. Its first delta frame is frame 94, 15 frames after
+		// its key frame, so the Consumer is given 106 + 15.
+		result = processDeltaFrame(streamB, 0);
+
+		REQUIRE(result.forwarded);
+		REQUIRE(result.forwardedFrameNumber == LastDeltaFrameNumber + 1 + (94 - KeyFrameNumber));
+	}
+
+	SECTION("the frames of a stream that already goes on are left alone")
+	{
+		context.SyncRequired();
+
+		auto result = processKeyFrame(streamA);
+
+		REQUIRE(result.forwarded);
+		REQUIRE(result.forwardedFrameNumber == KeyFrameNumber);
+
+		// Switching to a stream whose frames are already past the ones sent, as
+		// the single counter libwebrtc numbers all the encodings of a sender with
+		// makes them, must leave them untouched.
+		context.SyncRequired();
+
+		result = processDeltaFrame(streamA, 0);
+
+		REQUIRE(result.forwarded);
+		REQUIRE(result.forwardedFrameNumber == 94);
+	}
+
+	// The frame numbers given to the Consumer move on at every stream switch, so
+	// a packet sitting in the retransmission buffer must be encoded with the ones
+	// it was sent with rather than with the ones in use now.
+	SECTION("a retransmission carries the descriptor the packet was sent with")
+	{
+		// Its own buffer, since it has to outlive the packets that follow it.
+		alignas(4) uint8_t packetBuffer[1500];
+
+		// Stream A first, so that the Consumer has been given frames before the
+		// switch and the stream after it is really moved past them.
+		context.SyncRequired();
+
+		{
+			const auto first = forward(
+			  KeyFrameData,
+			  sizeof(KeyFrameData),
+			  streamA,
+			  rtpCommon::FactoryBuffer,
+			  sizeof(rtpCommon::FactoryBuffer));
+		}
+
+		// Switched to stream B, which numbers its frames below the ones already
+		// given, so this packet is rewritten with a frame number of its own.
+		context.SyncRequired();
+
+		auto sentPacket =
+		  forward(KeyFrameData, sizeof(KeyFrameData), streamB, packetBuffer, sizeof(packetBuffer));
+
+		// The Consumer takes the encoder left for it, which is what a
+		// retransmission of this packet is encoded with.
+		auto encoder = std::move(context.encoder);
+
+		REQUIRE(encoder);
+
+		const auto sent = getDependencyDescriptor(sentPacket.packet.get());
+
+		// As the Consumer does once the packet is on the wire, so that the next
+		// one sharing it is given the descriptor as received.
+		sentPacket.handler->Restore(sentPacket.packet.get());
+
+		REQUIRE(getDependencyDescriptor(sentPacket.packet.get()) != sent);
+
+		// And switched back, which moves the numbering of the Consumer on again,
+		// so what it would write now is not what this packet was sent with.
+		context.SyncRequired();
+
+		{
+			const auto later = forward(
+			  KeyFrameData,
+			  sizeof(KeyFrameData),
+			  streamA,
+			  rtpCommon::FactoryBuffer,
+			  sizeof(rtpCommon::FactoryBuffer));
+
+			REQUIRE(getDependencyDescriptor(later.packet.get()) != sent);
+		}
+
+		// A NACK for the old packet must give the endpoint the very bytes it was
+		// given before, not the ones the Consumer would write now.
+		sentPacket.handler->Encode(sentPacket.packet.get(), encoder.get());
+
+		REQUIRE(getDependencyDescriptor(sentPacket.packet.get()) == sent);
 	}
 }

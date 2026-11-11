@@ -309,6 +309,84 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		REQUIRE(forwarded->activeDecodeTargetsBitmask == 0b11);
 	}
 
+	// H264 is the only codec mediasoup forwards the Dependency Descriptor of that
+	// can be simulcast, since `IsValidTypeForCodec()` allows SIMULCAST for VP8 and
+	// H264 alone and VP8 never gets the Dependency Descriptor handler. So this is
+	// the one path where the frames of a Consumer are really given the numbers of
+	// several encoders.
+	SECTION("the Dependency Descriptor of a simulcast Consumer goes on across a stream switch")
+	{
+		// Key frame of an L1T2 stream, numbered 232.
+		// clang-format off
+		uint8_t keyFrameDescriptor[] =
+		{
+			0x80, 0x00, 0xE8, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C,
+		};
+		// clang-format on
+
+		constexpr uint16_t KeyFrameNumber{ 232 };
+
+		RTC::RTP::Codecs::EncodingContext::Params params;
+
+		params.spatialLayers              = 1;
+		params.temporalLayers             = 2;
+		params.simulcast                  = true;
+		params.preferDependencyDescriptor = true;
+
+		RTC::RTP::Codecs::H264::EncodingContext context(params);
+
+		context.SetTargetTemporalLayer(1);
+		context.SetCurrentTemporalLayer(1);
+
+		// Each encoding of the Producer is parsed with a context of its own, as
+		// `RtpStreamRecv` holds one per incoming SSRC. Replaying the same key frame
+		// against a fresh one is a second encoder numbering its frames on its own.
+		RTC::RTP::Codecs::DependencyDescriptor::Context streamA;
+		RTC::RTP::Codecs::DependencyDescriptor::Context streamB;
+
+		// Runs a key frame all the way through the packet, so that the handler is
+		// chosen as it is for a real one, and gives back the frame number the
+		// endpoint ends up being told.
+		auto forwardKeyFrame = [&](RTC::RTP::Codecs::DependencyDescriptor::Context& streamContext)
+		{
+			const auto packet = createPacket(
+			  keyFrameDescriptor,
+			  sizeof(keyFrameDescriptor),
+			  /*reservedLen*/ sizeof(keyFrameDescriptor) + 1);
+
+			RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), streamContext);
+
+			bool marker{ false };
+
+			REQUIRE(packet->ProcessPayload(std::addressof(context), marker));
+
+			std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> forwarded;
+			// NOTE: Into a copy, since reading a key frame back parses its structure
+			// again and would replace the one of the stream.
+			auto readContext = streamContext;
+
+			REQUIRE(packet->ReadDependencyDescriptor(forwarded, readContext));
+			REQUIRE(forwarded);
+
+			return forwarded->frameNumber;
+		};
+
+		context.SyncRequired();
+
+		// The first stream is given as it comes.
+		REQUIRE(forwardKeyFrame(streamA) == KeyFrameNumber);
+
+		// And the one switched to, whose key frame would otherwise repeat a frame
+		// number already given and be dropped by the endpoint for being older than
+		// the one that brought the structure it holds, follows it instead.
+		context.SyncRequired();
+
+		REQUIRE(forwardKeyFrame(streamB) == KeyFrameNumber + 1);
+	}
+
 	SECTION("the H264 payload descriptor is used when there is no Dependency Descriptor")
 	{
 		const auto packet = createPacket(nullptr, 0, 0);
