@@ -19,7 +19,7 @@ void FuzzerRtcIceStunPacket::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	auto* packet = RTC::ICE::StunPacket::Parse(data, len);
+	const std::unique_ptr<RTC::ICE::StunPacket> packet{ RTC::ICE::StunPacket::Parse(data, len) };
 
 	if (!packet)
 	{
@@ -95,8 +95,7 @@ void FuzzerRtcIceStunPacket::Fuzz(const uint8_t* data, size_t len)
 
 	try
 	{
-		packet->AddXorMappedAddress(
-		  reinterpret_cast<struct sockaddr*>(std::addressof(xorMappedAddressStorage)));
+		packet->AddXorMappedAddress(reinterpret_cast<sockaddr*>(std::addressof(xorMappedAddressStorage)));
 	}
 	catch (...) // NOLINT(bugprone-empty-catch)
 	{
@@ -128,19 +127,17 @@ void FuzzerRtcIceStunPacket::Fuzz(const uint8_t* data, size_t len)
 
 	if (packet->GetClass() == RTC::ICE::StunPacket::Class::REQUEST)
 	{
-		auto* successResponse =
-		  packet->CreateSuccessResponse(ResponseFactoryBuffer, sizeof(ResponseFactoryBuffer));
-		auto* errorResponse = packet->CreateErrorResponse(
-		  ResponseFactoryBuffer, sizeof(ResponseFactoryBuffer), 444, "ERROR aljsh œœ∫∂å∫∂ zhx   å∫∂å∫∂ !!!");
-
-		delete successResponse;
-		delete errorResponse;
+		const std::unique_ptr<RTC::ICE::StunPacket> successResponse{ packet->CreateSuccessResponse(
+			ResponseFactoryBuffer, sizeof(ResponseFactoryBuffer)) };
+		const std::unique_ptr<RTC::ICE::StunPacket> errorResponse{ packet->CreateErrorResponse(
+			ResponseFactoryBuffer,
+			sizeof(ResponseFactoryBuffer),
+			444,
+			"ERROR aljsh œœ∫∂å∫∂ zhx   å∫∂å∫∂ !!!") };
 	}
 
 	packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
-	const auto* clonedPacket = packet->Clone(CloneBuffer, sizeof(CloneBuffer));
-
-	delete packet;
-	delete clonedPacket;
+	const std::unique_ptr<const RTC::ICE::StunPacket> clonedPacket{ packet->Clone(
+		CloneBuffer, sizeof(CloneBuffer)) };
 }

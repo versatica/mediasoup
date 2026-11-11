@@ -1,0 +1,12 @@
+#ifndef MS_FUZZER_RTC_SCTP_RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES_ERROR_CAUSE_HPP
+#define MS_FUZZER_RTC_SCTP_RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES_ERROR_CAUSE_HPP
+
+#include "common.hpp"
+#include "RTC/SCTP/packet/errorCauses/RestartOfAnAssociationWithNewAddressesErrorCause.hpp"
+
+namespace FuzzerRtcSctpRestartOfAnAssociationWithNewAddressesErrorCause
+{
+	void Fuzz(const RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause* errorCause);
+} // namespace FuzzerRtcSctpRestartOfAnAssociationWithNewAddressesErrorCause
+
+#endif

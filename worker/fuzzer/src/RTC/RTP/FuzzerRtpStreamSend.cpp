@@ -3,6 +3,7 @@
 #include "RTC/RTP/PacketUtils.hpp"
 #include "Utils.hpp"
 #include "mocks/include/MockShared.hpp"
+#include <string>
 
 namespace
 {
@@ -26,7 +27,7 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	// clang-format on
 
 	// Create base RtpPacket instance.
-	auto* packet = RTC::RTP::Packet::Parse(buffer, 12);
+	const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, 12) };
 
 	// Create a RtpStreamSend instance.
 	TestRtpStreamListener testRtpStreamListener;
@@ -42,7 +43,7 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	packet->SetSsrc(params.ssrc);
 
 	std::string mid;
-	auto* stream = new RTC::RTP::RtpStreamSend(
+	const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 	  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 	size_t offset{ 0 };
 
@@ -52,11 +53,12 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 		packet->SetSequenceNumber(Utils::Byte::Get2Bytes(data, offset));
 		packet->SetTimestamp(Utils::Byte::Get4Bytes(data, offset + 2));
 
-		const auto result = stream->ReceivePacket(packet);
+		const RTC::RTP::RtpStreamSend::ReceivePacketResult result = stream->ReceivePacket(packet.get());
 
 		if (result.retransmissionBufferItem)
 		{
-			result.retransmissionBufferItem->sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet);
+			result.retransmissionBufferItem->sharedPacket =
+			  RTC::RTP::PacketUtils::ClonePacket(packet.get());
 		}
 
 		// Feed a 'random' report block, which is what the loss of the stream is
@@ -80,7 +82,4 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 		len -= 12;
 		offset += 12;
 	}
-
-	delete stream;
-	delete packet;
 }
