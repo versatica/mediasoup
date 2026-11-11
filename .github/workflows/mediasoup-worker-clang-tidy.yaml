@@ -9,10 +9,16 @@ on:
       - 'worker/test/include/**/*.hpp'
       - 'worker/fuzzer/src/**/*.cpp'
       - 'worker/fuzzer/include/**/*.hpp'
+      - 'worker/mocks/src/**/*.cpp'
+      - 'worker/mocks/include/**/*.hpp'
       - 'worker/meson.build'
       - 'worker/tasks.py'
       - 'worker/.clang-format'
       - 'worker/.clang-tidy'
+      - 'worker/subprojects/.clang-tidy'
+      - 'worker/scripts/clang-scripts.mjs'
+      - 'worker/scripts/package.json'
+      - 'worker/scripts/package-lock.json'
       - '.github/workflows/mediasoup-worker-clang-tidy.yaml'
 
 concurrency:
