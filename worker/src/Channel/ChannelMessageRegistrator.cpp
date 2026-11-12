@@ -31,7 +31,7 @@ namespace Channel
 
 		for (const auto& kv : this->mapChannelRequestHandlers)
 		{
-			const std::string& handlerId = kv.first;
+			const auto& handlerId = kv.first;
 
 			channelRequestHandlerIds.push_back(builder.CreateString(handlerId));
 		}
@@ -41,7 +41,7 @@ namespace Channel
 
 		for (const auto& kv : this->mapChannelNotificationHandlers)
 		{
-			const std::string& handlerId = kv.first;
+			const auto& handlerId = kv.first;
 
 			channelNotificationHandlerIds.push_back(builder.CreateString(handlerId));
 		}
@@ -102,8 +102,7 @@ namespace Channel
 
 		if (it != this->mapChannelRequestHandlers.end())
 		{
-			// NOLINTNEXTLINE(misc-const-correctness)
-			ChannelSocket::RequestHandler* const channelRequestHandler = it->second;
+			auto* const channelRequestHandler = it->second;
 
 			return channelRequestHandler;
 		}
@@ -122,8 +121,7 @@ namespace Channel
 
 		if (it != this->mapChannelNotificationHandlers.end())
 		{
-			// NOLINTNEXTLINE(misc-const-correctness)
-			ChannelSocket::NotificationHandler* const channelNotificationHandler = it->second;
+			auto* const channelNotificationHandler = it->second;
 
 			return channelNotificationHandler;
 		}

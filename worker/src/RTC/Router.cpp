@@ -456,7 +456,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::Transport* transport = it->second;
+		auto* transport = it->second;
 
 		return transport;
 	}
@@ -474,7 +474,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::RtpObserver* rtpObserver = it->second;
+		auto* rtpObserver = it->second;
 
 		return rtpObserver;
 	}
@@ -1131,7 +1131,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::Producer* producer = it->second;
+		auto* producer = it->second;
 
 		return producer;
 	}

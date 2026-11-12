@@ -69,7 +69,7 @@ void Worker::Close()
 	// Delete all Routers.
 	for (auto& kv : this->mapRouters)
 	{
-		RTC::Router* router = kv.second;
+		auto* router = kv.second;
 
 		delete router;
 	}
@@ -79,7 +79,7 @@ void Worker::Close()
 	// Delete all WebRtcServers.
 	for (auto& kv : this->mapWebRtcServers)
 	{
-		RTC::WebRtcServer* webRtcServer = kv.second;
+		auto* webRtcServer = kv.second;
 
 		delete webRtcServer;
 	}
@@ -102,7 +102,7 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 
 	for (const auto& kv : this->mapWebRtcServers)
 	{
-		const std::string& webRtcServerId = kv.first;
+		const auto& webRtcServerId = kv.first;
 
 		webRtcServerIds.push_back(builder.CreateString(webRtcServerId));
 	}
@@ -114,7 +114,7 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 
 	for (const auto& kv : this->mapRouters)
 	{
-		const std::string& routerId = kv.first;
+		const auto& routerId = kv.first;
 
 		routerIds.push_back(builder.CreateString(routerId));
 	}
@@ -206,7 +206,7 @@ RTC::WebRtcServer* Worker::AssertAndGetWebRtcServerById(
 	}
 
 	// NOLINTNEXTLINE(misc-const-correctness)
-	RTC::WebRtcServer* webRtcServer = it->second;
+	auto* webRtcServer = it->second;
 
 	return webRtcServer;
 }
@@ -223,7 +223,7 @@ RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId, const s
 	}
 
 	// NOLINTNEXTLINE(misc-const-correctness)
-	RTC::Router* router = it->second;
+	auto* router = it->second;
 
 	return router;
 }

@@ -817,7 +817,7 @@ namespace RTC
 			return;
 		}
 
-		const uint32_t ssrc = it->second;
+		const auto ssrc = it->second;
 
 		// If the current RTP packet is a key frame for the given mapped SSRC do
 		// nothing since we are gonna provide Consumers with the requested key frame
@@ -1203,7 +1203,7 @@ namespace RTC
 
 		// Mangle the SSRC.
 		{
-			const uint32_t mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
+			const auto mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
 
 			packet->SetSsrc(mappedSsrc);
 		}

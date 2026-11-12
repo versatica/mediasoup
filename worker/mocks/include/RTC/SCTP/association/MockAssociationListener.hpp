@@ -82,7 +82,7 @@ namespace mocks
 				{
 					++this->onStreamsResetPerformedCalls;
 
-					for (const uint16_t streamId : outboundStreamIds)
+					for (const auto streamId : outboundStreamIds)
 					{
 						this->streamsResetPerformed.insert(streamId);
 					}
@@ -93,7 +93,7 @@ namespace mocks
 				{
 					++this->onStreamsResetFailedCalls;
 
-					for (const uint16_t streamId : outboundStreamIds)
+					for (const auto streamId : outboundStreamIds)
 					{
 						this->streamsResetFailed.insert(streamId);
 					}
@@ -103,7 +103,7 @@ namespace mocks
 				{
 					++this->onInboundStreamsResetCalls;
 
-					for (const uint16_t streamId : inboundStreamIds)
+					for (const auto streamId : inboundStreamIds)
 					{
 						this->inboundStreamsReset.insert(streamId);
 					}

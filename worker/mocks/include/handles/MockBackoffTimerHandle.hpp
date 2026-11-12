@@ -109,7 +109,7 @@ namespace mocks
 	private:
 		int64_t ComputeNextTimeoutMs() const
 		{
-			size_t expirationCount = this->expirationCount;
+			auto expirationCount = this->expirationCount;
 
 			switch (this->backoffAlgorithm)
 			{

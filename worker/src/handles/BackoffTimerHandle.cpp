@@ -92,7 +92,7 @@ int64_t BackoffTimerHandle::ComputeNextTimeoutMs() const
 {
 	MS_TRACE();
 
-	size_t expirationCount = this->expirationCount;
+	auto expirationCount = this->expirationCount;
 
 	switch (this->backoffAlgorithm)
 	{

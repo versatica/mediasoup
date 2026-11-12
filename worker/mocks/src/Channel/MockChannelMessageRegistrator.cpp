@@ -33,7 +33,7 @@ namespace mocks
 
 			for (const auto& kv : this->mapChannelRequestHandlers)
 			{
-				const std::string& handlerId = kv.first;
+				const auto& handlerId = kv.first;
 
 				channelRequestHandlerIds.push_back(builder.CreateString(handlerId));
 			}
@@ -43,7 +43,7 @@ namespace mocks
 
 			for (const auto& kv : this->mapChannelNotificationHandlers)
 			{
-				const std::string& handlerId = kv.first;
+				const auto& handlerId = kv.first;
 
 				channelNotificationHandlerIds.push_back(builder.CreateString(handlerId));
 			}
@@ -104,7 +104,7 @@ namespace mocks
 
 			if (it != this->mapChannelRequestHandlers.end())
 			{
-				::Channel::ChannelSocket::RequestHandler* const channelRequestHandler = it->second;
+				auto* const channelRequestHandler = it->second;
 
 				return channelRequestHandler;
 			}
@@ -123,7 +123,7 @@ namespace mocks
 
 			if (it != this->mapChannelNotificationHandlers.end())
 			{
-				::Channel::ChannelSocket::NotificationHandler* const channelNotificationHandler = it->second;
+				auto* const channelNotificationHandler = it->second;
 
 				return channelNotificationHandler;
 			}

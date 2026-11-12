@@ -231,8 +231,8 @@ static void ignoreSignals()
 
 	for (const auto& kv : ignoredSignals)
 	{
-		const std::string& sigName = kv.first;
-		const int sigId            = kv.second;
+		const auto& sigName = kv.first;
+		const auto sigId    = kv.second;
 
 		err = sigaction(sigId, std::addressof(act), nullptr);
 

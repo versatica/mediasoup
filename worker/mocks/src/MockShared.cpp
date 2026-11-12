@@ -59,7 +59,7 @@ namespace mocks
 	{
 		MS_TRACE();
 
-		const std::string& label = options.label;
+		const auto& label = options.label;
 
 		// NOTE: Backoff timers are indexed by label so that tests can retrieve them
 		// via GetBackoffTimer(). Two alive timers sharing a label would make that

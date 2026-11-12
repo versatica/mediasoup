@@ -1737,7 +1737,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::Producer* producer = it->second;
+		auto* producer = it->second;
 
 		return producer;
 	}
@@ -1755,7 +1755,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::Consumer* consumer = it->second;
+		auto* consumer = it->second;
 
 		return consumer;
 	}
@@ -1805,7 +1805,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::DataProducer* dataProducer = it->second;
+		auto* dataProducer = it->second;
 
 		return dataProducer;
 	}
@@ -1823,7 +1823,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::DataConsumer* dataConsumer = it->second;
+		auto* dataConsumer = it->second;
 
 		return dataConsumer;
 	}
@@ -1840,7 +1840,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::DataConsumer* dataConsumer = it->second;
+		auto* dataConsumer = it->second;
 
 		return dataConsumer;
 	}
@@ -2151,7 +2151,7 @@ namespace RTC
 				const auto* byePacket = static_cast<const RTC::RTCP::ByePacket*>(packet);
 
 				// A source that leaves expects no answer to its Receiver Reference Time.
-				for (const uint32_t ssrc : byePacket->GetSsrcs())
+				for (const auto ssrc : byePacket->GetSsrcs())
 				{
 					this->receivedReceiverReferenceTimes.erase(ssrc);
 				}
@@ -2512,8 +2512,8 @@ namespace RTC
 							break;
 						}
 
-						const uint32_t ssrc                                                = kv.first;
-						const ReceivedReceiverReferenceTime& receivedReceiverReferenceTime = kv.second;
+						const uint32_t ssrc                       = kv.first;
+						const auto& receivedReceiverReferenceTime = kv.second;
 						// Get delay in microseconds.
 						const int64_t delayUs = nowUs - receivedReceiverReferenceTime.receivedAtUs;
 						// Express delay in units of 1/65536 seconds.
@@ -2537,7 +2537,7 @@ namespace RTC
 
 					dlrrExtendedReport->Consolidate();
 
-					for (const uint32_t ssrc : answeredSsrcs)
+					for (const auto ssrc : answeredSsrcs)
 					{
 						this->receivedReceiverReferenceTimes.erase(ssrc);
 					}

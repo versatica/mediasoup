@@ -533,7 +533,8 @@ namespace RTC
 			const size_t levelIndex = this->nextLevelIndex >= (i + 1)
 			                            ? this->nextLevelIndex - i - 1
 			                            : this->nextLevelIndex + LevelsBuffLen - i - 1;
-			uint8_t level           = this->levels[levelIndex];
+
+			auto level = this->levels[levelIndex];
 
 			if (level < minLevel)
 			{
