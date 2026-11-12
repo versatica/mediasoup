@@ -28,7 +28,7 @@ namespace Channel
 		  FBS::Notification::Body type,
 		  const flatbuffers::Offset<Body>& body)
 		{
-			flatbuffers::FlatBufferBuilder& builder = this->bufferBuilder;
+			auto& builder = this->bufferBuilder;
 
 			const auto notification = FBS::Notification::CreateNotificationDirect(
 			  builder, targetId.c_str(), event, type, body.Union());

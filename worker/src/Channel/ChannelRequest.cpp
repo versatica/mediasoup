@@ -120,7 +120,7 @@ namespace Channel
 
 		this->replied = true;
 
-		flatbuffers::FlatBufferBuilder& builder = ChannelRequest::bufferBuilder;
+		auto& builder = ChannelRequest::bufferBuilder;
 
 		const auto response =
 		  FBS::Response::CreateResponse(builder, this->id, true, FBS::Response::Body::NONE, 0);
@@ -136,7 +136,7 @@ namespace Channel
 
 		this->replied = true;
 
-		flatbuffers::FlatBufferBuilder& builder = ChannelRequest::bufferBuilder;
+		auto& builder = ChannelRequest::bufferBuilder;
 
 		const auto response = FBS::Response::CreateResponseDirect(
 		  builder, this->id, /*accepted*/ false, FBS::Response::Body::NONE, 0, /*error*/ "Error", reason);
@@ -152,7 +152,7 @@ namespace Channel
 
 		this->replied = true;
 
-		flatbuffers::FlatBufferBuilder& builder = ChannelRequest::bufferBuilder;
+		auto& builder = ChannelRequest::bufferBuilder;
 
 		const auto response = FBS::Response::CreateResponseDirect(
 		  builder, this->id, /*accepted*/ false, FBS::Response::Body::NONE, 0, /*error*/ "TypeError", reason);
@@ -168,7 +168,7 @@ namespace Channel
 
 		this->replied = true;
 
-		flatbuffers::FlatBufferBuilder& builder = ChannelRequest::bufferBuilder;
+		auto& builder = ChannelRequest::bufferBuilder;
 
 		const auto response = FBS::Response::CreateResponseDirect(
 		  builder,
@@ -193,7 +193,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		flatbuffers::FlatBufferBuilder& builder = ChannelRequest::bufferBuilder;
+		auto& builder = ChannelRequest::bufferBuilder;
 
 		const auto message =
 		  FBS::Message::CreateMessage(builder, FBS::Message::Body::Response, response.Union());

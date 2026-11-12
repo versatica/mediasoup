@@ -17,7 +17,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		flatbuffers::FlatBufferBuilder& builder = this->bufferBuilder;
+		auto& builder = this->bufferBuilder;
 
 		const auto notification =
 		  FBS::Notification::CreateNotificationDirect(builder, targetId.c_str(), event);

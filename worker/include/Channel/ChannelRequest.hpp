@@ -5,6 +5,7 @@
 #include "FBS/message.h"
 #include "FBS/request.h"
 #include "FBS/response.h"
+#include <flatbuffers/flatbuffer_builder.h>
 #include <cassert> // assert()
 #include <string>
 
@@ -41,7 +42,7 @@ namespace Channel
 
 			this->replied = true;
 
-			flatbuffers::FlatBufferBuilder& builder = ChannelRequest::bufferBuilder;
+			auto& builder = ChannelRequest::bufferBuilder;
 
 			const auto response =
 			  FBS::Response::CreateResponse(builder, this->id, true, type, body.Union());

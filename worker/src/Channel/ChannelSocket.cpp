@@ -174,7 +174,7 @@ namespace Channel
 			return;
 		}
 
-		flatbuffers::FlatBufferBuilder& builder = this->bufferBuilder;
+		auto& builder = this->bufferBuilder;
 
 		const auto log     = FBS::Log::CreateLogDirect(builder, data);
 		const auto message = FBS::Message::CreateMessage(builder, FBS::Message::Body::Log, log.Union());

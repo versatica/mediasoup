@@ -103,7 +103,7 @@ int64_t BackoffTimerHandle::ComputeNextTimeoutMs() const
 
 		case BackoffAlgorithm::EXPONENTIAL:
 		{
-			int64_t timeoutMs = this->baseTimeoutMs;
+			auto timeoutMs = this->baseTimeoutMs;
 
 			while (expirationCount > 0 && timeoutMs < BackoffTimerHandleInterface::MaxTimeoutMs)
 			{
@@ -135,7 +135,7 @@ void BackoffTimerHandle::OnTimer(TimerHandleInterface* /*timer*/)
 	this->running =
 	  !this->maxRestarts.has_value() || this->expirationCount <= this->maxRestarts.value();
 
-	int64_t baseTimeoutMs{ this->baseTimeoutMs };
+	auto baseTimeoutMs{ this->baseTimeoutMs };
 	bool stop{ false };
 
 	// Call the listener by passing base timeout as reference so the parent has

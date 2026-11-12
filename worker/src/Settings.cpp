@@ -432,8 +432,8 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 		return;
 	}
 
-	const std::string& dtlsCertificateFile = Settings::configuration.dtlsCertificateFile;
-	const std::string& dtlsPrivateKeyFile  = Settings::configuration.dtlsPrivateKeyFile;
+	const auto& dtlsCertificateFile = Settings::configuration.dtlsCertificateFile;
+	const auto& dtlsPrivateKeyFile  = Settings::configuration.dtlsPrivateKeyFile;
 
 	try
 	{

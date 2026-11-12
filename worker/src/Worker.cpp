@@ -305,8 +305,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			const auto* body          = request->data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
 			const auto webRtcServerId = body->webRtcServerId()->str();
-			const RTC::WebRtcServer* webRtcServer =
-			  AssertAndGetWebRtcServerById(webRtcServerId, request->methodCStr);
+			const auto* webRtcServer  = AssertAndGetWebRtcServerById(webRtcServerId, request->methodCStr);
 
 			// Remove it from the map and delete it.
 			this->mapWebRtcServers.erase(webRtcServer->GetId());
@@ -340,9 +339,9 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_CLOSE_ROUTER:
 		{
-			const auto* body          = request->data->body_as<FBS::Worker::CloseRouterRequest>();
-			const auto routerId       = body->routerId()->str();
-			const RTC::Router* router = AssertAndGetRouterById(routerId, request->methodCStr);
+			const auto* body    = request->data->body_as<FBS::Worker::CloseRouterRequest>();
+			const auto routerId = body->routerId()->str();
+			const auto* router  = AssertAndGetRouterById(routerId, request->methodCStr);
 
 			// Remove it from the map and delete it.
 			this->mapRouters.erase(router->id);

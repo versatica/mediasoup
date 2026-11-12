@@ -120,7 +120,7 @@ namespace mocks
 
 				case BackoffAlgorithm::EXPONENTIAL:
 				{
-					int64_t timeoutMs = this->baseTimeoutMs;
+					auto timeoutMs = this->baseTimeoutMs;
 
 					while (expirationCount > 0 && timeoutMs < BackoffTimerHandleInterface::MaxTimeoutMs)
 					{

@@ -90,7 +90,7 @@ extern "C" int mediasoup_worker_run(
 #endif
 
 	// Create a Shared singleton.
-	const std::unique_ptr<Shared> shared = std::make_unique<Shared>(
+	const auto shared = std::make_unique<Shared>(
 	  /*channelMessageRegistrator*/ std::make_unique<Channel::ChannelMessageRegistrator>(),
 	  /*channelNotifier*/ std::make_unique<Channel::ChannelNotifier>(channel.get()));
 
