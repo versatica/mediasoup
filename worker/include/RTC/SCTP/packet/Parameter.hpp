@@ -195,8 +195,9 @@ namespace RTC
 
 		private:
 			/**
-			 * NOTE: Return ParameterHeader* instead of const ParameterHeader* since
-			 * we may want to modify its fields.
+			 * @remarks
+			 * - Return ParameterHeader* instead of const ParameterHeader* since we
+			 *   may want to modify its fields.
 			 */
 			virtual ParameterHeader* GetHeaderPointer() const final
 			{

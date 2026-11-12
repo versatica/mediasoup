@@ -158,13 +158,13 @@ CheckOptions:
   - key: readability-identifier-naming.ConstantSuffix
     value: ''
   - key: readability-identifier-naming.ConstexprFunctionCase
-    value: camelBack
+    value: CamelCase
   - key: readability-identifier-naming.ConstexprFunctionPrefix
     value: ''
   - key: readability-identifier-naming.ConstexprFunctionSuffix
     value: ''
   - key: readability-identifier-naming.ConstexprMethodCase
-    value: camelBack
+    value: CamelCase
   - key: readability-identifier-naming.ConstexprMethodPrefix
     value: ''
   - key: readability-identifier-naming.ConstexprMethodSuffix

@@ -99,9 +99,10 @@
 #include "Channel/ChannelSocket.hpp"
 #include "LogLevel.hpp"
 #include "Settings.hpp"
-#include <cstdio>  // std::snprintf(), std::fprintf(), stdout, stderr
-#include <cstdlib> // std::abort()
-#include <cstring>
+#include <cstdio>    // std::snprintf(), std::fprintf(), std::fflush(), stdout, stderr
+#include <cstdlib>   // std::abort()
+#include <cstring>   // std::strchr()
+#include <stdexcept> // std::runtime_error
 
 // clang-format off
 
@@ -153,12 +154,14 @@
 class Logger
 {
 public:
+	static constexpr size_t BufferSize{ 50000 };
+
+public:
 	static void ClassInit(Channel::ChannelSocket* channel);
 
 public:
 	static const uint64_t Pid;
 	static thread_local Channel::ChannelSocket* channel;
-	static const size_t BufferSize {50000};
 	static thread_local char buffer[];
 };
 

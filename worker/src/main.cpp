@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "Logger.hpp"
 #include "lib.hpp"
-#include <cstdlib> // std::_Exit()
+#include <cstdlib> // std::_Exit(), std::getenv()
 #include <string>
 
 static constexpr int ConsumerChannelFd{ 3 };
@@ -12,6 +12,8 @@ static constexpr int ProducerChannelFd{ 4 };
 
 int main(int argc, char* argv[])
 {
+	MS_TRACE_STD();
+
 	const char* envVersion = std::getenv("MEDIASOUP_VERSION");
 
 	// Ensure we are called by our Node library.
@@ -25,7 +27,7 @@ int main(int argc, char* argv[])
 
 	const std::string version{ envVersion };
 
-	const auto statusCode = mediasoup_worker_run(
+	const int statusCode = mediasoup_worker_run(
 	  /*argc*/ argc,
 	  /*argv*/ argv,
 	  /*version*/ version.c_str(),

@@ -818,9 +818,10 @@ namespace RTC
 			/**
 			 * Whether the payload contains a video keyframe.
 			 *
-			 * NOTE: The ones below tell about the packet rather than about what a
-			 * given Consumer is given, so they prefer the Dependency Descriptor,
-			 * which is where the codecs carrying it keep this.
+			 * @remarks
+			 * - The ones below tell about the packet rather than about what a given
+			 *   Consumer is given, so they prefer the Dependency Descriptor, which is
+			 *   where the codecs carrying it keep this.
 			 */
 			bool IsKeyFrame() const
 			{

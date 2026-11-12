@@ -17,7 +17,7 @@ public:
 
 	static uv_loop_t* GetLoop()
 	{
-		return DepLibUV::loop;
+		return DepLibUV::loop.get();
 	}
 
 	/**
@@ -64,7 +64,7 @@ public:
 	}
 
 private:
-	static thread_local uv_loop_t* loop;
+	static thread_local std::unique_ptr<uv_loop_t> loop;
 	// Distance from our own monotonic clock to the NTP epoch (us), taken at
 	// ClassInit().
 	static thread_local int64_t ntpOffsetUs;

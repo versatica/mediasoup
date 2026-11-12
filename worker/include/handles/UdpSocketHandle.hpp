@@ -9,7 +9,9 @@
 class UdpSocketHandle
 {
 public:
-	/* Struct for the data field of uv_req_t when sending a datagram. */
+	/**
+	 * Struct for the data field of uv_req_t when sending a datagram.
+	 */
 	struct UvSendData
 	{
 		explicit UvSendData(size_t storeSize) : store(new uint8_t[storeSize])
@@ -34,8 +36,11 @@ public:
 	 * uvHandle must be an already initialized and binded uv_udp_t pointer.
 	 */
 	explicit UdpSocketHandle(uv_udp_t* uvHandle);
+
 	UdpSocketHandle& operator=(const UdpSocketHandle&) = delete;
-	UdpSocketHandle(const UdpSocketHandle&)            = delete;
+
+	UdpSocketHandle(const UdpSocketHandle&) = delete;
+
 	virtual ~UdpSocketHandle();
 
 public:
@@ -43,51 +48,66 @@ public:
 	{
 		return this->closed;
 	}
+
 	void Dump(int indentation = 0) const;
-	void Send(const uint8_t* data, size_t len, const struct sockaddr* addr, onSendCallback cb);
-	const struct sockaddr* GetLocalAddress() const
+
+	void Send(const uint8_t* data, size_t len, const sockaddr* addr, onSendCallback cb);
+
+	const sockaddr* GetLocalAddress() const
 	{
-		return reinterpret_cast<const struct sockaddr*>(std::addressof(this->localAddr));
+		return reinterpret_cast<const sockaddr*>(std::addressof(this->localAddr));
 	}
+
 	int GetLocalFamily() const
 	{
-		return reinterpret_cast<const struct sockaddr*>(std::addressof(this->localAddr))->sa_family;
+		return reinterpret_cast<const sockaddr*>(std::addressof(this->localAddr))->sa_family;
 	}
+
 	const std::string& GetLocalIp() const
 	{
 		return this->localIp;
 	}
+
 	uint16_t GetLocalPort() const
 	{
 		return this->localPort;
 	}
+
 	size_t GetRecvBytes() const
 	{
 		return this->recvBytes;
 	}
+
 	size_t GetSentBytes() const
 	{
 		return this->sentBytes;
 	}
+
 	uint32_t GetSendBufferSize() const;
+
 	void SetSendBufferSize(uint32_t size);
+
 	uint32_t GetRecvBufferSize() const;
+
 	void SetRecvBufferSize(uint32_t size);
 
 private:
 	void InternalClose();
+
 	bool SetLocalAddress();
 
 	/* Callbacks fired by UV events. */
 public:
 	void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
-	void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
+
+	void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const sockaddr* addr, unsigned int flags);
+
 	void OnUvSend(int status, const onSendCallback& cb);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
 	virtual void UserOnUdpDatagramReceived(
-	  const uint8_t* data, size_t len, size_t bufferLen, const struct sockaddr* addr) = 0;
+	  const uint8_t* data, size_t len, size_t bufferLen, const sockaddr* addr) = 0;
 
 protected:
 	sockaddr_storage localAddr{};

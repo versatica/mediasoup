@@ -3,7 +3,8 @@
 
 #include "common.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
-#include <limits>
+#include <limits> // std::numeric_limits
+#include <string>
 
 namespace mocks
 {
@@ -16,7 +17,7 @@ namespace mocks
 		friend class mocks::MockShared;
 
 	private:
-		explicit MockBackoffTimerHandle(
+		MockBackoffTimerHandle(
 		  BackoffTimerHandleOptions options,
 		  std::function<int64_t()> getTimeMs,
 		  std::function<void()> onDelete);
@@ -37,6 +38,7 @@ namespace mocks
 		void Start() override
 		{
 			this->running = true;
+
 			// NOTE: Reset the expiration count, just like the real BackoffTimerHandle
 			// does, so that the backoff starts over from the base timeout.
 			this->expirationCount = 0;
@@ -46,6 +48,7 @@ namespace mocks
 		void Stop() override
 		{
 			this->running = false;
+
 			// NOTE: Reset the expiration count, just like the real BackoffTimerHandle
 			// does.
 			this->expirationCount = 0;
@@ -67,7 +70,7 @@ namespace mocks
 			return this->running;
 		}
 
-		const std::string GetLabel() const override
+		const std::string& GetLabel() const override
 		{
 			return this->label;
 		}

@@ -77,7 +77,7 @@ namespace mocks
 			if (it != this->timers.end())
 			{
 				// NOLINTNEXTLINE(misc-const-correctness)
-				MockTimerHandle* timer = it->second;
+				auto* timer = it->second;
 
 				return timer;
 			}
@@ -94,7 +94,7 @@ namespace mocks
 			if (it != this->backoffTimers.end())
 			{
 				// NOLINTNEXTLINE(misc-const-correctness)
-				MockBackoffTimerHandle* backoffTimer = it->second;
+				auto* backoffTimer = it->second;
 
 				return backoffTimer;
 			}
@@ -105,7 +105,7 @@ namespace mocks
 		}
 
 	private:
-		// Given by argument.
+		// Passed by argument.
 		const std::function<int64_t()> getTimeUs;
 		// Others.
 		const std::unique_ptr<::Channel::ChannelSocket> channelSocket;

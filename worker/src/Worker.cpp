@@ -3,16 +3,18 @@
 
 #include "Worker.hpp"
 #include "FBS/response.h"
-#include "FBS/worker.h"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
+#include <uv.h>
+#include <csignal> // SIGINT, SIGTERM
+#include <vector>
 
 /* Instance methods. */
 
-Worker::Worker(::Channel::ChannelSocket* channel, SharedInterface* shared)
-  : channel(channel), signalHandle(std::make_unique<SignalHandle>(this)), shared(shared)
+Worker::Worker(Channel::ChannelSocket* channel, SharedInterface* shared)
+  : channel(channel), shared(shared), signalHandle(std::make_unique<SignalHandle>(this))
 {
 	MS_TRACE();
 
@@ -71,6 +73,7 @@ void Worker::Close()
 
 		delete router;
 	}
+
 	this->mapRouters.clear();
 
 	// Delete all WebRtcServers.
@@ -80,6 +83,7 @@ void Worker::Close()
 
 		delete webRtcServer;
 	}
+
 	this->mapWebRtcServers.clear();
 
 	// Close the Channel.
@@ -93,6 +97,7 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 
 	// Add webRtcServerIds.
 	std::vector<flatbuffers::Offset<flatbuffers::String>> webRtcServerIds;
+
 	webRtcServerIds.reserve(this->mapWebRtcServers.size());
 
 	for (const auto& kv : this->mapWebRtcServers)
@@ -104,6 +109,7 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 
 	// Add routerIds.
 	std::vector<flatbuffers::Offset<flatbuffers::String>> routerIds;
+
 	routerIds.reserve(this->mapRouters.size());
 
 	for (const auto& kv : this->mapRouters)
@@ -114,7 +120,8 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 	}
 
 	// Add channelMessageHandlers.
-	auto channelMessageHandlers = this->shared->GetChannelMessageRegistrator()->FillBuffer(builder);
+	const flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers =
+	  this->shared->GetChannelMessageRegistrator()->FillBuffer(builder);
 
 	return FBS::Worker::CreateDumpResponseDirect(
 	  builder,
@@ -199,7 +206,7 @@ RTC::WebRtcServer* Worker::AssertAndGetWebRtcServerById(
 	}
 
 	// NOLINTNEXTLINE(misc-const-correctness)
-	RTC::WebRtcServer* webRtcServer = it->second;
+	auto* webRtcServer = it->second;
 
 	return webRtcServer;
 }
@@ -216,7 +223,7 @@ RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId, const s
 	}
 
 	// NOLINTNEXTLINE(misc-const-correctness)
-	RTC::Router* router = it->second;
+	auto* router = it->second;
 
 	return router;
 }
@@ -253,7 +260,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 	{
 		case Channel::ChannelRequest::Method::WORKER_DUMP:
 		{
-			auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+			const auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 			request->Accept(FBS::Response::Body::Worker_DumpResponse, dumpOffset);
 
@@ -262,7 +269,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_GET_RESOURCE_USAGE:
 		{
-			auto resourceUsageOffset = FillBufferResourceUsage(request->GetBufferBuilder());
+			const auto resourceUsageOffset = FillBufferResourceUsage(request->GetBufferBuilder());
 
 			request->Accept(FBS::Response::Body::Worker_ResourceUsageResponse, resourceUsageOffset);
 
@@ -298,15 +305,14 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			const auto* body          = request->data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
 			const auto webRtcServerId = body->webRtcServerId()->str();
-			const RTC::WebRtcServer* webRtcServer =
-			  AssertAndGetWebRtcServerById(webRtcServerId, request->methodCStr);
+			const auto* webRtcServer  = AssertAndGetWebRtcServerById(webRtcServerId, request->methodCStr);
 
 			// Remove it from the map and delete it.
 			this->mapWebRtcServers.erase(webRtcServer->GetId());
 
-			delete webRtcServer;
-
 			MS_DEBUG_DEV("WebRtcServer closed [id:%s]", webRtcServer->id.c_str());
+
+			delete webRtcServer;
 
 			request->Accept();
 
@@ -333,16 +339,16 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_CLOSE_ROUTER:
 		{
-			const auto* body          = request->data->body_as<FBS::Worker::CloseRouterRequest>();
-			const auto routerId       = body->routerId()->str();
-			const RTC::Router* router = AssertAndGetRouterById(routerId, request->methodCStr);
+			const auto* body    = request->data->body_as<FBS::Worker::CloseRouterRequest>();
+			const auto routerId = body->routerId()->str();
+			const auto* router  = AssertAndGetRouterById(routerId, request->methodCStr);
 
 			// Remove it from the map and delete it.
 			this->mapRouters.erase(router->id);
 
-			delete router;
-
 			MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
+
+			delete router;
 
 			request->Accept();
 

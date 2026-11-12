@@ -1,4 +1,4 @@
-#define MS_CLASS "Channel::Notifier"
+#define MS_CLASS "Channel::ChannelNotifier"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/ChannelNotifier.hpp"
@@ -18,12 +18,16 @@ namespace Channel
 		MS_TRACE();
 
 		auto& builder = this->bufferBuilder;
-		auto notification = FBS::Notification::CreateNotificationDirect(builder, targetId.c_str(), event);
-		auto message =
+
+		const auto notification =
+		  FBS::Notification::CreateNotificationDirect(builder, targetId.c_str(), event);
+		const auto message =
 		  FBS::Message::CreateMessage(builder, FBS::Message::Body::Notification, notification.Union());
 
 		builder.FinishSizePrefixed(message);
+
 		this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
+
 		builder.Clear();
 	}
 } // namespace Channel

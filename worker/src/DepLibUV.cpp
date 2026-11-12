@@ -7,20 +7,144 @@
 
 /* Class variables. */
 
-thread_local uv_loop_t* DepLibUV::loop{ nullptr };
+thread_local std::unique_ptr<uv_loop_t> DepLibUV::loop;
 thread_local int64_t DepLibUV::ntpOffsetUs{ 0 };
 
 /* Static methods for UV callbacks. */
 
-inline static void onCloseLoop(uv_handle_t* handle)
+inline static void onCloseWalkedHandle(uv_handle_t* handle)
 {
 	MS_TRACE_STD();
 
-	delete reinterpret_cast<uv_loop_t*>(handle);
+	// The handle must be deleted with the same type it was allocated with.
+	switch (handle->type)
+	{
+		case UV_ASYNC:
+		{
+			delete reinterpret_cast<uv_async_t*>(handle);
+
+			break;
+		}
+
+		case UV_CHECK:
+		{
+			delete reinterpret_cast<uv_check_t*>(handle);
+
+			break;
+		}
+
+		case UV_FS_EVENT:
+		{
+			delete reinterpret_cast<uv_fs_event_t*>(handle);
+
+			break;
+		}
+
+		case UV_FS_POLL:
+		{
+			delete reinterpret_cast<uv_fs_poll_t*>(handle);
+
+			break;
+		}
+
+		case UV_HANDLE:
+		{
+			delete handle;
+
+			break;
+		}
+
+		case UV_IDLE:
+		{
+			delete reinterpret_cast<uv_idle_t*>(handle);
+
+			break;
+		}
+
+		case UV_NAMED_PIPE:
+		{
+			delete reinterpret_cast<uv_pipe_t*>(handle);
+
+			break;
+		}
+
+		case UV_POLL:
+		{
+			delete reinterpret_cast<uv_poll_t*>(handle);
+
+			break;
+		}
+
+		case UV_PREPARE:
+		{
+			delete reinterpret_cast<uv_prepare_t*>(handle);
+
+			break;
+		}
+
+		case UV_PROCESS:
+		{
+			delete reinterpret_cast<uv_process_t*>(handle);
+
+			break;
+		}
+
+		case UV_STREAM:
+		{
+			delete reinterpret_cast<uv_stream_t*>(handle);
+
+			break;
+		}
+
+		case UV_TCP:
+		{
+			delete reinterpret_cast<uv_tcp_t*>(handle);
+
+			break;
+		}
+
+		case UV_TIMER:
+		{
+			delete reinterpret_cast<uv_timer_t*>(handle);
+
+			break;
+		}
+
+		case UV_TTY:
+		{
+			delete reinterpret_cast<uv_tty_t*>(handle);
+
+			break;
+		}
+
+		case UV_UDP:
+		{
+			delete reinterpret_cast<uv_udp_t*>(handle);
+
+			break;
+		}
+
+		case UV_SIGNAL:
+		{
+			delete reinterpret_cast<uv_signal_t*>(handle);
+
+			break;
+		}
+
+		default:
+		{
+			// Must use MS_ERROR_STD() since at this point the Channel is already closed.
+			MS_ERROR_STD(
+			  "cannot free UV handle of unknown type, leaking it [type:%d]",
+			  static_cast<int>(handle->type));
+		}
+	}
 }
 
 inline static void onWalk(uv_handle_t* handle, void* /*arg*/)
 {
+	MS_TRACE_STD();
+
 	// Must use MS_ERROR_STD() since at this point the Channel is already closed.
 	MS_ERROR_STD(
 	  "alive UV handle found (this shouldn't happen) [type:%s, active:%d, closing:%d, has_ref:%d]",
@@ -31,7 +155,7 @@ inline static void onWalk(uv_handle_t* handle, void* /*arg*/)
 
 	if (!uv_is_closing(handle))
 	{
-		uv_close(handle, onCloseLoop);
+		uv_close(handle, onCloseWalkedHandle);
 	}
 }
 
@@ -42,9 +166,9 @@ void DepLibUV::ClassInit()
 	// Must use MS_TRACE_STD() since the Channel is not yet created.
 	MS_TRACE_STD();
 
-	DepLibUV::loop = new uv_loop_t;
+	DepLibUV::loop = std::make_unique<uv_loop_t>();
 
-	const int err = uv_loop_init(DepLibUV::loop);
+	const int err = uv_loop_init(DepLibUV::loop.get());
 
 	if (err != 0)
 	{
@@ -60,8 +184,8 @@ void DepLibUV::ClassInit()
 		MS_ABORT("uv_gettimeofday() failed");
 	}
 
-	const auto unixUs = (timeval.tv_sec * 1000000) + static_cast<int64_t>(timeval.tv_usec);
-	const auto ntpUs  = unixUs + (static_cast<int64_t>(Utils::Time::UnixNtpOffsetSec) * 1000000);
+	const int64_t unixUs = (timeval.tv_sec * 1000000) + static_cast<int64_t>(timeval.tv_usec);
+	const int64_t ntpUs  = unixUs + (static_cast<int64_t>(Utils::Time::UnixNtpOffsetSec) * 1000000);
 
 	DepLibUV::ntpOffsetUs = ntpUs - DepLibUV::GetTimeUs();
 }
@@ -77,19 +201,19 @@ void DepLibUV::ClassDestroy()
 
 	int err;
 
-	uv_stop(DepLibUV::loop);
-	uv_walk(DepLibUV::loop, onWalk, nullptr);
+	uv_stop(DepLibUV::loop.get());
+	uv_walk(DepLibUV::loop.get(), onWalk, nullptr);
 
 	while (true)
 	{
-		err = uv_loop_close(DepLibUV::loop);
+		err = uv_loop_close(DepLibUV::loop.get());
 
 		if (err != UV_EBUSY)
 		{
 			break;
 		}
 
-		uv_run(DepLibUV::loop, UV_RUN_NOWAIT);
+		uv_run(DepLibUV::loop.get(), UV_RUN_NOWAIT);
 	}
 
 	if (err != 0)
@@ -97,7 +221,7 @@ void DepLibUV::ClassDestroy()
 		MS_ERROR_STD("failed to close libuv loop: %s", uv_err_name(err));
 	}
 
-	delete DepLibUV::loop;
+	DepLibUV::loop.reset();
 }
 
 void DepLibUV::PrintVersion()
@@ -114,7 +238,7 @@ void DepLibUV::RunLoop()
 	// This should never happen.
 	MS_ASSERT(DepLibUV::loop != nullptr, "loop unset");
 
-	const int ret = uv_run(DepLibUV::loop, UV_RUN_DEFAULT);
+	const int ret = uv_run(DepLibUV::loop.get(), UV_RUN_DEFAULT);
 
 	MS_ASSERT(ret == 0, "uv_run() returned %s", uv_err_name(ret));
 }

@@ -324,7 +324,7 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::WEBRTCSERVER_DUMP:
 			{
-				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::WebRtcServer_DumpResponse, dumpOffset);
 

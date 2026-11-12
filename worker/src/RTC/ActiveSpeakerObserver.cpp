@@ -279,7 +279,7 @@ namespace RTC
 
 		if (!this->mapProducerSpeakers.empty() && CalculateActiveSpeaker())
 		{
-			auto notification = FBS::ActiveSpeakerObserver::CreateDominantSpeakerNotificationDirect(
+			const auto notification = FBS::ActiveSpeakerObserver::CreateDominantSpeakerNotificationDirect(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), this->dominantId.c_str());
 
 			this->shared->GetChannelNotifier()->Emit(
@@ -533,7 +533,8 @@ namespace RTC
 			const size_t levelIndex = this->nextLevelIndex >= (i + 1)
 			                            ? this->nextLevelIndex - i - 1
 			                            : this->nextLevelIndex + LevelsBuffLen - i - 1;
-			uint8_t level           = this->levels[levelIndex];
+
+			auto level = this->levels[levelIndex];
 
 			if (level < minLevel)
 			{

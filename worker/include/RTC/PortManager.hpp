@@ -86,8 +86,7 @@ namespace RTC
 	private:
 		struct PortRange
 		{
-			explicit PortRange(uint16_t numPorts, uint16_t minPort)
-			  : ports(numPorts, false), minPort(minPort)
+			PortRange(uint16_t numPorts, uint16_t minPort) : ports(numPorts, false), minPort(minPort)
 			{
 			}
 

@@ -20,6 +20,7 @@ public:
 
 public:
 	explicit SignalHandle(Listener* listener);
+
 	~SignalHandle();
 
 public:

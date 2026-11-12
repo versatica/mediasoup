@@ -246,7 +246,7 @@ namespace RTC
 		void EmitTraceEventRtcpFirType(uint32_t ssrc) const;
 		void EmitTraceEventRtcpNackType() const;
 		void EmitTraceEventRtcpSenderReportType(const RTC::RTCP::SenderReportPacket* senderReportPacket) const;
-		void EmitTraceEvent(flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const;
+		void EmitTraceEvent(const flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:

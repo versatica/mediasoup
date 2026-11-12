@@ -677,7 +677,7 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::CONSUMER_DUMP:
 			{
-				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::Consumer_DumpResponse, dumpOffset);
 
@@ -719,7 +719,7 @@ namespace RTC
 				if (this->type == RTC::RtpParameters::Type::SIMPLE || this->pipe)
 				{
 					// Accept with empty preferred layers object.
-					auto responseOffset =
+					const auto responseOffset =
 					  FBS::Consumer::CreateSetPreferredLayersResponse(request->GetBufferBuilder());
 
 					request->Accept(FBS::Response::Body::Consumer_SetPreferredLayersResponse, responseOffset);
@@ -773,7 +773,7 @@ namespace RTC
 				  request->GetBufferBuilder(),
 				  static_cast<uint8_t>(newPreferredLayers.spatial),
 				  preferredTemporalLayer);
-				auto responseOffset = FBS::Consumer::CreateSetPreferredLayersResponse(
+				const auto responseOffset = FBS::Consumer::CreateSetPreferredLayersResponse(
 				  request->GetBufferBuilder(), preferredLayersOffset);
 
 				request->Accept(FBS::Response::Body::Consumer_SetPreferredLayersResponse, responseOffset);
@@ -788,7 +788,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::CONSUMER_GET_STATS:
 			{
-				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+				const auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::Consumer_GetStatsResponse, responseOffset);
 
@@ -856,7 +856,7 @@ namespace RTC
 
 				this->priority = body->priority();
 
-				auto responseOffset =
+				const auto responseOffset =
 				  FBS::Consumer::CreateSetPriorityResponse(request->GetBufferBuilder(), this->priority);
 
 				request->Accept(FBS::Response::Body::Consumer_SetPriorityResponse, responseOffset);
@@ -1774,7 +1774,7 @@ namespace RTC
 
 		const auto scoreOffset = FillBufferScore(this->shared->GetChannelNotifier()->GetBufferBuilder());
 
-		auto notificationOffset = FBS::Consumer::CreateScoreNotification(
+		const auto notificationOffset = FBS::Consumer::CreateScoreNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), scoreOffset);
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -1804,7 +1804,7 @@ namespace RTC
 			  static_cast<uint8_t>(this->producerStreamManager->GetCurrentTemporalLayer()));
 		}
 
-		auto notificationOffset = FBS::Consumer::CreateLayersChangeNotification(
+		const auto notificationOffset = FBS::Consumer::CreateLayersChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), layersOffset);
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -1826,7 +1826,7 @@ namespace RTC
 			const auto traceInfo = FBS::Consumer::CreateKeyFrameTraceInfo(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
-			auto notification = FBS::Consumer::CreateTraceNotification(
+			const auto notification = FBS::Consumer::CreateTraceNotification(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Consumer::TraceEventType::KEYFRAME,
 			  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -1844,7 +1844,7 @@ namespace RTC
 			const auto traceInfo = FBS::Consumer::CreateRtpTraceInfo(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
-			auto notification = FBS::Consumer::CreateTraceNotification(
+			const auto notification = FBS::Consumer::CreateTraceNotification(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Consumer::TraceEventType::RTP,
 			  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -1868,7 +1868,7 @@ namespace RTC
 		auto traceInfo = FBS::Consumer::CreatePliTraceInfo(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
 
-		auto notification = FBS::Consumer::CreateTraceNotification(
+		const auto notification = FBS::Consumer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Consumer::TraceEventType::PLI,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -1891,7 +1891,7 @@ namespace RTC
 		auto traceInfo = FBS::Consumer::CreateFirTraceInfo(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
 
-		auto notification = FBS::Consumer::CreateTraceNotification(
+		const auto notification = FBS::Consumer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Consumer::TraceEventType::FIR,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -1911,7 +1911,7 @@ namespace RTC
 			return;
 		}
 
-		auto notification = FBS::Consumer::CreateTraceNotification(
+		const auto notification = FBS::Consumer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Consumer::TraceEventType::NACK,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -1920,7 +1920,8 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	void Consumer::EmitTraceEvent(flatbuffers::Offset<FBS::Consumer::TraceNotification>& notification) const
+	void Consumer::EmitTraceEvent(
+	  const flatbuffers::Offset<FBS::Consumer::TraceNotification>& notification) const
 	{
 		MS_TRACE();
 

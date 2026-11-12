@@ -17,7 +17,7 @@ namespace Utils
 			return AF_UNSPEC;
 		}
 
-		const auto* ipPtr               = ip.c_str();
+		const char* ipPtr               = ip.c_str();
 		char ipBuffer[INET6_ADDRSTRLEN] = { 0 };
 
 		if (uv_inet_pton(AF_INET, ipPtr, ipBuffer) == 0)
@@ -34,7 +34,7 @@ namespace Utils
 		}
 	}
 
-	void IP::GetAddressInfo(const struct sockaddr* addr, int& family, std::string& ip, uint16_t& port)
+	void IP::GetAddressInfo(const sockaddr* addr, int& family, std::string& ip, uint16_t& port)
 	{
 		MS_TRACE();
 
@@ -47,7 +47,7 @@ namespace Utils
 			{
 				err = uv_inet_ntop(
 				  AF_INET,
-				  std::addressof(reinterpret_cast<const struct sockaddr_in*>(addr)->sin_addr),
+				  std::addressof(reinterpret_cast<const sockaddr_in*>(addr)->sin_addr),
 				  ipBuffer,
 				  sizeof(ipBuffer));
 
@@ -56,7 +56,7 @@ namespace Utils
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 				}
 
-				port = ntohs(reinterpret_cast<const struct sockaddr_in*>(addr)->sin_port);
+				port = ntohs(reinterpret_cast<const sockaddr_in*>(addr)->sin_port);
 
 				break;
 			}
@@ -65,7 +65,7 @@ namespace Utils
 			{
 				err = uv_inet_ntop(
 				  AF_INET6,
-				  std::addressof(reinterpret_cast<const struct sockaddr_in6*>(addr)->sin6_addr),
+				  std::addressof(reinterpret_cast<const sockaddr_in6*>(addr)->sin6_addr),
 				  ipBuffer,
 				  sizeof(ipBuffer));
 
@@ -74,7 +74,7 @@ namespace Utils
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 				}
 
-				port = ntohs(reinterpret_cast<const struct sockaddr_in6*>(addr)->sin6_port);
+				port = ntohs(reinterpret_cast<const sockaddr_in6*>(addr)->sin6_port);
 
 				break;
 			}
@@ -89,7 +89,7 @@ namespace Utils
 		ip.assign(ipBuffer);
 	}
 
-	size_t IP::GetAddressLen(const struct sockaddr* addr)
+	size_t IP::GetAddressLen(const sockaddr* addr)
 	{
 		MS_TRACE();
 
@@ -97,12 +97,12 @@ namespace Utils
 		{
 			case AF_INET:
 			{
-				return sizeof(struct sockaddr_in);
+				return sizeof(sockaddr_in);
 			}
 
 			case AF_INET6:
 			{
-				return sizeof(struct sockaddr_in6);
+				return sizeof(sockaddr_in6);
 			}
 
 			default:
@@ -124,8 +124,7 @@ namespace Utils
 		{
 			case AF_INET:
 			{
-				err = uv_ip4_addr(
-				  ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(std::addressof(addrStorage)));
+				err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<sockaddr_in*>(std::addressof(addrStorage)));
 
 				if (err != 0)
 				{
@@ -133,7 +132,7 @@ namespace Utils
 				}
 
 				err = uv_ip4_name(
-				  reinterpret_cast<const struct sockaddr_in*>(std::addressof(addrStorage)),
+				  reinterpret_cast<const sockaddr_in*>(std::addressof(addrStorage)),
 				  ipBuffer,
 				  sizeof(ipBuffer));
 
@@ -149,8 +148,8 @@ namespace Utils
 
 			case AF_INET6:
 			{
-				err = uv_ip6_addr(
-				  ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(std::addressof(addrStorage)));
+				err =
+				  uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<sockaddr_in6*>(std::addressof(addrStorage)));
 
 				if (err != 0)
 				{
@@ -158,7 +157,7 @@ namespace Utils
 				}
 
 				err = uv_ip6_name(
-				  reinterpret_cast<const struct sockaddr_in6*>(std::addressof(addrStorage)),
+				  reinterpret_cast<const sockaddr_in6*>(std::addressof(addrStorage)),
 				  ipBuffer,
 				  sizeof(ipBuffer));
 

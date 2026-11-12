@@ -4,7 +4,6 @@
 #include "mocks/include/handles/MockBackoffTimerHandle.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <string>
 
 namespace mocks
 {
@@ -114,7 +113,7 @@ namespace mocks
 		this->running =
 		  !this->maxRestarts.has_value() || this->expirationCount <= this->maxRestarts.value();
 
-		int64_t baseTimeoutMs{ this->baseTimeoutMs };
+		auto baseTimeoutMs{ this->baseTimeoutMs };
 		bool stop{ false };
 
 		// Call the listener by passing base timeout as reference so the parent has

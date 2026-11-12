@@ -819,7 +819,7 @@ namespace RTC
 				}
 
 				// Create status response.
-				auto responseOffset = FBS::Transport::CreateProduceResponse(
+				const auto responseOffset = FBS::Transport::CreateProduceResponse(
 				  request->GetBufferBuilder(), FBS::RtpParameters::Type(producer->GetType()));
 
 				request->Accept(FBS::Response::Body::Transport_ProduceResponse, responseOffset);
@@ -911,8 +911,8 @@ namespace RTC
 					  static_cast<uint8_t>(preferredLayers.temporal));
 				}
 
-				auto scoreOffset    = consumer->FillBufferScore(request->GetBufferBuilder());
-				auto responseOffset = FBS::Transport::CreateConsumeResponse(
+				auto scoreOffset          = consumer->FillBufferScore(request->GetBufferBuilder());
+				const auto responseOffset = FBS::Transport::CreateConsumeResponse(
 				  request->GetBufferBuilder(),
 				  consumer->IsPaused(),
 				  consumer->IsProducerPaused(),
@@ -1046,7 +1046,7 @@ namespace RTC
 
 				MS_DEBUG_DEV("DataProducer created [dataProducerId:%s]", dataProducerId.c_str());
 
-				auto dumpOffset = dataProducer->FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = dataProducer->FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::DataProducer_DumpResponse, dumpOffset);
 
@@ -1076,13 +1076,7 @@ namespace RTC
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  this->shared,
-				  dataConsumerId,
-				  dataProducerId,
-				  this,
-				  body,
-				  this->maxSendMessageSize,
-				  this->IsPipe());
+				  this->shared, dataConsumerId, dataProducerId, this, body, this->maxSendMessageSize, IsPipe());
 
 				// Verify the type of the DataConsumer.
 				switch (dataConsumer->GetType())
@@ -1154,7 +1148,7 @@ namespace RTC
 				  dataConsumerId.c_str(),
 				  dataProducerId.c_str());
 
-				auto dumpOffset = dataConsumer->FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = dataConsumer->FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::DataConsumer_DumpResponse, dumpOffset);
 
@@ -1690,7 +1684,7 @@ namespace RTC
 
 			case RTC::SCTP::Types::SendMessageStatus::ERROR_RESOURCE_EXHAUSTION:
 			{
-				const auto sendStatusStringView = RTC::SCTP::Types::sendMessageStatusToString(sendStatus);
+				const auto sendStatusStringView = RTC::SCTP::Types::SendMessageStatusToString(sendStatus);
 
 				MS_WARN_2TAGS(
 				  sctp,
@@ -1711,7 +1705,7 @@ namespace RTC
 
 			default:
 			{
-				const auto sendStatusStringView = RTC::SCTP::Types::sendMessageStatusToString(sendStatus);
+				const auto sendStatusStringView = RTC::SCTP::Types::SendMessageStatusToString(sendStatus);
 
 				MS_WARN_2TAGS(
 				  sctp,
@@ -1743,7 +1737,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::Producer* producer = it->second;
+		auto* producer = it->second;
 
 		return producer;
 	}
@@ -1761,7 +1755,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::Consumer* consumer = it->second;
+		auto* consumer = it->second;
 
 		return consumer;
 	}
@@ -1811,7 +1805,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::DataProducer* dataProducer = it->second;
+		auto* dataProducer = it->second;
 
 		return dataProducer;
 	}
@@ -1829,7 +1823,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::DataConsumer* dataConsumer = it->second;
+		auto* dataConsumer = it->second;
 
 		return dataConsumer;
 	}
@@ -1846,7 +1840,7 @@ namespace RTC
 		}
 
 		// NOLINTNEXTLINE(misc-const-correctness)
-		RTC::DataConsumer* dataConsumer = it->second;
+		auto* dataConsumer = it->second;
 
 		return dataConsumer;
 	}
@@ -2157,7 +2151,7 @@ namespace RTC
 				const auto* byePacket = static_cast<const RTC::RTCP::ByePacket*>(packet);
 
 				// A source that leaves expects no answer to its Receiver Reference Time.
-				for (const uint32_t ssrc : byePacket->GetSsrcs())
+				for (const auto ssrc : byePacket->GetSsrcs())
 				{
 					this->receivedReceiverReferenceTimes.erase(ssrc);
 				}
@@ -2518,8 +2512,8 @@ namespace RTC
 							break;
 						}
 
-						const uint32_t ssrc                                                = kv.first;
-						const ReceivedReceiverReferenceTime& receivedReceiverReferenceTime = kv.second;
+						const uint32_t ssrc                       = kv.first;
+						const auto& receivedReceiverReferenceTime = kv.second;
 						// Get delay in microseconds.
 						const int64_t delayUs = nowUs - receivedReceiverReferenceTime.receivedAtUs;
 						// Express delay in units of 1/65536 seconds.
@@ -2543,7 +2537,7 @@ namespace RTC
 
 					dlrrExtendedReport->Consolidate();
 
-					for (const uint32_t ssrc : answeredSsrcs)
+					for (const auto ssrc : answeredSsrcs)
 					{
 						this->receivedReceiverReferenceTimes.erase(ssrc);
 					}
@@ -2909,7 +2903,7 @@ namespace RTC
 		const auto traceInfo = FBS::Transport::CreateProbationTraceInfo(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump);
 
-		auto notification = FBS::Transport::CreateTraceNotification(
+		const auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::PROBATION,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -2942,7 +2936,7 @@ namespace RTC
 		  static_cast<uint64_t>(this->maxOutgoingBitrate),
 		  static_cast<uint64_t>(this->senderTransportCongestionController->GetAvailableBitrate()));
 
-		auto notification = FBS::Transport::CreateTraceNotification(
+		const auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::BWE,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -3396,7 +3390,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto sctpStateChangeNotification = FBS::Transport::CreateSctpStateChangeNotification(
+		const auto sctpStateChangeNotification = FBS::Transport::CreateSctpStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::SctpAssociation::SctpState::CONNECTING);
 
@@ -3419,7 +3413,7 @@ namespace RTC
 		  this->sctpAssociation->GetNegotiatedMaxOutboundStreams(),
 		  this->sctpAssociation->GetNegotiatedMaxInboundStreams());
 
-		auto sctpNegotiatedCapabilitiesNotification =
+		const auto sctpNegotiatedCapabilitiesNotification =
 		  FBS::Transport::CreateSctpNegotiatedCapabilitiesNotification(
 		    this->shared->GetChannelNotifier()->GetBufferBuilder(), sctpNegotiatedCapabilitiesOffset);
 
@@ -3430,7 +3424,7 @@ namespace RTC
 		  sctpNegotiatedCapabilitiesNotification);
 
 		// Then announce "connected" SCTP state.
-		auto sctpStateChangeNotification = FBS::Transport::CreateSctpStateChangeNotification(
+		const auto sctpStateChangeNotification = FBS::Transport::CreateSctpStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::SctpAssociation::SctpState::CONNECTED);
 
@@ -3451,7 +3445,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto errorKindStringView = RTC::SCTP::Types::errorKindToString(errorKind);
+		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
 
 		if (errorKind == RTC::SCTP::Types::ErrorKind::SUCCESS || errorKind == RTC::SCTP::Types::ErrorKind::PEER_REPORTED)
 		{
@@ -3485,7 +3479,7 @@ namespace RTC
 			}
 		}
 
-		auto sctpStateChangeNotification = FBS::Transport::CreateSctpStateChangeNotification(
+		const auto sctpStateChangeNotification = FBS::Transport::CreateSctpStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::SctpAssociation::SctpState::FAILED);
 
@@ -3500,7 +3494,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto errorKindStringView = RTC::SCTP::Types::errorKindToString(errorKind);
+		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
 
 		if (errorKind == RTC::SCTP::Types::ErrorKind::SUCCESS || errorKind == RTC::SCTP::Types::ErrorKind::PEER_REPORTED)
 		{
@@ -3534,7 +3528,7 @@ namespace RTC
 			}
 		}
 
-		auto sctpStateChangeNotification = FBS::Transport::CreateSctpStateChangeNotification(
+		const auto sctpStateChangeNotification = FBS::Transport::CreateSctpStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::SctpAssociation::SctpState::CLOSED);
 
@@ -3556,7 +3550,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto errorKindStringView = RTC::SCTP::Types::errorKindToString(errorKind);
+		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
 
 		MS_WARN_TAG(
 		  sctp,
@@ -3593,7 +3587,7 @@ namespace RTC
 
 			// When this is a pipe transport, the subchannels, required subchannel and
 			// ignored subchannel may be encoded at the beginning of the message payload.
-			if (this->IsPipe())
+			if (IsPipe())
 			{
 				RTC::SubchannelsCodec::DecodeSubchannels(
 				  message, subchannels, requiredSubchannel, ignoredSubchannel);

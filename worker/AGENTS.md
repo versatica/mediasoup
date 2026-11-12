@@ -16,6 +16,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 - A member whose initial value is a constant that does not depend on any argument gets that value as its initializer in the `.hpp`, not in the initializer list.
 - A `std::optional` member that starts empty gets no initializer at all: `std::optional<uint16_t> frameNumber;`, never `{ std::nullopt }`, which is what it already is.
 - The initializer list follows the declaration order of the members. Never reorder members to fit the initializer list.
+- `explicit` goes only on constructors that can be called with a single argument (one parameter, or several with all but the first defaulted), never on one that takes none or that always takes several.
 
 ## `const` members
 
@@ -52,8 +53,9 @@ These rules apply to every C++ source file and header of the worker, that is, th
 
 ## Class layout
 
-- Class constants (`static constexpr` / `static const` members) go at the very top of the class body. Nested types (`struct`, `class`, `enum`, `using`) go right after them, before any method, under their own access specifier. A class constant whose type uses a nested type goes after that nested type. Lookup tables (`static const` maps such as `ChunkType2String`) are not class constants for this rule: they go in their own `private:` block right after the public static methods.
-- A block of `static constexpr` / `static const` members always starts with its own `public:` or `private:` line, even when the previous block has the same access.
+- Class constants (`static constexpr` members) go at the very top of the class body. Nested types (`struct`, `class`, `enum`, `using`) go right after them, before any method, under their own access specifier. A class constant whose type uses a nested type goes after that nested type.
+- `static const` members (`Logger::Pid`, lookup tables such as `ChunkType2String`...) are not class constants for this rule: they go together with the rest of the static data members, in the block right after the static methods.
+- A block of `static constexpr` members always starts with its own `public:` or `private:` line, even when the previous block has the same access.
 - Struct fields that need documentation use multiline `/** ... */` comments, never `//`.
 - Public methods and class constants are documented with `/** ... */`. Parameter docs take a dash: `@param nowMs - Current time.`
 - `@remarks` goes alone on its line (no colon, no text after it), and its content goes on the following lines as dash items (`- `), with continuation lines indented two spaces.
@@ -74,7 +76,9 @@ These rules apply to every C++ source file and header of the worker, that is, th
 
 - Code is split into paragraphs with blank lines, one per step: a declaration is not glued to the first thing done with it, an action is not glued to the assert/`REQUIRE` that checks it, and a check is not glued to the next action. What belongs to the same step stays together: several consecutive calls on the same object, the assignments that fill its fields, or several consecutive `REQUIRE`s.
 - A declaration that carries its own comment is a paragraph: it is separated by a blank line from the next commented declaration.
-- Everything that can be `const` is `const`, including `const auto` locals and `const T&` parameters. But never replace an explicit type with `auto` when the right-hand side does not show the type. Exception: iterators and similar types whose spelled-out name adds nothing for the reader can be `auto` (`auto chunkIt = packet->ChunksBegin()`, `auto it = map.find(key)`, `auto [it, inserted] = map.emplace(...)`).
+- Everything that can be `const` is `const`, including `const auto` locals and `const T&` parameters. But never replace an explicit type with `auto` when the right-hand side does not show the type. The right-hand side shows it when it is a cast or a `std::make_unique()`, when the name of the method or function called makes clear what it returns (`const auto response = FBS::Response::CreateResponse(...)`), and when the variable takes an entry out of a container whose name includes the name of the variable, even if the variable adds a suffix such as `Id` or `Name` for what it holds of the entry (`auto message = std::move(this->receivedMessages.front())`, `for (const auto streamId : outboundStreamIds)`, `auto* router = kv.second` and `const auto& routerId = kv.first` iterating `this->mapRouters`), and when it copies a member with the same name of the class itself or of one of our own structs (`auto expirationCount = this->expirationCount`, `const auto& label = options.label`). Spelling the type out there adds nothing. Exception: iterators and similar types whose spelled-out name adds nothing for the reader can be `auto` (`auto chunkIt = packet->ChunksBegin()`, `auto it = map.find(key)`, `auto [it, inserted] = map.emplace(...)`).
+- Class methods, static or not, and namespace functions always start with an uppercase letter, `constexpr` ones included: `GenerateCrcTables()`, never `generateCrcTables()`. Only file-scope `static` functions in a `.cpp` (libuv and OpenSSL callbacks and similar) start with a lowercase letter: `onCloseTcp()`.
+- A method of the class itself is called without `this->`: `Send(...)`, never `this->Send(...)`. `this->` is only for members: `this->bufferBuilder`.
 - Value getters are named `GetXxx()`. Boolean getters are named `IsXxx()` / `HasXxx()`.
 - Never `&foo` to take an address: use `std::addressof(foo)`.
 - Never reach through an iterator (`it->second.field`): bind a named reference or copy first.
@@ -111,7 +115,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 
 - All code text is in English.
 - A comment must help whoever reads the file cold. Do not write comments that only record a discussion, and do not reference other projects the code may have been ported from.
-- Never turn a point raised while working on a change into a comment: why a header was chosen over another, why something is measured one way and not another, what an earlier version did wrong, what a lint check would say. If the code is right, it needs no note defending it.
+- Never turn a point raised while working on a change into a comment: why a header was chosen over another, why something is measured one way and not another, what an earlier version did wrong. If the code is right, it needs no note defending it.
 - No semicolons in log messages or comments: use a comma in logs and split into sentences in comments.
 - Use ASCII `->`, never the Unicode arrow.
 - Prefer `MS_WARN_TAG()` / `MS_WARN_2TAGS()` over `MS_DEBUG_DEV()` for conditions worth seeing in production.

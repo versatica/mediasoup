@@ -7,6 +7,7 @@
 #include "Channel/ChannelNotifier.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
 #include "handles/TimerHandleInterface.hpp"
+#include <string>
 
 class SharedInterface
 {

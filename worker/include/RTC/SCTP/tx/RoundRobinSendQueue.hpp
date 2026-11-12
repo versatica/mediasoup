@@ -228,7 +228,7 @@ namespace RTC
 				// An enqueued message and metadata.
 				struct Item
 				{
-					explicit Item(uint32_t outgoingMessageId, Message msg, MessageAttributes attributes)
+					Item(uint32_t outgoingMessageId, Message msg, MessageAttributes attributes)
 					  : outgoingMessageId(outgoingMessageId),
 					    message(std::move(msg)),
 					    attributes(attributes),

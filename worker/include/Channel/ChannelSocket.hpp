@@ -5,6 +5,8 @@
 #include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "handles/UnixStreamSocketHandle.hpp"
+#include <flatbuffers/flatbuffer_builder.h>
+#include <uv.h>
 
 // Avoid cyclic #include problem by declaring the class instead of including the
 // corresponding header file.
@@ -22,22 +24,25 @@ namespace Channel
 
 		public:
 			virtual void OnConsumerSocketMessage(
-			  const ConsumerSocket* consumerSocket, char* msg, size_t msgLen)         = 0;
+			  const ConsumerSocket* consumerSocket, char* msg, size_t msgLen) = 0;
+
 			virtual void OnConsumerSocketClosed(const ConsumerSocket* consumerSocket) = 0;
 		};
 
 	public:
 		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
+
 		~ConsumerSocket() override;
 
 		/* Pure virtual methods inherited from UnixStreamSocketHandle. */
 	public:
 		void UserOnUnixStreamRead() override;
+
 		void UserOnUnixStreamSocketClosed() override;
 
 	private:
 		// Passed by argument.
-		Listener* listener;
+		Listener* const listener;
 	};
 
 	class ProducerSocket : public UnixStreamSocketHandle
@@ -50,6 +55,7 @@ namespace Channel
 		void UserOnUnixStreamRead() override
 		{
 		}
+
 		void UserOnUnixStreamSocketClosed() override
 		{
 		}
@@ -87,27 +93,35 @@ namespace Channel
 
 	public:
 #if defined(MS_TEST) || defined(MS_FUZZER)
-		explicit ChannelSocket();
+		ChannelSocket();
 #endif
-		explicit ChannelSocket(int consumerFd, int producerFd);
-		explicit ChannelSocket(
+
+		ChannelSocket(int consumerFd, int producerFd);
+
+		ChannelSocket(
 		  ChannelReadFn channelReadFn,
 		  ChannelReadCtx channelReadCtx,
 		  ChannelWriteFn channelWriteFn,
 		  ChannelWriteCtx channelWriteCtx);
+
 		~ChannelSocket() override;
 
 	public:
 		void Close();
+
 		void SetListener(Listener* listener);
+
 		/**
 		 * @remarks
 		 * - Must be called before the libuv loop runs, since notifications take
 		 *   their arrival time from it.
 		 */
 		void SetShared(SharedInterface* shared);
+
 		void Send(const uint8_t* data, uint32_t dataLen);
+
 		void SendLog(const char* data, uint32_t dataLen);
+
 		bool CallbackRead();
 
 	private:
@@ -116,6 +130,7 @@ namespace Channel
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
 		void OnConsumerSocketMessage(const ConsumerSocket* consumerSocket, char* msg, size_t msgLen) override;
+
 		void OnConsumerSocketClosed(const ConsumerSocket* consumerSocket) override;
 
 	private:
@@ -126,9 +141,9 @@ namespace Channel
 		bool closed{ false };
 		const std::unique_ptr<ConsumerSocket> consumerSocket;
 		const std::unique_ptr<ProducerSocket> producerSocket;
-		ChannelReadFn channelReadFn{ nullptr };
+		const ChannelReadFn channelReadFn{ nullptr };
 		ChannelReadCtx channelReadCtx{ nullptr };
-		ChannelWriteFn channelWriteFn{ nullptr };
+		const ChannelWriteFn channelWriteFn{ nullptr };
 		ChannelWriteCtx channelWriteCtx{ nullptr };
 		uv_async_t* uvReadHandle{ nullptr };
 		flatbuffers::FlatBufferBuilder bufferBuilder;

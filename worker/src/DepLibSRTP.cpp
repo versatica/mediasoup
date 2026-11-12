@@ -105,7 +105,7 @@ const std::string& DepLibSRTP::GetErrorString(srtp_err_status_t code)
 		return UnknownError;
 	}
 
-	const std::string& errorString = it->second;
+	const auto& errorString = it->second;
 
 	return errorString;
 }

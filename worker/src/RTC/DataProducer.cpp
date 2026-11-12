@@ -128,7 +128,7 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::DATAPRODUCER_DUMP:
 			{
-				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::DataProducer_DumpResponse, dumpOffset);
 
@@ -137,7 +137,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::DATAPRODUCER_GET_STATS:
 			{
-				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+				const auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::DataProducer_GetStatsResponse, responseOffset);
 

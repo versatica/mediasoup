@@ -101,7 +101,7 @@ namespace
 	class MockPayloadDescriptorHandler : public RTC::RTP::Codecs::PayloadDescriptorHandler
 	{
 	public:
-		explicit MockPayloadDescriptorHandler()  = default;
+		MockPayloadDescriptorHandler()           = default;
 		~MockPayloadDescriptorHandler() override = default;
 		void Dump(int /*indentation*/) const override
 		{

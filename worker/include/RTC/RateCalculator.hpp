@@ -152,8 +152,7 @@ namespace RTC
 	class RtpDataCounter
 	{
 	public:
-		explicit RtpDataCounter(
-		  SharedInterface* shared, bool ignorePaddingOnlyPackets, int64_t windowSizeMs = 2500)
+		RtpDataCounter(SharedInterface* shared, bool ignorePaddingOnlyPackets, int64_t windowSizeMs = 2500)
 		  : shared(shared), ignorePaddingOnlyPackets(ignorePaddingOnlyPackets), rate(windowSizeMs)
 		{
 		}

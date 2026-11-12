@@ -5,7 +5,7 @@
 #include "Logger.hpp"
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
-#include <mutex>
+#include <mutex> // std::call_once(), std::once_flag
 
 /* Static. */
 
@@ -19,7 +19,7 @@ void DepOpenSSL::ClassInit()
 
 	std::call_once(
 	  GlobalInitOnce,
-	  []
+	  []() -> void
 	  {
 		  MS_DEBUG_TAG(info, "openssl version: \"%s\"", OpenSSL_version(OPENSSL_VERSION));
 		  MS_DEBUG_TAG(info, "openssl CPU info: \"%s\"", OpenSSL_version(OPENSSL_CPU_INFO));

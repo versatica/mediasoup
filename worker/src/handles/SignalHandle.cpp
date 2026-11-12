@@ -66,6 +66,8 @@ void SignalHandle::AddSignal(int signum, const std::string& name)
 
 	if (err != 0)
 	{
+		uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseSignal));
+
 		MS_THROW_ERROR("uv_signal_start() failed for signal %s: %s", name.c_str(), uv_strerror(err));
 	}
 

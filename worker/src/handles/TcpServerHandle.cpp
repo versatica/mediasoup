@@ -90,6 +90,7 @@ uint32_t TcpServerHandle::GetSendBufferSize() const
 	MS_TRACE();
 
 	int size{ 0 };
+
 	const int err =
 	  uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
 
@@ -126,6 +127,7 @@ uint32_t TcpServerHandle::GetRecvBufferSize() const
 	MS_TRACE();
 
 	int size{ 0 };
+
 	const int err =
 	  uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
 
@@ -228,9 +230,7 @@ bool TcpServerHandle::SetLocalAddress()
 	int len = sizeof(this->localAddr);
 
 	err = uv_tcp_getsockname(
-	  this->uvHandle,
-	  reinterpret_cast<struct sockaddr*>(std::addressof(this->localAddr)),
-	  std::addressof(len));
+	  this->uvHandle, reinterpret_cast<sockaddr*>(std::addressof(this->localAddr)), std::addressof(len));
 
 	if (err != 0)
 	{
@@ -242,7 +242,7 @@ bool TcpServerHandle::SetLocalAddress()
 	int family;
 
 	Utils::IP::GetAddressInfo(
-	  reinterpret_cast<const struct sockaddr*>(std::addressof(this->localAddr)),
+	  reinterpret_cast<const sockaddr*>(std::addressof(this->localAddr)),
 	  family,
 	  this->localIp,
 	  this->localPort);

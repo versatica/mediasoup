@@ -32,8 +32,9 @@ namespace RTC
 	/**
 	 * Returns true if this is a found nacked packet. False otherwise.
 	 *
-	 * NOTE: It also returns true if packet comes via RTX and contains a sequence
-	 * number higher than the highest seen.
+	 * @remarks
+	 * - It also returns true if packet comes via RTX and contains a sequence
+	 *   number higher than the highest seen.
 	 */
 	bool NackGenerator::ReceivePacket(const RTC::RTP::Packet* packet, bool isRecovered)
 	{
@@ -210,7 +211,7 @@ namespace RTC
 				// The packets already requested may still arrive, as retransmissions.
 				for (const auto& kv : this->nackList)
 				{
-					const NackInfo& nackInfo = kv.second;
+					const auto& nackInfo = kv.second;
 
 					this->requestedList.insert(nackInfo.seq);
 				}
@@ -259,7 +260,7 @@ namespace RTC
 				// retransmissions.
 				for (auto removedIt = this->nackList.begin(); removedIt != it; ++removedIt)
 				{
-					const NackInfo& nackInfo = removedIt->second;
+					const auto& nackInfo = removedIt->second;
 
 					this->requestedList.insert(nackInfo.seq);
 				}
@@ -288,7 +289,7 @@ namespace RTC
 
 		while (it != this->nackList.end())
 		{
-			NackInfo& nackInfo = it->second;
+			auto& nackInfo     = it->second;
 			const uint16_t seq = nackInfo.seq;
 
 			if (this->sendNackDelayMs > 0 && nowMs - nackInfo.createdAtMs < this->sendNackDelayMs)
@@ -401,7 +402,7 @@ namespace RTC
 		// The packets still requested may arrive later, as retransmissions.
 		for (const auto& kv : this->nackList)
 		{
-			const NackInfo& nackInfo = kv.second;
+			const auto& nackInfo = kv.second;
 
 			this->requestedList.insert(nackInfo.seq);
 		}

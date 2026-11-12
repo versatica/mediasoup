@@ -29,7 +29,7 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::RTPOBSERVER_PAUSE:
 			{
-				this->Pause();
+				Pause();
 
 				request->Accept();
 
@@ -38,7 +38,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::RTPOBSERVER_RESUME:
 			{
-				this->Resume();
+				Resume();
 
 				request->Accept();
 
@@ -52,7 +52,7 @@ namespace RTC
 
 				RTC::Producer* producer = this->listener->RtpObserverGetProducer(this, producerId);
 
-				this->AddProducer(producer);
+				AddProducer(producer);
 
 				this->listener->OnRtpObserverAddProducer(this, producer);
 
@@ -68,7 +68,7 @@ namespace RTC
 
 				RTC::Producer* producer = this->listener->RtpObserverGetProducer(this, producerId);
 
-				this->RemoveProducer(producer);
+				RemoveProducer(producer);
 
 				// Remove from the map.
 				this->listener->OnRtpObserverRemoveProducer(this, producer);

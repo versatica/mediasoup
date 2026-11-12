@@ -4,7 +4,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include <cerrno>
+#include <cerrno>     // errno
 #include <sys/stat.h> // stat()
 #ifdef _WIN32
 #include <io.h>
@@ -16,7 +16,7 @@
 
 namespace Utils
 {
-	void Utils::File::CheckFile(const char* file)
+	void File::CheckFile(const char* file)
 	{
 		MS_TRACE();
 

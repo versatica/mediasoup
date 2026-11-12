@@ -14,6 +14,7 @@ namespace Channel
 
 	public:
 		ChannelNotification(const FBS::Notification::Notification* notification, int64_t receivedAtUs);
+
 		~ChannelNotification() = default;
 
 	public:
@@ -21,7 +22,7 @@ namespace Channel
 		const FBS::Notification::Notification* const data;
 		const int64_t receivedAtUs;
 		// Others.
-		const char* eventCStr;
+		const char* eventCStr{ nullptr };
 		std::string handlerId;
 	};
 } // namespace Channel

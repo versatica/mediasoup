@@ -43,7 +43,7 @@ public:
 	/**
 	 * Label of this timer, given at creation time.
 	 */
-	virtual const std::string GetLabel() const = 0;
+	virtual const std::string& GetLabel() const = 0;
 };
 
 #endif

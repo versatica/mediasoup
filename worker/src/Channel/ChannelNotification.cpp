@@ -28,7 +28,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		auto eventCStrIt = Event2String.find(this->data->event());
+		const auto eventCStrIt = Event2String.find(this->data->event());
 
 		if (eventCStrIt == Event2String.end())
 		{

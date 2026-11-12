@@ -316,12 +316,12 @@ namespace RTC
 	public:
 		void OnProducerReceiveData(RTC::Producer* /*producer*/, size_t len) override
 		{
-			this->DataReceived(len);
+			DataReceived(len);
 		}
 		void OnProducerReceiveRtpPacket(
 		  RTC::Producer* /*producer*/, RTC::RTP::Packet* packet, int64_t receivedAtUs) override
 		{
-			this->ReceiveRtpPacket(packet, receivedAtUs);
+			ReceiveRtpPacket(packet, receivedAtUs);
 		}
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;
@@ -358,7 +358,7 @@ namespace RTC
 	public:
 		void OnDataProducerReceiveData(RTC::DataProducer* /*dataProducer*/, size_t len) override
 		{
-			this->DataReceived(len);
+			DataReceived(len);
 		}
 		void OnDataProducerMessageReceived(
 		  RTC::DataProducer* dataProducer,

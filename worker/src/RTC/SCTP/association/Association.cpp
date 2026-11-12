@@ -107,7 +107,7 @@ namespace RTC
 			MS_TRACE();
 
 			const auto stateStringView = Association::StateToString(this->state);
-			const auto associationStateStringView = Types::associationStateToString(GetAssociationState());
+			const auto associationStateStringView = Types::AssociationStateToString(GetAssociationState());
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::Association>");
 
@@ -2125,7 +2125,7 @@ namespace RTC
 				// Verification Tag is reflected."
 				default:
 				{
-					auto packet = this->CreatePacketWithVerificationTag(receivedPacket->GetVerificationTag());
+					auto packet = CreatePacketWithVerificationTag(receivedPacket->GetVerificationTag());
 					auto* shutdownCompleteChunk = packet->BuildChunkInPlace<ShutdownCompleteChunk>();
 
 					shutdownCompleteChunk->SetT(true);

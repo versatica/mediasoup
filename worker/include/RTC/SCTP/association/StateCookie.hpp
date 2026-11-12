@@ -115,35 +115,55 @@ namespace RTC
 			};
 
 		public:
-			// Fixed length of our generated State Cookies when authentication is
-			// disabled.
+			/**
+			 * Fixed length of our generated State Cookies when authentication is
+			 * disabled.
+			 */
 			static constexpr size_t StateCookieLength{ 48 };
-			// Offset in the State Cookie where the Remote Capabilities are located.
+			/**
+			 * Offset in the State Cookie where the Remote Capabilities are located.
+			 */
 			static constexpr size_t RemoteCapabilitiesOffset{ 36 };
-			// Magic value we prefix the State Cookie with. Note that it is
-			// "msworker" in ASCII bytes.
+			/**
+			 * Magic value we prefix the State Cookie with. Note that it is
+			 * "msworker" in ASCII bytes.
+			 */
 			static constexpr uint64_t Magic1{ 0x6D73776F726B6572 };
 			static constexpr size_t Magic1Length{ 8 };
-			// Magic value used within the Remote Capabilities block.
+			/**
+			 * Magic value used within the Remote Capabilities block.
+			 */
 			static constexpr uint16_t Magic2{ 0xAD81 };
-			// Offset of the creation timestamp present in authenticated State
-			// Cookies.
+			/**
+			 * Offset of the creation timestamp present in authenticated State
+			 * Cookies.
+			 */
 			static constexpr size_t TimestampOffset{ StateCookie::StateCookieLength };
-			// Length of the creation timestamp field (a uint64_t with the time in
-			// milliseconds).
+			/**
+			 * Length of the creation timestamp field (a uint64_t with the time in
+			 * milliseconds).
+			 */
 			static constexpr size_t TimestampLength{ 8 };
-			// Offset of the MAC present in authenticated State Cookies.
+			/**
+			 * Offset of the MAC present in authenticated State Cookies.
+			 */
 			static constexpr size_t MacOffset{ StateCookie::TimestampOffset + StateCookie::TimestampLength };
-			// Length of the MAC. We use HMAC-SHA1 so it's 20 bytes.
+			/**
+			 * Length of the MAC. We use HMAC-SHA1 so it's 20 bytes.
+			 */
 			static constexpr size_t MacLength{ 20 };
-			// Fixed length of our generated State Cookies when authentication is
-			// enabled.
+			/**
+			 * Fixed length of our generated State Cookies when authentication is
+			 * enabled.
+			 */
 			static constexpr size_t AuthenticatedStateCookieLength{ StateCookie::MacOffset +
 			                                                        StateCookie::MacLength };
-			// State Cookie lifespan (Valid.Cookie.Life) in microseconds. Used to
-			// reject stale authenticated cookies.
-			//
-			// @see RFC 9260 section 16.
+			/**
+			 * State Cookie lifespan (Valid.Cookie.Life) in microseconds. Used to
+			 * reject stale authenticated cookies.
+			 *
+			 * @see RFC 9260 section 16.
+			 */
 			static constexpr int64_t ValidCookieLifeUs{ 60000 * 1000 };
 
 		public:

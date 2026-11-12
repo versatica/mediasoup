@@ -437,7 +437,7 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
 			{
-				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::PlainTransport_DumpResponse, dumpOffset);
 
@@ -446,7 +446,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
 			{
-				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+				const auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::PlainTransport_GetStatsResponse, responseOffset);
 
@@ -760,7 +760,7 @@ namespace RTC
 					  this->srtpKeyBase64.c_str());
 				}
 
-				auto responseOffset = FBS::PlainTransport::CreateConnectResponse(
+				const auto responseOffset = FBS::PlainTransport::CreateConnectResponse(
 				  request->GetBufferBuilder(), tupleOffset, rtcpTupleOffset, srtpParametersOffset);
 
 				request->Accept(FBS::Response::Body::PlainTransport_ConnectResponse, responseOffset);
@@ -1252,7 +1252,7 @@ namespace RTC
 		MS_TRACE();
 
 		auto tuple = this->tuple->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
-		auto notification = FBS::PlainTransport::CreateTupleNotification(
+		const auto notification = FBS::PlainTransport::CreateTupleNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), tuple);
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -1268,7 +1268,7 @@ namespace RTC
 
 		auto rtcpTuple =
 		  this->rtcpTuple->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
-		auto notification = FBS::PlainTransport::CreateRtcpTupleNotification(
+		const auto notification = FBS::PlainTransport::CreateRtcpTupleNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtcpTuple);
 
 		this->shared->GetChannelNotifier()->Emit(

@@ -45,7 +45,9 @@ namespace RTC
 		public:
 			/**
 			 * Error Cause Code.
-			 * NOTE: This field MUST be 2 bytes long.
+			 *
+			 * @remarks
+			 * - This field MUST be 2 bytes long.
 			 */
 			// NOLINTNEXTLINE(performance-enum-size)
 			enum class ErrorCauseCode : uint16_t
@@ -192,8 +194,9 @@ namespace RTC
 
 		private:
 			/**
-			 * NOTE: Return ErrorCauseHeader* instead of const ErrorCauseHeader*
-			 * since we may want to modify its fields.
+			 * @remarks
+			 * - Return ErrorCauseHeader* instead of const ErrorCauseHeader* since
+			 *   we may want to modify its fields.
 			 */
 			virtual ErrorCauseHeader* GetHeaderPointer() const final
 			{

@@ -6,13 +6,14 @@
 #include "Channel/ChannelNotifier.hpp"
 #include "DepLibUV.hpp"
 #include "SharedInterface.hpp"
+#include <string>
 
 class Shared : public SharedInterface
 {
 public:
-	explicit Shared(
-	  Channel::ChannelMessageRegistrator* channelMessageRegistrator,
-	  Channel::ChannelNotifier* channelNotifier);
+	Shared(
+	  std::unique_ptr<Channel::ChannelMessageRegistrator> channelMessageRegistrator,
+	  std::unique_ptr<Channel::ChannelNotifier> channelNotifier);
 
 	~Shared() override;
 

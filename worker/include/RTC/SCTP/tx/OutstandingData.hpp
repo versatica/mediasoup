@@ -400,7 +400,7 @@ namespace RTC
 
 			Types::UnwrappedTsn GetNextTsn() const
 			{
-				return this->GetHighestOutstandingTsn().GetNextValue();
+				return GetHighestOutstandingTsn().GetNextValue();
 			}
 
 			Types::UnwrappedTsn GetHighestOutstandingTsn() const;

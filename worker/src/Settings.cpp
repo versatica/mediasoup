@@ -6,7 +6,8 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <flatbuffers/flatbuffers.h>
-#include <cctype>   // isprint()
+#include <cctype> // isprint()
+#include <exception>
 #include <iterator> // std::ostream_iterator
 #include <mutex>
 #include <sstream> // std::ostringstream
@@ -21,7 +22,7 @@ static std::mutex GlobalSyncMutex;
 
 /* Class variables. */
 
-thread_local struct Settings::Configuration Settings::configuration;
+thread_local Settings::Configuration Settings::configuration;
 // clang-format off
 const ankerl::unordered_dense::map<std::string, LogLevel> Settings::String2LogLevel =
 {
@@ -49,8 +50,9 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	int c;
 	int optionIdx{ 0 };
+
 	// clang-format off
-	struct option options[] =
+	const option options[] =
 	{
 		{ .name="logLevel",             .has_arg=optional_argument, .flag=nullptr, .val='l' },
 		{ .name="logTags",              .has_arg=optional_argument, .flag=nullptr, .val='t' },
@@ -61,6 +63,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ .name=nullptr,                .has_arg=0,                 .flag=nullptr,  .val=0  },
 	};
 	// clang-format on
+
 	std::string stringValue;
 	std::vector<std::string> logTags;
 
@@ -349,6 +352,7 @@ void Settings::PrintConfiguration()
 	MS_DEBUG_TAG(info, "  logTags: %s", logTagsStream.str().c_str());
 	MS_DEBUG_TAG(info, "  rtcMinPort: %" PRIu16, Settings::configuration.rtcMinPort);
 	MS_DEBUG_TAG(info, "  rtcMaxPort: %" PRIu16, Settings::configuration.rtcMaxPort);
+
 	if (!Settings::configuration.dtlsCertificateFile.empty())
 	{
 		MS_DEBUG_TAG(
@@ -371,7 +375,7 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 
 			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateSettingsRequest::VT_LOGLEVEL))
 			{
-				auto logLevel = body->logLevel()->str();
+				std::string logLevel = body->logLevel()->str();
 
 				// This may throw.
 				Settings::SetLogLevel(logLevel);
@@ -428,8 +432,8 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 		return;
 	}
 
-	const std::string& dtlsCertificateFile = Settings::configuration.dtlsCertificateFile;
-	const std::string& dtlsPrivateKeyFile  = Settings::configuration.dtlsPrivateKeyFile;
+	const auto& dtlsCertificateFile = Settings::configuration.dtlsCertificateFile;
+	const auto& dtlsPrivateKeyFile  = Settings::configuration.dtlsPrivateKeyFile;
 
 	try
 	{

@@ -1,4 +1,4 @@
-#define MS_CLASS "ChannelMessageRegistrator"
+#define MS_CLASS "mocks::Channel::MockChannelMessageRegistrator"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "mocks/include/Channel/MockChannelMessageRegistrator.hpp"

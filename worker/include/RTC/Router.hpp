@@ -36,7 +36,7 @@ namespace RTC
 		};
 
 	public:
-		explicit Router(SharedInterface* shared, const std::string& id, Listener* listener);
+		Router(SharedInterface* shared, const std::string& id, Listener* listener);
 		~Router() override;
 
 	public:

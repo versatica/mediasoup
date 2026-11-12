@@ -139,7 +139,7 @@ namespace RTC
 		static const std::vector<SrtpCryptoSuiteMapEntry> SrtpCryptoSuites;
 
 	public:
-		explicit DtlsTransport(Listener* listener, SharedInterface* shared);
+		DtlsTransport(Listener* listener, SharedInterface* shared);
 		~DtlsTransport() override;
 
 	public:

@@ -32,7 +32,7 @@ namespace Utils
 
 		if (bit)
 		{
-			this->data[byteOffset] |= (1U << (7 - (this->offset & 0x7)));
+			this->data[byteOffset] |= (1 << (7 - (this->offset & 0x7)));
 		}
 
 		++this->offset;

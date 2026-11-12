@@ -18,24 +18,31 @@ class Worker : public Channel::ChannelSocket::Listener,
                public RTC::Router::Listener
 {
 public:
-	explicit Worker(Channel::ChannelSocket* channel, SharedInterface* shared);
+	Worker(Channel::ChannelSocket* channel, SharedInterface* shared);
+
 	~Worker() override;
 
 private:
 	void Close();
+
 	flatbuffers::Offset<FBS::Worker::DumpResponse> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
+
 	flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> FillBufferResourceUsage(
 	  flatbuffers::FlatBufferBuilder& builder) const;
-	void SetNewRouterId(std::string& routerId) const;
+
 	RTC::WebRtcServer* AssertAndGetWebRtcServerById(
 	  const std::string& webRtcServerId, const std::string& method) const;
+
 	RTC::Router* AssertAndGetRouterById(const std::string& routerId, const std::string& method) const;
+
 	void CheckNoWebRtcServer(const std::string& webRtcServerId, const std::string& method) const;
+
 	void CheckNoRouter(const std::string& routerId, const std::string& method) const;
 
 	/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 public:
 	void HandleRequest(Channel::ChannelRequest* request) override;
+
 	void HandleNotification(Channel::ChannelNotification* notification) override;
 
 	/* Methods inherited from Channel::ChannelSocket::Listener. */
@@ -54,9 +61,9 @@ public:
 private:
 	// Passed by argument.
 	Channel::ChannelSocket* const channel;
+	SharedInterface* const shared;
 	// Allocated by this.
 	std::unique_ptr<SignalHandle> signalHandle;
-	SharedInterface* const shared;
 	ankerl::unordered_dense::map<std::string, RTC::WebRtcServer*> mapWebRtcServers;
 	ankerl::unordered_dense::map<std::string, RTC::Router*> mapRouters;
 	// Others.
