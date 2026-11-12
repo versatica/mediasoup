@@ -102,6 +102,7 @@ namespace Channel
 
 		if (it != this->mapChannelRequestHandlers.end())
 		{
+			// NOLINTNEXTLINE(misc-const-correctness)
 			ChannelSocket::RequestHandler* const channelRequestHandler = it->second;
 
 			return channelRequestHandler;
@@ -121,6 +122,7 @@ namespace Channel
 
 		if (it != this->mapChannelNotificationHandlers.end())
 		{
+			// NOLINTNEXTLINE(misc-const-correctness)
 			ChannelSocket::NotificationHandler* const channelNotificationHandler = it->second;
 
 			return channelNotificationHandler;

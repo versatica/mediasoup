@@ -44,9 +44,9 @@ inline static void onWrite(uv_write_t* req, int status)
 {
 	MS_TRACE_STD();
 
-	auto* writeData     = static_cast<UnixStreamSocketHandle::UvWriteData*>(req->data);
-	uv_stream_t* handle = req->handle;
-	auto* socket        = static_cast<UnixStreamSocketHandle*>(handle->data);
+	auto* writeData           = static_cast<UnixStreamSocketHandle::UvWriteData*>(req->data);
+	const uv_stream_t* handle = req->handle;
+	auto* socket              = static_cast<UnixStreamSocketHandle*>(handle->data);
 
 	// Just notify the UnixStreamSocketHandle when error.
 	if (socket && status != 0)

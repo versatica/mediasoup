@@ -48,9 +48,9 @@ inline static void onSend(uv_udp_send_t* req, int status)
 {
 	MS_TRACE();
 
-	auto* sendData   = static_cast<UdpSocketHandle::UvSendData*>(req->data);
-	uv_udp_t* handle = req->handle;
-	auto* socket     = static_cast<UdpSocketHandle*>(handle->data);
+	auto* sendData         = static_cast<UdpSocketHandle::UvSendData*>(req->data);
+	const uv_udp_t* handle = req->handle;
+	auto* socket           = static_cast<UdpSocketHandle*>(handle->data);
 
 	if (socket)
 	{

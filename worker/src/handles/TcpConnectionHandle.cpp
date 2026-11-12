@@ -39,9 +39,9 @@ inline static void onWrite(uv_write_t* req, int status)
 {
 	MS_TRACE();
 
-	auto* writeData     = static_cast<TcpConnectionHandle::UvWriteData*>(req->data);
-	uv_stream_t* handle = req->handle;
-	auto* connection    = static_cast<TcpConnectionHandle*>(handle->data);
+	auto* writeData           = static_cast<TcpConnectionHandle::UvWriteData*>(req->data);
+	const uv_stream_t* handle = req->handle;
+	auto* connection          = static_cast<TcpConnectionHandle*>(handle->data);
 
 	if (connection)
 	{
