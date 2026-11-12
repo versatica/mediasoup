@@ -56,7 +56,7 @@ jobs:
           clang_tidy_version: '23'
           lgtm_comment_body: ''
           extra_arguments: --quiet
-          include: 'worker/src/**/*.cpp,worker/test/src/**/*.cpp,worker/fuzzer/src/**/*.cpp'
+          include: 'worker/src/*.cpp,worker/src/**/*.cpp,worker/test/src/*.cpp,worker/test/src/**/*.cpp,worker/fuzzer/src/*.cpp,worker/fuzzer/src/**/*.cpp,worker/mocks/src/*.cpp,worker/mocks/src/**/*.cpp'
 
       # Uploads an artifact containing clang_fixes.json.
       - uses: ZedThree/clang-tidy-review/upload@v0.23.1
