@@ -29,7 +29,7 @@ namespace mocks
 		// NOTE: Timers are indexed by label so that tests can retrieve them via
 		// GetTimer(). Two alive timers sharing a label would make that lookup
 		// ambiguous.
-		if (this->timers.find(label) != this->timers.end())
+		if (this->timers.contains(label))
 		{
 			MS_THROW_ERROR("a timer with same label already exists [label:%s]", label.c_str());
 		}
@@ -65,7 +65,7 @@ namespace mocks
 		// NOTE: Backoff timers are indexed by label so that tests can retrieve them
 		// via GetBackoffTimer(). Two alive timers sharing a label would make that
 		// lookup ambiguous.
-		if (this->backoffTimers.find(label) != this->backoffTimers.end())
+		if (this->backoffTimers.contains(label))
 		{
 			MS_THROW_ERROR("a backoff timer with same label already exists [label:%s]", label.c_str());
 		}

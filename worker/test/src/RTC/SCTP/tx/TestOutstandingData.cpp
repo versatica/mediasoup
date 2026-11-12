@@ -565,7 +565,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		});
 		REQUIRE(buffer.ShouldSendForwardTsn() == true);
 
-		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		const auto* forwardTsnChunk = buffer.AddForwardTsn(packet.get());
@@ -1090,10 +1090,9 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 12, RTC::SCTP::OutstandingData::State::ABANDONED },
 		    { 13, RTC::SCTP::OutstandingData::State::ABANDONED },
 		});
-		;
 		REQUIRE(buffer.ShouldSendForwardTsn() == true);
 
-		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		const auto* forwardTsnChunk = buffer.AddForwardTsn(packet.get());
