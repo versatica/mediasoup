@@ -135,6 +135,11 @@ jobs:
             cc: clang
             cxx: clang++
             build-type: Release
+          - os: macos-26
+            node: 26
+            cc: clang
+            cxx: clang++
+            build-type: Release
           - os: windows-2022
             node: 22
             cc: cl

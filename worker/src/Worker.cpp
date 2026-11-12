@@ -21,8 +21,7 @@ Worker::Worker(Channel::ChannelSocket* channel, SharedInterface* shared)
 	// Set us as Channel's listener.
 	this->channel->SetListener(this);
 
-	// Give the Channel the Shared instance, which it needs to take the arrival
-	// time of received notifications.
+	// Give the Channel the Shared instance.
 	this->channel->SetShared(this->shared);
 
 #ifdef MS_EXECUTABLE

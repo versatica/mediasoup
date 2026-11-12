@@ -47,10 +47,13 @@ jobs:
       - uses: ZedThree/clang-tidy-review@v0.23.1
         id: review
         with:
-          apt_packages: 'libclang-rt-21-dev'
+          # The action's image does not ship clang-tidy 23, so it is installed
+          # from apt.llvm.org.
+          apt_packages: 'ca-certificates,curl,gpg'
+          install_commands: 'curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /usr/share/keyrings/llvm.gpg && echo "deb [signed-by=/usr/share/keyrings/llvm.gpg] http://apt.llvm.org/questing/ llvm-toolchain-questing main" > /etc/apt/sources.list.d/llvm.list && apt-get update && apt-get install -y --no-install-recommends clang-tidy-23 libclang-rt-23-dev'
           build_dir: 'worker/out/Release/build-test'
           config_file: 'worker/.clang-tidy'
-          clang_tidy_version: '21'
+          clang_tidy_version: '23'
           lgtm_comment_body: ''
           extra_arguments: --quiet
           include: 'worker/src/**/*.cpp,worker/test/src/**/*.cpp,worker/fuzzer/src/**/*.cpp'

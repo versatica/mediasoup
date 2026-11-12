@@ -86,6 +86,11 @@ jobs:
           - os: ubuntu-26.04-arm
             cc: gcc
             cxx: g++
+          # A macOS binary runs on the macOS version it was built on and on any
+          # later one, so the prebuild built on macos-15 also covers macos-26
+          # and there is no need to add a job for newer macOS versions.
+          # Building on a newer version would instead produce a binary that
+          # does not run on older ones.
           - os: macos-15
             cc: clang
             cxx: clang++
