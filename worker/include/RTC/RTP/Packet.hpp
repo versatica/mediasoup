@@ -294,7 +294,7 @@ namespace RTC
 
 			bool HasHeaderExtension() const
 			{
-				return (GetFixedHeaderPointer()->extension);
+				return GetFixedHeaderPointer()->extension;
 			}
 
 			/**
@@ -417,7 +417,7 @@ namespace RTC
 				}
 				else if (HasTwoBytesExtensions())
 				{
-					return this->twoBytesExtensions.find(id) != this->twoBytesExtensions.end();
+					return this->twoBytesExtensions.contains(id);
 				}
 				else
 				{
@@ -713,7 +713,7 @@ namespace RTC
 			 */
 			bool HasPadding() const
 			{
-				return (GetFixedHeaderPointer()->padding);
+				return GetFixedHeaderPointer()->padding;
 			}
 
 			/**
