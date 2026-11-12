@@ -177,7 +177,7 @@ namespace RTC
 			static constexpr size_t StateCookieSecretLength{ 32 };
 
 		public:
-			explicit Association(
+			Association(
 			  const SctpOptions& sctpOptions,
 			  AssociationListenerInterface* listener,
 			  SharedInterface* shared,

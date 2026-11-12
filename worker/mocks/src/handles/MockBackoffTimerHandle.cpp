@@ -4,7 +4,6 @@
 #include "mocks/include/handles/MockBackoffTimerHandle.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <string>
 
 namespace mocks
 {

@@ -185,7 +185,7 @@ namespace RTC
 				    rit->first));
 			}
 
-			auto notification = FBS::AudioLevelObserver::CreateVolumesNotificationDirect(
+			const auto notification = FBS::AudioLevelObserver::CreateVolumesNotificationDirect(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), std::addressof(volumes));
 
 			this->shared->GetChannelNotifier()->Emit(

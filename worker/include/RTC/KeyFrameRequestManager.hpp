@@ -106,8 +106,7 @@ namespace RTC
 		};
 
 	public:
-		explicit KeyFrameRequestManager(
-		  Listener* listener, SharedInterface* shared, int64_t keyFrameRequestDelayMs);
+		KeyFrameRequestManager(Listener* listener, SharedInterface* shared, int64_t keyFrameRequestDelayMs);
 		~KeyFrameRequestManager() override;
 
 		void KeyFrameNeeded(uint32_t ssrc);

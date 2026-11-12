@@ -92,7 +92,7 @@ int64_t BackoffTimerHandle::ComputeNextTimeoutMs() const
 {
 	MS_TRACE();
 
-	auto expirationCount = this->expirationCount;
+	size_t expirationCount = this->expirationCount;
 
 	switch (this->backoffAlgorithm)
 	{
@@ -103,7 +103,7 @@ int64_t BackoffTimerHandle::ComputeNextTimeoutMs() const
 
 		case BackoffAlgorithm::EXPONENTIAL:
 		{
-			auto timeoutMs = this->baseTimeoutMs;
+			int64_t timeoutMs = this->baseTimeoutMs;
 
 			while (expirationCount > 0 && timeoutMs < BackoffTimerHandleInterface::MaxTimeoutMs)
 			{
@@ -156,7 +156,7 @@ void BackoffTimerHandle::OnTimer(TimerHandleInterface* /*timer*/)
 	// the `running` flag.
 	if (this->running)
 	{
-		auto nextTimeoutMs = ComputeNextTimeoutMs();
+		const auto nextTimeoutMs = ComputeNextTimeoutMs();
 
 		this->timer->Start(nextTimeoutMs);
 	}

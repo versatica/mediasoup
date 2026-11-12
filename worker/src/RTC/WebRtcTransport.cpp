@@ -491,7 +491,7 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
 			{
-				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+				const auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::WebRtcTransport_GetStatsResponse, responseOffset);
 
@@ -500,7 +500,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
 			{
-				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::WebRtcTransport_DumpResponse, dumpOffset);
 
@@ -571,7 +571,7 @@ namespace RTC
 				// Tell the caller about the selected local DTLS role.
 				auto dtlsLocalRole = DtlsTransport::RoleToFbs(this->dtlsRole);
 
-				auto responseOffset =
+				const auto responseOffset =
 				  FBS::WebRtcTransport::CreateConnectResponse(request->GetBufferBuilder(), dtlsLocalRole);
 
 				request->Accept(FBS::Response::Body::WebRtcTransport_ConnectResponse, responseOffset);
@@ -590,7 +590,7 @@ namespace RTC
 				  "WebRtcTransport ICE usernameFragment and password changed [id:%s]", this->id.c_str());
 
 				// Reply with the updated ICE local parameters.
-				auto responseOffset = FBS::Transport::CreateRestartIceResponseDirect(
+				const auto responseOffset = FBS::Transport::CreateRestartIceResponseDirect(
 				  request->GetBufferBuilder(),
 				  this->iceServer->GetUsernameFragment().c_str(),
 				  this->iceServer->GetPassword().c_str(),
@@ -1263,7 +1263,7 @@ namespace RTC
 		auto tuple = this->iceServer->GetSelectedTuple()->FillBuffer(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder());
 
-		auto notification = FBS::WebRtcTransport::CreateIceSelectedTupleChangeNotification(
+		const auto notification = FBS::WebRtcTransport::CreateIceSelectedTupleChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), tuple);
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -1283,7 +1283,7 @@ namespace RTC
 
 		MS_DEBUG_TAG(ice, "ICE connected");
 
-		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
+		const auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::IceState::CONNECTED);
 
@@ -1309,7 +1309,7 @@ namespace RTC
 
 		MS_DEBUG_TAG(ice, "ICE completed");
 
-		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
+		const auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::IceState::COMPLETED);
 
@@ -1335,7 +1335,7 @@ namespace RTC
 
 		MS_DEBUG_TAG(ice, "ICE disconnected");
 
-		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
+		const auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::IceState::DISCONNECTED);
 
@@ -1358,7 +1358,7 @@ namespace RTC
 
 		MS_DEBUG_TAG(dtls, "DTLS connecting");
 
-		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
+		const auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::DtlsState::CONNECTING);
 
@@ -1402,10 +1402,11 @@ namespace RTC
 			this->srtpRecvSession = std::make_unique<RTC::SrtpSession>(
 			  RTC::SrtpSession::Type::INBOUND, srtpCryptoSuite, srtpRemoteKey, srtpRemoteKeyLen);
 
-			auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotificationDirect(
-			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
-			  FBS::WebRtcTransport::DtlsState::CONNECTED,
-			  remoteCert.c_str());
+			const auto dtlsStateChangeOffset =
+			  FBS::WebRtcTransport::CreateDtlsStateChangeNotificationDirect(
+			    this->shared->GetChannelNotifier()->GetBufferBuilder(),
+			    FBS::WebRtcTransport::DtlsState::CONNECTED,
+			    remoteCert.c_str());
 
 			this->shared->GetChannelNotifier()->Emit(
 			  this->id,
@@ -1430,7 +1431,7 @@ namespace RTC
 
 		MS_WARN_TAG(dtls, "DTLS failed");
 
-		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
+		const auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::DtlsState::FAILED);
 
@@ -1447,7 +1448,7 @@ namespace RTC
 
 		MS_WARN_TAG(dtls, "DTLS remotely closed");
 
-		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
+		const auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::DtlsState::CLOSED);
 

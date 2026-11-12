@@ -3,7 +3,8 @@
 
 #include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
-#include <limits>
+#include <limits> // std::numeric_limits
+#include <string>
 
 namespace mocks
 {
@@ -16,7 +17,7 @@ namespace mocks
 		friend class mocks::MockShared;
 
 	private:
-		explicit MockTimerHandle(
+		MockTimerHandle(
 		  TimerHandleInterface::Listener* listener,
 		  std::string label,
 		  std::function<int64_t()> getTimeMs,
@@ -66,7 +67,7 @@ namespace mocks
 			return this->running;
 		}
 
-		const std::string GetLabel() const override
+		const std::string& GetLabel() const override
 		{
 			return this->label;
 		}

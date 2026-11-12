@@ -1,3 +1,6 @@
+#ifndef MS_LIB_HPP
+#define MS_LIB_HPP
+
 #include "common.hpp"
 
 // NOLINTNEXTLINE(readability-identifier-naming)
@@ -11,3 +14,5 @@ extern "C" int mediasoup_worker_run(
   ChannelReadCtx channelReadCtx,
   ChannelWriteFn channelWriteFn,
   ChannelWriteCtx channelWriteCtx);
+
+#endif

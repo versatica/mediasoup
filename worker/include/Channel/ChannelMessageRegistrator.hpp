@@ -12,7 +12,7 @@ namespace Channel
 	class ChannelMessageRegistrator : public Channel::ChannelMessageRegistratorInterface
 	{
 	public:
-		explicit ChannelMessageRegistrator();
+		ChannelMessageRegistrator();
 
 		~ChannelMessageRegistrator() override;
 

@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/ChannelRequest.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <ankerl/unordered_dense.h>
@@ -91,7 +92,7 @@ namespace Channel
 	/* Instance methods. */
 
 	/**
-	 * msg contains the request flatbuffer.
+	 * `request` contains the request flatbuffer.
 	 */
 	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, const FBS::Request::Request* request)
 	  : channel(channel), data(request), id(request->id()), method(request->method())
@@ -119,8 +120,9 @@ namespace Channel
 
 		this->replied = true;
 
-		auto& builder = ChannelRequest::bufferBuilder;
-		auto response =
+		flatbuffers::FlatBufferBuilder& builder = ChannelRequest::bufferBuilder;
+
+		const auto response =
 		  FBS::Response::CreateResponse(builder, this->id, true, FBS::Response::Body::NONE, 0);
 
 		SendResponse(response);
@@ -134,8 +136,9 @@ namespace Channel
 
 		this->replied = true;
 
-		auto& builder = ChannelRequest::bufferBuilder;
-		auto response = FBS::Response::CreateResponseDirect(
+		flatbuffers::FlatBufferBuilder& builder = ChannelRequest::bufferBuilder;
+
+		const auto response = FBS::Response::CreateResponseDirect(
 		  builder, this->id, /*accepted*/ false, FBS::Response::Body::NONE, 0, /*error*/ "Error", reason);
 
 		SendResponse(response);
@@ -149,8 +152,9 @@ namespace Channel
 
 		this->replied = true;
 
-		auto& builder = ChannelRequest::bufferBuilder;
-		auto response = FBS::Response::CreateResponseDirect(
+		flatbuffers::FlatBufferBuilder& builder = ChannelRequest::bufferBuilder;
+
+		const auto response = FBS::Response::CreateResponseDirect(
 		  builder, this->id, /*accepted*/ false, FBS::Response::Body::NONE, 0, /*error*/ "TypeError", reason);
 
 		SendResponse(response);
@@ -164,8 +168,9 @@ namespace Channel
 
 		this->replied = true;
 
-		auto& builder = ChannelRequest::bufferBuilder;
-		auto response = FBS::Response::CreateResponseDirect(
+		flatbuffers::FlatBufferBuilder& builder = ChannelRequest::bufferBuilder;
+
+		const auto response = FBS::Response::CreateResponseDirect(
 		  builder,
 		  this->id,
 		  /*accepted*/ false,
@@ -188,12 +193,15 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		auto& builder = ChannelRequest::bufferBuilder;
-		auto message =
+		flatbuffers::FlatBufferBuilder& builder = ChannelRequest::bufferBuilder;
+
+		const auto message =
 		  FBS::Message::CreateMessage(builder, FBS::Message::Body::Response, response.Union());
 
 		builder.FinishSizePrefixed(message);
+
 		Send(builder.GetBufferPointer(), builder.GetSize());
+
 		builder.Clear();
 	}
 } // namespace Channel

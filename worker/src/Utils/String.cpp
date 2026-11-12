@@ -14,7 +14,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include <cstring> // std::memset()
 
 /* Static. */
 
@@ -25,7 +24,7 @@ static constexpr uint8_t Base64Table[65] =
 
 namespace Utils
 {
-	std::string Utils::String::Base64Encode(const uint8_t* data, size_t len)
+	std::string String::Base64Encode(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -80,7 +79,7 @@ namespace Utils
 		return { reinterpret_cast<const char*>(out), static_cast<size_t>(pos - out) };
 	}
 
-	std::string Utils::String::Base64Encode(const std::string& str)
+	std::string String::Base64Encode(const std::string& str)
 	{
 		MS_TRACE();
 
@@ -89,7 +88,7 @@ namespace Utils
 		return Base64Encode(data, str.size());
 	}
 
-	uint8_t* Utils::String::Base64Decode(const uint8_t* data, size_t len, size_t& outLen)
+	uint8_t* String::Base64Decode(const uint8_t* data, size_t len, size_t& outLen)
 	{
 		MS_TRACE();
 
@@ -114,9 +113,11 @@ namespace Utils
 		{
 			dtable[Base64Table[i]] = static_cast<uint8_t>(i);
 		}
+
 		dtable[uint8_t{ '=' }] = 0;
 
 		count = 0;
+
 		for (i = 0; i < len; ++i)
 		{
 			if (dtable[data[i]] != 0x80)
@@ -182,7 +183,7 @@ namespace Utils
 		return out;
 	}
 
-	uint8_t* Utils::String::Base64Decode(const std::string& str, size_t& outLen)
+	uint8_t* String::Base64Decode(const std::string& str, size_t& outLen)
 	{
 		MS_TRACE();
 

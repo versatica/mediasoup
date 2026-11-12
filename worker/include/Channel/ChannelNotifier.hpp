@@ -3,6 +3,9 @@
 
 #include "common.hpp"
 #include "Channel/ChannelSocket.hpp"
+#include "FBS/message.h"
+#include "FBS/notification.h"
+#include <flatbuffers/flatbuffer_builder.h>
 #include <string>
 
 namespace Channel
@@ -23,16 +26,19 @@ namespace Channel
 		  const std::string& targetId,
 		  FBS::Notification::Event event,
 		  FBS::Notification::Body type,
-		  flatbuffers::Offset<Body>& body)
+		  const flatbuffers::Offset<Body>& body)
 		{
-			auto& builder     = this->bufferBuilder;
-			auto notification = FBS::Notification::CreateNotificationDirect(
+			flatbuffers::FlatBufferBuilder& builder = this->bufferBuilder;
+
+			const auto notification = FBS::Notification::CreateNotificationDirect(
 			  builder, targetId.c_str(), event, type, body.Union());
-			auto message =
+			const auto message =
 			  FBS::Message::CreateMessage(builder, FBS::Message::Body::Notification, notification.Union());
 
 			builder.FinishSizePrefixed(message);
+
 			this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
+
 			builder.Clear();
 		}
 

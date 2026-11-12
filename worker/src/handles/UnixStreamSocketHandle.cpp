@@ -1,6 +1,7 @@
 /**
- * NOTE: This code cannot log to the Channel since this is the base code of the
- * Channel.
+ * @remarks
+ * - This code cannot log to the Channel since this is the base code of the
+ *   Channel.
  */
 
 #define MS_CLASS "UnixStreamSocketHandle"
@@ -11,6 +12,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memcpy()
+#include <exception>
 
 /* Static methods for UV callbacks. */
 
@@ -42,9 +44,9 @@ inline static void onWrite(uv_write_t* req, int status)
 {
 	MS_TRACE_STD();
 
-	auto* writeData = static_cast<UnixStreamSocketHandle::UvWriteData*>(req->data);
-	auto* handle    = req->handle;
-	auto* socket    = static_cast<UnixStreamSocketHandle*>(handle->data);
+	auto* writeData     = static_cast<UnixStreamSocketHandle::UvWriteData*>(req->data);
+	uv_stream_t* handle = req->handle;
+	auto* socket        = static_cast<UnixStreamSocketHandle*>(handle->data);
 
 	// Just notify the UnixStreamSocketHandle when error.
 	if (socket && status != 0)
@@ -69,7 +71,7 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 {
 	MS_TRACE_STD();
 
-	auto* handle = req->handle;
+	uv_stream_t* handle = req->handle;
 
 	delete req;
 
@@ -139,7 +141,7 @@ UnixStreamSocketHandle::~UnixStreamSocketHandle()
 	delete[] this->buffer;
 }
 
-// NOTE: In UnixStreamSocketHandle we need a poublic Close() method and cannot
+// NOTE: In UnixStreamSocketHandle we need a public Close() method and cannot
 // just rely on the destructor plus a private InternalClose() method.
 void UnixStreamSocketHandle::Close()
 {
@@ -180,8 +182,10 @@ void UnixStreamSocketHandle::Close()
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
 		auto* req = new uv_shutdown_t;
+
 		req->data = static_cast<void*>(this);
-		err       = uv_shutdown(
+
+		err = uv_shutdown(
 		  req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
 
 		if (err != 0)
@@ -245,7 +249,8 @@ void UnixStreamSocketHandle::Write(const uint8_t* data, size_t len)
 	}
 
 	const size_t pendingLen = len - written;
-	auto* writeData         = new UvWriteData(pendingLen);
+
+	auto* writeData = new UvWriteData(pendingLen);
 
 	writeData->req.data = static_cast<void*>(writeData);
 	std::memcpy(writeData->store, data + written, pendingLen);
@@ -263,16 +268,17 @@ void UnixStreamSocketHandle::Write(const uint8_t* data, size_t len)
 	{
 		MS_ERROR_STD("uv_write() failed: %s", uv_strerror(err));
 
-		// Delete the UvSendData struct.
+		// Delete the UvWriteData struct.
 		delete writeData;
 	}
 }
 
 uint32_t UnixStreamSocketHandle::GetSendBufferSize() const
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	int size{ 0 };
+
 	const int err =
 	  uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
 
@@ -286,7 +292,7 @@ uint32_t UnixStreamSocketHandle::GetSendBufferSize() const
 
 void UnixStreamSocketHandle::SetSendBufferSize(uint32_t size)
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	auto sizeInt = static_cast<int>(size);
 
@@ -306,9 +312,10 @@ void UnixStreamSocketHandle::SetSendBufferSize(uint32_t size)
 
 uint32_t UnixStreamSocketHandle::GetRecvBufferSize() const
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	int size{ 0 };
+
 	const int err =
 	  uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
 
@@ -322,7 +329,7 @@ uint32_t UnixStreamSocketHandle::GetRecvBufferSize() const
 
 void UnixStreamSocketHandle::SetRecvBufferSize(uint32_t size)
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	auto sizeInt = static_cast<int>(size);
 

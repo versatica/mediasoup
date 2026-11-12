@@ -78,10 +78,11 @@ namespace RTC
 				 * What parsing the descriptors of a stream takes: the template
 				 * dependency structure in use and which frame brought it.
 				 *
-				 * NOTE: The frame is kept so that a descriptor of an older one, which a
-				 * retransmission or a reordered packet may carry, does not replace the
-				 * structure in use with an outdated one, leaving every following packet
-				 * parsed with the wrong templates until the next key frame.
+				 * @remarks
+				 * - The frame is kept so that a descriptor of an older one, which a
+				 *   retransmission or a reordered packet may carry, does not replace
+				 *   the structure in use with an outdated one, leaving every following
+				 *   packet parsed with the wrong templates until the next key frame.
 				 */
 				struct Context
 				{
@@ -138,8 +139,9 @@ namespace RTC
 				 * Given by argument, and replaced by a new one whenever this descriptor
 				 * carries a template dependency structure.
 				 *
-				 * NOTE: Shared so that descriptors parsed with a previous structure (which
-				 * may still sit in a retransmission buffer) keep seeing it unchanged.
+				 * @remarks
+				 * - Shared so that descriptors parsed with a previous structure (which
+				 *   may still sit in a retransmission buffer) keep seeing it unchanged.
 				 */
 				std::shared_ptr<TemplateDependencyStructure> templateDependencyStructure;
 				std::vector<uint8_t> decodeTargetProtectedBy;
@@ -238,12 +240,13 @@ namespace RTC
 				 * spatial and temporal layer, this is, whether an endpoint decoding just
 				 * that decode target needs it.
 				 *
-				 * NOTE: A frame whose decode target indication for it is "not present" is
-				 * not part of it. That is how K-SVC differs from full SVC: there the
-				 * lower spatial layers of a delta picture are not referenced by the higher
-				 * ones, so an endpoint on a higher layer does not need them. Key frames,
-				 * which is where inter layer prediction happens, are present in every
-				 * decode target and hence always kept.
+				 * @remarks
+				 * - A frame whose decode target indication for it is "not present" is
+				 *   not part of it. That is how K-SVC differs from full SVC: there the
+				 *   lower spatial layers of a delta picture are not referenced by the
+				 *   higher ones, so an endpoint on a higher layer does not need them.
+				 *   Key frames, which is where inter layer prediction happens, are
+				 *   present in every decode target and hence always kept.
 				 */
 				bool IsPresentInDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const;
 
@@ -253,10 +256,11 @@ namespace RTC
 				 * by the forwarded pair, this is, whether every frame it needs is also
 				 * needed by that one.
 				 *
-				 * NOTE: This is what tells a switch point apart from an entry point. A
-				 * "switch" indication promises that no frame of the decode target older
-				 * than this one is needed, which is of no use when its frames were not
-				 * being sent at all, as happens in K-SVC.
+				 * @remarks
+				 * - This is what tells a switch point apart from an entry point. A
+				 *   "switch" indication promises that no frame of the decode target
+				 *   older than this one is needed, which is of no use when its frames
+				 *   were not being sent at all, as happens in K-SVC.
 				 */
 				bool IsDecodeTargetActive(
 				  uint8_t spatialLayer,

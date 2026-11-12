@@ -17,11 +17,6 @@
  * The Dependency Descriptors below are REAL bytes captured from Chrome
  * producing AV1 with `scalabilityMode: 'L3T3_KEY'`, this is, K-SVC.
  *
- * NOTE: K-SVC matters here. Inter layer prediction only happens at key frames,
- * so the delta frames of a spatial layer are not referenced by the higher ones
- * and their decode target indications say so with a "-" (not present). A
- * Consumer given the top spatial layer is hence sent that layer alone.
- *
  * An equivalent capture can be taken and dumped with:
  *
  *   tshark -i <interface> -f "udp portrange <rtcMinPort>-<rtcMaxPort>" -s 0 \
@@ -34,6 +29,12 @@
  *
  * The Dependency Descriptor is the extension whose value is ~90 bytes long in
  * the first packet of a key frame and 3 bytes long everywhere else.
+ *
+ * @remarks
+ * - K-SVC matters here. Inter layer prediction only happens at key frames, so
+ *   the delta frames of a spatial layer are not referenced by the higher ones
+ *   and their decode target indications say so with a "-" (not present). A
+ *   Consumer given the top spatial layer is hence sent that layer alone.
  */
 
 namespace
@@ -78,10 +79,11 @@ namespace
 	 * One full repetition of the layers pattern that follows the key frame:
 	 * 4 pictures of 3 spatial layers each, with temporal layers T2, T1, T2, T0.
 	 *
-	 * NOTE: All of them are end of frame packets, which is what `Process()`
-	 * requires to switch the temporal layer down and to set the marker bit.
-	 * Frames that the capture sent in several packets are hence represented by
-	 * their last one.
+	 * @remarks
+	 * - All of them are end of frame packets, which is what `Process()` requires
+	 *   to switch the temporal layer down and to set the marker bit. Frames that
+	 *   the capture sent in several packets are hence represented by their last
+	 *   one.
 	 */
 	// clang-format off
 	const std::vector<std::vector<uint8_t>> DeltaFrames =

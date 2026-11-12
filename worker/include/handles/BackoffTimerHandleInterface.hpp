@@ -8,6 +8,12 @@
 class BackoffTimerHandleInterface
 {
 public:
+	/**
+	 * Maximum value accepted for any timeout (ms).
+	 */
+	static constexpr int64_t MaxTimeoutMs{ std::numeric_limits<int64_t>::max() / 2 };
+
+public:
 	class Listener
 	{
 	public:
@@ -20,7 +26,7 @@ public:
 		 *
 		 * @remarks
 		 * - If the caller deletes this BackoffTimer instance within the callback
-		 *   it must signal it be setting `stop` to true.
+		 *   it must signal it by setting `stop` to true.
 		 */
 		virtual void OnBackoffTimer(
 		  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop) = 0;
@@ -69,9 +75,6 @@ public:
 	};
 
 public:
-	static constexpr int64_t MaxTimeoutMs{ std::numeric_limits<int64_t>::max() / 2 };
-
-public:
 	BackoffTimerHandleInterface() = default;
 
 	BackoffTimerHandleInterface& operator=(const BackoffTimerHandleInterface&) = delete;
@@ -104,13 +107,14 @@ public:
 	 */
 	virtual bool IsRunning() const = 0;
 
-	virtual const std::string GetLabel() const = 0;
+	virtual const std::string& GetLabel() const = 0;
 
 	/**
 	 * Maximum number of restarts.
 	 *
 	 * @remarks
-	 * - If `maxRestarts` was not given in the constructor, this method returns 0.
+	 * - If `maxRestarts` was not given in the constructor, this method returns
+	 *   `std::nullopt`.
 	 */
 	virtual std::optional<size_t> GetMaxRestarts() const = 0;
 

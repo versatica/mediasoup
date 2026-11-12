@@ -266,7 +266,7 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
 			{
-				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+				const auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::PipeTransport_GetStatsResponse, responseOffset);
 
@@ -275,7 +275,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
 			{
-				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::PipeTransport_DumpResponse, dumpOffset);
 
@@ -455,7 +455,7 @@ namespace RTC
 
 				auto tupleOffset = this->tuple->FillBuffer(request->GetBufferBuilder());
 
-				auto responseOffset =
+				const auto responseOffset =
 				  FBS::PipeTransport::CreateConnectResponse(request->GetBufferBuilder(), tupleOffset);
 
 				request->Accept(FBS::Response::Body::PipeTransport_ConnectResponse, responseOffset);

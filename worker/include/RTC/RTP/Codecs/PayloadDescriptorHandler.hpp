@@ -97,7 +97,7 @@ namespace RTC
 				 */
 				uint16_t GetMaxFrameId() const
 				{
-					return Utils::Number::maxValue<uint16_t>(this->frameIdLength);
+					return Utils::Number::MaxValue<uint16_t>(this->frameIdLength);
 				}
 
 				bool IsFrameIdHigherThan(uint16_t lhs, uint16_t rhs) const
@@ -142,7 +142,7 @@ namespace RTC
 				 *   one when the Consumer negotiated it, since its handler takes
 				 *   over and numbers every frame itself.
 				 */
-				explicit EncodingContext(Codecs::EncodingContext::Params& params, uint8_t frameIdLength)
+				EncodingContext(Codecs::EncodingContext::Params& params, uint8_t frameIdLength)
 				  : params(params),
 				    frameIdLength(
 				      params.preferDependencyDescriptor ? DependencyDescriptor::FrameIdLength
@@ -294,9 +294,10 @@ namespace RTC
 				 * whether the packet carrying it was reordered and the current layers are
 				 * no longer the ones its frame was judged against.
 				 *
-				 * NOTE: Each codec gives the frame id it has. The Dependency Descriptor
-				 * numbers every frame, so in SVC the spatial layers of a picture get one
-				 * each, while VP8 and VP9 number the whole picture.
+				 * @remarks
+				 * - Each codec gives the frame id it has. The Dependency Descriptor
+				 *   numbers every frame, so in SVC the spatial layers of a picture get
+				 *   one each, while VP8 and VP9 number the whole picture.
 				 */
 				bool IsOldFrameId(uint16_t frameId) const
 				{
@@ -319,13 +320,13 @@ namespace RTC
 				bool IsFrameIdHigherThan(uint16_t lhs, uint16_t rhs) const
 				{
 					return Utils::Number::IsHigherThan<uint16_t>(
-					  lhs, rhs, Utils::Number::maxValue<uint16_t>(this->frameIdLength));
+					  lhs, rhs, Utils::Number::MaxValue<uint16_t>(this->frameIdLength));
 				}
 
 				bool IsFrameIdLowerThan(uint16_t lhs, uint16_t rhs) const
 				{
 					return Utils::Number::IsLowerThan<uint16_t>(
-					  lhs, rhs, Utils::Number::maxValue<uint16_t>(this->frameIdLength));
+					  lhs, rhs, Utils::Number::MaxValue<uint16_t>(this->frameIdLength));
 				}
 
 			public:
@@ -338,9 +339,9 @@ namespace RTC
 				 * for this Consumer, left here by it and taken by the Consumer so that
 				 * the retransmissions of that packet are rewritten the very same way.
 				 *
-				 * NOTE: It belongs here rather than to the packet, which is given to
-				 * every Consumer of the Producer and rewritten by each of them its own
-				 * way.
+				 * @remarks
+				 * - It belongs here rather than to the packet, which is given to every
+				 *   Consumer of the Producer and rewritten by each of them its own way.
 				 */
 				std::unique_ptr<PayloadDescriptor::Encoder> encoder{ nullptr };
 				/**

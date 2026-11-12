@@ -15,7 +15,7 @@ namespace mocks
 		class MockChannelMessageRegistrator : public ::Channel::ChannelMessageRegistratorInterface
 		{
 		public:
-			explicit MockChannelMessageRegistrator();
+			MockChannelMessageRegistrator();
 
 			~MockChannelMessageRegistrator() override;
 

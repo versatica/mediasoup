@@ -6,7 +6,9 @@
 #include <deque>
 #include <map>
 #include <set>
+#include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace mocks
@@ -80,7 +82,7 @@ namespace mocks
 				{
 					++this->onStreamsResetPerformedCalls;
 
-					for (const auto streamId : outboundStreamIds)
+					for (const uint16_t streamId : outboundStreamIds)
 					{
 						this->streamsResetPerformed.insert(streamId);
 					}
@@ -91,7 +93,7 @@ namespace mocks
 				{
 					++this->onStreamsResetFailedCalls;
 
-					for (const auto streamId : outboundStreamIds)
+					for (const uint16_t streamId : outboundStreamIds)
 					{
 						this->streamsResetFailed.insert(streamId);
 					}
@@ -101,7 +103,7 @@ namespace mocks
 				{
 					++this->onInboundStreamsResetCalls;
 
-					for (const auto streamId : inboundStreamIds)
+					for (const uint16_t streamId : inboundStreamIds)
 					{
 						this->inboundStreamsReset.insert(streamId);
 					}
@@ -204,12 +206,12 @@ namespace mocks
 					return this->erroredErrorMessage;
 				}
 
-				bool HasOnStreamBufferedAmountLowBeenCalledWithStreamId(uint64_t streamId) const
+				bool HasOnStreamBufferedAmountLowBeenCalledWithStreamId(uint16_t streamId) const
 				{
 					return this->onStreamBufferedAmountLowCalls.contains(streamId);
 				}
 
-				size_t CountOnStreamBufferedAmountLowCallsWithStreamId(uint64_t streamId) const
+				size_t CountOnStreamBufferedAmountLowCallsWithStreamId(uint16_t streamId) const
 				{
 					if (!this->onStreamBufferedAmountLowCalls.contains(streamId))
 					{
@@ -280,7 +282,7 @@ namespace mocks
 						return {};
 					}
 
-					const auto packet = std::move(this->sentPackets.front());
+					auto packet = std::move(this->sentPackets.front());
 
 					this->sentPackets.pop_front();
 

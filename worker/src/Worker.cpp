@@ -3,16 +3,18 @@
 
 #include "Worker.hpp"
 #include "FBS/response.h"
-#include "FBS/worker.h"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
+#include <uv.h>
+#include <csignal> // SIGINT, SIGTERM
+#include <vector>
 
 /* Instance methods. */
 
-Worker::Worker(::Channel::ChannelSocket* channel, SharedInterface* shared)
-  : channel(channel), signalHandle(std::make_unique<SignalHandle>(this)), shared(shared)
+Worker::Worker(Channel::ChannelSocket* channel, SharedInterface* shared)
+  : channel(channel), shared(shared), signalHandle(std::make_unique<SignalHandle>(this))
 {
 	MS_TRACE();
 
@@ -67,19 +69,21 @@ void Worker::Close()
 	// Delete all Routers.
 	for (auto& kv : this->mapRouters)
 	{
-		auto* router = kv.second;
+		RTC::Router* router = kv.second;
 
 		delete router;
 	}
+
 	this->mapRouters.clear();
 
 	// Delete all WebRtcServers.
 	for (auto& kv : this->mapWebRtcServers)
 	{
-		auto* webRtcServer = kv.second;
+		RTC::WebRtcServer* webRtcServer = kv.second;
 
 		delete webRtcServer;
 	}
+
 	this->mapWebRtcServers.clear();
 
 	// Close the Channel.
@@ -93,28 +97,31 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 
 	// Add webRtcServerIds.
 	std::vector<flatbuffers::Offset<flatbuffers::String>> webRtcServerIds;
+
 	webRtcServerIds.reserve(this->mapWebRtcServers.size());
 
 	for (const auto& kv : this->mapWebRtcServers)
 	{
-		const auto& webRtcServerId = kv.first;
+		const std::string& webRtcServerId = kv.first;
 
 		webRtcServerIds.push_back(builder.CreateString(webRtcServerId));
 	}
 
 	// Add routerIds.
 	std::vector<flatbuffers::Offset<flatbuffers::String>> routerIds;
+
 	routerIds.reserve(this->mapRouters.size());
 
 	for (const auto& kv : this->mapRouters)
 	{
-		const auto& routerId = kv.first;
+		const std::string& routerId = kv.first;
 
 		routerIds.push_back(builder.CreateString(routerId));
 	}
 
 	// Add channelMessageHandlers.
-	auto channelMessageHandlers = this->shared->GetChannelMessageRegistrator()->FillBuffer(builder);
+	const flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers =
+	  this->shared->GetChannelMessageRegistrator()->FillBuffer(builder);
 
 	return FBS::Worker::CreateDumpResponseDirect(
 	  builder,
@@ -253,7 +260,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 	{
 		case Channel::ChannelRequest::Method::WORKER_DUMP:
 		{
-			auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+			const auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 			request->Accept(FBS::Response::Body::Worker_DumpResponse, dumpOffset);
 
@@ -262,7 +269,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_GET_RESOURCE_USAGE:
 		{
-			auto resourceUsageOffset = FillBufferResourceUsage(request->GetBufferBuilder());
+			const auto resourceUsageOffset = FillBufferResourceUsage(request->GetBufferBuilder());
 
 			request->Accept(FBS::Response::Body::Worker_ResourceUsageResponse, resourceUsageOffset);
 
@@ -304,9 +311,9 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 			// Remove it from the map and delete it.
 			this->mapWebRtcServers.erase(webRtcServer->GetId());
 
-			delete webRtcServer;
-
 			MS_DEBUG_DEV("WebRtcServer closed [id:%s]", webRtcServer->id.c_str());
+
+			delete webRtcServer;
 
 			request->Accept();
 
@@ -340,9 +347,9 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 			// Remove it from the map and delete it.
 			this->mapRouters.erase(router->id);
 
-			delete router;
-
 			MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
+
+			delete router;
 
 			request->Accept();
 

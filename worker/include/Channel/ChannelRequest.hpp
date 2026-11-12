@@ -5,6 +5,7 @@
 #include "FBS/message.h"
 #include "FBS/request.h"
 #include "FBS/response.h"
+#include <cassert> // assert()
 #include <string>
 
 namespace Channel
@@ -34,15 +35,17 @@ namespace Channel
 		void Accept();
 
 		template<class Body>
-		void Accept(FBS::Response::Body type, flatbuffers::Offset<Body>& body)
+		void Accept(FBS::Response::Body type, const flatbuffers::Offset<Body>& body)
 		{
 			assert(!this->replied);
 
 			this->replied = true;
 
-			auto& builder = ChannelRequest::bufferBuilder;
-			auto response = FBS::Response::CreateResponse(builder, this->id, true, type, body.Union());
-			auto message =
+			flatbuffers::FlatBufferBuilder& builder = ChannelRequest::bufferBuilder;
+
+			const auto response =
+			  FBS::Response::CreateResponse(builder, this->id, true, type, body.Union());
+			const auto message =
 			  FBS::Message::CreateMessage(builder, FBS::Message::Body::Response, response.Union());
 
 			builder.FinishSizePrefixed(message);
@@ -70,7 +73,7 @@ namespace Channel
 		// Others.
 		const uint32_t id;
 		const Method method;
-		const char* methodCStr;
+		const char* methodCStr{ nullptr };
 		std::string handlerId;
 		bool replied{ false };
 	};

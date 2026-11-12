@@ -171,7 +171,7 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::DATACONSUMER_DUMP:
 			{
-				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::DataConsumer_DumpResponse, dumpOffset);
 
@@ -180,7 +180,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::DATACONSUMER_GET_STATS:
 			{
-				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+				const auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::DataConsumer_GetStatsResponse, responseOffset);
 
@@ -225,7 +225,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::DATACONSUMER_GET_BUFFERED_AMOUNT:
 			{
-				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
+				if (GetType() != RTC::DataConsumer::Type::SCTP)
 				{
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
@@ -234,7 +234,7 @@ namespace RTC
 
 				this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
 
-				auto responseOffset = FBS::DataConsumer::CreateGetBufferedAmountResponse(
+				const auto responseOffset = FBS::DataConsumer::CreateGetBufferedAmountResponse(
 				  request->GetBufferBuilder(), bufferedAmount);
 
 				request->Accept(FBS::Response::Body::DataConsumer_GetBufferedAmountResponse, responseOffset);
@@ -244,7 +244,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
 			{
-				if (this->GetType() != DataConsumer::Type::SCTP)
+				if (GetType() != DataConsumer::Type::SCTP)
 				{
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
@@ -262,7 +262,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::DATACONSUMER_SEND:
 			{
-				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
+				if (GetType() != RTC::DataConsumer::Type::SCTP)
 				{
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
@@ -291,7 +291,7 @@ namespace RTC
 
 						  this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
 
-						  auto responseOffset =
+						  const auto responseOffset =
 						    FBS::DataConsumer::CreateSendResponse(request->GetBufferBuilder(), bufferedAmount);
 
 						  request->Accept(FBS::Response::Body::DataConsumer_SendResponse, responseOffset);
@@ -337,7 +337,7 @@ namespace RTC
 				}
 
 				// Create response.
-				auto responseOffset = FBS::DataConsumer::CreateSetSubchannelsResponseDirect(
+				const auto responseOffset = FBS::DataConsumer::CreateSetSubchannelsResponseDirect(
 				  request->GetBufferBuilder(), std::addressof(subchannels));
 
 				request->Accept(FBS::Response::Body::DataConsumer_SetSubchannelsResponse, responseOffset);
@@ -361,7 +361,7 @@ namespace RTC
 				}
 
 				// Create response.
-				auto responseOffset = FBS::DataConsumer::CreateAddSubchannelResponseDirect(
+				const auto responseOffset = FBS::DataConsumer::CreateAddSubchannelResponseDirect(
 				  request->GetBufferBuilder(), std::addressof(subchannels));
 
 				request->Accept(FBS::Response::Body::DataConsumer_AddSubchannelResponse, responseOffset);
@@ -385,7 +385,7 @@ namespace RTC
 				}
 
 				// Create response.
-				auto responseOffset = FBS::DataConsumer::CreateRemoveSubchannelResponseDirect(
+				const auto responseOffset = FBS::DataConsumer::CreateRemoveSubchannelResponseDirect(
 				  request->GetBufferBuilder(), std::addressof(subchannels));
 
 				request->Accept(FBS::Response::Body::DataConsumer_RemoveSubchannelResponse, responseOffset);
@@ -445,7 +445,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
+		const auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), bufferedAmount);
 
 		this->shared->GetChannelNotifier()->Emit(

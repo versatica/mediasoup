@@ -28,7 +28,7 @@ namespace RTC
 	private:
 		struct NackInfo
 		{
-			explicit NackInfo(int64_t createdAtMs, uint16_t seq, uint16_t sendAtSeq)
+			NackInfo(int64_t createdAtMs, uint16_t seq, uint16_t sendAtSeq)
 			  : createdAtMs(createdAtMs), seq(seq), sendAtSeq(sendAtSeq)
 			{
 			}
@@ -50,7 +50,7 @@ namespace RTC
 		static constexpr int64_t DefaultRttMs{ 100 };
 
 	public:
-		explicit NackGenerator(Listener* listener, SharedInterface* shared, int64_t sendNackDelayMs);
+		NackGenerator(Listener* listener, SharedInterface* shared, int64_t sendNackDelayMs);
 		~NackGenerator() override;
 
 		bool ReceivePacket(const RTC::RTP::Packet* packet, bool isRecovered);

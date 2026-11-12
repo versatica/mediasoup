@@ -75,7 +75,7 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
 			{
-				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+				const auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::DirectTransport_GetStatsResponse, responseOffset);
 
@@ -84,7 +84,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
 			{
-				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::DirectTransport_DumpResponse, dumpOffset);
 
@@ -185,7 +185,7 @@ namespace RTC
 		const auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(
 		  packet->GetBuffer(), packet->GetLength());
 
-		auto notification = FBS::Consumer::CreateRtpNotification(
+		const auto notification = FBS::Consumer::CreateRtpNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), data);
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -210,7 +210,7 @@ namespace RTC
 		const auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(
 		  packet->GetBuffer(), packet->GetLength());
 
-		auto notification = FBS::DirectTransport::CreateRtcpNotification(
+		const auto notification = FBS::DirectTransport::CreateRtcpNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), data);
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -230,7 +230,7 @@ namespace RTC
 		const auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(
 		  compoundPacket->GetBuffer(), compoundPacket->GetLength());
 
-		auto notification = FBS::DirectTransport::CreateRtcpNotification(
+		const auto notification = FBS::DirectTransport::CreateRtcpNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), data);
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -251,7 +251,7 @@ namespace RTC
 		auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(
 		  message.GetPayload().data(), message.GetPayloadLength());
 
-		auto notification = FBS::DataConsumer::CreateMessageNotification(
+		const auto notification = FBS::DataConsumer::CreateMessageNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), message.GetPayloadProtocolId(), data);
 
 		this->shared->GetChannelNotifier()->Emit(

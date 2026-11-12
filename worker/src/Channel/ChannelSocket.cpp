@@ -174,12 +174,15 @@ namespace Channel
 			return;
 		}
 
-		auto& builder = this->bufferBuilder;
-		auto log      = FBS::Log::CreateLogDirect(builder, data);
-		auto message  = FBS::Message::CreateMessage(builder, FBS::Message::Body::Log, log.Union());
+		flatbuffers::FlatBufferBuilder& builder = this->bufferBuilder;
+
+		const auto log     = FBS::Log::CreateLogDirect(builder, data);
+		const auto message = FBS::Message::CreateMessage(builder, FBS::Message::Body::Log, log.Union());
 
 		builder.FinishSizePrefixed(message);
-		this->Send(builder.GetBufferPointer(), builder.GetSize());
+
+		Send(builder.GetBufferPointer(), builder.GetSize());
+
 		builder.Clear();
 	}
 
@@ -198,7 +201,7 @@ namespace Channel
 
 		// Try to read next message using `channelReadFn`, message, its length and
 		// context will be stored in provided arguments.
-		auto free = this->channelReadFn(
+		const ChannelReadFreeFn free = this->channelReadFn(
 		  std::addressof(msg),
 		  std::addressof(msgLen),
 		  std::addressof(msgCtx),
@@ -216,8 +219,9 @@ namespace Channel
 			const auto* message = FBS::Message::GetMessage(msg);
 
 #if MS_LOG_DEV_LEVEL == 3
-			auto s = flatbuffers::FlatBufferToString(
+			const auto s = flatbuffers::FlatBufferToString(
 			  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
+
 			MS_DUMP("%s", s.c_str());
 #endif
 
@@ -234,15 +238,24 @@ namespace Channel
 				}
 				catch (const MediaSoupTypeError& error)
 				{
-					request->TypeError(error.what());
+					if (request)
+					{
+						request->TypeError(error.what());
+					}
 				}
 				catch (const MediaSoupNotFoundError& error)
 				{
-					request->NotFoundError(error.what());
+					if (request)
+					{
+						request->NotFoundError(error.what());
+					}
 				}
 				catch (const MediaSoupError& error)
 				{
-					request->Error(error.what());
+					if (request)
+					{
+						request->Error(error.what());
+					}
 				}
 
 				delete request;
@@ -306,8 +319,9 @@ namespace Channel
 		const auto* message = FBS::Message::GetMessage(msg);
 
 #if MS_LOG_DEV_LEVEL == 3
-		auto s = flatbuffers::FlatBufferToString(
+		const auto s = flatbuffers::FlatBufferToString(
 		  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
+
 		MS_DUMP("%s", s.c_str());
 #endif
 
@@ -324,15 +338,24 @@ namespace Channel
 			}
 			catch (const MediaSoupTypeError& error)
 			{
-				request->TypeError(error.what());
+				if (request)
+				{
+					request->TypeError(error.what());
+				}
 			}
 			catch (const MediaSoupNotFoundError& error)
 			{
-				request->NotFoundError(error.what());
+				if (request)
+				{
+					request->NotFoundError(error.what());
+				}
 			}
 			catch (const MediaSoupError& error)
 			{
-				request->Error(error.what());
+				if (request)
+				{
+					request->Error(error.what());
+				}
 			}
 
 			delete request;
@@ -372,7 +395,7 @@ namespace Channel
 	/* Instance methods. */
 
 	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
-	  : ::UnixStreamSocketHandle(fd, bufferSize, ::UnixStreamSocketHandle::Role::CONSUMER),
+	  : UnixStreamSocketHandle(fd, bufferSize, UnixStreamSocketHandle::Role::CONSUMER),
 	    listener(listener)
 	{
 		MS_TRACE_STD();
@@ -446,7 +469,7 @@ namespace Channel
 	/* Instance methods. */
 
 	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
-	  : ::UnixStreamSocketHandle(fd, bufferSize, ::UnixStreamSocketHandle::Role::PRODUCER)
+	  : UnixStreamSocketHandle(fd, bufferSize, UnixStreamSocketHandle::Role::PRODUCER)
 	{
 		MS_TRACE_STD();
 	}

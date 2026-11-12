@@ -57,7 +57,8 @@ namespace Utils
 			return 0;
 		}
 
-		auto bit = ((*(data + (this->offset >> 0x3))) >> (0x7 - (this->offset & 0x7))) & 0x1;
+		const uint8_t bit =
+		  ((*(this->data + (this->offset >> 0x3))) >> (0x7 - (this->offset & 0x7))) & 0x1;
 
 		this->offset++;
 
@@ -87,7 +88,7 @@ namespace Utils
 			return 0;
 		}
 
-		auto leftBits = (this->len * 8) - this->offset;
+		const uint32_t leftBits = (this->len * 8) - this->offset;
 
 		return leftBits;
 	}
@@ -117,25 +118,26 @@ namespace Utils
 			++w;
 		}
 
-		if (this->GetLeftBits() < w - 1)
+		if (GetLeftBits() < w - 1)
 		{
 			return std::nullopt;
 		}
 
-		const unsigned v = this->GetBits(w - 1);
-		const unsigned m = (1u << w) - n;
+		const unsigned v = GetBits(w - 1);
+		// NOTE: Shift in 64 bits since `w` reaches 32 when `n` is 2^31 or higher.
+		const auto m = static_cast<unsigned>((uint64_t{ 1 } << w) - n);
 
 		if (v < m)
 		{
 			return v;
 		}
 
-		if (this->GetLeftBits() < 1)
+		if (GetLeftBits() < 1)
 		{
 			return std::nullopt;
 		}
 
-		const unsigned extraBit = this->GetBit();
+		const unsigned extraBit = GetBit();
 
 		return (v << 1) - m + extraBit;
 	}

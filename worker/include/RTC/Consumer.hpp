@@ -279,7 +279,7 @@ namespace RTC
 
 		void EmitTraceEventRtcpNackType() const;
 
-		void EmitTraceEvent(flatbuffers::Offset<FBS::Consumer::TraceNotification>& notification) const;
+		void EmitTraceEvent(const flatbuffers::Offset<FBS::Consumer::TraceNotification>& notification) const;
 
 		void EmitScore() const;
 

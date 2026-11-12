@@ -105,7 +105,7 @@ namespace mocks
 		}
 
 	private:
-		// Given by argument.
+		// Passed by argument.
 		const std::function<int64_t()> getTimeUs;
 		// Others.
 		const std::unique_ptr<::Channel::ChannelSocket> channelSocket;

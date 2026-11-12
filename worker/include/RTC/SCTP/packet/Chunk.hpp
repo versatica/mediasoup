@@ -630,8 +630,9 @@ namespace RTC
 
 		private:
 			/**
-			 * NOTE: Return ChunkHeader* instead of const ChunkHeader* since we may
-			 * want to modify its fields.
+			 * @remarks
+			 * - Return ChunkHeader* instead of const ChunkHeader* since we may want
+			 *   to modify its fields.
 			 */
 			virtual ChunkHeader* GetHeaderPointer() const final
 			{

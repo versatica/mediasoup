@@ -19,7 +19,9 @@ public:
 	};
 
 public:
-	/* Struct for the data field of uv_req_t when writing into the connection. */
+	/**
+	 * Struct for the data field of uv_req_t when writing into the connection.
+	 */
 	struct UvWriteData
 	{
 		explicit UvWriteData(size_t storeSize) : store(new uint8_t[storeSize])
@@ -41,61 +43,77 @@ public:
 
 public:
 	explicit TcpConnectionHandle(size_t bufferSize);
+
 	TcpConnectionHandle& operator=(const TcpConnectionHandle&) = delete;
-	TcpConnectionHandle(const TcpConnectionHandle&)            = delete;
+
+	TcpConnectionHandle(const TcpConnectionHandle&) = delete;
+
 	virtual ~TcpConnectionHandle();
 
 public:
 	void TriggerClose();
+
 	bool IsClosed() const
 	{
 		return this->closed;
 	}
+
 	void Dump(int indentation = 0) const;
+
 	void Setup(
-	  Listener* listener,
-	  struct sockaddr_storage* localAddr,
-	  const std::string& localIp,
-	  uint16_t localPort);
+	  Listener* listener, sockaddr_storage* localAddr, const std::string& localIp, uint16_t localPort);
+
 	uv_tcp_t* GetUvHandle() const
 	{
 		return this->uvHandle;
 	}
+
 	bool Start() noexcept;
+
 	void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2, onSendCallback cb);
+
 	void ErrorReceiving();
-	const struct sockaddr* GetLocalAddress() const
+
+	const sockaddr* GetLocalAddress() const
 	{
-		return reinterpret_cast<const struct sockaddr*>(this->localAddr);
+		return reinterpret_cast<const sockaddr*>(this->localAddr);
 	}
+
 	int GetLocalFamily() const
 	{
-		return reinterpret_cast<const struct sockaddr*>(this->localAddr)->sa_family;
+		return reinterpret_cast<const sockaddr*>(this->localAddr)->sa_family;
 	}
+
 	const std::string& GetLocalIp() const
 	{
 		return this->localIp;
 	}
+
 	uint16_t GetLocalPort() const
 	{
 		return this->localPort;
 	}
-	const struct sockaddr* GetPeerAddress() const
+
+	const sockaddr* GetPeerAddress() const
 	{
-		return reinterpret_cast<const struct sockaddr*>(std::addressof(this->peerAddr));
+		return reinterpret_cast<const sockaddr*>(std::addressof(this->peerAddr));
 	}
+
 	const std::string& GetPeerIp() const
 	{
 		return this->peerIp;
 	}
+
 	uint16_t GetPeerPort() const
 	{
 		return this->peerPort;
 	}
+
 	size_t GetRecvBytes() const
 	{
 		return this->recvBytes;
 	}
+
 	size_t GetSentBytes() const
 	{
 		return this->sentBytes;
@@ -103,12 +121,15 @@ public:
 
 private:
 	void InternalClose();
+
 	bool SetPeerAddress();
 
 	/* Callbacks fired by UV events. */
 public:
 	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
+
 	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
+
 	void OnUvWrite(int status, const onSendCallback& cb);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
@@ -134,7 +155,7 @@ private:
 	// Allocated by this.
 	uv_tcp_t* uvHandle;
 	// Others.
-	struct sockaddr_storage* localAddr{ nullptr };
+	sockaddr_storage* localAddr{ nullptr };
 	bool closed{ false };
 	size_t recvBytes{ 0 };
 	size_t sentBytes{ 0 };

@@ -7,6 +7,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <cstring> // std::memcpy()
+#include <exception>
 
 /* Static methods for UV callbacks. */
 
@@ -38,9 +39,9 @@ inline static void onWrite(uv_write_t* req, int status)
 {
 	MS_TRACE();
 
-	auto* writeData  = static_cast<TcpConnectionHandle::UvWriteData*>(req->data);
-	auto* handle     = req->handle;
-	auto* connection = static_cast<TcpConnectionHandle*>(handle->data);
+	auto* writeData     = static_cast<TcpConnectionHandle::UvWriteData*>(req->data);
+	uv_stream_t* handle = req->handle;
+	auto* connection    = static_cast<TcpConnectionHandle*>(handle->data);
 
 	if (connection)
 	{
@@ -64,7 +65,7 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 {
 	MS_TRACE();
 
-	auto* handle = req->handle;
+	uv_stream_t* handle = req->handle;
 
 	delete req;
 
@@ -125,7 +126,7 @@ void TcpConnectionHandle::Dump(int indentation) const
 }
 
 void TcpConnectionHandle::Setup(
-  Listener* listener, struct sockaddr_storage* localAddr, const std::string& localIp, uint16_t localPort)
+  Listener* listener, sockaddr_storage* localAddr, const std::string& localIp, uint16_t localPort)
 {
 	MS_TRACE();
 
@@ -209,6 +210,7 @@ void TcpConnectionHandle::Write(
 	// data then build a uv_req_t and use uv_write().
 
 	const size_t totalLen = len1 + len2;
+
 	uv_buf_t buffers[2];
 	int written{ 0 };
 	int err;
@@ -246,7 +248,8 @@ void TcpConnectionHandle::Write(
 	}
 
 	const size_t pendingLen = totalLen - written;
-	auto* writeData         = new UvWriteData(pendingLen);
+
+	auto* writeData = new UvWriteData(pendingLen);
 
 	writeData->req.data = static_cast<void*>(writeData);
 
@@ -342,8 +345,10 @@ void TcpConnectionHandle::InternalClose()
 		// Use uv_shutdown() so pending data to be written will be sent to the peer
 		// before closing.
 		auto* req = new uv_shutdown_t;
+
 		req->data = static_cast<void*>(this);
-		err       = uv_shutdown(
+
+		err = uv_shutdown(
 		  req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
 
 		if (err != 0)
@@ -377,9 +382,7 @@ bool TcpConnectionHandle::SetPeerAddress()
 	// happen that the peer sent a TCP RST already. In fact, this is the proper
 	// and only way to check whether the socket remains connected now.
 	err = uv_tcp_getpeername(
-	  this->uvHandle,
-	  reinterpret_cast<struct sockaddr*>(std::addressof(this->peerAddr)),
-	  std::addressof(len));
+	  this->uvHandle, reinterpret_cast<sockaddr*>(std::addressof(this->peerAddr)), std::addressof(len));
 
 	if (err != 0)
 	{
@@ -391,7 +394,7 @@ bool TcpConnectionHandle::SetPeerAddress()
 	int family;
 
 	Utils::IP::GetAddressInfo(
-	  reinterpret_cast<const struct sockaddr*>(std::addressof(this->peerAddr)),
+	  reinterpret_cast<const sockaddr*>(std::addressof(this->peerAddr)),
 	  family,
 	  this->peerIp,
 	  this->peerPort);

@@ -1,5 +1,5 @@
-#ifndef MS_MOCKS_RTC_SCTP_MOCK_TRANSMISSION_CONTROL_BLOCK_HPP
-#define MS_MOCKS_RTC_SCTP_MOCK_TRANSMISSION_CONTROL_BLOCK_HPP
+#ifndef MS_MOCKS_RTC_SCTP_MOCK_TRANSMISSION_CONTROL_BLOCK_CONTEXT_HPP
+#define MS_MOCKS_RTC_SCTP_MOCK_TRANSMISSION_CONTROL_BLOCK_CONTEXT_HPP
 
 #include "common.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlockContextInterface.hpp"
@@ -8,8 +8,8 @@
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "mocks/include/mockTypes.hpp"
 #include <queue>
-#include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace mocks
 {
@@ -24,7 +24,7 @@ namespace mocks
 				using GetCurrentRtoUsAction = std::function<int64_t()>;
 
 			public:
-				explicit MockTransmissionControlBlockContext(
+				MockTransmissionControlBlockContext(
 				  ::RTC::SCTP::AssociationListenerInterface& associationListener,
 				  const ::RTC::SCTP::SctpOptions& sctpOptions)
 				  : associationListener(associationListener), sctpOptions(sctpOptions)

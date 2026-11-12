@@ -4,15 +4,14 @@
 #include "mocks/include/MockShared.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "mocks/include/handles/MockTimerHandle.hpp"
 
 namespace mocks
 {
 	MockShared::MockShared(std::function<int64_t()> getTimeUs)
 	  : getTimeUs(std::move(getTimeUs)),
-	    channelSocket(new ::Channel::ChannelSocket()),
-	    channelMessageRegistrator(new mocks::Channel::MockChannelMessageRegistrator()),
-	    channelNotifier(new ::Channel::ChannelNotifier(this->channelSocket.get()))
+	    channelSocket(std::make_unique<::Channel::ChannelSocket>()),
+	    channelMessageRegistrator(std::make_unique<mocks::Channel::MockChannelMessageRegistrator>()),
+	    channelNotifier(std::make_unique<::Channel::ChannelNotifier>(this->channelSocket.get()))
 	{
 		MS_TRACE();
 
@@ -60,7 +59,7 @@ namespace mocks
 	{
 		MS_TRACE();
 
-		const auto& label = options.label;
+		const std::string& label = options.label;
 
 		// NOTE: Backoff timers are indexed by label so that tests can retrieve them
 		// via GetBackoffTimer(). Two alive timers sharing a label would make that
@@ -85,7 +84,7 @@ namespace mocks
 			  this->backoffTimers.erase(label);
 		  });
 
-		this->backoffTimers[options.label] = backoffTimer;
+		this->backoffTimers[label] = backoffTimer;
 
 		return backoffTimer;
 	}

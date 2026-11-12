@@ -7,7 +7,9 @@
 class UnixStreamSocketHandle
 {
 public:
-	/* Struct for the data field of uv_req_t when writing data. */
+	/**
+	 * Struct for the data field of uv_req_t when writing data.
+	 */
 	struct UvWriteData
 	{
 		explicit UvWriteData(size_t storeSize) : store(new uint8_t[storeSize])
@@ -26,6 +28,7 @@ public:
 		uint8_t* const store;
 	};
 
+public:
 	enum class Role : uint8_t
 	{
 		PRODUCER = 1,
@@ -34,31 +37,43 @@ public:
 
 public:
 	UnixStreamSocketHandle(int fd, size_t bufferSize, UnixStreamSocketHandle::Role role);
+
 	UnixStreamSocketHandle& operator=(const UnixStreamSocketHandle&) = delete;
-	UnixStreamSocketHandle(const UnixStreamSocketHandle&)            = delete;
+
+	UnixStreamSocketHandle(const UnixStreamSocketHandle&) = delete;
+
 	virtual ~UnixStreamSocketHandle();
 
 public:
 	void Close();
+
 	bool IsClosed() const
 	{
 		return this->closed;
 	}
+
 	void Write(const uint8_t* data, size_t len);
+
 	uint32_t GetSendBufferSize() const;
+
 	void SetSendBufferSize(uint32_t size);
+
 	uint32_t GetRecvBufferSize() const;
+
 	void SetRecvBufferSize(uint32_t size);
 
 	/* Callbacks fired by UV events. */
 public:
 	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
+
 	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
+
 	void OnUvWriteError(int error);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void UserOnUnixStreamRead()         = 0;
+	virtual void UserOnUnixStreamRead() = 0;
+
 	virtual void UserOnUnixStreamSocketClosed() = 0;
 
 private:

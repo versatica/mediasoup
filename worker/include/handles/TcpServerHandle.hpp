@@ -14,33 +14,43 @@ public:
 	 * uvHandle must be an already initialized and binded uv_tcp_t pointer.
 	 */
 	explicit TcpServerHandle(uv_tcp_t* uvHandle);
+
 	~TcpServerHandle() override;
 
 public:
 	void Dump(int indentation = 0) const;
-	const struct sockaddr* GetLocalAddress() const
+
+	const sockaddr* GetLocalAddress() const
 	{
-		return reinterpret_cast<const struct sockaddr*>(std::addressof(this->localAddr));
+		return reinterpret_cast<const sockaddr*>(std::addressof(this->localAddr));
 	}
+
 	int GetLocalFamily() const
 	{
-		return reinterpret_cast<const struct sockaddr*>(std::addressof(this->localAddr))->sa_family;
+		return reinterpret_cast<const sockaddr*>(std::addressof(this->localAddr))->sa_family;
 	}
+
 	const std::string& GetLocalIp() const
 	{
 		return this->localIp;
 	}
+
 	uint16_t GetLocalPort() const
 	{
 		return this->localPort;
 	}
+
 	size_t GetNumConnections() const
 	{
 		return this->connections.size();
 	}
+
 	uint32_t GetSendBufferSize() const;
+
 	void SetSendBufferSize(uint32_t size);
+
 	uint32_t GetRecvBufferSize() const;
+
 	void SetRecvBufferSize(uint32_t size);
 
 protected:
@@ -48,11 +58,13 @@ protected:
 
 private:
 	void InternalClose();
+
 	bool SetLocalAddress();
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void UserOnTcpConnectionAlloc()                                 = 0;
+	virtual void UserOnTcpConnectionAlloc() = 0;
+
 	virtual void UserOnTcpConnectionClosed(TcpConnectionHandle* connection) = 0;
 
 	/* Callbacks fired by UV events. */

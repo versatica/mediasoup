@@ -288,8 +288,9 @@ namespace RTC
 
 		private:
 			/**
-			 * NOTE: Return CommonHeader* instead of const CommonHeader* since we may
-			 * want to modify its fields.
+			 * @remarks
+			 * - Return CommonHeader* instead of const CommonHeader* since we may
+			 *   want to modify its fields.
 			 */
 			CommonHeader* GetHeaderPointer() const
 			{

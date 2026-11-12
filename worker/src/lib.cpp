@@ -16,7 +16,9 @@
 #include "Shared.hpp"
 #include "Utils.hpp"
 #include "Worker.hpp"
+#include <stdexcept> // std::runtime_error
 #ifdef MS_EXECUTABLE
+#include <ankerl/unordered_dense.h>
 #include <cerrno>  // errno
 #include <cstring> // std::strerror()
 #include <string>
@@ -49,6 +51,9 @@ extern "C" int mediasoup_worker_run(
   ChannelWriteFn channelWriteFn,
   ChannelWriteCtx channelWriteCtx)
 {
+	// Must use MS_TRACE_STD() since the Channel is not yet created.
+	MS_TRACE_STD();
+
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
 
@@ -63,12 +68,12 @@ extern "C" int mediasoup_worker_run(
 #endif
 		if (channelReadFn)
 		{
-			channel.reset(
-			  new Channel::ChannelSocket(channelReadFn, channelReadCtx, channelWriteFn, channelWriteCtx));
+			channel = std::make_unique<Channel::ChannelSocket>(
+			  channelReadFn, channelReadCtx, channelWriteFn, channelWriteCtx);
 		}
 		else
 		{
-			channel.reset(new Channel::ChannelSocket(consumerChannelFd, producerChannelFd));
+			channel = std::make_unique<Channel::ChannelSocket>(consumerChannelFd, producerChannelFd);
 		}
 #ifndef MS_EXECUTABLE
 	}
@@ -86,8 +91,8 @@ extern "C" int mediasoup_worker_run(
 
 	// Create a Shared singleton.
 	const std::unique_ptr<Shared> shared = std::make_unique<Shared>(
-	  /*channelMessageRegistrator*/ new Channel::ChannelMessageRegistrator(),
-	  /*channelNotifier*/ new Channel::ChannelNotifier(channel.get()));
+	  /*channelMessageRegistrator*/ std::make_unique<Channel::ChannelMessageRegistrator>(),
+	  /*channelNotifier*/ std::make_unique<Channel::ChannelNotifier>(channel.get()));
 
 	// Initialize the Logger.
 	Logger::ClassInit(channel.get());
@@ -194,17 +199,18 @@ extern "C" int mediasoup_worker_run(
 
 static void ignoreSignals()
 {
-#ifdef MS_EXECUTABLE
-#ifndef _WIN32
 	MS_TRACE();
 
+#ifdef MS_EXECUTABLE
+#ifndef _WIN32
 	int err;
+
 	// NOTE: The `struct` keyword is required since the POSIX function of the same
 	// name hides the type.
 	struct sigaction act{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 	// clang-format off
-	ankerl::unordered_dense::map<std::string, int> const ignoredSignals =
+	const ankerl::unordered_dense::map<std::string, int> ignoredSignals =
 	{
 		{ "PIPE", SIGPIPE },
 		{ "HUP",  SIGHUP  },
@@ -225,8 +231,8 @@ static void ignoreSignals()
 
 	for (const auto& kv : ignoredSignals)
 	{
-		const auto& sigName = kv.first;
-		const int sigId     = kv.second;
+		const std::string& sigName = kv.first;
+		const int sigId            = kv.second;
 
 		err = sigaction(sigId, std::addressof(act), nullptr);
 

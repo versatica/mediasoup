@@ -345,7 +345,7 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::PRODUCER_DUMP:
 			{
-				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::Producer_DumpResponse, dumpOffset);
 
@@ -354,7 +354,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::PRODUCER_GET_STATS:
 			{
-				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+				const auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::Producer_GetStatsResponse, responseOffset);
 
@@ -1548,7 +1548,7 @@ namespace RTC
 					this->videoOrientation.flip     = flip;
 					this->videoOrientation.rotation = rotation;
 
-					auto notification = FBS::Producer::CreateVideoOrientationChangeNotification(
+					const auto notification = FBS::Producer::CreateVideoOrientationChangeNotification(
 					  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 					  this->videoOrientation.camera,
 					  this->videoOrientation.flip,
@@ -1586,7 +1586,7 @@ namespace RTC
 			    rtpStream->GetScore()));
 		}
 
-		auto notification = FBS::Producer::CreateScoreNotificationDirect(
+		const auto notification = FBS::Producer::CreateScoreNotificationDirect(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), std::addressof(scores));
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -1606,7 +1606,7 @@ namespace RTC
 			auto traceInfo = FBS::Producer::CreateKeyFrameTraceInfo(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
-			auto notification = FBS::Producer::CreateTraceNotification(
+			const auto notification = FBS::Producer::CreateTraceNotification(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Producer::TraceEventType::KEYFRAME,
 			  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -1622,7 +1622,7 @@ namespace RTC
 			auto traceInfo = FBS::Producer::CreateRtpTraceInfo(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
-			auto notification = FBS::Producer::CreateTraceNotification(
+			const auto notification = FBS::Producer::CreateTraceNotification(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Producer::TraceEventType::RTP,
 			  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -1646,7 +1646,7 @@ namespace RTC
 		auto traceInfo = FBS::Producer::CreatePliTraceInfo(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
 
-		auto notification = FBS::Producer::CreateTraceNotification(
+		const auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::PLI,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -1669,7 +1669,7 @@ namespace RTC
 		auto traceInfo = FBS::Producer::CreateFirTraceInfo(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
 
-		auto notification = FBS::Producer::CreateTraceNotification(
+		const auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::FIR,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -1689,7 +1689,7 @@ namespace RTC
 			return;
 		}
 
-		auto notification = FBS::Producer::CreateTraceNotification(
+		const auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::NACK,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -1719,7 +1719,7 @@ namespace RTC
 		  senderReportPacket->GetPacketCount(),
 		  senderReportPacket->GetOctetCount());
 
-		auto notification = FBS::Producer::CreateTraceNotification(
+		const auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::SR,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
@@ -1730,7 +1730,8 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	void Producer::EmitTraceEvent(flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const
+	void Producer::EmitTraceEvent(
+	  const flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const
 	{
 		MS_TRACE();
 

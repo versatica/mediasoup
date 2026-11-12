@@ -1,4 +1,4 @@
-#define MS_CLASS "ChannelMessageRegistrator"
+#define MS_CLASS "mocks::Channel::MockChannelMessageRegistrator"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "mocks/include/Channel/MockChannelMessageRegistrator.hpp"
@@ -33,7 +33,7 @@ namespace mocks
 
 			for (const auto& kv : this->mapChannelRequestHandlers)
 			{
-				const auto& handlerId = kv.first;
+				const std::string& handlerId = kv.first;
 
 				channelRequestHandlerIds.push_back(builder.CreateString(handlerId));
 			}
@@ -43,7 +43,7 @@ namespace mocks
 
 			for (const auto& kv : this->mapChannelNotificationHandlers)
 			{
-				const auto& handlerId = kv.first;
+				const std::string& handlerId = kv.first;
 
 				channelNotificationHandlerIds.push_back(builder.CreateString(handlerId));
 			}
@@ -104,7 +104,7 @@ namespace mocks
 
 			if (it != this->mapChannelRequestHandlers.end())
 			{
-				auto* const channelRequestHandler = it->second;
+				::Channel::ChannelSocket::RequestHandler* const channelRequestHandler = it->second;
 
 				return channelRequestHandler;
 			}
@@ -123,7 +123,7 @@ namespace mocks
 
 			if (it != this->mapChannelNotificationHandlers.end())
 			{
-				auto* const channelNotificationHandler = it->second;
+				::Channel::ChannelSocket::NotificationHandler* const channelNotificationHandler = it->second;
 
 				return channelNotificationHandler;
 			}

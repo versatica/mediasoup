@@ -30,7 +30,9 @@ public:
 	};
 
 public:
-	// Struct holding the configuration.
+	/**
+	 * Struct holding the configuration.
+	 */
 	struct Configuration
 	{
 		LogLevel logLevel{ LogLevel::LOG_ERROR };

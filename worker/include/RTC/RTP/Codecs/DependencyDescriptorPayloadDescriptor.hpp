@@ -17,9 +17,10 @@ namespace RTC
 			 * layers of the frame, whether decoding can start at it, and which decode
 			 * targets the endpoint must be told about.
 			 *
-			 * NOTE: Codec agnostic on purpose. The extension tells the same regardless
-			 * of the codec that produced the frame, so every codec whose packets may
-			 * carry it uses this rather than its own payload descriptor.
+			 * @remarks
+			 * - Codec agnostic on purpose. The extension tells the same regardless
+			 *   of the codec that produced the frame, so every codec whose packets
+			 *   may carry it uses this rather than its own payload descriptor.
 			 */
 			struct DependencyDescriptorPayloadDescriptor : public Codecs::PayloadDescriptor
 			{

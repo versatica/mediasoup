@@ -7,9 +7,10 @@
 #include "Logger.hpp"
 
 Shared::Shared(
-  Channel::ChannelMessageRegistrator* channelMessageRegistrator,
-  Channel::ChannelNotifier* channelNotifier)
-  : channelMessageRegistrator(channelMessageRegistrator), channelNotifier(channelNotifier)
+  std::unique_ptr<Channel::ChannelMessageRegistrator> channelMessageRegistrator,
+  std::unique_ptr<Channel::ChannelNotifier> channelNotifier)
+  : channelMessageRegistrator(std::move(channelMessageRegistrator)),
+    channelNotifier(std::move(channelNotifier))
 {
 	MS_TRACE();
 }

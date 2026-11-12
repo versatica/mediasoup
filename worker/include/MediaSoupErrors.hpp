@@ -3,18 +3,20 @@
 
 #include "common.hpp"
 #include "Logger.hpp"
-#include <cstdio> // std::snprintf()
-#include <stdexcept>
+#include <cstdio>    // std::snprintf()
+#include <stdexcept> // std::runtime_error
 
 class MediaSoupError : public std::runtime_error
 {
+public:
+	static constexpr size_t BufferSize{ 2000 };
+
 public:
 	explicit MediaSoupError(const char* description) : std::runtime_error(description)
 	{
 	}
 
 public:
-	static const size_t BufferSize{ 2000 };
 	static thread_local char buffer[];
 };
 

@@ -3,6 +3,8 @@
 
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include <openssl/core.h>   // OSSL_PARAM, OSSL_PARAM_UTF8_STRING
+#include <openssl/params.h> // OSSL_PARAM_END
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 
@@ -37,7 +39,7 @@ namespace Utils
 	 * one further zero byte, which is what allows 8 input bytes to be folded in per iteration. The
 	 * RFC only lists table 0, since its sample code is byte at a time.
 	 */
-	constexpr Crypto::CrcTables Crypto::generateCrcTables(uint32_t polynomial) noexcept
+	constexpr Crypto::CrcTables Crypto::GenerateCrcTables(uint32_t polynomial) noexcept
 	{
 		CrcTables tables{};
 
@@ -67,13 +69,13 @@ namespace Utils
 		return tables;
 	}
 
-	// NOTE: These are class variables, but they must be defined below generateCrcTables() so that
+	// NOTE: These are class variables, but they must be defined below GenerateCrcTables() so that
 	// their initializer is a constant expression. constinit forces constant initialization, so
-	// moving them above it, or making generateCrcTables() no longer constexpr evaluable (an
+	// moving them above it, or making GenerateCrcTables() no longer constexpr evaluable (an
 	// MS_TRACE() in it would suffice), is a compile error rather than silent initialization at
 	// process start.
-	const constinit Crypto::CrcTables Crypto::Crc32Tables{ generateCrcTables(Crc32Polynomial) };
-	const constinit Crypto::CrcTables Crypto::Crc32cTables{ generateCrcTables(Crc32cPolynomial) };
+	const constinit Crypto::CrcTables Crypto::Crc32Tables{ GenerateCrcTables(Crc32Polynomial) };
+	const constinit Crypto::CrcTables Crypto::Crc32cTables{ GenerateCrcTables(Crc32cPolynomial) };
 
 	/**
 	 * Reads a 32 bit little endian word. The slice-by-8 formulation consumes input as little
@@ -82,6 +84,8 @@ namespace Utils
 	 */
 	uint32_t Crypto::ReadLe32(const uint8_t* data)
 	{
+		MS_TRACE();
+
 		return static_cast<uint32_t>(data[0]) | (static_cast<uint32_t>(data[1]) << 8) |
 		       (static_cast<uint32_t>(data[2]) << 16) | (static_cast<uint32_t>(data[3]) << 24);
 	}
@@ -92,6 +96,8 @@ namespace Utils
 	 */
 	uint32_t Crypto::ComputeCrc(const CrcTables& tables, const uint8_t* data, size_t size)
 	{
+		MS_TRACE();
+
 		uint32_t crc{ 0xFFFFFFFF };
 
 		while (size >= CrcSlices)
@@ -150,6 +156,7 @@ namespace Utils
 		MS_TRACE();
 
 		char buffer[64];
+
 		static constexpr char Chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
 		                                  'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
 		                                  'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
@@ -201,7 +208,7 @@ namespace Utils
 
 		int ret;
 
-		OSSL_PARAM sha1[] = {
+		const OSSL_PARAM sha1[] = {
 			{ "digest", OSSL_PARAM_UTF8_STRING, (void*)"sha1", 4, 0 },
       OSSL_PARAM_END
 		};

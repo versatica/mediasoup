@@ -202,7 +202,7 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::ROUTER_DUMP:
 			{
-				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::Router_DumpResponse, dumpOffset);
 
@@ -226,7 +226,7 @@ namespace RTC
 
 				MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
 
-				auto dumpOffset = webRtcTransport->FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = webRtcTransport->FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::WebRtcTransport_DumpResponse, dumpOffset);
 
@@ -265,7 +265,7 @@ namespace RTC
 				MS_DEBUG_DEV(
 				  "WebRtcTransport with WebRtcServer created [transportId:%s]", transportId.c_str());
 
-				auto dumpOffset = webRtcTransport->FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = webRtcTransport->FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::WebRtcTransport_DumpResponse, dumpOffset);
 
@@ -288,7 +288,7 @@ namespace RTC
 
 				MS_DEBUG_DEV("PlainTransport created [transportId:%s]", transportId.c_str());
 
-				auto dumpOffset = plainTransport->FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = plainTransport->FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::PlainTransport_DumpResponse, dumpOffset);
 
@@ -311,7 +311,7 @@ namespace RTC
 
 				MS_DEBUG_DEV("PipeTransport created [transportId:%s]", transportId.c_str());
 
-				auto dumpOffset = pipeTransport->FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = pipeTransport->FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::PipeTransport_DumpResponse, dumpOffset);
 
@@ -334,7 +334,7 @@ namespace RTC
 
 				MS_DEBUG_DEV("DirectTransport created [transportId:%s]", transportId.c_str());
 
-				auto dumpOffset = directTransport->FillBuffer(request->GetBufferBuilder());
+				const auto dumpOffset = directTransport->FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::DirectTransport_DumpResponse, dumpOffset);
 

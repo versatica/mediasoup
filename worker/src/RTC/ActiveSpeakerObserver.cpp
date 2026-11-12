@@ -279,7 +279,7 @@ namespace RTC
 
 		if (!this->mapProducerSpeakers.empty() && CalculateActiveSpeaker())
 		{
-			auto notification = FBS::ActiveSpeakerObserver::CreateDominantSpeakerNotificationDirect(
+			const auto notification = FBS::ActiveSpeakerObserver::CreateDominantSpeakerNotificationDirect(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), this->dominantId.c_str());
 
 			this->shared->GetChannelNotifier()->Emit(

@@ -51,7 +51,7 @@ public:
 		return this->running;
 	}
 
-	const std::string GetLabel() const override
+	const std::string& GetLabel() const override
 	{
 		return this->label;
 	}

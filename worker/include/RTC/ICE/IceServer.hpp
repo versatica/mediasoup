@@ -141,7 +141,9 @@ namespace RTC
 
 			/**
 			 * Set the given tuple as the selected tuple.
-			 * NOTE: The given tuple MUST be already stored within the list.
+			 *
+			 * @remarks
+			 * - The given tuple MUST be already stored within the list.
 			 */
 			void SetSelectedTuple(RTC::TransportTuple* storedTuple);
 
