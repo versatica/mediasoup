@@ -97,6 +97,8 @@ jobs:
             run-test-in-debug-mode: true
           - os: macos-15
             run-test-in-debug-mode: true
+          - os: macos-26
+            run-test-in-debug-mode: true
           - os: windows-2022
           - os: windows-2025
 

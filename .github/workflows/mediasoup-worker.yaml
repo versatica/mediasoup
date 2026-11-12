@@ -178,6 +178,15 @@ jobs:
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
+          - os: macos-26
+            cc: clang
+            cxx: clang++
+            build-type: Release
+            pip-break-system-packages: true
+            run-lint: true
+            run-test: true
+            run-test-asan-address: false
+            run-test-asan-undefined: false
           - os: windows-2022
             cc: cl
             cxx: cl
