@@ -454,18 +454,18 @@ namespace RTC
 
 		// NOTE: MBSTRING_ASC is a signed bitwise OR inside the OpenSSL macro itself.
 		X509_NAME_add_entry_by_txt(
-		  // NOLINTNEXTLINE(bugprone-signed-bitwise)
 		  certName,
 		  "O",
+		  // NOLINTNEXTLINE(bugprone-signed-bitwise)
 		  MBSTRING_ASC,
 		  reinterpret_cast<const uint8_t*>(subject.c_str()),
 		  -1,
 		  -1,
 		  0);
 		X509_NAME_add_entry_by_txt(
-		  // NOLINTNEXTLINE(bugprone-signed-bitwise)
 		  certName,
 		  "CN",
+		  // NOLINTNEXTLINE(bugprone-signed-bitwise)
 		  MBSTRING_ASC,
 		  reinterpret_cast<const uint8_t*>(subject.c_str()),
 		  -1,

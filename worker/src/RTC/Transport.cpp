@@ -3541,6 +3541,13 @@ namespace RTC
 
 			for (const auto streamId : inboundStreamIds)
 			{
+				// Ignore duplicated stream ids (the remote peer may send them), otherwise
+				// the same DataConsumer would be closed twice.
+				if (std::ranges::find(streamsToReset, streamId) != streamsToReset.end())
+				{
+					continue;
+				}
+
 				// Only reset the outgoing stream if there is a live DataConsumer
 				// using it. If the DataChannel was closed by the app, the DataConsumer
 				// will have already been closed and removed.

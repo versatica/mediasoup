@@ -4,7 +4,6 @@
 #include "RTC/DataProducer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <vector>
 
 namespace RTC
 {

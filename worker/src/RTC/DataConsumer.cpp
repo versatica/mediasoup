@@ -5,7 +5,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/SubchannelsCodec.hpp"
-#include <vector>
 
 namespace RTC
 {

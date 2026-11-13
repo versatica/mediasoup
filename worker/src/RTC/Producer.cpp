@@ -874,6 +874,16 @@ namespace RTC
 
 			if (isMediaPacket && encoding.ssrc != 0 && encoding.ssrc == ssrc)
 			{
+				// Ensure no stream was already created for this encoding (e.g. via RID
+				// lookup with a different ssrc).
+				if (this->rtpStreamByEncodingIdx[i])
+				{
+					MS_WARN_TAG(
+					  rtp, "ignoring packet with ssrc of an encoding that already has a stream (ssrc lookup)");
+
+					return nullptr;
+				}
+
 				auto* const rtpStream = CreateRtpStream(packet, *mediaCodec, i);
 
 				return rtpStream;

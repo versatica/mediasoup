@@ -712,9 +712,14 @@ namespace RTC
 				}
 				catch (const MediaSoupError&)
 				{
-					this->tuple.reset();
+					// In comedia mode the tuples are not created here but set by received
+					// packets, so keep them.
+					if (!this->comedia)
+					{
+						this->tuple.reset();
 
-					this->rtcpTuple.reset();
+						this->rtcpTuple.reset();
+					}
 
 					this->srtpSendSession.reset();
 

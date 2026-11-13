@@ -125,7 +125,13 @@ namespace RTC
 
 				case FBS::RtpParameters::Value::Integer32Array:
 				{
-					this->mapKeyValues.emplace(key, Value(parameter->value_as_Integer32Array()->value()));
+					const auto* const arrayOfIntegers = parameter->value_as_Integer32Array()->value();
+
+					this->mapKeyValues.emplace(
+					  key,
+					  Value(
+					    arrayOfIntegers ? std::vector<int32_t>(arrayOfIntegers->begin(), arrayOfIntegers->end())
+							                : std::vector<int32_t>()));
 
 					break;
 				}
