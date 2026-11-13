@@ -3,6 +3,8 @@
 
 #include "RTC/SimulcastProducerStreamManager.hpp"
 #include "Logger.hpp"
+#include "RTC/SeqManager.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -92,7 +94,7 @@ namespace RTC
 			this->listener->IsActive() &&
 			std::ranges::any_of(
 				this->producerRtpStreams,
-				[](const RTC::RTP::RtpStreamRecv* rtpStream)
+				[](const RTC::RTP::RtpStreamRecv* rtpStream) -> bool
 				{
 					return (
 						rtpStream != nullptr &&
@@ -265,7 +267,7 @@ namespace RTC
 			const auto spatialLayer = static_cast<int16_t>(sIdx);
 
 			// This can be null.
-			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
+			auto* const producerRtpStream = this->producerRtpStreams.at(sIdx);
 
 			// Ignore spatial layers for non existing Producer streams or for those
 			// with score 0.
@@ -358,6 +360,7 @@ namespace RTC
 			UpdateTargetLayers(option.layers.spatial, option.layers.temporal);
 		}
 	}
+
 	int64_t SimulcastProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
@@ -371,14 +374,14 @@ namespace RTC
 		// iterate all streams here anyway.
 		for (auto sIdx{ static_cast<int16_t>(this->producerRtpStreams.size() - 1) }; sIdx >= 0; --sIdx)
 		{
-			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
+			auto* const producerRtpStream = this->producerRtpStreams.at(sIdx);
 
 			if (!producerRtpStream)
 			{
 				continue;
 			}
 
-			auto streamBitrate = producerRtpStream->GetBitrate(nowMs);
+			const auto streamBitrate = producerRtpStream->GetBitrate(nowMs);
 
 			desiredBitrate = std::max(streamBitrate, desiredBitrate);
 		}
@@ -393,7 +396,7 @@ namespace RTC
 
 		RtpPacketProcessResult result;
 
-		auto spatialLayer = this->mapMappedSsrcSpatialLayer.at(packet->GetSsrc());
+		const auto spatialLayer = this->mapMappedSsrcSpatialLayer.at(packet->GetSsrc());
 
 		// Check target layers validity.
 		if (this->targetLayers.temporal == -1)
@@ -470,13 +473,10 @@ namespace RTC
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
 #endif
+
 			if (spatialLayer == this->currentSpatialLayer)
 			{
 				result.type = RtpPacketProcessResult::Type::DROP;
-
-#ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
-#endif
 			}
 			else
 			{
@@ -612,7 +612,7 @@ namespace RTC
 				const int64_t maxTsExtraOffset = MaxExtraOffsetMs * clockRate / 1000;
 
 				// NOTE: RTP timestamps wrap around, so the sum is truncated on purpose.
-				auto tsExtraOffset =
+				const auto tsExtraOffset =
 				  static_cast<uint32_t>(maxPacketTs - (packet->GetTimestamp() - tsOffset) + 1);
 
 				// NOTE: Don't ask for a key frame if already done.
@@ -752,7 +752,7 @@ namespace RTC
 		}
 		else
 		{
-			auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
+			const auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
 
 			// Rewrite payload if needed. Drop packet if necessary.
 			if (!packet->ProcessPayload(this->encodingContext.get(), marker))
@@ -789,19 +789,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto* producerTargetRtpStream  = GetProducerTargetRtpStream();
-		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
+		auto* const producerTargetRtpStream  = GetProducerTargetRtpStream();
+		auto* const producerCurrentRtpStream = GetProducerCurrentRtpStream();
 
 		if (producerTargetRtpStream)
 		{
-			auto mappedSsrc = this->consumableRtpEncodings[this->targetLayers.spatial].ssrc;
+			const auto mappedSsrc = this->consumableRtpEncodings[this->targetLayers.spatial].ssrc;
 
 			this->listener->OnProducerStreamManagerKeyFrameRequested(mappedSsrc);
 		}
 
 		if (producerCurrentRtpStream && producerCurrentRtpStream != producerTargetRtpStream)
 		{
-			auto mappedSsrc = this->consumableRtpEncodings[this->currentSpatialLayer].ssrc;
+			const auto mappedSsrc = this->consumableRtpEncodings[this->currentSpatialLayer].ssrc;
 
 			this->listener->OnProducerStreamManagerKeyFrameRequested(mappedSsrc);
 		}
@@ -811,14 +811,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto* producerTargetRtpStream = GetProducerTargetRtpStream();
+		auto* const producerTargetRtpStream = GetProducerTargetRtpStream();
 
 		if (!producerTargetRtpStream)
 		{
 			return;
 		}
 
-		auto mappedSsrc = this->consumableRtpEncodings[this->targetLayers.spatial].ssrc;
+		const auto mappedSsrc = this->consumableRtpEncodings[this->targetLayers.spatial].ssrc;
 
 		this->listener->OnProducerStreamManagerKeyFrameRequested(mappedSsrc);
 	}
@@ -827,14 +827,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
+		auto* const producerCurrentRtpStream = GetProducerCurrentRtpStream();
 
 		if (!producerCurrentRtpStream)
 		{
 			return;
 		}
 
-		auto mappedSsrc = this->consumableRtpEncodings[this->currentSpatialLayer].ssrc;
+		const auto mappedSsrc = this->consumableRtpEncodings[this->currentSpatialLayer].ssrc;
 
 		this->listener->OnProducerStreamManagerKeyFrameRequested(mappedSsrc);
 	}
@@ -913,9 +913,9 @@ namespace RTC
 
 		for (size_t sIdx{ 0 }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
-			auto spatialLayer       = static_cast<int16_t>(sIdx);
-			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
-			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0;
+			const auto spatialLayer       = static_cast<int16_t>(sIdx);
+			const auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
+			const auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0;
 
 			// Ignore spatial layers for non existing Producer streams or for those
 			// with score 0.

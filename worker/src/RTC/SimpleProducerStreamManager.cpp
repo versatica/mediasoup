@@ -256,7 +256,7 @@ namespace RTC
 			return;
 		}
 
-		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
+		const auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
 
 		this->listener->OnProducerStreamManagerKeyFrameRequested(mappedSsrc);
 	}

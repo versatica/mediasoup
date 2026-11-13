@@ -70,7 +70,10 @@ namespace RTC
 				return RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID;
 			}
 
-				NO_DEFAULT();
+			default:
+			{
+				MS_ABORT("invalid RTP header extension URI [value:%" PRIu8 "]", static_cast<uint8_t>(uri));
+			}
 		}
 	}
 

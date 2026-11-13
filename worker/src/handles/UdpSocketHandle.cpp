@@ -77,7 +77,6 @@ UdpSocketHandle::UdpSocketHandle(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 
 	this->uvHandle->data = static_cast<void*>(this);
 
-	// NOLINTNEXTLINE(misc-const-correctness)
 	const int err = uv_udp_recv_start(
 	  this->uvHandle, static_cast<uv_alloc_cb>(onAlloc), static_cast<uv_udp_recv_cb>(onRecv));
 

@@ -33,33 +33,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
-
-		// Close all Transports.
-		for (auto& kv : this->mapTransports)
-		{
-			auto* transport = kv.second;
-
-			delete transport;
-		}
-		this->mapTransports.clear();
-
-		// Close all RtpObservers.
-		for (auto& kv : this->mapRtpObservers)
-		{
-			auto* rtpObserver = kv.second;
-
-			delete rtpObserver;
-		}
-		this->mapRtpObservers.clear();
-
-		// Clear other maps.
-		this->mapProducerConsumers.clear();
-		this->mapConsumerProducer.clear();
-		this->mapProducerRtpObservers.clear();
-		this->mapProducers.clear();
-		this->mapDataProducerDataConsumers.clear();
-		this->mapDataConsumerDataProducer.clear();
-		this->mapDataProducers.clear();
 	}
 
 	flatbuffers::Offset<FBS::Router::DumpResponse> Router::FillBuffer(
@@ -69,6 +42,7 @@ namespace RTC
 
 		// Add transportIds.
 		std::vector<flatbuffers::Offset<flatbuffers::String>> transportIds;
+
 		transportIds.reserve(this->mapTransports.size());
 
 		for (const auto& kv : this->mapTransports)
@@ -80,6 +54,7 @@ namespace RTC
 
 		// Add rtpObserverIds.
 		std::vector<flatbuffers::Offset<flatbuffers::String>> rtpObserverIds;
+
 		rtpObserverIds.reserve(this->mapRtpObservers.size());
 
 		for (const auto& kv : this->mapRtpObservers)
@@ -91,17 +66,19 @@ namespace RTC
 
 		// Add mapProducerIdConsumerIds.
 		std::vector<flatbuffers::Offset<FBS::Common::StringStringArray>> mapProducerIdConsumerIds;
+
 		mapProducerIdConsumerIds.reserve(this->mapProducerConsumers.size());
 
 		for (const auto& kv : this->mapProducerConsumers)
 		{
-			auto* producer        = kv.first;
+			const auto* producer  = kv.first;
 			const auto& consumers = kv.second;
 
 			std::vector<flatbuffers::Offset<flatbuffers::String>> consumerIds;
+
 			consumerIds.reserve(consumers.size());
 
-			for (auto* consumer : consumers)
+			for (const auto* consumer : consumers)
 			{
 				consumerIds.emplace_back(builder.CreateString(consumer->id));
 			}
@@ -113,12 +90,13 @@ namespace RTC
 
 		// Add mapConsumerIdProducerId.
 		std::vector<flatbuffers::Offset<FBS::Common::StringString>> mapConsumerIdProducerId;
+
 		mapConsumerIdProducerId.reserve(this->mapConsumerProducer.size());
 
 		for (const auto& kv : this->mapConsumerProducer)
 		{
-			auto* consumer = kv.first;
-			auto* producer = kv.second;
+			const auto* consumer = kv.first;
+			const auto* producer = kv.second;
 
 			mapConsumerIdProducerId.emplace_back(
 			  FBS::Common::CreateStringStringDirect(builder, consumer->id.c_str(), producer->id.c_str()));
@@ -126,17 +104,19 @@ namespace RTC
 
 		// Add mapProducerIdObserverIds.
 		std::vector<flatbuffers::Offset<FBS::Common::StringStringArray>> mapProducerIdObserverIds;
+
 		mapProducerIdObserverIds.reserve(this->mapProducerRtpObservers.size());
 
 		for (const auto& kv : this->mapProducerRtpObservers)
 		{
-			auto* producer           = kv.first;
+			const auto* producer     = kv.first;
 			const auto& rtpObservers = kv.second;
 
 			std::vector<flatbuffers::Offset<flatbuffers::String>> observerIds;
+
 			observerIds.reserve(rtpObservers.size());
 
-			for (auto* rtpObserver : rtpObservers)
+			for (const auto* rtpObserver : rtpObservers)
 			{
 				observerIds.emplace_back(builder.CreateString(rtpObserver->id));
 			}
@@ -148,17 +128,19 @@ namespace RTC
 
 		// Add mapDataProducerIdDataConsumerIds.
 		std::vector<flatbuffers::Offset<FBS::Common::StringStringArray>> mapDataProducerIdDataConsumerIds;
+
 		mapDataProducerIdDataConsumerIds.reserve(this->mapDataProducerDataConsumers.size());
 
 		for (const auto& kv : this->mapDataProducerDataConsumers)
 		{
-			auto* dataProducer        = kv.first;
+			const auto* dataProducer  = kv.first;
 			const auto& dataConsumers = kv.second;
 
 			std::vector<flatbuffers::Offset<flatbuffers::String>> dataConsumerIds;
+
 			dataConsumerIds.reserve(dataConsumers.size());
 
-			for (auto* dataConsumer : dataConsumers)
+			for (const auto* dataConsumer : dataConsumers)
 			{
 				dataConsumerIds.emplace_back(builder.CreateString(dataConsumer->id));
 			}
@@ -170,12 +152,13 @@ namespace RTC
 
 		// Add mapDataConsumerIdDataProducerId.
 		std::vector<flatbuffers::Offset<FBS::Common::StringString>> mapDataConsumerIdDataProducerId;
+
 		mapDataConsumerIdDataProducerId.reserve(this->mapDataConsumerDataProducer.size());
 
 		for (const auto& kv : this->mapDataConsumerDataProducer)
 		{
-			auto* dataConsumer = kv.first;
-			auto* dataProducer = kv.second;
+			const auto* dataConsumer = kv.first;
+			const auto* dataProducer = kv.second;
 
 			mapDataConsumerIdDataProducerId.emplace_back(
 			  FBS::Common::CreateStringStringDirect(
@@ -218,11 +201,12 @@ namespace RTC
 				CheckNoTransport(transportId, request->methodCStr);
 
 				// This may throw.
-				auto* webRtcTransport =
-				  new RTC::WebRtcTransport(this->shared, transportId, this, body->options());
+				auto webRtcTransportUniquePtr =
+				  std::make_unique<RTC::WebRtcTransport>(this->shared, transportId, this, body->options());
+				auto* const webRtcTransport = webRtcTransportUniquePtr.get();
 
 				// Insert into the map.
-				this->mapTransports[transportId] = webRtcTransport;
+				this->mapTransports[transportId] = std::move(webRtcTransportUniquePtr);
 
 				MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
 
@@ -244,23 +228,24 @@ namespace RTC
 				const auto* options    = body->options();
 				const auto* listenInfo = options->listen_as<FBS::WebRtcTransport::ListenServer>();
 
-				auto webRtcServerId = listenInfo->webRtcServerId()->str();
-				auto* webRtcServer  = this->listener->OnRouterNeedWebRtcServer(this, webRtcServerId);
+				const auto webRtcServerId = listenInfo->webRtcServerId()->str();
+				auto* const webRtcServer  = this->listener->OnRouterNeedWebRtcServer(this, webRtcServerId);
 
 				if (!webRtcServer)
 				{
 					MS_THROW_ERROR("wrong webRtcServerId (no associated WebRtcServer found)");
 				}
 
-				auto iceCandidates = webRtcServer->GetIceCandidates(
+				const auto iceCandidates = webRtcServer->GetIceCandidates(
 				  options->enableUdp(), options->enableTcp(), options->preferUdp(), options->preferTcp());
 
 				// This may throw.
-				auto* webRtcTransport = new RTC::WebRtcTransport(
+				auto webRtcTransportUniquePtr = std::make_unique<RTC::WebRtcTransport>(
 				  this->shared, transportId, this, webRtcServer, iceCandidates, options);
+				auto* const webRtcTransport = webRtcTransportUniquePtr.get();
 
 				// Insert into the map.
-				this->mapTransports[transportId] = webRtcTransport;
+				this->mapTransports[transportId] = std::move(webRtcTransportUniquePtr);
 
 				MS_DEBUG_DEV(
 				  "WebRtcTransport with WebRtcServer created [transportId:%s]", transportId.c_str());
@@ -280,11 +265,12 @@ namespace RTC
 				// This may throw.
 				CheckNoTransport(transportId, request->methodCStr);
 
-				auto* plainTransport =
-				  new RTC::PlainTransport(this->shared, transportId, this, body->options());
+				auto plainTransportUniquePtr =
+				  std::make_unique<RTC::PlainTransport>(this->shared, transportId, this, body->options());
+				auto* const plainTransport = plainTransportUniquePtr.get();
 
 				// Insert into the map.
-				this->mapTransports[transportId] = plainTransport;
+				this->mapTransports[transportId] = std::move(plainTransportUniquePtr);
 
 				MS_DEBUG_DEV("PlainTransport created [transportId:%s]", transportId.c_str());
 
@@ -303,11 +289,12 @@ namespace RTC
 				// This may throw.
 				CheckNoTransport(transportId, request->methodCStr);
 
-				auto* pipeTransport =
-				  new RTC::PipeTransport(this->shared, transportId, this, body->options());
+				auto pipeTransportUniquePtr =
+				  std::make_unique<RTC::PipeTransport>(this->shared, transportId, this, body->options());
+				auto* const pipeTransport = pipeTransportUniquePtr.get();
 
 				// Insert into the map.
-				this->mapTransports[transportId] = pipeTransport;
+				this->mapTransports[transportId] = std::move(pipeTransportUniquePtr);
 
 				MS_DEBUG_DEV("PipeTransport created [transportId:%s]", transportId.c_str());
 
@@ -326,11 +313,12 @@ namespace RTC
 				// This may throw.
 				CheckNoTransport(transportId, request->methodCStr);
 
-				auto* directTransport =
-				  new RTC::DirectTransport(this->shared, transportId, this, body->options());
+				auto directTransportUniquePtr =
+				  std::make_unique<RTC::DirectTransport>(this->shared, transportId, this, body->options());
+				auto* const directTransport = directTransportUniquePtr.get();
 
 				// Insert into the map.
-				this->mapTransports[transportId] = directTransport;
+				this->mapTransports[transportId] = std::move(directTransportUniquePtr);
 
 				MS_DEBUG_DEV("DirectTransport created [transportId:%s]", transportId.c_str());
 
@@ -349,11 +337,9 @@ namespace RTC
 				// This may throw.
 				CheckNoRtpObserver(rtpObserverId, request->methodCStr);
 
-				auto* activeSpeakerObserver =
-				  new RTC::ActiveSpeakerObserver(this->shared, rtpObserverId, this, body->options());
-
 				// Insert into the map.
-				this->mapRtpObservers[rtpObserverId] = activeSpeakerObserver;
+				this->mapRtpObservers[rtpObserverId] = std::make_unique<RTC::ActiveSpeakerObserver>(
+				  this->shared, rtpObserverId, this, body->options());
 
 				MS_DEBUG_DEV("ActiveSpeakerObserver created [rtpObserverId:%s]", rtpObserverId.c_str());
 
@@ -370,11 +356,9 @@ namespace RTC
 				// This may throw.
 				CheckNoRtpObserver(rtpObserverId, request->methodCStr);
 
-				auto* audioLevelObserver =
-				  new RTC::AudioLevelObserver(this->shared, rtpObserverId, this, body->options());
-
 				// Insert into the map.
-				this->mapRtpObservers[rtpObserverId] = audioLevelObserver;
+				this->mapRtpObservers[rtpObserverId] = std::make_unique<RTC::AudioLevelObserver>(
+				  this->shared, rtpObserverId, this, body->options());
 
 				MS_DEBUG_DEV("AudioLevelObserver created [rtpObserverId:%s]", rtpObserverId.c_str());
 
@@ -389,19 +373,18 @@ namespace RTC
 				const auto transportId = body->transportId()->str();
 
 				// This may throw.
-				RTC::Transport* transport = AssertAndGetTransportById(transportId, request->methodCStr);
+				RTC::Transport* const transport = AssertAndGetTransportById(transportId, request->methodCStr);
+
+				// Remove it from the map. The extracted entry also keeps the Transport
+				// alive, so `transport` remains valid below, and deletes it when leaving
+				// this block.
+				const auto extractedTransport = this->mapTransports.extract(transport->id);
 
 				// Tell the Transport to close all its Producers and Consumers so it will
 				// notify us about their closures.
 				transport->CloseProducersAndConsumers();
 
-				// Remove it from the map.
-				this->mapTransports.erase(transport->id);
-
 				MS_DEBUG_DEV("Transport closed [transportId:%s]", transport->id.c_str());
-
-				// Delete it.
-				delete transport;
 
 				request->Accept();
 
@@ -412,24 +395,23 @@ namespace RTC
 			{
 				const auto* body         = request->data->body_as<FBS::Router::CloseRtpObserverRequest>();
 				const auto rtpObserverId = body->rtpObserverId()->str();
-				const RTC::RtpObserver* rtpObserver =
+				RTC::RtpObserver* const rtpObserver =
 				  AssertAndGetRtpObserverById(rtpObserverId, request->methodCStr);
 
-				// Remove it from the map.
-				this->mapRtpObservers.erase(rtpObserver->id);
+				// Remove it from the map. The extracted entry also keeps the RtpObserver
+				// alive, so `rtpObserver` remains valid below, and deletes it when
+				// leaving this block.
+				const auto extractedRtpObserver = this->mapRtpObservers.extract(rtpObserver->id);
 
 				// Iterate all entries in mapProducerRtpObservers and remove the closed one.
 				for (auto& kv : this->mapProducerRtpObservers)
 				{
 					auto& rtpObservers = kv.second;
 
-					rtpObservers.erase(const_cast<RTC::RtpObserver*>(rtpObserver));
+					rtpObservers.erase(rtpObserver);
 				}
 
 				MS_DEBUG_DEV("RtpObserver closed [rtpObserverId:%s]", rtpObserver->id.c_str());
-
-				// Delete it.
-				delete rtpObserver;
 
 				request->Accept();
 
@@ -455,8 +437,7 @@ namespace RTC
 			MS_THROW_NOT_FOUND_ERROR("Transport not found [method:%s]", method.c_str());
 		}
 
-		// NOLINTNEXTLINE(misc-const-correctness)
-		auto* transport = it->second;
+		auto* const transport = it->second.get();
 
 		return transport;
 	}
@@ -473,8 +454,7 @@ namespace RTC
 			MS_THROW_NOT_FOUND_ERROR("RtpObserver not found [method:%s]", method.c_str());
 		}
 
-		// NOLINTNEXTLINE(misc-const-correctness)
-		auto* rtpObserver = it->second;
+		auto* const rtpObserver = it->second.get();
 
 		return rtpObserver;
 	}
@@ -535,14 +515,14 @@ namespace RTC
 		  "Producer not present in mapProducerRtpObservers");
 
 		// Close all Consumers associated to the closed Producer.
-		auto& consumers = mapProducerConsumersIt->second;
+		const auto& consumers = mapProducerConsumersIt->second;
 
 		// NOTE: While iterating the set of Consumers, we call ProducerClosed() on each
 		// one, which will end calling Router::OnTransportConsumerProducerClosed(),
 		// which will remove the Consumer from mapConsumerProducer but won't remove the
 		// closed Consumer from the set of Consumers in mapProducerConsumers (here will
 		// erase the complete entry in that map).
-		for (auto* consumer : consumers)
+		for (auto* const consumer : consumers)
 		{
 			// Call consumer->ProducerClosed() so the Consumer will notify the Node process,
 			// will notify its Transport, and its Transport will delete the Consumer.
@@ -550,9 +530,9 @@ namespace RTC
 		}
 
 		// Tell all RtpObservers that the Producer has been closed.
-		auto& rtpObservers = mapProducerRtpObserversIt->second;
+		const auto& rtpObservers = mapProducerRtpObserversIt->second;
 
-		for (auto* rtpObserver : rtpObservers)
+		for (auto* const rtpObserver : rtpObservers)
 		{
 			rtpObserver->RemoveProducer(producer);
 		}
@@ -567,9 +547,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers.at(producer);
+		const auto& consumers = this->mapProducerConsumers.at(producer);
 
-		for (auto* consumer : consumers)
+		for (auto* const consumer : consumers)
 		{
 			consumer->ProducerPaused();
 		}
@@ -578,9 +558,9 @@ namespace RTC
 
 		if (it != this->mapProducerRtpObservers.end())
 		{
-			auto& rtpObservers = it->second;
+			const auto& rtpObservers = it->second;
 
-			for (auto* rtpObserver : rtpObservers)
+			for (auto* const rtpObserver : rtpObservers)
 			{
 				rtpObserver->ProducerPaused(producer);
 			}
@@ -591,9 +571,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers.at(producer);
+		const auto& consumers = this->mapProducerConsumers.at(producer);
 
-		for (auto* consumer : consumers)
+		for (auto* const consumer : consumers)
 		{
 			consumer->ProducerResumed();
 		}
@@ -602,9 +582,9 @@ namespace RTC
 
 		if (it != this->mapProducerRtpObservers.end())
 		{
-			auto& rtpObservers = it->second;
+			const auto& rtpObservers = it->second;
 
-			for (auto* rtpObserver : rtpObservers)
+			for (auto* const rtpObserver : rtpObservers)
 			{
 				rtpObserver->ProducerResumed(producer);
 			}
@@ -619,9 +599,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers.at(producer);
+		const auto& consumers = this->mapProducerConsumers.at(producer);
 
-		for (auto* consumer : consumers)
+		for (auto* const consumer : consumers)
 		{
 			consumer->ProducerNewRtpStream(rtpStream, mappedSsrc);
 		}
@@ -636,9 +616,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers.at(producer);
+		const auto& consumers = this->mapProducerConsumers.at(producer);
 
-		for (auto* consumer : consumers)
+		for (auto* const consumer : consumers)
 		{
 			consumer->ProducerRtpStreamScore(rtpStream, score, previousScore);
 		}
@@ -649,9 +629,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers.at(producer);
+		const auto& consumers = this->mapProducerConsumers.at(producer);
 
-		for (auto* consumer : consumers)
+		for (auto* const consumer : consumers)
 		{
 			consumer->ProducerRtcpSenderReport(rtpStream, first);
 		}
@@ -666,9 +646,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers.at(producer);
+		const auto& consumers = this->mapProducerConsumers.at(producer);
 
-		for (auto* consumer : consumers)
+		for (auto* const consumer : consumers)
 		{
 			consumer->ProducerSpatialLayerActivityChanged(rtpStream, spatialLayer, isActive);
 		}
@@ -683,7 +663,7 @@ namespace RTC
 		packet->logger.routerId = this->id;
 #endif
 
-		auto& consumers = this->mapProducerConsumers.at(producer);
+		const auto& consumers = this->mapProducerConsumers.at(producer);
 
 		if (!consumers.empty())
 		{
@@ -692,7 +672,7 @@ namespace RTC
 			// needed and only once.
 			std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
 
-			for (auto* consumer : consumers)
+			for (auto* const consumer : consumers)
 			{
 				// Update MID RTP extension value.
 				const auto& mid = consumer->GetRtpParameters().mid;
@@ -717,9 +697,9 @@ namespace RTC
 
 		if (it != this->mapProducerRtpObservers.end())
 		{
-			auto& rtpObservers = it->second;
+			const auto& rtpObservers = it->second;
 
-			for (auto* rtpObserver : rtpObservers)
+			for (auto* const rtpObserver : rtpObservers)
 			{
 				rtpObserver->ReceiveRtpPacket(producer, packet);
 			}
@@ -756,7 +736,7 @@ namespace RTC
 			MS_THROW_NOT_FOUND_ERROR("Producer not found [producerId:%s]", producerId.c_str());
 		}
 
-		auto* producer                    = mapProducersIt->second;
+		auto* const producer              = mapProducersIt->second;
 		const auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
 
 		MS_ASSERT(
@@ -781,7 +761,7 @@ namespace RTC
 		// Get all streams in the Producer and provide the Consumer with them.
 		for (const auto& kv : producer->GetRtpStreams())
 		{
-			auto* rtpStream           = kv.first;
+			auto* const rtpStream     = kv.first;
 			const uint32_t mappedSsrc = kv.second;
 
 			consumer->ProducerRtpStream(rtpStream, mappedSsrc);
@@ -807,7 +787,7 @@ namespace RTC
 		  "Consumer not present in mapConsumerProducer");
 
 		// Get the associated Producer.
-		auto* producer                    = mapConsumerProducerIt->second;
+		auto* const producer              = mapConsumerProducerIt->second;
 		const auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
 
 		MS_ASSERT(
@@ -847,7 +827,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto* producer = this->mapConsumerProducer.at(consumer);
+		auto* const producer = this->mapConsumerProducer.at(consumer);
 
 		producer->RequestKeyFrame(mappedSsrc);
 	}
@@ -887,7 +867,7 @@ namespace RTC
 		  "DataProducer not present in mapDataProducers");
 
 		// Close all DataConsumers associated to the closed DataProducer.
-		auto& dataConsumers = mapDataProducerDataConsumersIt->second;
+		const auto& dataConsumers = mapDataProducerDataConsumersIt->second;
 
 		// NOTE: While iterating the set of DataConsumers, we call DataProducerClosed()
 		// on each one, which will end calling
@@ -895,7 +875,7 @@ namespace RTC
 		// DataConsumer from mapDataConsumerDataProducer but won't remove the closed
 		// DataConsumer from the set of DataConsumers in mapDataProducerDataConsumers
 		// (here will erase the complete entry in that map).
-		for (auto* dataConsumer : dataConsumers)
+		for (auto* const dataConsumer : dataConsumers)
 		{
 			// Call dataConsumer->DataProducerClosed() so the DataConsumer will notify the Node
 			// process, will notify its Transport, and its Transport will delete the DataConsumer.
@@ -911,9 +891,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
+		const auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
 
-		for (auto* dataConsumer : dataConsumers)
+		for (auto* const dataConsumer : dataConsumers)
 		{
 			dataConsumer->DataProducerPaused();
 		}
@@ -924,9 +904,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
+		const auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
 
-		for (auto* dataConsumer : dataConsumers)
+		for (auto* const dataConsumer : dataConsumers)
 		{
 			dataConsumer->DataProducerResumed();
 		}
@@ -942,7 +922,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
+		const auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
 
 		const auto getStreamId = [](const RTC::DataConsumer* dataConsumer) -> uint16_t
 		{
@@ -957,7 +937,7 @@ namespace RTC
 		// no message clone since it can take ownership of the original message.
 		RTC::DataConsumer* pendingDataConsumer{ nullptr };
 
-		for (auto* dataConsumer : dataConsumers)
+		for (auto* const dataConsumer : dataConsumers)
 		{
 			// Verify subchannels first to avoid cloning the message needlessly.
 			if (!dataConsumer->IsActive() || !dataConsumer->VerifySubchannels(subchannels, requiredSubchannel, ignoredSubchannel))
@@ -1010,7 +990,7 @@ namespace RTC
 			MS_THROW_NOT_FOUND_ERROR("DataProducer not found [dataProducerId:%s]", dataProducerId.c_str());
 		}
 
-		auto* dataProducer = mapDataProducersIt->second;
+		auto* const dataProducer = mapDataProducersIt->second;
 		const auto mapDataProducerDataConsumersIt = this->mapDataProducerDataConsumers.find(dataProducer);
 
 		MS_ASSERT(
@@ -1049,7 +1029,7 @@ namespace RTC
 		  "DataConsumer not present in mapDataConsumerDataProducer");
 
 		// Get the associated DataProducer.
-		auto* dataProducer = mapDataConsumerDataProducerIt->second;
+		auto* const dataProducer = mapDataConsumerDataProducerIt->second;
 		const auto mapDataProducerDataConsumersIt = this->mapDataProducerDataConsumers.find(dataProducer);
 
 		MS_ASSERT(
@@ -1091,15 +1071,30 @@ namespace RTC
 
 		MS_ASSERT(this->mapTransports.contains(transport->id), "Transport not present in mapTransports");
 
+		// Remove it from the map. The extracted entry also keeps the Transport alive,
+		// so `transport` remains valid below, and deletes it when leaving this block.
+		const auto extractedTransport = this->mapTransports.extract(transport->id);
+
 		// Tell the Transport to close all its Producers and Consumers so it will
 		// notify us about their closures.
 		transport->CloseProducersAndConsumers();
+	}
 
-		// Remove it from the map.
-		this->mapTransports.erase(transport->id);
+	RTC::Producer* Router::RtpObserverGetProducer(
+	  RTC::RtpObserver* /* rtpObserver */, const std::string& id)
+	{
+		MS_TRACE();
 
-		// Delete it.
-		delete transport;
+		const auto it = this->mapProducers.find(id);
+
+		if (it == this->mapProducers.end())
+		{
+			MS_THROW_NOT_FOUND_ERROR("Producer not found");
+		}
+
+		auto* const producer = it->second;
+
+		return producer;
 	}
 
 	void Router::OnRtpObserverAddProducer(RTC::RtpObserver* rtpObserver, RTC::Producer* producer)
@@ -1116,23 +1111,5 @@ namespace RTC
 
 		// Remove from the map.
 		this->mapProducerRtpObservers[producer].erase(rtpObserver);
-	}
-
-	RTC::Producer* Router::RtpObserverGetProducer(
-	  RTC::RtpObserver* /* rtpObserver */, const std::string& id)
-	{
-		MS_TRACE();
-
-		const auto it = this->mapProducers.find(id);
-
-		if (it == this->mapProducers.end())
-		{
-			MS_THROW_NOT_FOUND_ERROR("Producer not found");
-		}
-
-		// NOLINTNEXTLINE(misc-const-correctness)
-		auto* producer = it->second;
-
-		return producer;
 	}
 } // namespace RTC

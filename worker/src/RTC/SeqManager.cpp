@@ -4,7 +4,7 @@
 #include "RTC/SeqManager.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
-#include <iterator>
+#include <iterator> // std::ranges::distance()
 
 namespace RTC
 {
@@ -124,7 +124,8 @@ namespace RTC
 		{
 			const SeqLowerThan seqLowerThan;
 			const auto droppedBegin = this->dropped.begin() + this->droppedStart;
-			const auto it = std::lower_bound(droppedBegin, this->dropped.end(), input, seqLowerThan);
+			const auto it =
+			  std::ranges::lower_bound(droppedBegin, this->dropped.end(), input, seqLowerThan);
 
 			if (it != this->dropped.end() && *it == input)
 			{
@@ -134,7 +135,7 @@ namespace RTC
 			}
 
 			// There are dropped inputs, calculate 'base' for this input.
-			auto droppedCount = std::distance(droppedBegin, it);
+			const auto droppedCount = std::ranges::distance(droppedBegin, it);
 
 			base = (this->base - droppedCount) & SeqManager::MaxValue;
 		}
@@ -189,14 +190,6 @@ namespace RTC
 		return (this->maxOutput + this->initialOutput) & SeqManager::MaxValue;
 	}
 
-	template<typename T, uint8_t N>
-	size_t SeqManager<T, N>::DroppedSize() const
-	{
-		MS_TRACE();
-
-		return this->dropped.size() - this->droppedStart;
-	}
-
 	/*
 	 * Insert 'input' into 'dropped', in sorted order, if not present yet.
 	 */
@@ -206,7 +199,7 @@ namespace RTC
 		MS_TRACE();
 
 		const SeqLowerThan seqLowerThan;
-		const auto it = std::lower_bound(
+		const auto it = std::ranges::lower_bound(
 		  this->dropped.begin() + this->droppedStart, this->dropped.end(), input, seqLowerThan);
 
 		if (it == this->dropped.end() || *it != input)
@@ -257,6 +250,14 @@ namespace RTC
 
 			this->droppedStart = 0;
 		}
+	}
+
+	template<typename T, uint8_t N>
+	size_t SeqManager<T, N>::DroppedSize() const
+	{
+		MS_TRACE();
+
+		return this->dropped.size() - this->droppedStart;
 	}
 
 	// Explicit instantiation to have all SeqManager definitions in this file.

@@ -2,21 +2,28 @@
 #define MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 
 #include "common.hpp"
+#include "FBS/activeSpeakerObserver.h"
 #include "handles/TimerHandleInterface.hpp"
 #include "RTC/RtpObserver.hpp"
 #include "SharedInterface.hpp"
 #include <ankerl/unordered_dense.h>
+#include <string>
 #include <vector>
 
-// Implementation of Dominant Speaker Identification for Multipoint
-// Videoconferencing by Ilana Volfin and Israel Cohen. This implementation uses
-// the RTP Audio Level extension from RFC-6464 for the input signal. This has
-// been ported from DominantSpeakerIdentification.java in Jitsi:
-// https://github.com/jitsi/jitsi-utils/blob/master/src/main/java/org/jitsi/utils/dsi/DominantSpeakerIdentification.java
 namespace RTC
 {
+	/**
+	 * Implementation of Dominant Speaker Identification for Multipoint
+	 * Videoconferencing by Ilana Volfin and Israel Cohen. This implementation
+	 * uses the RTP Audio Level extension from RFC-6464 for the input signal.
+	 * This has been ported from DominantSpeakerIdentification.java in Jitsi:
+	 * https://github.com/jitsi/jitsi-utils/blob/master/src/main/java/org/jitsi/utils/dsi/DominantSpeakerIdentification.java
+	 */
 	class ActiveSpeakerObserver : public RTC::RtpObserver, public TimerHandleInterface::Listener
 	{
+	private:
+		static constexpr uint8_t RelativeSpeachActivitiesLen{ 3 };
+
 	private:
 		class Speaker
 		{
@@ -25,17 +32,26 @@ namespace RTC
 
 		public:
 			void EvalActivityScores();
+
 			double GetActivityScore(uint8_t interval) const;
+
 			void LevelChanged(uint32_t level, int64_t nowMs);
+
 			void LevelTimedOut(int64_t nowMs);
 
 		private:
 			bool ComputeImmediates();
+
 			bool ComputeLongs();
+
 			bool ComputeMediums();
+
 			void EvalImmediateActivityScore();
+
 			void EvalMediumActivityScore();
+
 			void EvalLongActivityScore();
+
 			void UpdateMinLevel(int8_t level);
 
 		public:
@@ -60,6 +76,7 @@ namespace RTC
 		{
 		public:
 			ProducerSpeaker(SharedInterface* shared, RTC::Producer* producer);
+
 			~ProducerSpeaker();
 
 		public:
@@ -67,32 +84,38 @@ namespace RTC
 			const std::unique_ptr<Speaker> speaker;
 		};
 
-	private:
-		static const uint8_t RelativeSpeachActivitiesLen{ 3 };
-
 	public:
 		ActiveSpeakerObserver(
 		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::RtpObserver::Listener* listener,
 		  const FBS::ActiveSpeakerObserver::ActiveSpeakerObserverOptions* options);
+
 		~ActiveSpeakerObserver() override;
 
 	public:
 		void AddProducer(RTC::Producer* producer) override;
+
 		void RemoveProducer(RTC::Producer* producer) override;
+
 		void ReceiveRtpPacket(RTC::Producer* producer, RTC::RTP::Packet* packet) override;
+
 		void ProducerPaused(RTC::Producer* producer) override;
+
 		void ProducerResumed(RTC::Producer* producer) override;
 
 	private:
 		void Paused() override;
+
 		void Resumed() override;
+
 		void Update();
+
 		bool CalculateActiveSpeaker();
+
 		void TimeoutIdleLevels(int64_t nowMs);
 
-		/* Pure virtual methods inherited from TimerHandleInterface. */
+		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	protected:
 		void OnTimer(TimerHandleInterface* timer) override;
 
@@ -102,7 +125,7 @@ namespace RTC
 		const std::unique_ptr<TimerHandleInterface> periodicTimer;
 		int64_t intervalMs;
 		// Map of ProducerSpeakers indexed by Producer id.
-		ankerl::unordered_dense::map<std::string, ProducerSpeaker*> mapProducerSpeakers;
+		ankerl::unordered_dense::map<std::string, std::unique_ptr<ProducerSpeaker>> mapProducerSpeakers;
 		int64_t lastLevelIdleAtMs{ 0 };
 	};
 } // namespace RTC

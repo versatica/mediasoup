@@ -66,23 +66,13 @@ void Worker::Close()
 	this->signalHandle.reset();
 
 	// Delete all Routers.
-	for (auto& kv : this->mapRouters)
-	{
-		auto* router = kv.second;
-
-		delete router;
-	}
-
+	// NOTE: Must be done here, before deleting the WebRtcServers (which the
+	// Routers may use) and before closing the Channel (since their destruction may
+	// emit notifications).
 	this->mapRouters.clear();
 
 	// Delete all WebRtcServers.
-	for (auto& kv : this->mapWebRtcServers)
-	{
-		auto* webRtcServer = kv.second;
-
-		delete webRtcServer;
-	}
-
+	// NOTE: Must be done here, before closing the Channel.
 	this->mapWebRtcServers.clear();
 
 	// Close the Channel.
@@ -135,10 +125,9 @@ flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResour
 {
 	MS_TRACE();
 
-	int err;
-	uv_rusage_t uvRusage{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+	uv_rusage_t uvRusage{};
 
-	err = uv_getrusage(std::addressof(uvRusage));
+	const int err = uv_getrusage(std::addressof(uvRusage));
 
 	if (err != 0)
 	{
@@ -204,8 +193,7 @@ RTC::WebRtcServer* Worker::AssertAndGetWebRtcServerById(
 		MS_THROW_NOT_FOUND_ERROR("WebRtcServer not found [method:%s]", method.c_str());
 	}
 
-	// NOLINTNEXTLINE(misc-const-correctness)
-	auto* webRtcServer = it->second;
+	auto* const webRtcServer = it->second.get();
 
 	return webRtcServer;
 }
@@ -221,8 +209,7 @@ RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId, const s
 		MS_THROW_NOT_FOUND_ERROR("Router not found [method:%s]", method.c_str());
 	}
 
-	// NOLINTNEXTLINE(misc-const-correctness)
-	auto* router = it->second;
+	auto* const router = it->second.get();
 
 	return router;
 }
@@ -289,9 +276,8 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			CheckNoWebRtcServer(webRtcServerId, request->methodCStr);
 
-			auto* webRtcServer = new RTC::WebRtcServer(this->shared, webRtcServerId, body->listenInfos());
-
-			this->mapWebRtcServers[webRtcServerId] = webRtcServer;
+			this->mapWebRtcServers[webRtcServerId] =
+			  std::make_unique<RTC::WebRtcServer>(this->shared, webRtcServerId, body->listenInfos());
 
 			MS_DEBUG_DEV("WebRtcServer created [webRtcServerId:%s]", webRtcServerId.c_str());
 
@@ -306,12 +292,12 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 			const auto webRtcServerId = body->webRtcServerId()->str();
 			const auto* webRtcServer  = AssertAndGetWebRtcServerById(webRtcServerId, request->methodCStr);
 
-			// Remove it from the map and delete it.
-			this->mapWebRtcServers.erase(webRtcServer->GetId());
+			// Remove it from the map. The extracted entry also keeps the WebRtcServer
+			// alive, so `webRtcServer` remains valid below, and deletes it when leaving
+			// this block.
+			const auto extractedWebRtcServer = this->mapWebRtcServers.extract(webRtcServer->id);
 
 			MS_DEBUG_DEV("WebRtcServer closed [id:%s]", webRtcServer->id.c_str());
-
-			delete webRtcServer;
 
 			request->Accept();
 
@@ -325,9 +311,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			CheckNoRouter(routerId, request->methodCStr);
 
-			auto* router = new RTC::Router(this->shared, routerId, this);
-
-			this->mapRouters[routerId] = router;
+			this->mapRouters[routerId] = std::make_unique<RTC::Router>(this->shared, routerId, this);
 
 			MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
 
@@ -342,12 +326,11 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 			const auto routerId = body->routerId()->str();
 			const auto* router  = AssertAndGetRouterById(routerId, request->methodCStr);
 
-			// Remove it from the map and delete it.
-			this->mapRouters.erase(router->id);
+			// Remove it from the map. The extracted entry also keeps the Router alive,
+			// so `router` remains valid below, and deletes it when leaving this block.
+			const auto extractedRouter = this->mapRouters.extract(router->id);
 
 			MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
-
-			delete router;
 
 			request->Accept();
 
@@ -357,7 +340,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 		// Any other request must be delivered to the corresponding Router.
 		default:
 		{
-			auto* handler =
+			auto* const handler =
 			  this->shared->GetChannelMessageRegistrator()->GetChannelRequestHandler(request->handlerId);
 
 			if (!handler)
@@ -399,8 +382,9 @@ void Worker::HandleNotification(Channel::ChannelNotification* notification)
 
 		default:
 		{
-			auto* handler = this->shared->GetChannelMessageRegistrator()->GetChannelNotificationHandler(
-			  notification->handlerId);
+			auto* const handler =
+			  this->shared->GetChannelMessageRegistrator()->GetChannelNotificationHandler(
+			    notification->handlerId);
 
 			if (handler == nullptr)
 			{
@@ -461,14 +445,14 @@ RTC::WebRtcServer* Worker::OnRouterNeedWebRtcServer(
 {
 	MS_TRACE();
 
-	RTC::WebRtcServer* webRtcServer{ nullptr }; // NOLINT(misc-const-correctness)
-
 	const auto it = this->mapWebRtcServers.find(webRtcServerId);
 
-	if (it != this->mapWebRtcServers.end())
+	if (it == this->mapWebRtcServers.end())
 	{
-		webRtcServer = it->second;
+		return nullptr;
 	}
+
+	auto* const webRtcServer = it->second.get();
 
 	return webRtcServer;
 }

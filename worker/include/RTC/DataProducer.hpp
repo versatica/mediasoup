@@ -4,6 +4,8 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
+#include "FBS/dataProducer.h"
+#include "FBS/transport.h"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include "SharedInterface.hpp"
@@ -23,13 +25,16 @@ namespace RTC
 
 		public:
 			virtual void OnDataProducerReceiveData(RTC::DataProducer* producer, size_t len) = 0;
+
 			virtual void OnDataProducerMessageReceived(
 			  RTC::DataProducer* dataProducer,
 			  RTC::SCTP::Message message,
 			  std::vector<uint16_t>& subchannels,
 			  std::optional<uint16_t> requiredSubchannel,
-			  std::optional<uint16_t> ignoredSubchannel)                        = 0;
-			virtual void OnDataProducerPaused(RTC::DataProducer* dataProducer)  = 0;
+			  std::optional<uint16_t> ignoredSubchannel) = 0;
+
+			virtual void OnDataProducerPaused(RTC::DataProducer* dataProducer) = 0;
+
 			virtual void OnDataProducerResumed(RTC::DataProducer* dataProducer) = 0;
 		};
 
@@ -47,25 +52,31 @@ namespace RTC
 		  size_t maxMessageSize,
 		  RTC::DataProducer::Listener* listener,
 		  const FBS::Transport::ProduceDataRequest* data);
+
 		~DataProducer() override;
 
 	public:
 		flatbuffers::Offset<FBS::DataProducer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
+
 		flatbuffers::Offset<FBS::DataProducer::GetStatsResponse> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) const;
+
 		Type GetType() const
 		{
 			return this->type;
 		}
+
 		const RTC::SctpStreamParameters& GetSctpStreamParameters() const
 		{
 			return this->sctpStreamParameters;
 		}
+
 		bool IsPaused() const
 		{
 			return this->paused;
 		}
+
 		void ReceiveMessage(
 		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,

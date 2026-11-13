@@ -2,6 +2,8 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/PipeTransport.hpp"
+#include "FBS/srtpParameters.h"
+#include "FBS/transport.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/Consts.hpp"
@@ -13,15 +15,6 @@
 
 namespace RTC
 {
-	/* Static. */
-
-	// NOTE: PipeTransport just allows AEAD_AES_256_GCM SRTP crypto suite.
-	RTC::SrtpSession::CryptoSuite PipeTransport::srtpCryptoSuite{
-		RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM
-	};
-	// MAster length of AEAD_AES_256_GCM.
-	size_t PipeTransport::srtpMasterLength{ 44 };
-
 	/* Instance methods. */
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
@@ -53,11 +46,6 @@ namespace RTC
 			this->listenInfo.announcedAddress.assign(options->listenInfo()->announcedAddress()->str());
 		}
 
-		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
-		{
-			this->listenInfo.announcedAddress.assign(options->listenInfo()->announcedAddress()->str());
-		}
-
 		this->listenInfo.port               = options->listenInfo()->port();
 		this->listenInfo.portRange.min      = options->listenInfo()->portRange()->min();
 		this->listenInfo.portRange.max      = options->listenInfo()->portRange()->max();
@@ -68,7 +56,7 @@ namespace RTC
 
 		if (options->enableSrtp())
 		{
-			this->srtpKey       = Utils::Crypto::GetRandomString(PipeTransport::srtpMasterLength);
+			this->srtpKey       = Utils::Crypto::GetRandomString(PipeTransport::SrtpMasterLength);
 			this->srtpKeyBase64 = Utils::String::Base64Encode(this->srtpKey);
 		}
 
@@ -82,6 +70,7 @@ namespace RTC
 				  this,
 				  this->shared,
 				  this->listenInfo.ip,
+				  this->listenInfo.announcedAddress,
 				  this->listenInfo.portRange.min,
 				  this->listenInfo.portRange.max,
 				  this->listenInfo.flags,
@@ -90,7 +79,12 @@ namespace RTC
 			else if (this->listenInfo.port != 0)
 			{
 				this->udpSocket = std::make_unique<RTC::UdpSocket>(
-				  this, this->shared, this->listenInfo.ip, this->listenInfo.port, this->listenInfo.flags);
+				  this,
+				  this->shared,
+				  this->listenInfo.ip,
+				  this->listenInfo.announcedAddress,
+				  this->listenInfo.port,
+				  this->listenInfo.flags);
 			}
 			// NOTE: This is temporal to allow deprecated usage of worker port range.
 			// In the future this should throw since |port| or |portRange| will be
@@ -103,6 +97,7 @@ namespace RTC
 				  this,
 				  this->shared,
 				  this->listenInfo.ip,
+				  this->listenInfo.announcedAddress,
 				  Settings::configuration.rtcMinPort,
 				  Settings::configuration.rtcMaxPort,
 				  this->listenInfo.flags,
@@ -124,8 +119,8 @@ namespace RTC
 			MS_DEBUG_TAG(
 			  info,
 			  "UDP socket buffer sizes [send:%" PRIu32 ", recv:%" PRIu32 "]",
-			  udpSocket->GetSendBufferSize(),
-			  udpSocket->GetRecvBufferSize());
+			  this->udpSocket->GetSendBufferSize(),
+			  this->udpSocket->GetRecvBufferSize());
 
 			// NOTE: This may throw.
 			this->shared->GetChannelMessageRegistrator()->RegisterHandler(
@@ -152,14 +147,6 @@ namespace RTC
 		SetDestroying();
 
 		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
-
-		this->udpSocket.reset();
-
-		this->tuple.reset();
-
-		this->srtpSendSession.reset();
-
-		this->srtpRecvSession.reset();
 	}
 
 	flatbuffers::Offset<FBS::PipeTransport::DumpResponse> PipeTransport::FillBuffer(
@@ -203,12 +190,12 @@ namespace RTC
 		{
 			srtpParameters = FBS::SrtpParameters::CreateSrtpParametersDirect(
 			  builder,
-			  SrtpSession::CryptoSuiteToFbs(PipeTransport::srtpCryptoSuite),
+			  SrtpSession::CryptoSuiteToFbs(PipeTransport::SrtpCryptoSuite),
 			  this->srtpKeyBase64.c_str());
 		}
 
 		// Add base transport dump.
-		auto base = Transport::FillBuffer(builder);
+		const auto base = Transport::FillBuffer(builder);
 
 		return FBS::PipeTransport::CreateDumpResponse(builder, base, tuple, this->rtx, srtpParameters);
 	}
@@ -253,7 +240,7 @@ namespace RTC
 		}
 
 		// Base Transport stats.
-		auto base = Transport::FillBufferStats(builder);
+		const auto base = Transport::FillBufferStats(builder);
 
 		return FBS::PipeTransport::CreateGetStatsResponse(builder, base, tuple);
 	}
@@ -298,7 +285,7 @@ namespace RTC
 
 					const auto* body = request->data->body_as<FBS::PipeTransport::ConnectRequest>();
 
-					auto srtpParametersPresent =
+					const bool srtpParametersPresent =
 					  flatbuffers::IsFieldPresent(body, FBS::PipeTransport::ConnectRequest::VT_SRTPPARAMETERS);
 
 					if (!HasSrtp() && srtpParametersPresent)
@@ -324,27 +311,28 @@ namespace RTC
 						srtpKeyBase64 = srtpParameters->keyBase64()->str();
 
 						size_t outLen;
-						// This may throw.
-						auto* srtpKey = Utils::String::Base64Decode(srtpKeyBase64, outLen);
 
-						if (outLen != PipeTransport::srtpMasterLength)
+						// This may throw.
+						const uint8_t* srtpKey = Utils::String::Base64Decode(srtpKeyBase64, outLen);
+
+						if (outLen != PipeTransport::SrtpMasterLength)
 						{
 							MS_THROW_TYPE_ERROR("invalid decoded SRTP key length");
 						}
 
-						auto* srtpLocalKey  = new uint8_t[PipeTransport::srtpMasterLength];
-						auto* srtpRemoteKey = new uint8_t[PipeTransport::srtpMasterLength];
+						auto* const srtpLocalKey  = new uint8_t[PipeTransport::SrtpMasterLength];
+						auto* const srtpRemoteKey = new uint8_t[PipeTransport::SrtpMasterLength];
 
-						std::memcpy(srtpLocalKey, this->srtpKey.c_str(), PipeTransport::srtpMasterLength);
-						std::memcpy(srtpRemoteKey, srtpKey, PipeTransport::srtpMasterLength);
+						std::memcpy(srtpLocalKey, this->srtpKey.c_str(), PipeTransport::SrtpMasterLength);
+						std::memcpy(srtpRemoteKey, srtpKey, PipeTransport::SrtpMasterLength);
 
 						try
 						{
 							this->srtpSendSession = std::make_unique<RTC::SrtpSession>(
 							  RTC::SrtpSession::Type::OUTBOUND,
-							  PipeTransport::srtpCryptoSuite,
+							  PipeTransport::SrtpCryptoSuite,
 							  srtpLocalKey,
-							  PipeTransport::srtpMasterLength);
+							  PipeTransport::SrtpMasterLength);
 						}
 						catch (const MediaSoupError& error)
 						{
@@ -358,9 +346,9 @@ namespace RTC
 						{
 							this->srtpRecvSession = std::make_unique<RTC::SrtpSession>(
 							  RTC::SrtpSession::Type::INBOUND,
-							  PipeTransport::srtpCryptoSuite,
+							  PipeTransport::SrtpCryptoSuite,
 							  srtpRemoteKey,
-							  PipeTransport::srtpMasterLength);
+							  PipeTransport::SrtpMasterLength);
 						}
 						catch (const MediaSoupError& error)
 						{
@@ -401,7 +389,7 @@ namespace RTC
 							err = uv_ip4_addr(
 							  ip.c_str(),
 							  static_cast<int>(port),
-							  reinterpret_cast<struct sockaddr_in*>(std::addressof(this->remoteAddrStorage)));
+							  reinterpret_cast<sockaddr_in*>(std::addressof(this->remoteAddrStorage)));
 
 							if (err != 0)
 							{
@@ -416,7 +404,7 @@ namespace RTC
 							err = uv_ip6_addr(
 							  ip.c_str(),
 							  static_cast<int>(port),
-							  reinterpret_cast<struct sockaddr_in6*>(std::addressof(this->remoteAddrStorage)));
+							  reinterpret_cast<sockaddr_in6*>(std::addressof(this->remoteAddrStorage)));
 
 							if (err != 0)
 							{
@@ -435,12 +423,7 @@ namespace RTC
 					// Create the tuple.
 					this->tuple = std::make_unique<RTC::TransportTuple>(
 					  this->udpSocket.get(),
-					  reinterpret_cast<struct sockaddr*>(std::addressof(this->remoteAddrStorage)));
-
-					if (!this->listenInfo.announcedAddress.empty())
-					{
-						this->tuple->SetLocalAnnouncedAddress(this->listenInfo.announcedAddress);
-					}
+					  reinterpret_cast<sockaddr*>(std::addressof(this->remoteAddrStorage)));
 				}
 				catch (const MediaSoupError&)
 				{
@@ -453,7 +436,7 @@ namespace RTC
 					throw;
 				}
 
-				auto tupleOffset = this->tuple->FillBuffer(request->GetBufferBuilder());
+				const auto tupleOffset = this->tuple->FillBuffer(request->GetBufferBuilder());
 
 				const auto responseOffset =
 				  FBS::PipeTransport::CreateConnectResponse(request->GetBufferBuilder(), tupleOffset);
@@ -487,7 +470,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return this->tuple ? true : false;
+		return this->tuple != nullptr;
 	}
 
 	size_t PipeTransport::GetPacketOverhead() const
@@ -682,7 +665,8 @@ namespace RTC
 		// Decrypt the SRTP packet.
 		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), std::addressof(len)))
 		{
-			const auto* packet = RTC::RTP::Packet::Parse(data, len, bufferLen);
+			const std::unique_ptr<const RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(
+				data, len, bufferLen) };
 
 			if (!packet)
 			{
@@ -696,14 +680,12 @@ namespace RTC
 				  packet->GetSsrc(),
 				  packet->GetPayloadType(),
 				  packet->GetSequenceNumber());
-
-				delete packet;
 			}
 
 			return;
 		}
 
-		auto* packet = RTC::RTP::Packet::Parse(data, len, bufferLen);
+		const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(data, len, bufferLen) };
 
 		if (!packet)
 		{
@@ -720,13 +702,11 @@ namespace RTC
 			// Remove this SSRC.
 			RecvStreamClosed(packet->GetSsrc());
 
-			delete packet;
-
 			return;
 		}
 
 		// Pass the packet to the parent transport.
-		RTC::Transport::ReceiveRtpPacket(packet, receivedAtUs);
+		RTC::Transport::ReceiveRtpPacket(packet.get(), receivedAtUs);
 	}
 
 	void PipeTransport::OnRtcpDataReceived(
@@ -805,7 +785,7 @@ namespace RTC
 	  const uint8_t* data,
 	  size_t len,
 	  size_t bufferLen,
-	  const struct sockaddr* remoteAddr,
+	  const sockaddr* remoteAddr,
 	  int64_t receivedAtUs)
 	{
 		MS_TRACE();

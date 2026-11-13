@@ -4,7 +4,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include <cmath> // std::log()
+#include <cmath> // std::log(), std::sqrt()
 
 namespace RTC
 {
@@ -70,6 +70,7 @@ namespace RTC
 		const uint32_t littleLen       = littles.size();
 		const uint32_t bigLen          = bigs.size();
 		const uint32_t littleLenPerBig = littleLen / bigLen;
+
 		bool changed{ false };
 
 		for (uint32_t b = 0, l = 0; b < bigLen; ++b)
@@ -128,16 +129,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
-
-		// Must clear all entries in this->mapProducerSpeakers since RemoveProducer()
-		// won't be called for each existing Producer if the ActiveSpeakerObserver or
-		// its parent Router are directly closed.
-		for (auto& kv : this->mapProducerSpeakers)
-		{
-			auto* producerSpeaker = kv.second;
-			delete producerSpeaker;
-		}
-		this->mapProducerSpeakers.clear();
 	}
 
 	void ActiveSpeakerObserver::AddProducer(RTC::Producer* producer)
@@ -154,7 +145,8 @@ namespace RTC
 			MS_THROW_ERROR("Producer already in map");
 		}
 
-		this->mapProducerSpeakers[producer->id] = new ProducerSpeaker(this->shared, producer);
+		this->mapProducerSpeakers[producer->id] =
+		  std::make_unique<ProducerSpeaker>(this->shared, producer);
 	}
 
 	void ActiveSpeakerObserver::RemoveProducer(RTC::Producer* producer)
@@ -167,10 +159,6 @@ namespace RTC
 		{
 			return;
 		}
-
-		auto* producerSpeaker = it->second;
-
-		delete producerSpeaker;
 
 		this->mapProducerSpeakers.erase(it);
 
@@ -190,7 +178,7 @@ namespace RTC
 
 		if (it != this->mapProducerSpeakers.end())
 		{
-			auto* producerSpeaker = it->second;
+			auto* const producerSpeaker = it->second.get();
 
 			producerSpeaker->speaker->paused = true;
 		}
@@ -204,7 +192,7 @@ namespace RTC
 
 		if (it != this->mapProducerSpeakers.end())
 		{
-			auto* producerSpeaker = it->second;
+			auto* const producerSpeaker = it->second.get();
 
 			producerSpeaker->speaker->paused = false;
 		}
@@ -233,8 +221,8 @@ namespace RTC
 
 		if (it != this->mapProducerSpeakers.end())
 		{
-			auto* producerSpeaker = it->second;
-			const int64_t nowMs   = this->shared->GetTimeMs();
+			const auto* producerSpeaker = it->second.get();
+			const int64_t nowMs         = this->shared->GetTimeMs();
 
 			producerSpeaker->speaker->LevelChanged(volume, nowMs);
 		}
@@ -295,6 +283,7 @@ namespace RTC
 		MS_TRACE();
 
 		std::string newDominantId;
+
 		const int32_t speakerCount = this->mapProducerSpeakers.size();
 
 		if (speakerCount == 0)
@@ -303,9 +292,10 @@ namespace RTC
 		}
 		else if (speakerCount == 1)
 		{
-			auto it               = this->mapProducerSpeakers.begin();
-			auto* producerSpeaker = it->second;
-			newDominantId         = producerSpeaker->producer->id;
+			const auto it               = this->mapProducerSpeakers.begin();
+			const auto* producerSpeaker = it->second.get();
+
+			newDominantId = producerSpeaker->producer->id;
 		}
 		else
 		{
@@ -315,10 +305,11 @@ namespace RTC
 
 			if (dominantSpeaker == nullptr)
 			{
-				auto it               = this->mapProducerSpeakers.begin();
-				newDominantId         = it->first;
-				auto* producerSpeaker = it->second;
-				dominantSpeaker       = producerSpeaker->speaker.get();
+				const auto it               = this->mapProducerSpeakers.begin();
+				const auto* producerSpeaker = it->second.get();
+
+				newDominantId   = it->first;
+				dominantSpeaker = producerSpeaker->speaker.get();
 			}
 			else
 			{
@@ -326,13 +317,14 @@ namespace RTC
 			}
 
 			dominantSpeaker->EvalActivityScores();
+
 			double newDominantC2 = C2;
 
-			for (auto& kv : this->mapProducerSpeakers)
+			for (const auto& kv : this->mapProducerSpeakers)
 			{
-				auto* producerSpeaker = kv.second;
-				auto* speaker         = producerSpeaker->speaker.get();
-				const auto& id        = producerSpeaker->producer->id;
+				const auto* producerSpeaker = kv.second.get();
+				auto* const speaker         = producerSpeaker->speaker.get();
+				const auto& id              = producerSpeaker->producer->id;
 
 				if (id == this->dominantId || speaker->paused)
 				{
@@ -374,12 +366,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& kv : this->mapProducerSpeakers)
+		for (const auto& kv : this->mapProducerSpeakers)
 		{
-			auto* producerSpeaker = kv.second;
-			auto* speaker         = producerSpeaker->speaker.get();
-			const auto& id        = producerSpeaker->producer->id;
-			const int64_t idleMs  = nowMs - speaker->lastLevelChangeAtMs;
+			const auto* producerSpeaker = kv.second.get();
+			auto* const speaker         = producerSpeaker->speaker.get();
+			const auto& id              = producerSpeaker->producer->id;
+			const int64_t idleMs        = nowMs - speaker->lastLevelChangeAtMs;
 
 			if (SpeakerIdleTimeoutMs < idleMs && (this->dominantId.empty() || id != this->dominantId))
 			{
@@ -523,7 +515,8 @@ namespace RTC
 		MS_TRACE();
 
 		const uint32_t minLevel = this->minLevel + SubunitLengthN1;
-		bool changed            = false;
+
+		bool changed = false;
 
 		for (uint32_t i = 0; i < ImmediateBuffLen; ++i)
 		{

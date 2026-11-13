@@ -39,6 +39,11 @@ namespace RTC
 
 				break;
 			}
+
+			default:
+			{
+				MS_THROW_TYPE_ERROR("invalid type");
+			}
 		}
 
 		if (this->type == DataProducer::Type::SCTP)
@@ -223,19 +228,8 @@ namespace RTC
 					}
 				}
 
-				std::optional<uint16_t> requiredSubchannel{ std::nullopt };
-
-				if (body->requiredSubchannel().has_value())
-				{
-					requiredSubchannel = body->requiredSubchannel();
-				}
-
-				std::optional<uint16_t> ignoredSubchannel{ std::nullopt };
-
-				if (body->ignoredSubchannel().has_value())
-				{
-					ignoredSubchannel = body->ignoredSubchannel();
-				}
+				const std::optional<uint16_t> requiredSubchannel = body->requiredSubchannel();
+				const std::optional<uint16_t> ignoredSubchannel  = body->ignoredSubchannel();
 
 				const uint16_t streamId =
 				  this->type == DataProducer::Type::SCTP ? this->sctpStreamParameters.streamId : 0;

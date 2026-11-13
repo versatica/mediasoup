@@ -78,7 +78,7 @@ namespace RTC
 					return nullptr;
 				}
 
-				Chunk* chunk{ nullptr }; // NOLINT(misc-const-correctness)
+				Chunk* chunk{ nullptr };
 
 				MS_DEBUG_DEV(
 				  "parsing SCTP chunk [ptr:%zu, type:%" PRIu8 " (%s)]",
@@ -402,7 +402,7 @@ namespace RTC
 			// NOTE: It may throw.
 			SetLength(previousLength + chunk->GetLength());
 
-			Chunk* clonedChunk{ nullptr }; // NOLINT(misc-const-correctness)
+			Chunk* clonedChunk{ nullptr };
 
 			try
 			{

@@ -7,6 +7,7 @@
 #include "RTC/SrtpSession.hpp"
 #include "SharedInterface.hpp"
 #include <openssl/bio.h>
+#include <openssl/evp.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
 #include <ankerl/unordered_dense.h>
@@ -66,13 +67,23 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
-			// DTLS is in the process of negotiating a secure connection. Incoming
-			// media can flow through.
-			// NOTE: The caller MUST NOT call any method during this callback.
+			/**
+			 * DTLS is in the process of negotiating a secure connection. Incoming
+			 * media can flow through.
+			 *
+			 * @remarks
+			 * - The caller MUST NOT call any method during this callback.
+			 */
 			virtual void OnDtlsTransportConnecting(const RTC::DtlsTransport* dtlsTransport) = 0;
-			// DTLS has completed negotiation of a secure connection (including DTLS-SRTP
-			// and remote fingerprint verification). Outgoing media can now flow through.
-			// NOTE: The caller MUST NOT call any method during this callback.
+
+			/**
+			 * DTLS has completed negotiation of a secure connection (including
+			 * DTLS-SRTP and remote fingerprint verification). Outgoing media can now
+			 * flow through.
+			 *
+			 * @remarks
+			 * - The caller MUST NOT call any method during this callback.
+			 */
 			virtual void OnDtlsTransportConnected(
 			  const RTC::DtlsTransport* dtlsTransport,
 			  RTC::SrtpSession::CryptoSuite srtpCryptoSuite,
@@ -81,15 +92,28 @@ namespace RTC
 			  uint8_t* srtpRemoteKey,
 			  size_t srtpRemoteKeyLen,
 			  std::string& remoteCert) = 0;
-			// The DTLS connection has been closed as the result of an error (such as a
-			// DTLS alert or a failure to validate the remote fingerprint).
+
+			/**
+			 * The DTLS connection has been closed as the result of an error (such as a
+			 * DTLS alert or a failure to validate the remote fingerprint).
+			 */
 			virtual void OnDtlsTransportFailed(const RTC::DtlsTransport* dtlsTransport) = 0;
-			// The DTLS connection has been closed due to receipt of a close_notify alert.
+
+			/**
+			 * The DTLS connection has been closed due to receipt of a close_notify
+			 * alert.
+			 */
 			virtual void OnDtlsTransportClosed(const RTC::DtlsTransport* dtlsTransport) = 0;
-			// Need to send DTLS data to the peer.
+
+			/**
+			 * Need to send DTLS data to the peer.
+			 */
 			virtual void OnDtlsTransportSendData(
 			  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
-			// DTLS application data received.
+
+			/**
+			 * DTLS application data received.
+			 */
 			virtual void OnDtlsTransportApplicationDataReceived(
 			  const RTC::DtlsTransport* dtlsTransport,
 			  const uint8_t* data,
@@ -99,12 +123,19 @@ namespace RTC
 
 	public:
 		static void ClassInit();
+
 		static void ClassDestroy();
+
 		static Role RoleFromFbs(FBS::WebRtcTransport::DtlsRole role);
+
 		static FBS::WebRtcTransport::DtlsRole RoleToFbs(Role role);
+
 		static FBS::WebRtcTransport::DtlsState StateToFbs(DtlsState state);
+
 		static FingerprintAlgorithm AlgorithmFromFbs(FBS::WebRtcTransport::FingerprintAlgorithm algorithm);
+
 		static FBS::WebRtcTransport::FingerprintAlgorithm AlgorithmToFbs(FingerprintAlgorithm algorithm);
+
 		static bool IsDtls(const uint8_t* data, size_t len)
 		{
 			// clang-format off
@@ -116,6 +147,7 @@ namespace RTC
 			);
 			// clang-format on
 		}
+
 		static const std::vector<Fingerprint>& GetLocalFingerprints()
 		{
 			return DtlsTransport::localFingerprints;
@@ -123,8 +155,11 @@ namespace RTC
 
 	private:
 		static void GenerateCertificateAndPrivateKey();
+
 		static void ReadCertificateAndPrivateKeyFromFiles();
+
 		static void CreateSslCtx();
+
 		static void GenerateFingerprints();
 
 	private:
@@ -140,24 +175,38 @@ namespace RTC
 
 	public:
 		DtlsTransport(Listener* listener, SharedInterface* shared);
+
 		~DtlsTransport() override;
 
 	public:
 		void Dump(int indentation = 0) const;
+
 		void Run(Role localRole);
+
 		bool SetRemoteFingerprint(const Fingerprint& fingerprint);
+
 		void ProcessDtlsData(const uint8_t* data, size_t len, int64_t receivedAtUs);
+
 		DtlsState GetState() const
 		{
 			return this->state;
 		}
+
 		std::optional<Role> GetLocalRole() const
 		{
 			return this->localRole;
 		}
-		// Returns a boolean indicating whether the data could be sent.
+
+		/**
+		 * Returns a boolean indicating whether the data could be sent.
+		 */
 		bool SendApplicationData(const uint8_t* data, size_t len);
-		// This method must be public since it's called within an OpenSSL callback.
+
+		/**
+		 * @remarks
+		 * - This method must be public since it's called within an OpenSSL
+		 *   callback.
+		 */
 		void SendDtlsData(const uint8_t* data, size_t len);
 
 	private:
@@ -188,11 +237,17 @@ namespace RTC
 		}
 
 		void Reset();
+
 		bool CheckStatus(int returnCode);
+
 		bool SetTimeout();
+
 		bool ProcessHandshake();
+
 		bool CheckRemoteFingerprint();
+
 		void ExtractSrtpKeys(RTC::SrtpSession::CryptoSuite srtpCryptoSuite);
+
 		std::optional<RTC::SrtpSession::CryptoSuite> GetNegotiatedSrtpCryptoSuite();
 
 		/* Callbacks fired by OpenSSL events. */

@@ -2,6 +2,8 @@
 
 These rules apply to every C++ source file and header of the worker, that is, the files matched by the `CLANG_FORMAT_PATHS` constant in `scripts/clang-scripts.mjs` (`src/`, `include/`, `test/`, `fuzzer/` and `mocks/`).
 
+Every rule states a criterion. The cases, names and snippets that come with a rule illustrate that criterion, they never delimit it: a line that does not literally match any of them is judged by the criterion, never treated as uncovered because it is not listed. Only a list that a rule explicitly calls exhaustive (such as the headers provided by `common.hpp`) is closed.
+
 ## Building
 
 - Build the worker with `MEDIASOUP_LOCAL_DEV=true make` and its tests with `MEDIASOUP_LOCAL_DEV=true make test`.
@@ -11,7 +13,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 
 - A member that the constructor must set gets no default initializer in the `.hpp`, so that the compiler complains if a constructor forgets it.
 - A member whose value comes verbatim from a constructor argument is set in the member initializer list, never assigned in the constructor body.
-- A member that the constructor normalizes, validates or computes before assigning keeps its default initializer in the `.hpp` and is assigned in the body.
+- If every constructor is guaranteed to set a member, whether in the initializer list or in its body, the member gets no default initializer in the `.hpp`: the constructor always overwrites it, so a default would be dead code.
 - A member that not every constructor sets (several constructors, or a default constructor) keeps its default initializer.
 - A member whose initial value is a constant that does not depend on any argument gets that value as its initializer in the `.hpp`, not in the initializer list.
 - A `std::optional` member that starts empty gets no initializer at all: `std::optional<uint16_t> frameNumber;`, never `{ std::nullopt }`, which is what it already is.
@@ -31,7 +33,13 @@ These rules apply to every C++ source file and header of the worker, that is, th
 - An object owned by a class is held in a `std::unique_ptr`, never as a raw pointer with `new`/`delete`.
 - If it is created once in the constructor and never replaced, the `std::unique_ptr` is `const` and is created in the initializer list (a ternary is fine when it is optional and the condition is known at construction).
 - If it is created lazily, conditionally with complex logic, or replaced during the object's life, the `std::unique_ptr` is not `const` and is set with `reset()` or `std::make_unique()`.
-- Where destruction order matters (for example, a DTLS transport that must go before the sockets), keep an explicit `reset()` in the destructor at the place where the `delete` would have been.
+- A destructor does not `clear()` containers nor `reset()` smart pointers that the destruction of the members empties or destroys right afterwards anyway. Before removing one, follow every chain of calls that destroying that member starts, to its end: the destructors of the owned objects, of their own members, and everything any of them triggers (calls to listeners or to any other object, callbacks, closed handles), and then whatever those calls trigger in turn. Every object that any link of a chain touches must still be alive at the moment the chain runs, whether it is the owner, another member of the owner, an object reached through one of them or a third party. Moving a destruction changes that moment:
+  - Implicit destruction happens after the destructor body, in reverse declaration order, so by then everything the body deleted and every member declared after this one is already gone. In a base class, the subclass is gone too.
+  - `std::unique_ptr::reset()` nulls the pointer before destroying the object, unlike `delete` followed by `= nullptr`, so a chain that reads that same pointer finds it null.
+  - Example: in `WebRtcTransport`, destroying the ICE server notifies the removal of every tuple, the transport then closes the TCP connection of each one, and those connections belong to TCP servers that the destructor body deletes. Destroying the ICE server implicitly, after the body, would make that chain touch deleted TCP connections, even though nothing in it calls the destroyed member back.
+  - A callback that libuv defers to a later loop iteration (`uv_close()`, a pending send) is not part of the chain, but whatever it touches when it runs must not depend on the destroyed objects either.
+- Constructors have side effects too: they may register something that must be unique while it lives (a timer label, a channel handler id, a bound port). So replacing an owned object is not order free. Assigning a new `std::unique_ptr` over an existing one (`ptr = std::make_unique<T>(...)`, `map[key] = std::make_unique<T>(...)`) constructs the new object while the old one is still alive and destroys the old one only afterwards, unlike `delete` of the old one followed by `new`. Whenever code is changed so that an object is created or destroyed at another moment, check what both its constructor and its destructor register, release or trigger, and keep the original order (for example `map.erase(key)` before creating the replacement) with a comment saying why.
+- Where destruction order matters (for example, a DTLS transport that must go before the sockets, or an ICE server whose destructor closes TCP connections of servers deleted later in the same destructor), keep an explicit `reset()` in the destructor at the place where the `delete` would have been, with a comment saying why it must go there.
 - Exceptions: libuv handles (`uv_*_t`), which are freed in the `uv_close()` callback, and raw buffers created with `new[]`.
 
 ## Timers
@@ -46,7 +54,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 - Every `.hpp` includes `"common.hpp"`.
 - A `.cpp` includes `"common.hpp"` only if it has no paired `.hpp` (tests, `main.cpp`, fuzzers).
 - A `.cpp` never re-includes a header that its paired `.hpp` already includes.
-- Standard headers already provided by `common.hpp` (`<algorithm>`, `<cinttypes>`, `<cstddef>`, `<cstdint>`, `<functional>`, `<memory>`, `<optional>`, `<utility>`) are never included again, neither in a `.cpp` nor in a `.hpp`. Others (`<vector>`, `<deque>`, `<map>`, `<string>`...) are included directly where used.
+- The standard headers provided by `common.hpp`, which are exactly `<algorithm>`, `<cinttypes>`, `<cstddef>`, `<cstdint>`, `<functional>`, `<memory>`, `<optional>` and `<utility>`, are never included again, neither in a `.cpp` nor in a `.hpp`. Others (`<vector>`, `<deque>`, `<map>`, `<string>`...) are included directly where used.
 - A type newly used in a file gets its own `#include`. Never rely on transitive includes (except through the paired `.hpp`).
 - Whenever code is touched, check the includes of the file: none missing and none left over.
 - A standard header that provides functions or utilities rather than a type of its own name (`<cstring>`, `<cstdlib>`, `<cmath>`, `<limits>`, `<sstream>`...) carries a comment listing what is used from it, with `()` for functions: `#include <cstring> // std::memcmp(), std::memcpy()`. Headers named after the type they provide (`<vector>`, `<string>`, `<map>`...) take no comment.
@@ -74,9 +82,10 @@ These rules apply to every C++ source file and header of the worker, that is, th
   		int64_t maxBitrate{ Types::BitrateInfinite };
   ```
 
-- Code is split into paragraphs with blank lines, one per step: a declaration is not glued to the first thing done with it, an action is not glued to the assert/`REQUIRE` that checks it, and a check is not glued to the next action. What belongs to the same step stays together: several consecutive calls on the same object, the assignments that fill its fields, or several consecutive `REQUIRE`s.
+- Code is split into paragraphs with blank lines, one per step: a declaration is not glued to the first thing done with it, an action is not glued to the assert/`REQUIRE` that checks it, and a check is not glued to the next action. Whatever belongs to the same step stays together, for example several consecutive calls on the same object, the assignments that fill its fields, or several consecutive `REQUIRE`s.
 - A declaration that carries its own comment is a paragraph: it is separated by a blank line from the next commented declaration.
-- Everything that can be `const` is `const`, including `const auto` locals and `const T&` parameters. But never replace an explicit type with `auto` when the right-hand side does not show the type. The right-hand side shows it when it is a cast or a `std::make_unique()`, when the name of the method or function called makes clear what it returns (`const auto response = FBS::Response::CreateResponse(...)`), and when the variable takes an entry out of a container whose name includes the name of the variable, even if the variable adds a suffix such as `Id` or `Name` for what it holds of the entry (`auto message = std::move(this->receivedMessages.front())`, `for (const auto streamId : outboundStreamIds)`, `auto* router = kv.second` and `const auto& routerId = kv.first` iterating `this->mapRouters`), and when it copies a member with the same name of the class itself or of one of our own structs (`auto expirationCount = this->expirationCount`, `const auto& label = options.label`). Spelling the type out there adds nothing. Exception: iterators and similar types whose spelled-out name adds nothing for the reader can be `auto` (`auto chunkIt = packet->ChunksBegin()`, `auto it = map.find(key)`, `auto [it, inserted] = map.emplace(...)`).
+- Everything that can be `const` is `const`, including `const auto` locals and `const T&` parameters.
+- `auto` or an explicit type is decided by one criterion: can whoever reads the line tell the type from the line itself? If yes, `auto`. If not, spell the type out. The line shows the type when the right-hand side names it (a cast, `std::make_unique()`, a function or method whose name says what it returns), or when the name of the variable, read together with what it is assigned from, makes the type obvious: it is named after the member, field, container or entry it comes from, whatever word it adds before or after that name. These are descriptions of the criterion, not a closed list of allowed cases: any line where the type is evident qualifies, and a line that does not literally match one of them is judged by the criterion, never rejected for not matching. Iterators and similar types whose spelled-out name adds nothing for the reader are always `auto`.
 - Class methods, static or not, and namespace functions always start with an uppercase letter, `constexpr` ones included: `GenerateCrcTables()`, never `generateCrcTables()`. Only file-scope `static` functions in a `.cpp` (libuv and OpenSSL callbacks and similar) start with a lowercase letter: `onCloseTcp()`.
 - A method of the class itself is called without `this->`: `Send(...)`, never `this->Send(...)`. `this->` is only for members: `this->bufferBuilder`.
 - Value getters are named `GetXxx()`. Boolean getters are named `IsXxx()` / `HasXxx()`.
@@ -89,7 +98,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 - Integer literals have no `u` suffix (`0`, not `0u`), unless the value does not fit in an `int`.
 - Write `Utils::Foo`, never `::Utils::Foo`.
 - Access `std::optional` with `.value()`, not `*opt`.
-- In production code, before touching a `.value()`, read upwards until finding what guarantees the value. If an `if`, an `else`, an early `return` or an earlier assignment guarantees it, it is left exactly as it is: no `NOLINT`, no local variable pulled out, no restructuring of the `if`, and no mention of it. Only accesses that are really unguarded are acted upon. The `NOLINT` rule for optionals is a test rule (see "Tests (Catch2)").
+- In production code, before touching a `.value()`, read upwards until finding what guarantees the value. If anything earlier in the code path guarantees it (an `if`, an `else`, an early `return`, an earlier assignment or anything else), it is left exactly as it is: no `NOLINT`, no local variable pulled out, no restructuring of the `if`, and no mention of it. Only accesses that are really unguarded are acted upon. The `NOLINT` rule for optionals is a test rule (see "Tests (Catch2)").
 
   ```cpp
   if (!this->avgRttUs.has_value())
@@ -114,7 +123,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 ## Comments and logs
 
 - All code text is in English.
-- A comment must help whoever reads the file cold. Do not write comments that only record a discussion, and do not reference other projects the code may have been ported from.
+- A comment must help whoever reads the file cold. Do not write comments that only record a discussion, and do not add references to projects the code may have been ported from. References already in the code stay.
 - Never turn a point raised while working on a change into a comment: why a header was chosen over another, why something is measured one way and not another, what an earlier version did wrong. If the code is right, it needs no note defending it.
 - No semicolons in log messages or comments: use a comma in logs and split into sentences in comments.
 - Use ASCII `->`, never the Unicode arrow.

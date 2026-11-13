@@ -21,10 +21,11 @@ namespace RTC
 			TCP
 		};
 
+	public:
 		/**
 		 * Opaque-ish key identifying one (protocol, bind address, port range)
 		 * tuple. Issued by Bind*() and consumed by Unbind(). Callers store it as
-		 * an opaque token; equality and hashing are exact-tuple based, so distinct
+		 * an opaque token. Equality and hashing are exact-tuple based, so distinct
 		 * tuples never collide regardless of how close their numeric
 		 * representations are.
 		 */
@@ -36,10 +37,12 @@ namespace RTC
 
 		public:
 			PortRangeKey() = default;
+
 			PortRangeKey(
 			  Protocol protocol, const sockaddr_storage& bindAddr, uint16_t minPort, uint16_t maxPort);
 
 			bool operator==(const PortRangeKey& other) const noexcept;
+
 			bool operator!=(const PortRangeKey& other) const noexcept
 			{
 				return !(*this == other);
@@ -50,14 +53,17 @@ namespace RTC
 			{
 				return this->protocol;
 			}
+
 			const sockaddr_storage& GetSockaddrStorage() const
 			{
 				return this->bindAddr;
 			}
+
 			uint16_t GetMinPort() const
 			{
 				return this->minPort;
 			}
+
 			uint16_t GetMaxPort() const
 			{
 				return this->maxPort;
@@ -70,6 +76,7 @@ namespace RTC
 			uint16_t maxPort{ 0 };
 		};
 
+	public:
 		struct PortRangeKeyHash
 		{
 			/**
@@ -77,7 +84,7 @@ namespace RTC
 			 * with the standard boost-style `hash_combine` seed mixer. We deliberately
 			 * do NOT hash the raw `sockaddr_storage` bytes (padding is
 			 * caller-controlled and would cause structurally-equal keys to hash
-			 * differently); instead we hash the same fields that `operator==`
+			 * differently). Instead we hash the same fields that `operator==`
 			 * inspects.
 			 */
 			size_t operator()(const PortRangeKey& key) const noexcept;
@@ -86,7 +93,7 @@ namespace RTC
 	private:
 		struct PortRange
 		{
-			PortRange(uint16_t numPorts, uint16_t minPort) : ports(numPorts, false), minPort(minPort)
+			PortRange(uint32_t numPorts, uint16_t minPort) : ports(numPorts, false), minPort(minPort)
 			{
 			}
 
@@ -96,47 +103,56 @@ namespace RTC
 		};
 
 	public:
-		static uv_udp_t* BindUdp(std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags)
+		static void Dump(int indentation = 0);
+
+		static uv_udp_t* BindUdp(std::string& ip, uint16_t port, const RTC::Transport::SocketFlags& flags)
 		{
 			return reinterpret_cast<uv_udp_t*>(Bind(Protocol::UDP, ip, port, flags));
 		}
+
 		static uv_udp_t* BindUdp(
 		  std::string& ip,
 		  uint16_t minPort,
 		  uint16_t maxPort,
-		  RTC::Transport::SocketFlags& flags,
+		  const RTC::Transport::SocketFlags& flags,
 		  PortRangeKey& key)
 		{
 			return reinterpret_cast<uv_udp_t*>(Bind(Protocol::UDP, ip, minPort, maxPort, flags, key));
 		}
-		static uv_tcp_t* BindTcp(std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags)
+
+		static uv_tcp_t* BindTcp(std::string& ip, uint16_t port, const RTC::Transport::SocketFlags& flags)
 		{
 			return reinterpret_cast<uv_tcp_t*>(Bind(Protocol::TCP, ip, port, flags));
 		}
+
 		static uv_tcp_t* BindTcp(
 		  std::string& ip,
 		  uint16_t minPort,
 		  uint16_t maxPort,
-		  RTC::Transport::SocketFlags& flags,
+		  const RTC::Transport::SocketFlags& flags,
 		  PortRangeKey& key)
 		{
 			return reinterpret_cast<uv_tcp_t*>(Bind(Protocol::TCP, ip, minPort, maxPort, flags, key));
 		}
+
 		static void Unbind(const PortRangeKey& key, uint16_t port);
-		void Dump(int indentation = 0) const;
 
 	private:
 		static uv_handle_t* Bind(
-		  Protocol protocol, std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags);
+		  Protocol protocol, std::string& ip, uint16_t port, const RTC::Transport::SocketFlags& flags);
+
 		static uv_handle_t* Bind(
 		  Protocol protocol,
 		  std::string& ip,
 		  uint16_t minPort,
 		  uint16_t maxPort,
-		  RTC::Transport::SocketFlags& flags,
+		  const RTC::Transport::SocketFlags& flags,
 		  PortRangeKey& key);
+
 		static PortRange& GetOrCreatePortRange(const PortRangeKey& key, uint16_t minPort, uint16_t maxPort);
-		static uint8_t ConvertSocketFlags(RTC::Transport::SocketFlags& flags, Protocol protocol, int family);
+
+		static uint8_t ConvertSocketFlags(
+		  const RTC::Transport::SocketFlags& flags, Protocol protocol, int family);
 
 	private:
 		static thread_local ankerl::unordered_dense::map<PortRangeKey, PortRange, PortRangeKeyHash> mapPortRanges;
@@ -152,9 +168,9 @@ namespace RTC
 		int family;
 		uint16_t port;
 		std::string ip;
-		auto* storage = const_cast<sockaddr_storage*>(std::addressof(k.GetSockaddrStorage()));
 
-		Utils::IP::GetAddressInfo(reinterpret_cast<sockaddr*>(storage), family, ip, port);
+		Utils::IP::GetAddressInfo(
+		  reinterpret_cast<const sockaddr*>(std::addressof(k.GetSockaddrStorage())), family, ip, port);
 
 		return os << "{protocol:" << protocolStr << ", family:" << family << ", ip:" << ip
 		          << ", minPort:" << k.GetMinPort() << ", maxPort:" << k.GetMaxPort() << "}";

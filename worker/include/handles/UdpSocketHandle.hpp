@@ -105,7 +105,7 @@ public:
 	void OnUvSend(int status, const onSendCallback& cb);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
-protected:
+public:
 	virtual void UserOnUdpDatagramReceived(
 	  const uint8_t* data, size_t len, size_t bufferLen, const sockaddr* addr) = 0;
 

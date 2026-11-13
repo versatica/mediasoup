@@ -36,43 +36,13 @@ namespace RTC
 			static FBS::WebRtcTransport::IceCandidateTcpType TcpCandidateTypeToFbs(TcpCandidateType type);
 
 		public:
-			IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority)
-			  : foundation("udpcandidate"),
-			    priority(priority),
-			    address(udpSocket->GetLocalIp()),
-			    protocol(Protocol::UDP),
-			    port(udpSocket->GetLocalPort())
-			{
-			}
+			IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority);
 
-			IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority, std::string& announcedAddress)
-			  : foundation("udpcandidate"),
-			    priority(priority),
-			    address(announcedAddress),
-			    protocol(Protocol::UDP),
-			    port(udpSocket->GetLocalPort())
-			{
-			}
+			IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority, const std::string& announcedAddress);
 
-			IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority)
-			  : foundation("tcpcandidate"),
-			    priority(priority),
-			    address(tcpServer->GetLocalIp()),
-			    protocol(Protocol::TCP),
-			    port(tcpServer->GetLocalPort())
+			IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority);
 
-			{
-			}
-
-			IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority, std::string& announcedAddress)
-			  : foundation("tcpcandidate"),
-			    priority(priority),
-			    address(announcedAddress),
-			    protocol(Protocol::TCP),
-			    port(tcpServer->GetLocalPort())
-
-			{
-			}
+			IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority, const std::string& announcedAddress);
 
 			flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate> FillBuffer(
 			  flatbuffers::FlatBufferBuilder& builder) const;

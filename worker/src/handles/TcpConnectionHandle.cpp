@@ -159,7 +159,6 @@ bool TcpConnectionHandle::Start() noexcept
 		return false;
 	}
 
-	// NOLINTNEXTLINE(misc-const-correctness)
 	const int err = uv_read_start(
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
 	  static_cast<uv_alloc_cb>(onAlloc),

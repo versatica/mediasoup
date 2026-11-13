@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpObserver.hpp"
+#include "FBS/rtpObserver.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 
@@ -19,70 +20,6 @@ namespace RTC
 	RtpObserver::~RtpObserver()
 	{
 		MS_TRACE();
-	}
-
-	void RtpObserver::HandleRequest(Channel::ChannelRequest* request)
-	{
-		MS_TRACE();
-
-		switch (request->method)
-		{
-			case Channel::ChannelRequest::Method::RTPOBSERVER_PAUSE:
-			{
-				Pause();
-
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::ChannelRequest::Method::RTPOBSERVER_RESUME:
-			{
-				Resume();
-
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::ChannelRequest::Method::RTPOBSERVER_ADD_PRODUCER:
-			{
-				const auto* body = request->data->body_as<FBS::RtpObserver::AddProducerRequest>();
-				auto producerId  = body->producerId()->str();
-
-				RTC::Producer* producer = this->listener->RtpObserverGetProducer(this, producerId);
-
-				AddProducer(producer);
-
-				this->listener->OnRtpObserverAddProducer(this, producer);
-
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::ChannelRequest::Method::RTPOBSERVER_REMOVE_PRODUCER:
-			{
-				const auto* body = request->data->body_as<FBS::RtpObserver::RemoveProducerRequest>();
-				auto producerId  = body->producerId()->str();
-
-				RTC::Producer* producer = this->listener->RtpObserverGetProducer(this, producerId);
-
-				RemoveProducer(producer);
-
-				// Remove from the map.
-				this->listener->OnRtpObserverRemoveProducer(this, producer);
-
-				request->Accept();
-
-				break;
-			}
-
-			default:
-			{
-				MS_THROW_ERROR("unknown method '%s'", request->methodCStr);
-			}
-		}
 	}
 
 	void RtpObserver::Pause()
@@ -111,5 +48,69 @@ namespace RTC
 		this->paused = false;
 
 		Resumed();
+	}
+
+	void RtpObserver::HandleRequest(Channel::ChannelRequest* request)
+	{
+		MS_TRACE();
+
+		switch (request->method)
+		{
+			case Channel::ChannelRequest::Method::RTPOBSERVER_PAUSE:
+			{
+				Pause();
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::RTPOBSERVER_RESUME:
+			{
+				Resume();
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::RTPOBSERVER_ADD_PRODUCER:
+			{
+				const auto* body      = request->data->body_as<FBS::RtpObserver::AddProducerRequest>();
+				const auto producerId = body->producerId()->str();
+
+				RTC::Producer* const producer = this->listener->RtpObserverGetProducer(this, producerId);
+
+				AddProducer(producer);
+
+				this->listener->OnRtpObserverAddProducer(this, producer);
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::RTPOBSERVER_REMOVE_PRODUCER:
+			{
+				const auto* body      = request->data->body_as<FBS::RtpObserver::RemoveProducerRequest>();
+				const auto producerId = body->producerId()->str();
+
+				RTC::Producer* const producer = this->listener->RtpObserverGetProducer(this, producerId);
+
+				RemoveProducer(producer);
+
+				// Remove from the map.
+				this->listener->OnRtpObserverRemoveProducer(this, producer);
+
+				request->Accept();
+
+				break;
+			}
+
+			default:
+			{
+				MS_THROW_ERROR("unknown method '%s'", request->methodCStr);
+			}
+		}
 	}
 } // namespace RTC

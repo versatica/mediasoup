@@ -90,12 +90,12 @@ namespace RTC
 
 		bool IsMediaCodec() const
 		{
-			return this->subtype >= Subtype(100) && this->subtype < (Subtype)300;
+			return this->subtype >= Subtype(100) && this->subtype < Subtype(300);
 		}
 
 		bool IsComplementaryCodec() const
 		{
-			return this->subtype >= Subtype(300) && this->subtype < (Subtype)400;
+			return this->subtype >= Subtype(300) && this->subtype < Subtype(400);
 		}
 
 		bool IsFeatureCodec() const
@@ -131,6 +131,7 @@ namespace RTC
 
 	public:
 		static RtpHeaderExtensionUri::Type TypeFromFbs(FBS::RtpParameters::RtpHeaderExtensionUri uri);
+
 		static FBS::RtpParameters::RtpHeaderExtensionUri TypeToFbs(RtpHeaderExtensionUri::Type uri);
 	};
 
@@ -138,6 +139,7 @@ namespace RTC
 	{
 	public:
 		RtcpFeedback() = default;
+
 		explicit RtcpFeedback(const FBS::RtpParameters::RtcpFeedback* data);
 
 		flatbuffers::Offset<FBS::RtpParameters::RtcpFeedback> FillBuffer(
@@ -152,6 +154,7 @@ namespace RTC
 	{
 	public:
 		RtpCodecParameters() = default;
+
 		explicit RtpCodecParameters(const FBS::RtpParameters::RtpCodecParameters* data);
 
 		flatbuffers::Offset<FBS::RtpParameters::RtpCodecParameters> FillBuffer(
@@ -179,6 +182,7 @@ namespace RTC
 	{
 	public:
 		RtpRtxParameters() = default;
+
 		explicit RtpRtxParameters(const FBS::RtpParameters::Rtx* data);
 
 		flatbuffers::Offset<FBS::RtpParameters::Rtx> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
@@ -191,6 +195,7 @@ namespace RTC
 	{
 	public:
 		RtpEncodingParameters() = default;
+
 		explicit RtpEncodingParameters(const FBS::RtpParameters::RtpEncodingParameters* data);
 
 		flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters> FillBuffer(
@@ -216,6 +221,7 @@ namespace RTC
 	{
 	public:
 		RtpHeaderExtensionParameters() = default;
+
 		explicit RtpHeaderExtensionParameters(const FBS::RtpParameters::RtpHeaderExtensionParameters* data);
 
 		flatbuffers::Offset<FBS::RtpParameters::RtpHeaderExtensionParameters> FillBuffer(
@@ -232,6 +238,7 @@ namespace RTC
 	{
 	public:
 		RtcpParameters() = default;
+
 		explicit RtcpParameters(const FBS::RtpParameters::RtcpParameters* data);
 
 		flatbuffers::Offset<FBS::RtpParameters::RtcpParameters> FillBuffer(
@@ -255,7 +262,9 @@ namespace RTC
 
 	public:
 		static std::optional<Type> GetType(const RtpParameters& rtpParameters);
+
 		static const std::string& GetTypeString(Type type);
+
 		static FBS::RtpParameters::Type TypeToFbs(Type type);
 
 	private:
@@ -263,16 +272,21 @@ namespace RTC
 
 	public:
 		RtpParameters() = default;
+
 		explicit RtpParameters(const FBS::RtpParameters::RtpParameters* data);
 
 		flatbuffers::Offset<FBS::RtpParameters::RtpParameters> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
-		const RTC::RtpCodecParameters* GetCodecForEncoding(RtpEncodingParameters& encoding) const;
-		const RTC::RtpCodecParameters* GetRtxCodecForEncoding(RtpEncodingParameters& encoding) const;
+
+		const RTC::RtpCodecParameters* GetCodecForEncoding(const RtpEncodingParameters& encoding) const;
+
+		const RTC::RtpCodecParameters* GetRtxCodecForEncoding(const RtpEncodingParameters& encoding) const;
 
 	private:
 		void ValidateCodecs();
+
 		void ValidateEncodings();
+
 		void SetType();
 
 	public:

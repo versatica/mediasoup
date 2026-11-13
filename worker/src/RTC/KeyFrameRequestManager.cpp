@@ -1,4 +1,4 @@
-#define MS_CLASS "KeyFrameRequestManager"
+#define MS_CLASS "RTC::KeyFrameRequestManager"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/KeyFrameRequestManager.hpp"
@@ -22,6 +22,13 @@ RTC::PendingKeyFrameInfo::PendingKeyFrameInfo(
 RTC::PendingKeyFrameInfo::~PendingKeyFrameInfo()
 {
 	MS_TRACE();
+}
+
+void RTC::PendingKeyFrameInfo::SetRetryOnTimeout(bool retryOnTimeout)
+{
+	MS_TRACE();
+
+	this->retryOnTimeout = retryOnTimeout;
 }
 
 void RTC::PendingKeyFrameInfo::OnTimer(TimerHandleInterface* timer)
@@ -52,6 +59,13 @@ RTC::KeyFrameRequestDelayer::~KeyFrameRequestDelayer()
 	MS_TRACE();
 }
 
+void RTC::KeyFrameRequestDelayer::SetKeyFrameRequested(bool keyFrameRequested)
+{
+	MS_TRACE();
+
+	this->keyFrameRequested = keyFrameRequested;
+}
+
 void RTC::KeyFrameRequestDelayer::OnTimer(TimerHandleInterface* timer)
 {
 	MS_TRACE();
@@ -74,22 +88,6 @@ RTC::KeyFrameRequestManager::KeyFrameRequestManager(
 RTC::KeyFrameRequestManager::~KeyFrameRequestManager()
 {
 	MS_TRACE();
-
-	for (auto& kv : this->mapSsrcPendingKeyFrameInfo)
-	{
-		auto* pendingKeyFrameInfo = kv.second;
-
-		delete pendingKeyFrameInfo;
-	}
-	this->mapSsrcPendingKeyFrameInfo.clear();
-
-	for (auto& kv : this->mapSsrcKeyFrameRequestDelayer)
-	{
-		auto* keyFrameRequestDelayer = kv.second;
-
-		delete keyFrameRequestDelayer;
-	}
-	this->mapSsrcKeyFrameRequestDelayer.clear();
 }
 
 void RTC::KeyFrameRequestManager::KeyFrameNeeded(uint32_t ssrc)
@@ -98,14 +96,14 @@ void RTC::KeyFrameRequestManager::KeyFrameNeeded(uint32_t ssrc)
 
 	if (this->keyFrameRequestDelayMs > 0)
 	{
-		auto it = this->mapSsrcKeyFrameRequestDelayer.find(ssrc);
+		const auto it = this->mapSsrcKeyFrameRequestDelayer.find(ssrc);
 
 		// There is a delayer for the given ssrc, so enable it and return.
 		if (it != this->mapSsrcKeyFrameRequestDelayer.end())
 		{
 			MS_DEBUG_DEV("there is a delayer for the given ssrc, enabling it and returning");
 
-			auto* keyFrameRequestDelayer = it->second;
+			auto* const keyFrameRequestDelayer = it->second.get();
 
 			keyFrameRequestDelayer->SetKeyFrameRequested(true);
 
@@ -116,17 +114,17 @@ void RTC::KeyFrameRequestManager::KeyFrameNeeded(uint32_t ssrc)
 		{
 			MS_DEBUG_DEV("creating a delayer for the given ssrc");
 
-			this->mapSsrcKeyFrameRequestDelayer[ssrc] =
-			  new KeyFrameRequestDelayer(this, this->shared, ssrc, this->keyFrameRequestDelayMs);
+			this->mapSsrcKeyFrameRequestDelayer[ssrc] = std::make_unique<KeyFrameRequestDelayer>(
+			  this, this->shared, ssrc, this->keyFrameRequestDelayMs);
 		}
 	}
 
-	auto it = this->mapSsrcPendingKeyFrameInfo.find(ssrc);
+	const auto it = this->mapSsrcPendingKeyFrameInfo.find(ssrc);
 
 	// There is a pending key frame for the given ssrc.
 	if (it != this->mapSsrcPendingKeyFrameInfo.end())
 	{
-		auto* pendingKeyFrameInfo = it->second;
+		auto* const pendingKeyFrameInfo = it->second.get();
 
 		// Re-request the key frame if not received on time.
 		pendingKeyFrameInfo->SetRetryOnTimeout(true);
@@ -134,7 +132,8 @@ void RTC::KeyFrameRequestManager::KeyFrameNeeded(uint32_t ssrc)
 		return;
 	}
 
-	this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, this->shared, ssrc);
+	this->mapSsrcPendingKeyFrameInfo[ssrc] =
+	  std::make_unique<PendingKeyFrameInfo>(this, this->shared, ssrc);
 
 	this->listener->OnKeyFrameNeeded(this, ssrc);
 }
@@ -146,33 +145,27 @@ void RTC::KeyFrameRequestManager::ForceKeyFrameNeeded(uint32_t ssrc)
 	if (this->keyFrameRequestDelayMs > 0)
 	{
 		// Create/replace a delayer for this ssrc.
-		auto it = this->mapSsrcKeyFrameRequestDelayer.find(ssrc);
-
-		// There is a delayer for the given ssrc, so enable it and return.
-		if (it != this->mapSsrcKeyFrameRequestDelayer.end())
-		{
-			auto* keyFrameRequestDelayer = it->second;
-
-			delete keyFrameRequestDelayer;
-		}
-
-		this->mapSsrcKeyFrameRequestDelayer[ssrc] =
-		  new KeyFrameRequestDelayer(this, this->shared, ssrc, this->keyFrameRequestDelayMs);
+		// NOTE: The existing one must be deleted before creating the new one, since
+		// both would hold a timer with the same label at once.
+		this->mapSsrcKeyFrameRequestDelayer.erase(ssrc);
+		this->mapSsrcKeyFrameRequestDelayer[ssrc] = std::make_unique<KeyFrameRequestDelayer>(
+		  this, this->shared, ssrc, this->keyFrameRequestDelayMs);
 	}
 
-	auto it = this->mapSsrcPendingKeyFrameInfo.find(ssrc);
+	const auto it = this->mapSsrcPendingKeyFrameInfo.find(ssrc);
 
 	// There is a pending key frame for the given ssrc.
 	if (it != this->mapSsrcPendingKeyFrameInfo.end())
 	{
-		auto* pendingKeyFrameInfo = it->second;
+		auto* const pendingKeyFrameInfo = it->second.get();
 
 		pendingKeyFrameInfo->SetRetryOnTimeout(true);
 		pendingKeyFrameInfo->Restart();
 	}
 	else
 	{
-		this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, this->shared, ssrc);
+		this->mapSsrcPendingKeyFrameInfo[ssrc] =
+		  std::make_unique<PendingKeyFrameInfo>(this, this->shared, ssrc);
 	}
 
 	this->listener->OnKeyFrameNeeded(this, ssrc);
@@ -182,17 +175,13 @@ void RTC::KeyFrameRequestManager::KeyFrameReceived(uint32_t ssrc)
 {
 	MS_TRACE();
 
-	auto it = this->mapSsrcPendingKeyFrameInfo.find(ssrc);
+	const auto it = this->mapSsrcPendingKeyFrameInfo.find(ssrc);
 
 	// There is no pending key frame for the given ssrc.
 	if (it == this->mapSsrcPendingKeyFrameInfo.end())
 	{
 		return;
 	}
-
-	auto* pendingKeyFrameInfo = it->second;
-
-	delete pendingKeyFrameInfo;
 
 	this->mapSsrcPendingKeyFrameInfo.erase(it);
 }
@@ -201,15 +190,13 @@ void RTC::KeyFrameRequestManager::OnKeyFrameRequestTimeout(PendingKeyFrameInfo* 
 {
 	MS_TRACE();
 
-	auto it = this->mapSsrcPendingKeyFrameInfo.find(pendingKeyFrameInfo->GetSsrc());
+	const auto it = this->mapSsrcPendingKeyFrameInfo.find(pendingKeyFrameInfo->GetSsrc());
 
 	MS_ASSERT(
 	  it != this->mapSsrcPendingKeyFrameInfo.end(), "PendingKeyFrameInfo not present in the map");
 
-	if (!pendingKeyFrameInfo->GetRetryOnTimeout())
+	if (!pendingKeyFrameInfo->IsRetryOnTimeoutEnabled())
 	{
-		delete pendingKeyFrameInfo;
-
 		this->mapSsrcPendingKeyFrameInfo.erase(it);
 
 		return;
@@ -228,15 +215,13 @@ void RTC::KeyFrameRequestManager::OnKeyFrameDelayTimeout(KeyFrameRequestDelayer*
 {
 	MS_TRACE();
 
-	auto it = this->mapSsrcKeyFrameRequestDelayer.find(keyFrameRequestDelayer->GetSsrc());
+	const auto it = this->mapSsrcKeyFrameRequestDelayer.find(keyFrameRequestDelayer->GetSsrc());
 
 	MS_ASSERT(
 	  it != this->mapSsrcKeyFrameRequestDelayer.end(), "KeyFrameRequestDelayer not present in the map");
 
-	auto ssrc              = keyFrameRequestDelayer->GetSsrc();
-	auto keyFrameRequested = keyFrameRequestDelayer->GetKeyFrameRequested();
-
-	delete keyFrameRequestDelayer;
+	const auto ssrc              = keyFrameRequestDelayer->GetSsrc();
+	const auto keyFrameRequested = keyFrameRequestDelayer->IsKeyFrameRequested();
 
 	this->mapSsrcKeyFrameRequestDelayer.erase(it);
 

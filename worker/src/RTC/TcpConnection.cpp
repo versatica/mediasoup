@@ -19,8 +19,12 @@ namespace RTC
 
 	/* Instance methods. */
 
-	TcpConnection::TcpConnection(Listener* listener, SharedInterface* shared, size_t bufferSize)
-	  : ::TcpConnectionHandle::TcpConnectionHandle(bufferSize), listener(listener), shared(shared)
+	TcpConnection::TcpConnection(
+	  Listener* listener, SharedInterface* shared, const std::string& announcedAddress, size_t bufferSize)
+	  : TcpConnectionHandle::TcpConnectionHandle(bufferSize),
+	    listener(listener),
+	    shared(shared),
+	    announcedAddress(announcedAddress)
 	{
 		MS_TRACE();
 	}
@@ -84,7 +88,7 @@ namespace RTC
 			// We have packetLen bytes.
 			if (dataLen >= 2 && dataLen >= 2 + packetLen)
 			{
-				const uint8_t* packet = this->buffer + this->frameStart + 2;
+				const uint8_t* const packet = this->buffer + this->frameStart + 2;
 
 				// Update received bytes and notify the listener.
 				if (packetLen != 0)
@@ -177,6 +181,6 @@ namespace RTC
 		uint8_t frameLen[2];
 
 		Utils::Byte::Set2Bytes(frameLen, 0, len);
-		::TcpConnectionHandle::Write(frameLen, 2, data, len, std::move(cb));
+		TcpConnectionHandle::Write(frameLen, 2, data, len, std::move(cb));
 	}
 } // namespace RTC

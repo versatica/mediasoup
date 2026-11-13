@@ -1,5 +1,5 @@
-#ifndef MS_KEY_FRAME_REQUEST_MANAGER_HPP
-#define MS_KEY_FRAME_REQUEST_MANAGER_HPP
+#ifndef MS_RTC_KEY_FRAME_REQUEST_MANAGER_HPP
+#define MS_RTC_KEY_FRAME_REQUEST_MANAGER_HPP
 
 #include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
@@ -22,20 +22,21 @@ namespace RTC
 
 	public:
 		PendingKeyFrameInfo(Listener* listener, SharedInterface* shared, uint32_t ssrc);
+
 		~PendingKeyFrameInfo() override;
 
 		uint32_t GetSsrc() const
 		{
 			return this->ssrc;
 		}
-		void SetRetryOnTimeout(bool notify)
-		{
-			this->retryOnTimeout = notify;
-		}
-		bool GetRetryOnTimeout() const
+
+		void SetRetryOnTimeout(bool retryOnTimeout);
+
+		bool IsRetryOnTimeoutEnabled() const
 		{
 			return this->retryOnTimeout;
 		}
+
 		void Restart()
 		{
 			this->timer->Restart();
@@ -66,20 +67,20 @@ namespace RTC
 
 	public:
 		KeyFrameRequestDelayer(Listener* listener, SharedInterface* shared, uint32_t ssrc, int64_t delayMs);
+
 		~KeyFrameRequestDelayer() override;
 
 		uint32_t GetSsrc() const
 		{
 			return this->ssrc;
 		}
-		bool GetKeyFrameRequested() const
+
+		bool IsKeyFrameRequested() const
 		{
 			return this->keyFrameRequested;
 		}
-		void SetKeyFrameRequested(bool flag)
-		{
-			this->keyFrameRequested = flag;
-		}
+
+		void SetKeyFrameRequested(bool keyFrameRequested);
 
 		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
@@ -107,17 +108,20 @@ namespace RTC
 
 	public:
 		KeyFrameRequestManager(Listener* listener, SharedInterface* shared, int64_t keyFrameRequestDelayMs);
+
 		~KeyFrameRequestManager() override;
 
 		void KeyFrameNeeded(uint32_t ssrc);
+
 		void ForceKeyFrameNeeded(uint32_t ssrc);
+
 		void KeyFrameReceived(uint32_t ssrc);
 
 		/* Pure virtual methods inherited from PendingKeyFrameInfo::Listener. */
 	public:
 		void OnKeyFrameRequestTimeout(PendingKeyFrameInfo* pendingKeyFrameInfo) override;
 
-		/* Pure virtual methods inherited from PendingKeyFrameInfo::Listener. */
+		/* Pure virtual methods inherited from KeyFrameRequestDelayer::Listener. */
 	public:
 		void OnKeyFrameDelayTimeout(KeyFrameRequestDelayer* keyFrameRequestDelayer) override;
 
@@ -125,8 +129,9 @@ namespace RTC
 		Listener* const listener;
 		SharedInterface* const shared;
 		const int64_t keyFrameRequestDelayMs; // 0 means disabled.
-		ankerl::unordered_dense::map<uint32_t, PendingKeyFrameInfo*> mapSsrcPendingKeyFrameInfo;
-		ankerl::unordered_dense::map<uint32_t, KeyFrameRequestDelayer*> mapSsrcKeyFrameRequestDelayer;
+		ankerl::unordered_dense::map<uint32_t, std::unique_ptr<PendingKeyFrameInfo>> mapSsrcPendingKeyFrameInfo;
+		ankerl::unordered_dense::map<uint32_t, std::unique_ptr<KeyFrameRequestDelayer>>
+		  mapSsrcKeyFrameRequestDelayer;
 	};
 } // namespace RTC
 
