@@ -61,6 +61,7 @@ inline static void onSslInfo(const SSL* ssl, int where, int ret)
  * handshake data, it never exceeds `RTC::Consts::OutgoingDtlsPacketMaxSize`.
  */
 inline static long onSslBioOut(
+  // NOLINTNEXTLINE(misc-const-correctness)
   BIO* bio,
   int operationType,
   const char* argp,
@@ -140,6 +141,7 @@ namespace RTC
 	thread_local SSL_CTX* DtlsTransport::sslCtx{ nullptr };
 	thread_local uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
 	const ankerl::unordered_dense::map<std::string, DtlsTransport::FingerprintAlgorithm>
+	  // NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	  DtlsTransport::String2FingerprintAlgorithm = {
 		  { "sha-1",   DtlsTransport::FingerprintAlgorithm::SHA1   },
 		  { "sha-224", DtlsTransport::FingerprintAlgorithm::SHA224 },
@@ -148,6 +150,7 @@ namespace RTC
 		  { "sha-512", DtlsTransport::FingerprintAlgorithm::SHA512 },
 	};
 	const ankerl::unordered_dense::map<DtlsTransport::FingerprintAlgorithm, std::string>
+	  // NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	  DtlsTransport::FingerprintAlgorithm2String = {
 		  { DtlsTransport::FingerprintAlgorithm::SHA1,   "sha-1"   },
 		  { DtlsTransport::FingerprintAlgorithm::SHA224, "sha-224" },
@@ -155,12 +158,14 @@ namespace RTC
 		  { DtlsTransport::FingerprintAlgorithm::SHA384, "sha-384" },
 		  { DtlsTransport::FingerprintAlgorithm::SHA512, "sha-512" },
 	};
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const ankerl::unordered_dense::map<std::string, DtlsTransport::Role> DtlsTransport::String2Role = {
 		{ "auto",   DtlsTransport::Role::AUTO   },
 		{ "client", DtlsTransport::Role::CLIENT },
 		{ "server", DtlsTransport::Role::SERVER },
 	};
 	thread_local std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::SrtpCryptoSuites = {
 		{
 		 .cryptoSuite = RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM,
