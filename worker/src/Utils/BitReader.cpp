@@ -6,7 +6,7 @@
 
 namespace Utils
 {
-	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init, hicpp-member-init)
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	BitReader::BitReader(const uint8_t* data, size_t len) : len(len)
 	{
 		MS_TRACE();
@@ -58,7 +58,8 @@ namespace Utils
 		}
 
 		const uint8_t bit =
-		  ((*(this->data + (this->offset >> 0x3))) >> (0x7 - (this->offset & 0x7))) & 0x1;
+		  static_cast<uint8_t>((*(this->data + (this->offset >> 0x3))) >> (0x7 - (this->offset & 0x7))) &
+		  0x1;
 
 		this->offset++;
 
@@ -71,7 +72,7 @@ namespace Utils
 
 		uint32_t bits = 0;
 
-		for (unsigned i = 0; i < count; ++i)
+		for (size_t i{ 0 }; i < count; ++i)
 		{
 			bits = (2 * bits) + GetBit();
 		}

@@ -129,7 +129,7 @@ namespace RTC
 
 		// Fill RTP header extension ids.
 		// This may throw.
-		for (auto& exten : this->rtpParameters.headerExtensions)
+		for (const auto& exten : this->rtpParameters.headerExtensions)
 		{
 			if (exten.id == 0)
 			{
@@ -492,6 +492,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOTE: We want a switch here, as in every other notification handler.
+		// NOLINTNEXTLINE(readability-trivial-switch)
 		switch (notification->data->event())
 		{
 			case Channel::ChannelNotification::Event::PRODUCER_SEND:
@@ -1164,6 +1166,7 @@ namespace RTC
 		// Create a RtpStreamRecv for receiving a media stream.
 		auto rtpStreamUniquePtr = std::make_unique<RTC::RTP::RtpStreamRecv>(
 		  this, this->shared, params, SendNackDelayMs, useRtpInactivityCheck);
+
 		auto* const rtpStream = rtpStreamUniquePtr.get();
 
 		// Insert into the maps.
@@ -1554,31 +1557,29 @@ namespace RTC
 			bool flip{ false };
 			uint16_t rotation{ 0 };
 
-			if (packet->ReadVideoOrientation(camera, flip, rotation))
+			// If video orientation was not yet detected or any value has changed,
+			// emit event.
+			if (
+			  packet->ReadVideoOrientation(camera, flip, rotation) &&
+			  (!this->videoOrientationDetected || camera != this->videoOrientation.camera ||
+				 flip != this->videoOrientation.flip || rotation != this->videoOrientation.rotation))
 			{
-				// If video orientation was not yet detected or any value has changed,
-				// emit event.
-				if (
-				  !this->videoOrientationDetected || camera != this->videoOrientation.camera ||
-				  flip != this->videoOrientation.flip || rotation != this->videoOrientation.rotation)
-				{
-					this->videoOrientationDetected  = true;
-					this->videoOrientation.camera   = camera;
-					this->videoOrientation.flip     = flip;
-					this->videoOrientation.rotation = rotation;
+				this->videoOrientationDetected  = true;
+				this->videoOrientation.camera   = camera;
+				this->videoOrientation.flip     = flip;
+				this->videoOrientation.rotation = rotation;
 
-					const auto notification = FBS::Producer::CreateVideoOrientationChangeNotification(
-					  this->shared->GetChannelNotifier()->GetBufferBuilder(),
-					  this->videoOrientation.camera,
-					  this->videoOrientation.flip,
-					  this->videoOrientation.rotation);
+				const auto notification = FBS::Producer::CreateVideoOrientationChangeNotification(
+				  this->shared->GetChannelNotifier()->GetBufferBuilder(),
+				  this->videoOrientation.camera,
+				  this->videoOrientation.flip,
+				  this->videoOrientation.rotation);
 
-					this->shared->GetChannelNotifier()->Emit(
-					  this->id,
-					  FBS::Notification::Event::PRODUCER_VIDEO_ORIENTATION_CHANGE,
-					  FBS::Notification::Body::Producer_VideoOrientationChangeNotification,
-					  notification);
-				}
+				this->shared->GetChannelNotifier()->Emit(
+				  this->id,
+				  FBS::Notification::Event::PRODUCER_VIDEO_ORIENTATION_CHANGE,
+				  FBS::Notification::Body::Producer_VideoOrientationChangeNotification,
+				  notification);
 			}
 		}
 	}
@@ -1820,6 +1821,8 @@ namespace RTC
 				const auto* const feedbackPacket =
 				  static_cast<const RTC::RTCP::AnyTransportLayerFeedbackPacket*>(packet);
 
+				// NOTE: We want a switch here to dispatch on the RTCP message type.
+				// NOLINTNEXTLINE(readability-trivial-switch)
 				switch (feedbackPacket->GetMessageType())
 				{
 					case RTC::RTCP::AnyTransportLayerFeedbackPacket::MessageType::NACK:

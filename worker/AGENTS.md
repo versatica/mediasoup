@@ -71,7 +71,7 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 ## Functions and statements
 
 - Every function and method defined in a `.cpp` starts with `MS_TRACE()` (`MS_TRACE_STD()` in the `Channel` classes and other code that uses the `_STD` variants). This does not apply to the fuzzers (`fuzzer/`).
-- Local declarations inside a function or at file scope: `constexpr` first, then `const`, then non-const, with a blank line between the `const` and the non-const groups. That order is not mandatory, though: logical order wins. The "parent" is declared first and then the "children" that are put into it or assigned to it, and each declaration stays next to the one it relates to. Making a line `const` never moves it: if it ends up next to a declaration of the other kind, a blank line goes between the two and nothing else.
+- Local declarations inside a function or at file scope: `constexpr` first, then `const`, then non-const, with a blank line between the `const` and the non-const groups. This also applies when a line is made `const`: it moves up into the `const` group. The only exception is a real reason, logical or aesthetic, to declare a non-const first: the "parent" is declared first and then the "children" that are put into it or assigned to it, and a declaration that only makes sense next to the one it relates to stays there.
 - None of the above applies to the private/protected members of a class in the `.hpp`: there members go in the order that makes sense to whoever reads the class, grouped by what they are under their group comment, and a `const` member stays in its place with `const` added and nothing else. It is not moved up, not separated with a blank line and not taken out of its group.
 
   ```cpp
@@ -96,7 +96,7 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 - Aggregates are built with designated initializers: `{ .ssrc = ssrc, .lastSeq = seq }`, never `{ ssrc, seq }` (clang-tidy `modernize-use-designated-initializers`).
 - Never write the `struct` keyword before a variable, parameter or return type: `RttBackoff rttBackoff;`, never `struct RttBackoff rttBackoff;`. The only exception is where a function with the same name hides the type, as with `struct stat` and `struct sigaction` (POSIX declares the `stat()` and `sigaction()` functions, and without the keyword it does not compile). There it stays, with a one-line comment saying why, so that it is not "fixed" in a later pass.
 - Every lambda states its return type explicitly, `-> void` included. Hence a lambda never takes `auto` parameters (clang-tidy `fuchsia-trailing-return` rejects a trailing return type on a generic lambda): spell out the parameter type, e.g. `const std::pair<const uint16_t, OutgoingStream>& entry` for a `std::map` entry.
-- Integer literals have no `u` suffix (`0`, not `0u`), unless the value does not fit in an `int`.
+- Integer literals have no unsigned suffix (`0`, not `0u`), unless the suffix is needed: the value does not fit in an `int`, or the literal must not be an `int` (e.g. so that a template argument is deduced as an unsigned type). When needed, the suffix is uppercase: `4711U`, never `4711u`.
 - Write `Utils::Foo`, never `::Utils::Foo`.
 - Access `std::optional` with `.value()`, not `*opt`.
 - In production code, before touching a `.value()`, read upwards until finding what guarantees the value. If anything earlier in the code path guarantees it (an `if`, an `else`, an early `return`, an earlier assignment or anything else), it is left exactly as it is: no `NOLINT`, no local variable pulled out, no restructuring of the `if`, and no mention of it. Only accesses that are really unguarded are acted upon. The `NOLINT` rule for optionals is a test rule (see "Tests (Catch2)").
@@ -120,6 +120,7 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 ## Robustness
 
 - No input coming from the API or the network may crash the worker. `MS_ASSERT` aborts in release builds too, so it is only for invariants that hold by construction. Inputs are validated at the boundary and rejected with `MS_THROW_TYPE_ERROR`.
+- Never use `assert()`, always `MS_ASSERT()`. `assert()` disappears in release builds, so an invariant it checks is not checked in production.
 
 ## Comments and logs
 

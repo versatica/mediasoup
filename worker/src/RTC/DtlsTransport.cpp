@@ -457,25 +457,10 @@ namespace RTC
 			goto error;
 		}
 
-		// NOTE: MBSTRING_ASC is a signed bitwise OR inside the OpenSSL macro itself.
 		X509_NAME_add_entry_by_txt(
-		  certName,
-		  "O",
-		  // NOLINTNEXTLINE(bugprone-signed-bitwise)
-		  MBSTRING_ASC,
-		  reinterpret_cast<const uint8_t*>(subject.c_str()),
-		  -1,
-		  -1,
-		  0);
+		  certName, "O", MBSTRING_ASC, reinterpret_cast<const uint8_t*>(subject.c_str()), -1, -1, 0);
 		X509_NAME_add_entry_by_txt(
-		  certName,
-		  "CN",
-		  // NOLINTNEXTLINE(bugprone-signed-bitwise)
-		  MBSTRING_ASC,
-		  reinterpret_cast<const uint8_t*>(subject.c_str()),
-		  -1,
-		  -1,
-		  0);
+		  certName, "CN", MBSTRING_ASC, reinterpret_cast<const uint8_t*>(subject.c_str()), -1, -1, 0);
 
 		// It is self-signed so set the issuer name to be the same as the subject.
 		ret = X509_set_issuer_name(DtlsTransport::certificate, certName);
@@ -621,8 +606,8 @@ namespace RTC
 		// Set options.
 		SSL_CTX_set_options(
 		  DtlsTransport::sslCtx,
-		  SSL_OP_CIPHER_SERVER_PREFERENCE | SSL_OP_NO_TICKET |
-		    static_cast<uint64_t>(SSL_OP_SINGLE_ECDH_USE) | SSL_OP_NO_QUERY_MTU);
+		  SSL_OP_CIPHER_SERVER_PREFERENCE | SSL_OP_NO_TICKET | SSL_OP_SINGLE_ECDH_USE |
+		    SSL_OP_NO_QUERY_MTU);
 
 		// Don't use sessions cache.
 		SSL_CTX_set_session_cache_mode(DtlsTransport::sslCtx, SSL_SESS_CACHE_OFF);
@@ -631,11 +616,7 @@ namespace RTC
 
 		// Require certificate from peer.
 		SSL_CTX_set_verify(
-		  DtlsTransport::sslCtx,
-		  static_cast<int>(
-		    static_cast<unsigned int>(SSL_VERIFY_PEER) |
-		    static_cast<unsigned int>(SSL_VERIFY_FAIL_IF_NO_PEER_CERT)),
-		  onSslCertificateVerify);
+		  DtlsTransport::sslCtx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, onSslCertificateVerify);
 
 		// Set SSL info callback.
 		SSL_CTX_set_info_callback(DtlsTransport::sslCtx, onSslInfo);

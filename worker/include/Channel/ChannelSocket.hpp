@@ -142,9 +142,9 @@ namespace Channel
 		const std::unique_ptr<ConsumerSocket> consumerSocket;
 		const std::unique_ptr<ProducerSocket> producerSocket;
 		const ChannelReadFn channelReadFn{ nullptr };
-		ChannelReadCtx channelReadCtx{ nullptr };
+		void* const channelReadCtx{ nullptr };
 		const ChannelWriteFn channelWriteFn{ nullptr };
-		ChannelWriteCtx channelWriteCtx{ nullptr };
+		void* const channelWriteCtx{ nullptr };
 		uv_async_t* uvReadHandle{ nullptr };
 		flatbuffers::FlatBufferBuilder bufferBuilder;
 	};

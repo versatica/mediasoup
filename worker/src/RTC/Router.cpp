@@ -203,7 +203,8 @@ namespace RTC
 				// This may throw.
 				auto webRtcTransportUniquePtr =
 				  std::make_unique<RTC::WebRtcTransport>(this->shared, transportId, this, body->options());
-				auto* const webRtcTransport = webRtcTransportUniquePtr.get();
+
+				const auto* const webRtcTransport = webRtcTransportUniquePtr.get();
 
 				// Insert into the map.
 				this->mapTransports[transportId] = std::move(webRtcTransportUniquePtr);
@@ -242,7 +243,8 @@ namespace RTC
 				// This may throw.
 				auto webRtcTransportUniquePtr = std::make_unique<RTC::WebRtcTransport>(
 				  this->shared, transportId, this, webRtcServer, iceCandidates, options);
-				auto* const webRtcTransport = webRtcTransportUniquePtr.get();
+
+				const auto* const webRtcTransport = webRtcTransportUniquePtr.get();
 
 				// Insert into the map.
 				this->mapTransports[transportId] = std::move(webRtcTransportUniquePtr);
@@ -267,7 +269,8 @@ namespace RTC
 
 				auto plainTransportUniquePtr =
 				  std::make_unique<RTC::PlainTransport>(this->shared, transportId, this, body->options());
-				auto* const plainTransport = plainTransportUniquePtr.get();
+
+				const auto* const plainTransport = plainTransportUniquePtr.get();
 
 				// Insert into the map.
 				this->mapTransports[transportId] = std::move(plainTransportUniquePtr);
@@ -291,7 +294,8 @@ namespace RTC
 
 				auto pipeTransportUniquePtr =
 				  std::make_unique<RTC::PipeTransport>(this->shared, transportId, this, body->options());
-				auto* const pipeTransport = pipeTransportUniquePtr.get();
+
+				const auto* const pipeTransport = pipeTransportUniquePtr.get();
 
 				// Insert into the map.
 				this->mapTransports[transportId] = std::move(pipeTransportUniquePtr);
@@ -315,7 +319,8 @@ namespace RTC
 
 				auto directTransportUniquePtr =
 				  std::make_unique<RTC::DirectTransport>(this->shared, transportId, this, body->options());
-				auto* const directTransport = directTransportUniquePtr.get();
+
+				const auto* const directTransport = directTransportUniquePtr.get();
 
 				// Insert into the map.
 				this->mapTransports[transportId] = std::move(directTransportUniquePtr);

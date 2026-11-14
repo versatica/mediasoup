@@ -199,6 +199,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOTE: We want a switch here, as in every other notification handler.
+		// NOLINTNEXTLINE(readability-trivial-switch)
 		switch (notification->data->event())
 		{
 			case Channel::ChannelNotification::Event::DATAPRODUCER_SEND:

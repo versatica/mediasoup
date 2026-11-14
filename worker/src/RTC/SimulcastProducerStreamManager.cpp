@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "RTC/SeqManager.hpp"
 #include "Utils.hpp"
+#include <limits> // std::numeric_limits
 
 namespace RTC
 {
@@ -314,7 +315,7 @@ namespace RTC
 				// costs its temporal layers up to this one and nothing else.
 				const RTC::BWE::BitrateAllocator::Candidate::BitrateOption option{
 					.bitrate = producerRtpStream->GetCumulativeTemporalLayerBitrate(nowMs, 0, temporalLayer),
-					.layers  = { spatialLayer, temporalLayer }
+					.layers  = { spatialLayer, temporalLayer },
 				};
 
 				// Lowering the frame rate is only on offer within the lowest usable
@@ -548,7 +549,7 @@ namespace RTC
 
 					// NOTE: Capped below 2^31 ticks, beyond which RTP timestamps that wrap
 					// around would take the jump forward as a jump backwards.
-					static constexpr int64_t MaxElapsedTs{ (int64_t{ 1 } << 31) - 1 };
+					static constexpr int64_t MaxElapsedTs{ std::numeric_limits<int32_t>::max() };
 
 					const int64_t nowMs     = this->shared->GetTimeMs();
 					const int64_t elapsedMs = nowMs - this->lastPacketForwardedAtMs.value_or(nowMs);
@@ -615,8 +616,7 @@ namespace RTC
 				const int64_t maxTsExtraOffset = MaxExtraOffsetMs * clockRate / 1000;
 
 				// NOTE: RTP timestamps wrap around, so the sum is truncated on purpose.
-				const auto tsExtraOffset =
-				  static_cast<uint32_t>(maxPacketTs - (packet->GetTimestamp() - tsOffset) + 1);
+				const uint32_t tsExtraOffset = maxPacketTs - (packet->GetTimestamp() - tsOffset) + 1;
 
 				// NOTE: Don't ask for a key frame if already done.
 				if (this->keyFrameForTsOffsetRequested)
@@ -792,8 +792,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto* const producerTargetRtpStream  = GetProducerTargetRtpStream();
-		auto* const producerCurrentRtpStream = GetProducerCurrentRtpStream();
+		const auto* const producerTargetRtpStream  = GetProducerTargetRtpStream();
+		const auto* const producerCurrentRtpStream = GetProducerCurrentRtpStream();
 
 		if (producerTargetRtpStream)
 		{
@@ -816,7 +816,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto* const producerTargetRtpStream = GetProducerTargetRtpStream();
+		const auto* const producerTargetRtpStream = GetProducerTargetRtpStream();
 
 		if (!producerTargetRtpStream)
 		{
@@ -833,7 +833,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto* const producerCurrentRtpStream = GetProducerCurrentRtpStream();
+		const auto* const producerCurrentRtpStream = GetProducerCurrentRtpStream();
 
 		if (!producerCurrentRtpStream)
 		{

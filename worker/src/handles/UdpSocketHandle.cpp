@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include <cstdlib> // std::abort()
 #include <cstring> // std::memcpy()
 #include <exception>
 
@@ -19,11 +20,13 @@ alignas(4) static thread_local uint8_t ReadBuffer[ReadBufferSize];
 
 /* Static methods for UV callbacks. */
 
+// libuv imposes the callback signature.
+// NOLINTNEXTLINE(misc-const-correctness)
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
 	MS_TRACE();
 
-	auto* socket = static_cast<UdpSocketHandle*>(handle->data);
+	auto* const socket = static_cast<UdpSocketHandle*>(handle->data);
 
 	if (socket)
 	{
@@ -31,12 +34,18 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 	}
 }
 
+// libuv imposes the callback signature.
 inline static void onRecv(
-  uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const sockaddr* addr, unsigned int flags)
+  // NOLINTNEXTLINE(misc-const-correctness)
+  uv_udp_t* handle,
+  ssize_t nread,
+  const uv_buf_t* buf,
+  const sockaddr* addr,
+  unsigned int flags)
 {
 	MS_TRACE();
 
-	auto* socket = static_cast<UdpSocketHandle*>(handle->data);
+	auto* const socket = static_cast<UdpSocketHandle*>(handle->data);
 
 	if (socket)
 	{
@@ -44,13 +53,15 @@ inline static void onRecv(
 	}
 }
 
+// libuv imposes the callback signature.
+// NOLINTNEXTLINE(misc-const-correctness)
 inline static void onSend(uv_udp_send_t* req, int status)
 {
 	MS_TRACE();
 
-	auto* sendData         = static_cast<UdpSocketHandle::UvSendData*>(req->data);
-	const uv_udp_t* handle = req->handle;
-	auto* socket           = static_cast<UdpSocketHandle*>(handle->data);
+	const auto* const sendData   = static_cast<UdpSocketHandle::UvSendData*>(req->data);
+	const uv_udp_t* const handle = req->handle;
+	auto* const socket           = static_cast<UdpSocketHandle*>(handle->data);
 
 	if (socket)
 	{
@@ -106,9 +117,11 @@ UdpSocketHandle::~UdpSocketHandle()
 		{
 			InternalClose();
 		}
-		catch (const std::exception& e)
+		// NOTE: MS_ABORT() throws in the lib build, and an exception cannot leave
+		// a destructor.
+		catch (const std::exception&)
 		{
-			MS_ERROR("error closing UDP socket: %s", e.what());
+			std::abort();
 		}
 	}
 }
@@ -188,7 +201,7 @@ void UdpSocketHandle::Send(const uint8_t* data, size_t len, const sockaddr* addr
 		MS_WARN_DEV("uv_udp_try_send() failed, trying uv_udp_send(): %s", uv_strerror(sent));
 	}
 
-	auto* sendData = new UvSendData(len);
+	auto* const sendData = new UvSendData(len);
 
 	sendData->req.data = static_cast<void*>(sendData);
 	std::memcpy(sendData->store, data, len);
@@ -328,10 +341,9 @@ bool UdpSocketHandle::SetLocalAddress()
 {
 	MS_TRACE();
 
-	int err;
 	int len = sizeof(this->localAddr);
 
-	err = uv_udp_getsockname(
+	const int err = uv_udp_getsockname(
 	  this->uvHandle, reinterpret_cast<sockaddr*>(std::addressof(this->localAddr)), std::addressof(len));
 
 	if (err != 0)
@@ -411,9 +423,7 @@ inline void UdpSocketHandle::OnUvSend(int status, const onSendCallback& cb)
 	}
 	else
 	{
-#if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_DEV("send error: %s", uv_strerror(status));
-#endif
 
 		if (cb)
 		{

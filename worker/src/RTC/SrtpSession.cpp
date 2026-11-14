@@ -6,6 +6,8 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/Consts.hpp"
+#include <cstdlib> // std::abort()
+#include <exception>
 
 namespace RTC
 {
@@ -294,11 +296,11 @@ namespace RTC
 				{
 					MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
 				}
-				catch (const std::exception&) // NOLINT(bugprone-empty-catch)
+				// NOTE: MS_ABORT() throws in the lib build, and an exception cannot
+				// leave a destructor.
+				catch (const std::exception&)
 				{
-					// NOTE: This is to avoid a warning:
-					// '~SrtpSession' has a non-throwing exception specification but can
-					// still throw [-Wexceptions]
+					std::abort();
 				}
 			}
 		}

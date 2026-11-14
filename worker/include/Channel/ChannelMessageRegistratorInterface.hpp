@@ -4,6 +4,8 @@
 #include "common.hpp"
 // TODO: We should have a ChannelSocketInterface class instead.
 #include "Channel/ChannelSocket.hpp"
+#include "FBS/worker.h"
+#include <flatbuffers/flatbuffer_builder.h>
 #include <string>
 
 namespace Channel

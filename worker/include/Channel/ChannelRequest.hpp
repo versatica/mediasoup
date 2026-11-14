@@ -2,11 +2,9 @@
 #define MS_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
-#include "FBS/message.h"
 #include "FBS/request.h"
 #include "FBS/response.h"
 #include <flatbuffers/flatbuffer_builder.h>
-#include <cassert> // assert()
 #include <string>
 
 namespace Channel
@@ -38,23 +36,10 @@ namespace Channel
 		template<class Body>
 		void Accept(FBS::Response::Body type, const flatbuffers::Offset<Body>& body)
 		{
-			assert(!this->replied);
-
-			this->replied = true;
-
-			auto& builder = ChannelRequest::bufferBuilder;
-
-			const auto response =
-			  FBS::Response::CreateResponse(builder, this->id, true, type, body.Union());
-			const auto message =
-			  FBS::Message::CreateMessage(builder, FBS::Message::Body::Response, response.Union());
-
-			builder.FinishSizePrefixed(message);
-
-			Send(builder.GetBufferPointer(), builder.GetSize());
-
-			builder.Clear();
+			Accept(type, body.Union());
 		}
+
+		void Accept(FBS::Response::Body type, flatbuffers::Offset<void> body);
 
 		void Error(const char* reason = nullptr);
 
@@ -75,7 +60,7 @@ namespace Channel
 		const uint32_t id;
 		const Method method;
 		const char* methodCStr;
-		std::string handlerId;
+		const std::string handlerId;
 		bool replied{ false };
 	};
 } // namespace Channel

@@ -67,12 +67,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Allocate a new RTC::TcpConnection for the TcpServer to handle it.
-		auto* const connection = new RTC::TcpConnection(
-		  this->connListener, this->shared, this->announcedAddress, TcpConnectionBufferSize);
-
-		// Accept it.
-		AcceptTcpConnection(connection);
+		// Allocate a new RTC::TcpConnection for the TcpServer to handle it, and
+		// accept it.
+		AcceptTcpConnection(
+		  std::make_unique<RTC::TcpConnection>(
+		    this->connListener, this->shared, this->announcedAddress, TcpConnectionBufferSize));
 	}
 
 	void TcpServer::UserOnTcpConnectionClosed(TcpConnectionHandle* connection)

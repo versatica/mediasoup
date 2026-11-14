@@ -11,16 +11,19 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <cstdlib> // std::abort()
 #include <cstring> // std::memcpy()
 #include <exception>
 
 /* Static methods for UV callbacks. */
 
+// libuv imposes the callback signature.
+// NOLINTNEXTLINE(misc-const-correctness)
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
 	MS_TRACE_STD();
 
-	auto* socket = static_cast<UnixStreamSocketHandle*>(handle->data);
+	auto* const socket = static_cast<UnixStreamSocketHandle*>(handle->data);
 
 	if (socket)
 	{
@@ -28,11 +31,13 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 	}
 }
 
+// libuv imposes the callback signature.
+// NOLINTNEXTLINE(misc-const-correctness)
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
 	MS_TRACE_STD();
 
-	auto* socket = static_cast<UnixStreamSocketHandle*>(handle->data);
+	auto* const socket = static_cast<UnixStreamSocketHandle*>(handle->data);
 
 	if (socket)
 	{
@@ -40,13 +45,15 @@ inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
 	}
 }
 
+// libuv imposes the callback signature.
+// NOLINTNEXTLINE(misc-const-correctness)
 inline static void onWrite(uv_write_t* req, int status)
 {
 	MS_TRACE_STD();
 
-	auto* writeData           = static_cast<UnixStreamSocketHandle::UvWriteData*>(req->data);
-	const uv_stream_t* handle = req->handle;
-	auto* socket              = static_cast<UnixStreamSocketHandle*>(handle->data);
+	const auto* const writeData     = static_cast<UnixStreamSocketHandle::UvWriteData*>(req->data);
+	const uv_stream_t* const handle = req->handle;
+	auto* const socket              = static_cast<UnixStreamSocketHandle*>(handle->data);
 
 	// Just notify the UnixStreamSocketHandle when error.
 	if (socket && status != 0)
@@ -67,11 +74,13 @@ inline static void onClosePipe(uv_handle_t* handle)
 	delete reinterpret_cast<uv_pipe_t*>(handle);
 }
 
+// libuv imposes the callback signature.
+// NOLINTNEXTLINE(misc-const-correctness)
 inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 {
 	MS_TRACE_STD();
 
-	uv_stream_t* handle = req->handle;
+	uv_stream_t* const handle = req->handle;
 
 	delete req;
 
@@ -135,7 +144,16 @@ UnixStreamSocketHandle::~UnixStreamSocketHandle()
 
 	if (!this->closed)
 	{
-		Close();
+		try
+		{
+			Close();
+		}
+		// NOTE: MS_ABORT() throws in the lib build, and an exception cannot leave
+		// a destructor.
+		catch (const std::exception&)
+		{
+			std::abort();
+		}
 	}
 
 	delete[] this->buffer;
@@ -166,14 +184,7 @@ void UnixStreamSocketHandle::Close()
 
 		if (err != 0)
 		{
-			try
-			{
-				MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
-			}
-			catch (const std::exception& e)
-			{
-				MS_ERROR("%s", e.what());
-			}
+			MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
 		}
 	}
 
@@ -181,7 +192,7 @@ void UnixStreamSocketHandle::Close()
 	if (this->role == UnixStreamSocketHandle::Role::PRODUCER && !this->hasError && !this->isClosedByPeer)
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
-		auto* req = new uv_shutdown_t;
+		auto* const req = new uv_shutdown_t;
 
 		req->data = static_cast<void*>(this);
 
@@ -190,14 +201,7 @@ void UnixStreamSocketHandle::Close()
 
 		if (err != 0)
 		{
-			try
-			{
-				MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
-			}
-			catch (const std::exception& e)
-			{
-				MS_ERROR("%s", e.what());
-			}
+			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
 		}
 	}
 	// Otherwise directly close the socket.
@@ -250,7 +254,7 @@ void UnixStreamSocketHandle::Write(const uint8_t* data, size_t len)
 
 	const size_t pendingLen = len - written;
 
-	auto* writeData = new UvWriteData(pendingLen);
+	auto* const writeData = new UvWriteData(pendingLen);
 
 	writeData->req.data = static_cast<void*>(writeData);
 	std::memcpy(writeData->store, data + written, pendingLen);

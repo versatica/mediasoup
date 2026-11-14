@@ -28,13 +28,15 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		const uint8_t* out = BufferOut;
-		uint8_t* pos;
-		const uint8_t* end;
-		const uint8_t* in;
-		size_t olen;
+		uint8_t* const out       = BufferOut;
+		const size_t olen        = (len * 4 / 3) + 4; // 3-byte blocks to 4-byte.
+		const uint8_t* const end = data + len;
 
-		olen = (len * 4 / 3) + 4; // 3-byte blocks to 4-byte.
+		const uint8_t* in = data;
+		// NOTE: misc-const-correctness does not take `*pos++ = x` as a write through
+		// `pos`, so it wrongly suggests making its pointee const.
+		// NOLINTNEXTLINE(misc-const-correctness)
+		uint8_t* pos = out;
 
 		if (olen < len)
 		{
@@ -45,32 +47,36 @@ namespace Utils
 			MS_THROW_TYPE_ERROR("data too big");
 		}
 
-		end = data + len;
-		in  = data;
-		pos = const_cast<uint8_t*>(out);
-
 		while (end - in >= 3)
 		{
-			*pos++ = Base64Table[in[0] >> 2];
-			*pos++ = Base64Table[((in[0] & 0x03) << 4) | (in[1] >> 4)];
-			*pos++ = Base64Table[((in[1] & 0x0f) << 2) | (in[2] >> 6)];
-			*pos++ = Base64Table[in[2] & 0x3f];
+			const uint32_t byte0 = in[0];
+			const uint32_t byte1 = in[1];
+			const uint32_t byte2 = in[2];
+
+			*pos++ = Base64Table[byte0 >> 2];
+			*pos++ = Base64Table[((byte0 & 0x03) << 4) | (byte1 >> 4)];
+			*pos++ = Base64Table[((byte1 & 0x0f) << 2) | (byte2 >> 6)];
+			*pos++ = Base64Table[byte2 & 0x3f];
 			in += 3;
 		}
 
 		if (end - in)
 		{
-			*pos++ = Base64Table[in[0] >> 2];
+			const uint32_t byte0 = in[0];
+
+			*pos++ = Base64Table[byte0 >> 2];
 
 			if (end - in == 1)
 			{
-				*pos++ = Base64Table[(in[0] & 0x03) << 4];
+				*pos++ = Base64Table[(byte0 & 0x03) << 4];
 				*pos++ = '=';
 			}
 			else
 			{
-				*pos++ = Base64Table[((in[0] & 0x03) << 4) | (in[1] >> 4)];
-				*pos++ = Base64Table[(in[1] & 0x0f) << 2];
+				const uint32_t byte1 = in[1];
+
+				*pos++ = Base64Table[((byte0 & 0x03) << 4) | (byte1 >> 4)];
+				*pos++ = Base64Table[(byte1 & 0x0f) << 2];
 			}
 
 			*pos++ = '=';
@@ -92,10 +98,11 @@ namespace Utils
 	{
 		MS_TRACE();
 
+		uint8_t* const out = BufferOut;
+
 		uint8_t dtable[256];
-		uint8_t* out = BufferOut;
 		uint8_t* pos;
-		uint8_t block[4];
+		uint32_t block[4];
 		uint8_t tmp;
 		size_t i;
 		size_t count;

@@ -11,7 +11,7 @@ class TcpServerHandle : public TcpConnectionHandle::Listener
 {
 public:
 	/**
-	 * uvHandle must be an already initialized and binded uv_tcp_t pointer.
+	 * uvHandle must be an already initialized and bound uv_tcp_t pointer.
 	 */
 	explicit TcpServerHandle(uv_tcp_t* uvHandle);
 
@@ -54,7 +54,7 @@ public:
 	void SetRecvBufferSize(uint32_t size);
 
 protected:
-	void AcceptTcpConnection(TcpConnectionHandle* connection);
+	void AcceptTcpConnection(std::unique_ptr<TcpConnectionHandle> connection);
 
 private:
 	void InternalClose();
@@ -84,7 +84,7 @@ private:
 	// Allocated by this (may be passed by argument).
 	uv_tcp_t* const uvHandle;
 	// Others.
-	ankerl::unordered_dense::set<TcpConnectionHandle*> connections;
+	ankerl::unordered_dense::map<TcpConnectionHandle*, std::unique_ptr<TcpConnectionHandle>> connections;
 	bool closed{ false };
 };
 

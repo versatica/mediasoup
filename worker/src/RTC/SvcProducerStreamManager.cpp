@@ -112,13 +112,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->listener->IsActive())
+		// Just check target layers if the stream has died or reborned.
+		if (this->listener->IsActive() && (score == 0 || previousScore == 0))
 		{
-			// Just check target layers if the stream has died or reborned.
-			if (score == 0 || previousScore == 0)
-			{
-				MayChangeLayers();
-			}
+			MayChangeLayers();
 		}
 	}
 
@@ -212,7 +209,8 @@ namespace RTC
 				    : this->producerRtpStream->GetCumulativeBitrate(nowMs, spatialLayer, temporalLayer);
 
 				const RTC::BWE::BitrateAllocator::Candidate::BitrateOption option{
-					.bitrate = bitrate, .layers = { spatialLayer, temporalLayer }
+					.bitrate = bitrate,
+					.layers  = { spatialLayer, temporalLayer },
 				};
 
 				// Lowering the frame rate is only on offer within the lowest usable

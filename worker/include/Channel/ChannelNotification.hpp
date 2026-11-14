@@ -23,7 +23,7 @@ namespace Channel
 		const int64_t receivedAtUs;
 		// Others.
 		const char* eventCStr;
-		std::string handlerId;
+		const std::string handlerId;
 	};
 } // namespace Channel
 

@@ -78,6 +78,10 @@ HeaderFilterRegex: '.*/worker/(include|test/include|fuzzer/include)/.*'
 FormatStyle: 'file'
 User: mediasoup
 CheckOptions:
+  # A positive integer literal is never negative, so it cannot cause any signed
+  # bitwise issue.
+  - key: bugprone-signed-bitwise.IgnorePositiveIntegerLiterals
+    value: 'true'
   # Maps' operator[] inserts the key if missing, so it is never out of bounds.
   # The first three are the default value, ankerl::unordered_dense::map is added.
   - key: cppcoreguidelines-pro-bounds-avoid-unchecked-container-access.ExcludeClasses

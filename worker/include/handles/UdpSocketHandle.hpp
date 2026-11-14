@@ -33,7 +33,7 @@ public:
 
 public:
 	/**
-	 * uvHandle must be an already initialized and binded uv_udp_t pointer.
+	 * uvHandle must be an already initialized and bound uv_udp_t pointer.
 	 */
 	explicit UdpSocketHandle(uv_udp_t* uvHandle);
 

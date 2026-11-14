@@ -39,13 +39,12 @@ namespace Utils
 		MS_TRACE();
 
 		char ipBuffer[INET6_ADDRSTRLEN] = { 0 };
-		int err;
 
 		switch (addr->sa_family)
 		{
 			case AF_INET:
 			{
-				err = uv_inet_ntop(
+				const int err = uv_inet_ntop(
 				  AF_INET,
 				  std::addressof(reinterpret_cast<const sockaddr_in*>(addr)->sin_addr),
 				  ipBuffer,
@@ -63,7 +62,7 @@ namespace Utils
 
 			case AF_INET6:
 			{
-				err = uv_inet_ntop(
+				const int err = uv_inet_ntop(
 				  AF_INET6,
 				  std::addressof(reinterpret_cast<const sockaddr_in6*>(addr)->sin6_addr),
 				  ipBuffer,
@@ -138,7 +137,7 @@ namespace Utils
 
 				if (err != 0)
 				{
-					MS_THROW_TYPE_ERROR("uv_ipv4_name() failed [ip:'%s']: %s", ip.c_str(), uv_strerror(err));
+					MS_THROW_TYPE_ERROR("uv_ip4_name() failed [ip:'%s']: %s", ip.c_str(), uv_strerror(err));
 				}
 
 				ip.assign(ipBuffer);
@@ -163,7 +162,7 @@ namespace Utils
 
 				if (err != 0)
 				{
-					MS_THROW_TYPE_ERROR("uv_ipv6_name() failed [ip:'%s']: %s", ip.c_str(), uv_strerror(err));
+					MS_THROW_TYPE_ERROR("uv_ip6_name() failed [ip:'%s']: %s", ip.c_str(), uv_strerror(err));
 				}
 
 				ip.assign(ipBuffer);

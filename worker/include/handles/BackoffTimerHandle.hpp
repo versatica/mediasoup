@@ -5,6 +5,7 @@
 #include "handles/BackoffTimerHandleInterface.hpp"
 #include "handles/TimerHandle.hpp"
 #include "handles/TimerHandleInterface.hpp"
+#include <string>
 
 // Forward declaration.
 class Shared;

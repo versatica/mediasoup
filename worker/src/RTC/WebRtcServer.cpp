@@ -374,6 +374,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOTE: We want a switch here, as in every other request handler.
+		// NOLINTNEXTLINE(readability-trivial-switch)
 		switch (request->method)
 		{
 			case Channel::ChannelRequest::Method::WEBRTCSERVER_DUMP:

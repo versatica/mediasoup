@@ -5,7 +5,6 @@
 #include "RTC/Consts.hpp"
 #include <openssl/evp.h>
 #include <array>
-#include <cassert> // assert()
 #include <cctype>  // std::tolower()
 #include <cmath>   // std::round()
 #include <cstring> // std::memcmp(), std::memcpy(), std::memset(), std::strerror()
@@ -171,7 +170,7 @@ namespace Utils
 
 		static void Set3BytesSigned(uint8_t* data, size_t i, int32_t value)
 		{
-			data[i + 2] = static_cast<int8_t>(value);
+			data[i + 2] = static_cast<uint8_t>(value);
 			data[i + 1] = static_cast<uint8_t>(value >> 8);
 			data[i]     = static_cast<uint8_t>(value >> 16);
 		}
@@ -508,10 +507,7 @@ namespace Utils
 		{
 			static_assert(std::is_unsigned_v<T>, "type must be an unsigned integer");
 
-			assert(a < M);
-			assert(b < M);
-
-			return a <= b ? b - a : M - (a - b);
+			return static_cast<T>(ForwardDiff(static_cast<uint64_t>(a), static_cast<uint64_t>(b), M));
 		}
 
 		template<typename T, T M>
@@ -527,6 +523,8 @@ namespace Utils
 		{
 			return ForwardDiff<T, 0>(a, b);
 		}
+
+		static uint64_t ForwardDiff(uint64_t a, uint64_t b, uint64_t max);
 
 		/**
 		 * Calculates the reverse difference between two wrapping numbers.
@@ -560,10 +558,7 @@ namespace Utils
 		{
 			static_assert(std::is_unsigned_v<T>, "type must be an unsigned integer");
 
-			assert(a < M);
-			assert(b < M);
-
-			return b <= a ? a - b : M - (b - a);
+			return static_cast<T>(ReverseDiff(static_cast<uint64_t>(a), static_cast<uint64_t>(b), M));
 		}
 
 		template<typename T, T M>
@@ -579,6 +574,8 @@ namespace Utils
 		{
 			return ReverseDiff<T, 0>(a, b);
 		}
+
+		static uint64_t ReverseDiff(uint64_t a, uint64_t b, uint64_t max);
 	};
 
 	class Time
@@ -638,17 +635,16 @@ namespace Utils
 		 */
 		static Time::Ntp TimeUsToNtp(int64_t timeUs)
 		{
-			Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-			// NOTE: The truncation is intended. Seconds are 32 bits wide in NTP, so they wrap
-			// every 2^32 seconds since Jan 1, 1900, being Feb 7, 2036 the next time it
-			// happens. That is the NTP era and receivers deal with it by doing modular
-			// arithmetic, so there is nothing to protect against here.
-			ntp.seconds = static_cast<uint32_t>(timeUs / 1000000);
-			ntp.fractions =
-			  static_cast<uint32_t>((static_cast<double>(timeUs % 1000000) / 1000000) * NtpFractionalUnit);
-
-			return ntp;
+			// NOTE: The truncation of the seconds is intended. Seconds are 32 bits wide
+			// in NTP, so they wrap every 2^32 seconds since Jan 1, 1900, being Feb 7,
+			// 2036 the next time it happens. That is the NTP era and receivers deal with
+			// it by doing modular arithmetic, so there is nothing to protect against
+			// here.
+			return {
+				.seconds   = static_cast<uint32_t>(timeUs / 1000000),
+				.fractions = static_cast<uint32_t>(
+				  (static_cast<double>(timeUs % 1000000) / 1000000) * NtpFractionalUnit),
+			};
 		}
 
 		/**

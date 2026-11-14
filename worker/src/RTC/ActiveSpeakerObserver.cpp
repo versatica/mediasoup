@@ -293,7 +293,7 @@ namespace RTC
 		}
 		else
 		{
-			Speaker* dominantSpeaker = (this->dominantId.empty())
+			Speaker* dominantSpeaker = this->dominantId.empty()
 			                             ? nullptr
 			                             : this->mapProducerSpeakers.at(this->dominantId)->speaker.get();
 

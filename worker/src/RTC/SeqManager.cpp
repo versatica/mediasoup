@@ -52,7 +52,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update base.
-		this->base = (this->maxOutput - input) & SeqManager::MaxValue;
+		this->base = static_cast<T>(this->maxOutput - input) & SeqManager::MaxValue;
 
 		// Update maxInput.
 		this->maxInput = input;
@@ -137,11 +137,11 @@ namespace RTC
 			// There are dropped inputs, calculate 'base' for this input.
 			const auto droppedCount = std::ranges::distance(droppedBegin, it);
 
-			base = (this->base - droppedCount) & SeqManager::MaxValue;
+			base = static_cast<T>(this->base - droppedCount) & SeqManager::MaxValue;
 		}
 
 	done:
-		output = (input + base) & SeqManager::MaxValue;
+		output = static_cast<T>(input + base) & SeqManager::MaxValue;
 
 		if (!this->started)
 		{
@@ -166,7 +166,7 @@ namespace RTC
 			}
 		}
 
-		output = (output + this->initialOutput) & SeqManager::MaxValue;
+		output = static_cast<T>(output + this->initialOutput) & SeqManager::MaxValue;
 
 		return true;
 	}
@@ -187,7 +187,7 @@ namespace RTC
 		// 'maxOutput' is stored in the offset-less space (as 'base' and comparisons
 		// use it), so apply 'initialOutput' here, just like `Input()` does before
 		// returning the output to the caller.
-		return (this->maxOutput + this->initialOutput) & SeqManager::MaxValue;
+		return static_cast<T>(this->maxOutput + this->initialOutput) & SeqManager::MaxValue;
 	}
 
 	/*
@@ -230,6 +230,7 @@ namespace RTC
 
 		// Consume entries belonging to a previous cycle.
 		while (this->droppedStart < this->dropped.size() &&
+		       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		       SeqManager<T, N>::IsSeqHigherThan(this->dropped[this->droppedStart], this->maxInput))
 		{
 			++this->droppedStart;

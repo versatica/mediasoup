@@ -39,6 +39,7 @@ namespace RTC
 
 	thread_local ankerl::unordered_dense::
 	  map<PortManager::PortRangeKey, PortManager::PortRange, PortManager::PortRangeKeyHash>
+	    // NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	    PortManager::mapPortRanges;
 
 	/* PortManager class methods. */

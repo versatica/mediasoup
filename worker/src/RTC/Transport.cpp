@@ -146,7 +146,7 @@ namespace RTC
 
 			RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod
 			  zeroChecksumAlternateErrorDetectionMethod{
-				  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
+				  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE,
 			  };
 
 			switch (options->sctpZeroChecksum())
@@ -180,7 +180,7 @@ namespace RTC
 				.defaultStreamBufferedAmountLowThreshold =
 				  options->sctpDefaultStreamBufferedAmountLowThreshold(),
 				.zeroChecksumAlternateErrorDetectionMethod = zeroChecksumAlternateErrorDetectionMethod,
-				.requireAuthenticatedCookie                = requireSctpStateCookieAuthentication
+				.requireAuthenticatedCookie                = requireSctpStateCookieAuthentication,
 			};
 
 			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(
@@ -683,6 +683,7 @@ namespace RTC
 				// This may throw.
 				auto producerUniquePtr =
 				  std::make_unique<RTC::Producer>(this->shared, producerId, this, this->rtcpSsrc, body);
+
 				auto* const producer = producerUniquePtr.get();
 
 				// Insert the Producer into the RtpListener.
@@ -814,6 +815,7 @@ namespace RTC
 				// This may throw.
 				auto consumerUniquePtr =
 				  std::make_unique<RTC::Consumer>(this->shared, consumerId, producerId, this, body);
+
 				auto* const consumer = consumerUniquePtr.get();
 
 				// Notify the listener.
@@ -913,6 +915,7 @@ namespace RTC
 				// This may throw.
 				auto dataProducerUniquePtr = std::make_unique<RTC::DataProducer>(
 				  this->shared, dataProducerId, this->maxReceiveMessageSize, this, body);
+
 				auto* const dataProducer = dataProducerUniquePtr.get();
 
 				// Verify the type of the DataProducer.
@@ -1000,6 +1003,7 @@ namespace RTC
 				// This may throw.
 				auto dataConsumerUniquePtr = std::make_unique<RTC::DataConsumer>(
 				  this->shared, dataConsumerId, dataProducerId, this, body, this->maxSendMessageSize, IsPipe());
+
 				auto* const dataConsumer = dataConsumerUniquePtr.get();
 
 				// Verify the type of the DataConsumer.
@@ -1136,7 +1140,7 @@ namespace RTC
 				// Tell the child class to clear associated SSRCs.
 				for (const auto& kv : producer->GetRtpStreams())
 				{
-					auto* const rtpStream = kv.first;
+					const auto* const rtpStream = kv.first;
 
 					RecvStreamClosed(rtpStream->GetSsrc());
 
@@ -1315,13 +1319,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (notification->data->event())
-		{
-			default:
-			{
-				MS_ERROR("unknown event '%s'", notification->eventCStr);
-			}
-		}
+		MS_ERROR("unknown event '%s'", notification->eventCStr);
 	}
 
 	void Transport::SetDestroying()
@@ -2366,7 +2364,7 @@ namespace RTC
 					sdesPacket->AddItem(RTC::RTCP::SdesPacket::ItemType::CNAME, this->rtcpCname);
 				}
 
-				for (auto* const rtpStream : senderReportRtpStreams)
+				for (const auto* const rtpStream : senderReportRtpStreams)
 				{
 					const bool added = rtpStream->AddRtcpSdesChunk(sdesPacket);
 
@@ -2402,19 +2400,18 @@ namespace RTC
 
 					answeredSsrcs.reserve(numDlrrSubBlocks);
 
-					for (const auto& kv : this->receivedReceiverReferenceTimes)
+					for (const auto& [ssrc, receivedReceiverReferenceTime] :
+					     this->receivedReceiverReferenceTimes)
 					{
 						if (answeredSsrcs.size() == numDlrrSubBlocks)
 						{
 							break;
 						}
 
-						const uint32_t ssrc                       = kv.first;
-						const auto& receivedReceiverReferenceTime = kv.second;
 						// Get delay in microseconds.
 						const int64_t delayUs = nowUs - receivedReceiverReferenceTime.receivedAtUs;
 						// Express delay in units of 1/65536 seconds.
-						auto dlrr = static_cast<uint32_t>((delayUs / 1000000) << 16);
+						auto dlrr = static_cast<uint32_t>(static_cast<uint64_t>(delayUs / 1000000) << 16);
 
 						dlrr |= static_cast<uint32_t>(((delayUs % 1000000) * 65536) / 1000000);
 
@@ -2424,10 +2421,11 @@ namespace RTC
 						  "DLRR sub-block does not fit in the RTCP compound packet");
 
 						dlrrExtendedReport->AddSubBlock(
-						  RTC::RTCP::DlrrExtendedReport::SubBlock{ .ssrc = ssrc,
-							                                         .lastReceiverReport =
-							                                           receivedReceiverReferenceTime.compactNtp,
-							                                         .delaySinceLastReceiverReport = dlrr });
+						  RTC::RTCP::DlrrExtendedReport::SubBlock{
+						    .ssrc                         = ssrc,
+						    .lastReceiverReport           = receivedReceiverReferenceTime.compactNtp,
+						    .delaySinceLastReceiverReport = dlrr,
+						  });
 
 						answeredSsrcs.push_back(ssrc);
 					}
@@ -2632,7 +2630,8 @@ namespace RTC
 			    RTC::BWE::SenderTransportCongestionController::SenderTransportCongestionControllerOptions{
 			      .startBitrate = this->initialAvailableOutgoingBitrate,
 			      .minBitrate   = this->minOutgoingBitrate,
-			      .maxBitrate   = this->maxOutgoingBitrate });
+			      .maxBitrate   = this->maxOutgoingBitrate,
+			    });
 
 			created = true;
 
@@ -2690,7 +2689,8 @@ namespace RTC
 		    this,
 		    this->shared,
 		    RTC::BWE::ReceiverTransportCongestionController::ReceiverTransportCongestionControllerOptions{
-		      .rtcpSenderSsrc = this->rtcpSsrc });
+		      .rtcpSenderSsrc = this->rtcpSsrc,
+		    });
 
 		// The cap travels to the remote peer in a REMB, so it could not be applied
 		// before this.
@@ -3049,9 +3049,11 @@ namespace RTC
 			// which is how a retransmission without RTX is told apart.
 			const auto sequenceNumber = this->senderTransportCongestionController->OnRtpPacketToBeSent(
 			  packet,
-			  { .isAudio          = consumer->GetKind() == RTC::Media::Kind::AUDIO,
-				  .isRetransmission = true,
-				  .originalSsrc     = packet->GetMediaSsrc() });
+			  {
+			    .isAudio          = consumer->GetKind() == RTC::Media::Kind::AUDIO,
+			    .isRetransmission = true,
+			    .originalSsrc     = packet->GetMediaSsrc(),
+			  });
 
 			const size_t size = packet->GetLength();
 

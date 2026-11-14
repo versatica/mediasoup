@@ -1749,6 +1749,7 @@ namespace RTC
 
 			auto rtpStreamUniquePtr = std::make_unique<RTC::RTP::RtpStreamSend>(
 			  this, this->shared, params, this->rtpParameters.mid);
+
 			auto* const rtpStream = rtpStreamUniquePtr.get();
 
 			// If the Consumer is paused, tell the RtpStreamSend.

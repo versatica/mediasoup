@@ -83,6 +83,7 @@ namespace RTC
 			this->firstSampleCount  = size;
 		}
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		Item& item = this->buffer[this->newestItemIndex];
 
 		item.count += size;
@@ -253,6 +254,7 @@ namespace RTC
 				this->newestItemIndex = 0;
 			}
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			Item& item = this->buffer[this->newestItemIndex];
 
 			this->totalCount -= item.count;

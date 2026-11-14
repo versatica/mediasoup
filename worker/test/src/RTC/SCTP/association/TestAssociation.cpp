@@ -558,7 +558,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		for (size_t i = 0; i < maxInitRetransmissions; ++i)
 		{
-			advanceNowMs(a, z, a.sctpOptions.t1InitTimeoutMs * (1u << i));
+			advanceNowMs(a, z, a.sctpOptions.t1InitTimeoutMs * (1 << i));
 
 			// INIT is resent.
 			REQUIRE(
@@ -566,7 +566,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		}
 
 		// Another timeout, after the max init retransmits.
-		advanceNowMs(a, z, a.sctpOptions.t1InitTimeoutMs * (1u << maxInitRetransmissions));
+		advanceNowMs(a, z, a.sctpOptions.t1InitTimeoutMs * (1 << maxInitRetransmissions));
 
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
 		REQUIRE(a.listener.HasFailed() == true);
@@ -622,7 +622,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		for (size_t i = 0; i < maxInitRetransmissions; ++i)
 		{
-			advanceNowMs(a, z, a.sctpOptions.t1CookieTimeoutMs * (1u << i));
+			advanceNowMs(a, z, a.sctpOptions.t1CookieTimeoutMs * (1 << i));
 
 			// COOKIE-ECHO is resent.
 			REQUIRE(
@@ -631,7 +631,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		}
 
 		// Another timeout, after the max init retransmits.
-		advanceNowMs(a, z, a.sctpOptions.t1CookieTimeoutMs * (1u << maxInitRetransmissions));
+		advanceNowMs(a, z, a.sctpOptions.t1CookieTimeoutMs * (1 << maxInitRetransmissions));
 
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
 		REQUIRE(a.listener.HasFailed() == true);
@@ -715,7 +715,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		for (size_t i = 0; i < maxRetransmissions; ++i)
 		{
-			advanceNowMs(a, z, a.sctpOptions.initialRtoMs * (1u << i));
+			advanceNowMs(a, z, a.sctpOptions.initialRtoMs * (1 << i));
 
 			// SHUTDOWN is resent (and dropped).
 			REQUIRE(
@@ -724,7 +724,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		}
 
 		// The last expiry makes it abort the connection.
-		advanceNowMs(a, z, a.sctpOptions.initialRtoMs * (1u << maxRetransmissions));
+		advanceNowMs(a, z, a.sctpOptions.initialRtoMs * (1 << maxRetransmissions));
 
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
 		REQUIRE(a.listener.IsClosed() == true);

@@ -1,4 +1,4 @@
-#define MS_CLASS "ChannelMessageRegistrator"
+#define MS_CLASS "Channel::ChannelMessageRegistrator"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/ChannelMessageRegistrator.hpp"
@@ -16,9 +16,6 @@ namespace Channel
 	ChannelMessageRegistrator::~ChannelMessageRegistrator()
 	{
 		MS_TRACE();
-
-		this->mapChannelRequestHandlers.clear();
-		this->mapChannelNotificationHandlers.clear();
 	}
 
 	flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> ChannelMessageRegistrator::FillBuffer(

@@ -76,7 +76,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasPriority*/ true,
 		                  /*priority*/ 1853693695,
 		                  /*hasIceControlling*/ true,
-		                  /*iceControlling*/ 15897499370457501716u,
+		                  /*iceControlling*/ 15897499370457501716U,
 		                  /*hasIceControlled*/ false,
 		                  /*iceControlled*/ 0,
 		                  /*hasUseCandidate*/ true,
@@ -119,7 +119,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasPriority*/ true,
 		                  /*priority*/ 1853693695,
 		                  /*hasIceControlling*/ true,
-		                  /*iceControlling*/ 15897499370457501716u,
+		                  /*iceControlling*/ 15897499370457501716U,
 		                  /*hasIceControlled*/ false,
 		                  /*iceControlled*/ 0,
 		                  /*hasUseCandidate*/ true,
@@ -159,7 +159,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasPriority*/ true,
 		                  /*priority*/ 1853693695,
 		                  /*hasIceControlling*/ true,
-		                  /*iceControlling*/ 15897499370457501716u,
+		                  /*iceControlling*/ 15897499370457501716U,
 		                  /*hasIceControlled*/ false,
 		                  /*iceControlled*/ 0,
 		                  /*hasUseCandidate*/ true,
@@ -506,7 +506,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// Byte length: 4.
 		const uint32_t priority = 999888777;
 		// Byte length: 8.
-		const uint64_t iceControlling = 15697499370457501716u;
+		const uint64_t iceControlling = 15697499370457501716U;
 		// Byte length of USE_CANDIDATE: 0.
 		// NOTE: `AddNomination()` adds the "NOMINATION" attribute with both the old
 		// and the new value, so it will insert 2 attributes instead of one.

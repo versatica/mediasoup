@@ -79,7 +79,7 @@ namespace mocks
 			  return getTimeUs() / 1000;
 		  },
 		  /*onDelete*/
-		  [this, label]() -> void
+		  [this, label = options.label]() -> void
 		  {
 			  this->backoffTimers.erase(label);
 		  });

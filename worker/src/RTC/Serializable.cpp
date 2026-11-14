@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memmove(), std::memset()
+#include <exception>
 
 namespace RTC
 {
@@ -22,7 +23,14 @@ namespace RTC
 
 		if (this->bufferReleasedListener)
 		{
-			(*this->bufferReleasedListener)(this, this->buffer);
+			try
+			{
+				(*this->bufferReleasedListener)(this, this->buffer);
+			}
+			catch (const std::exception& e)
+			{
+				MS_ERROR("error calling buffer released listener: %s", e.what());
+			}
 		}
 	}
 
