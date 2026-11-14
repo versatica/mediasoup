@@ -6,13 +6,13 @@
 - Worker: Don’t take a template dependency structure older than the one in use ([PR #2047](https://github.com/versatica/mediasoup/pull/2047)).
 - New RTCP stack ([task #2049](https://github.com/versatica/mediasoup/issues/2049)).
 - Worker: Rewrite the Dependency Descriptor frame numbers across stream switches ([PR #2048](https://github.com/versatica/mediasoup/pull/2048)).
-- Modernize C++ code ([PR #2060](https://github.com/versatica/mediasoup/pull/2060)).:
+- Modernize C++ code ([PR #2060](https://github.com/versatica/mediasoup/pull/2060)):
   - Use `unique_ptr` instead of holding raw pointers.
   - `WebRtcTransport` and `WebRtcServer`: Use `announcedAddress` (it was missing).
-  - **Fix crash** in `Producer.cpp`: An RTP packet with SSRC 0 matched encodings without `ssrc` (0 means "no SSRC") and hit an `MS_ASSERT` in `CreateRtpStream()`.
-  - **Fix crash** in `PlainTransport` with comedia and SRTP: An SCTP packet received before `connect()` set the tuple and the next sent RTP packet dereferenced a null SRTP send session.
-  - **Fix use-after-free** in `Transport` when the remote SCTP peer resets the same stream id twice in a single request (the same `DataConsumer` was closed twice).
-  - **Fix crash** in `Producer` when an encoding has both `ssrc` and `rid` and a packet with that `rid` but another SSRC arrives before one with the encoding `ssrc`.
+  - Fix crash in `Producer.cpp`: An RTP packet with SSRC 0 matched encodings without `ssrc` (0 means "no SSRC") and hit an `MS_ASSERT` in `CreateRtpStream()`.
+  - Fix crash in `PlainTransport` with comedia and SRTP: An SCTP packet received before `connect()` set the tuple and the next sent RTP packet dereferenced a null SRTP send session.
+  - Fix crash (use-after-free) in `Transport` when the remote SCTP peer resets the same stream id twice in a single request (the same `DataConsumer` was closed twice).
+  - Fix crash in `Producer` when an encoding has both `ssrc` and `rid` and a packet with that `rid` but another SSRC arrives before one with the encoding `ssrc`.
   - Fix `RTC::RtpParameters::Parameters`: RTP parameters with an array of integers value were stored as a boolean `true`.
   - Fix `RTC::Parameters`: Boolean parameters were missing in dumps.
   - Fix `Producer`: RTX packets were discarded forever if the stream of their encoding was created via RID with a SSRC other than the encoding one, or could be bound to the wrong stream if several encodings had no SSRC.
