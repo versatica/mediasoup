@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_DICTIONARIES_HPP
 
 #include "common.hpp"
-#include <FBS/sctpParameters.h>
+#include "FBS/sctpParameters.h"
 
 namespace RTC
 {
@@ -10,6 +10,7 @@ namespace RTC
 	{
 	public:
 		SctpStreamParameters() = default;
+
 		explicit SctpStreamParameters(const FBS::SctpParameters::SctpStreamParameters* data);
 
 		flatbuffers::Offset<FBS::SctpParameters::SctpStreamParameters> FillBuffer(

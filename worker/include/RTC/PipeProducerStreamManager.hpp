@@ -63,7 +63,7 @@ namespace RTC
 
 		bool IsPacketForCurrentStream(const RTC::RTP::Packet* /*packet*/) const override
 		{
-			// Pipe has no concept of "current" stream — all packets belong.
+			// Pipe has no concept of "current" stream. All packets belong.
 			return true;
 		}
 

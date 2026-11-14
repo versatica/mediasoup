@@ -8,6 +8,8 @@
 
 namespace RTC
 {
+	/* Instance methods. */
+
 	Serializable::Serializable(const uint8_t* buffer, size_t bufferLength)
 	  : buffer(const_cast<uint8_t*>(buffer)), bufferLength(bufferLength)
 	{

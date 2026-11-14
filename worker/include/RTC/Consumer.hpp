@@ -33,6 +33,7 @@ namespace RTC
 	                 public RTC::BWE::BitrateAllocator::Candidate,
 	                 public RTC::ProducerStreamManager::Listener
 	{
+	private:
 		using RetransmissionBuffer =
 		  std::map<uint16_t, std::shared_ptr<RTC::RTP::Packet>, RTC::SeqManager<uint16_t>::SeqLowerThan>;
 
@@ -77,6 +78,7 @@ namespace RTC
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
 		  const FBS::Transport::ConsumeRequest* data);
+
 		~Consumer() override;
 
 		flatbuffers::Offset<FBS::Consumer::DumpResponse> FillBuffer(
@@ -126,11 +128,11 @@ namespace RTC
 		 * the RTP header extension and the RTCP feedback.
 		 */
 		bool SupportsTransportCc() const;
+
 		/**
 		 * Whether this Consumer was negotiated with REMB, whose RTP header extension
 		 * is abs-send-time.
 		 */
-
 		bool SupportsRemb() const;
 
 		RTC::ConsumerTypes::VideoLayers GetPreferredLayers() const
@@ -148,9 +150,18 @@ namespace RTC
 			return this->rtxSsrcs;
 		}
 
-		const std::vector<RTC::RTP::RtpStreamSend*>& GetRtpStreams() const
+		std::vector<RTC::RTP::RtpStreamSend*> GetRtpStreams() const
 		{
-			return this->rtpStreams;
+			std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;
+
+			rtpStreams.reserve(this->rtpStreams.size());
+
+			for (const auto& rtpStream : this->rtpStreams)
+			{
+				rtpStreams.push_back(rtpStream.get());
+			}
+
+			return rtpStreams;
 		}
 
 		bool IsActive() const override
@@ -206,11 +217,7 @@ namespace RTC
 		 * - While it is false there is nobody to answer a round, so nothing about
 		 *   bitrate or layers is told to the Transport.
 		 */
-		void SetBweManaged(bool bweManaged)
-		{
-			this->bweManaged = bweManaged;
-			this->producerStreamManager->SetBweManaged(bweManaged);
-		}
+		void SetBweManaged(bool bweManaged);
 
 		const std::string& GetBitrateAllocationId() const override;
 
@@ -334,7 +341,7 @@ namespace RTC
 		// Others.
 		std::bitset<128> supportedCodecPayloadTypes;
 		int64_t lastRtcpSentAtUs{ 0 };
-		int64_t maxRtcpIntervalMs{ 0 };
+		int64_t maxRtcpIntervalMs;
 		// Whether a bitrate allocation is running for this Transport. While it is
 		// false nobody would answer a round, so this one is told nothing about
 		// bitrate and its manager applies the layers it works out.
@@ -343,7 +350,7 @@ namespace RTC
 		TraceEventTypes traceEventTypes;
 		const bool pipe;
 		// Others.
-		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;
+		std::vector<std::unique_ptr<RTC::RTP::RtpStreamSend>> rtpStreams;
 		ankerl::unordered_dense::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
 		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamSend*> mapSsrcRtpStream;
 		ankerl::unordered_dense::map<RTC::RTP::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;

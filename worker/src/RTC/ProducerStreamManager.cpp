@@ -27,10 +27,24 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	void ProducerStreamManager::SetPreferredLayers(const RTC::ConsumerTypes::VideoLayers& layers)
+	{
+		MS_TRACE();
+
+		this->preferredLayers = layers;
+	}
+
 	void ProducerStreamManager::ProducerSpatialLayerActivityChanged(
 	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/)
 	{
 		MS_TRACE();
+	}
+
+	void ProducerStreamManager::SetBweManaged(bool bweManaged)
+	{
+		MS_TRACE();
+
+		this->bweManaged = bweManaged;
 	}
 
 	void ProducerStreamManager::MayChangeLayers()

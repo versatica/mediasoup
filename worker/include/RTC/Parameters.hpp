@@ -37,7 +37,7 @@ namespace RTC
 			{
 			}
 
-			explicit Value(std::string& stringValue) : type(Type::STRING), stringValue(stringValue)
+			explicit Value(const std::string& stringValue) : type(Type::STRING), stringValue(stringValue)
 			{
 			}
 
@@ -46,7 +46,7 @@ namespace RTC
 			{
 			}
 
-			explicit Value(std::vector<int32_t>& arrayOfIntegers)
+			explicit Value(const std::vector<int32_t>& arrayOfIntegers)
 			  : type(Type::ARRAY_OF_INTEGERS), arrayOfIntegers(arrayOfIntegers)
 			{
 			}
@@ -63,18 +63,31 @@ namespace RTC
 	public:
 		std::vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
+
 		void Set(const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>>* data);
+
 		bool HasBoolean(const std::string& key) const;
+
 		bool HasInteger(const std::string& key) const;
+
 		bool HasPositiveInteger(const std::string& key) const;
+
 		bool HasDouble(const std::string& key) const;
+
 		bool HasString(const std::string& key) const;
+
 		bool HasArrayOfIntegers(const std::string& key) const;
+
 		bool IncludesInteger(const std::string& key, int32_t integer) const;
+
 		bool GetBoolean(const std::string& key) const;
+
 		int32_t GetInteger(const std::string& key) const;
+
 		double GetDouble(const std::string& key) const;
+
 		const std::string& GetString(const std::string& key) const;
+
 		const std::vector<int32_t>& GetArrayOfIntegers(const std::string& key) const;
 
 	private:

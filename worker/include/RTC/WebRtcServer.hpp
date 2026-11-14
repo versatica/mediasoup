@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
+#include "FBS/webRtcServer.h"
 #include "RTC/ICE/IceCandidate.hpp"
 #include "RTC/ICE/StunPacket.hpp"
 #include "RTC/TcpConnection.hpp"
@@ -11,8 +12,8 @@
 #include "RTC/UdpSocket.hpp"
 #include "RTC/WebRtcTransport.hpp"
 #include "SharedInterface.hpp"
-#include "TransportTuple.hpp"
 #include <flatbuffers/flatbuffers.h>
+#include <uv.h>
 #include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
@@ -30,20 +31,17 @@ namespace RTC
 		{
 			// Expose a constructor to use vector.emplace_back().
 			UdpSocketOrTcpServer(
-			  RTC::UdpSocket* udpSocket,
-			  RTC::TcpServer* tcpServer,
-			  std::string& announcedAddress,
+			  std::unique_ptr<RTC::UdpSocket> udpSocket,
+			  std::unique_ptr<RTC::TcpServer> tcpServer,
 			  bool exposeInternalIp)
-			  : udpSocket(udpSocket),
-			    tcpServer(tcpServer),
-			    announcedAddress(announcedAddress),
+			  : udpSocket(std::move(udpSocket)),
+			    tcpServer(std::move(tcpServer)),
 			    exposeInternalIp(exposeInternalIp)
 			{
 			}
 
-			RTC::UdpSocket* udpSocket;
-			RTC::TcpServer* tcpServer;
-			std::string announcedAddress;
+			std::unique_ptr<RTC::UdpSocket> udpSocket;
+			std::unique_ptr<RTC::TcpServer> tcpServer;
 			bool exposeInternalIp;
 		};
 
@@ -56,11 +54,13 @@ namespace RTC
 		  SharedInterface* shared,
 		  const std::string& id,
 		  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::ListenInfo>>* listenInfos);
+
 		~WebRtcServer() override;
 
 	public:
 		flatbuffers::Offset<FBS::WebRtcServer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
+
 		std::vector<RTC::ICE::IceCandidate> GetIceCandidates(
 		  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp) const;
 
@@ -75,8 +75,10 @@ namespace RTC
 		  size_t len,
 		  size_t bufferLen,
 		  int64_t receivedAtUs);
+
 		void OnStunDataReceived(
 		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs);
+
 		void OnNonStunDataReceived(
 		  RTC::TransportTuple* tuple,
 		  const uint8_t* data,
@@ -87,13 +89,18 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::WebRtcTransport::WebRtcTransportListener. */
 	public:
 		void OnWebRtcTransportCreated(RTC::WebRtcTransport* webRtcTransport) override;
+
 		void OnWebRtcTransportClosed(RTC::WebRtcTransport* webRtcTransport) override;
+
 		void OnWebRtcTransportLocalIceUsernameFragmentAdded(
 		  RTC::WebRtcTransport* webRtcTransport, const std::string& usernameFragment) override;
+
 		void OnWebRtcTransportLocalIceUsernameFragmentRemoved(
 		  RTC::WebRtcTransport* webRtcTransport, const std::string& usernameFragment) override;
+
 		void OnWebRtcTransportTransportTupleAdded(
 		  RTC::WebRtcTransport* webRtcTransport, RTC::TransportTuple* tuple) override;
+
 		void OnWebRtcTransportTransportTupleRemoved(
 		  RTC::WebRtcTransport* webRtcTransport, RTC::TransportTuple* tuple) override;
 
@@ -104,7 +111,7 @@ namespace RTC
 		  const uint8_t* data,
 		  size_t len,
 		  size_t bufferLen,
-		  const struct sockaddr* remoteAddr,
+		  const sockaddr* remoteAddr,
 		  int64_t receivedAtUs) override;
 
 		/* Pure virtual methods inherited from RTC::TcpServer::Listener. */
@@ -119,14 +126,12 @@ namespace RTC
 		  size_t len,
 		  size_t bufferLen,
 		  int64_t receivedAtUs) override;
-		const std::string& GetId() const
-		{
-			return this->id;
-		}
 
-	private:
+	public:
 		// Passed by argument.
 		const std::string id;
+
+	private:
 		// Passed by argument.
 		SharedInterface* const shared;
 		// Vector of UdpSockets and TcpServers in the user given order.

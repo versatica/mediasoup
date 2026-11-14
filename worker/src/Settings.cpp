@@ -24,6 +24,7 @@ static std::mutex GlobalSyncMutex;
 
 thread_local Settings::Configuration Settings::configuration;
 // clang-format off
+// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 const ankerl::unordered_dense::map<std::string, LogLevel> Settings::String2LogLevel =
 {
 	{ "debug", LogLevel::LOG_DEBUG },
@@ -31,6 +32,7 @@ const ankerl::unordered_dense::map<std::string, LogLevel> Settings::String2LogLe
 	{ "error", LogLevel::LOG_ERROR },
 	{ "none",  LogLevel::LOG_NONE  },
 };
+// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 const ankerl::unordered_dense::map<LogLevel, std::string> Settings::LogLevel2String =
 {
 	{ LogLevel::LOG_DEBUG, "debug" },
@@ -180,6 +182,11 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	}
 
 	// Validate RTC ports.
+	if (Settings::configuration.rtcMinPort == 0)
+	{
+		MS_THROW_TYPE_ERROR("rtcMinPort cannot be 0");
+	}
+
 	if (Settings::configuration.rtcMaxPort < Settings::configuration.rtcMinPort)
 	{
 		MS_THROW_TYPE_ERROR("rtcMaxPort cannot be less than rtcMinPort");

@@ -11,7 +11,7 @@
 
 namespace RTC
 {
-	class TcpServer : public ::TcpServerHandle
+	class TcpServer : public TcpServerHandle
 	{
 	public:
 		class Listener
@@ -30,31 +30,42 @@ namespace RTC
 		  RTC::TcpConnection::Listener* connListener,
 		  SharedInterface* shared,
 		  std::string& ip,
+		  const std::string& announcedAddress,
 		  uint16_t port,
-		  RTC::Transport::SocketFlags& flags);
+		  const RTC::Transport::SocketFlags& flags);
+
 		TcpServer(
 		  Listener* listener,
 		  RTC::TcpConnection::Listener* connListener,
 		  SharedInterface* shared,
 		  std::string& ip,
+		  const std::string& announcedAddress,
 		  uint16_t minPort,
 		  uint16_t maxPort,
-		  RTC::Transport::SocketFlags& flags,
+		  const RTC::Transport::SocketFlags& flags,
 		  RTC::PortManager::PortRangeKey& portRangeKey);
+
 		~TcpServer() override;
 
-		/* Pure virtual methods inherited from ::TcpServerHandle. */
+		const std::string& GetAnnouncedAddress() const
+		{
+			return this->announcedAddress;
+		}
+
+		/* Pure virtual methods inherited from TcpServerHandle. */
 	public:
 		void UserOnTcpConnectionAlloc() override;
-		void UserOnTcpConnectionClosed(::TcpConnectionHandle* connection) override;
+
+		void UserOnTcpConnectionClosed(TcpConnectionHandle* connection) override;
 
 	private:
 		// Passed by argument.
 		Listener* const listener;
 		RTC::TcpConnection::Listener* const connListener;
 		SharedInterface* const shared;
+		const std::string announcedAddress;
 		bool fixedPort{ false };
-		RTC::PortManager::PortRangeKey portRangeKey{};
+		RTC::PortManager::PortRangeKey portRangeKey;
 	};
 } // namespace RTC
 

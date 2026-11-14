@@ -6,8 +6,6 @@
 
 namespace RTC
 {
-	/* Static. */
-
 	/* Instance methods. */
 
 	SvcProducerStreamManager::SvcProducerStreamManager(
@@ -263,6 +261,7 @@ namespace RTC
 			UpdateTargetLayers(option.layers.spatial, option.layers.temporal);
 		}
 	}
+
 	int64_t SvcProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
@@ -285,7 +284,7 @@ namespace RTC
 			for (auto spatialLayer{ this->producerRtpStream->GetSpatialLayers() - 1 }; spatialLayer >= 0;
 			     --spatialLayer)
 			{
-				auto spatialLayerBitrate =
+				const auto spatialLayerBitrate =
 				  this->producerRtpStream->GetSpatialLayerBitrate(nowMs, spatialLayer);
 
 				desiredBitrate = std::max(spatialLayerBitrate, desiredBitrate);
@@ -383,7 +382,7 @@ namespace RTC
 			this->syncRequired = false;
 		}
 
-		auto previousLayers = this->encodingContext->GetCurrentLayers();
+		const auto previousLayers = this->encodingContext->GetCurrentLayers();
 
 		// Preserve the original marker bit. ProcessPayload may update it (VP9/AV1
 		// overwrite it based on spatial-layer end-of-frame; VP8/H264 do not, so the
@@ -432,7 +431,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+		const auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
 
 		this->listener->OnProducerStreamManagerKeyFrameRequested(mappedSsrc);
 	}

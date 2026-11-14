@@ -11,15 +11,24 @@
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
 #include "SharedInterface.hpp"
+#include <uv.h>
+#include <string>
 
 namespace RTC
 {
 	class PipeTransport : public RTC::Transport, public RTC::UdpSocket::Listener
 	{
 	private:
-		static RTC::SrtpSession::CryptoSuite srtpCryptoSuite;
-		static std::string srtpCryptoSuiteString;
-		static size_t srtpMasterLength;
+		/**
+		 * PipeTransport just allows AEAD_AES_256_GCM SRTP crypto suite.
+		 */
+		static constexpr RTC::SrtpSession::CryptoSuite SrtpCryptoSuite{
+			RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM
+		};
+		/**
+		 * Master length of AEAD_AES_256_GCM.
+		 */
+		static constexpr size_t SrtpMasterLength{ 44 };
 
 	public:
 		PipeTransport(
@@ -27,11 +36,13 @@ namespace RTC
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
 		  const FBS::PipeTransport::PipeTransportOptions* options);
+
 		~PipeTransport() override;
 
 	public:
 		flatbuffers::Offset<FBS::PipeTransport::GetStatsResponse> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder);
+
 		flatbuffers::Offset<FBS::PipeTransport::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 
@@ -48,37 +59,52 @@ namespace RTC
 		{
 			return false;
 		}
+
 		bool IsPipe() const override
 		{
 			return true;
 		}
+
 		bool IsConnected() const override;
+
 		size_t GetPacketOverhead() const override;
+
 		bool HasSrtp() const;
+
 		void SendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) override;
+
 		void SendRtcpPacket(const RTC::RTCP::Packet* packet) override;
+
 		void SendRtcpCompoundPacket(const RTC::RTCP::CompoundPacket* compoundPacket) override;
+
 		void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
 		  RTC::SCTP::Message message,
 		  onMessageQueuedCallback cb = {}) override;
+
 		bool SendData(const uint8_t* data, size_t len) override;
+
 		void RecvStreamClosed(uint32_t ssrc) override;
+
 		void SendStreamClosed(uint32_t ssrc) override;
+
 		void OnPacketReceived(
 		  RTC::TransportTuple* tuple,
 		  const uint8_t* data,
 		  size_t len,
 		  size_t bufferLen,
 		  int64_t receivedAtUs);
+
 		void OnRtpDataReceived(
 		  RTC::TransportTuple* tuple,
 		  const uint8_t* data,
 		  size_t len,
 		  size_t bufferLen,
 		  int64_t receivedAtUs);
+
 		void OnRtcpDataReceived(
 		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs);
+
 		void OnSctpDataReceived(
 		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs);
 
@@ -89,7 +115,7 @@ namespace RTC
 		  const uint8_t* data,
 		  size_t len,
 		  size_t bufferLen,
-		  const struct sockaddr* remoteAddr,
+		  const sockaddr* remoteAddr,
 		  int64_t receivedAtUs) override;
 
 	private:

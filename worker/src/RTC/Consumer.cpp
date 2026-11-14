@@ -25,8 +25,7 @@ namespace RTC
 	/* Class methods. */
 
 	void Consumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  std::map<uint16_t, std::shared_ptr<RTC::RTP::Packet>, RTC::SeqManager<uint16_t>::SeqLowerThan>&
-	    targetLayerRetransmissionBuffer,
+	  RetransmissionBuffer& targetLayerRetransmissionBuffer,
 	  RTC::RTP::Packet* packet,
 	  std::shared_ptr<RTC::RTP::Packet>& sharedPacket)
 	{
@@ -97,7 +96,7 @@ namespace RTC
 		}
 
 		// All encodings must have SSRCs.
-		for (auto& encoding : this->rtpParameters.encodings)
+		for (const auto& encoding : this->rtpParameters.encodings)
 		{
 			if (encoding.ssrc == 0)
 			{
@@ -124,7 +123,8 @@ namespace RTC
 			this->consumableRtpEncodings.emplace_back(entry);
 
 			// Verify that it has ssrc field.
-			auto& encoding = this->consumableRtpEncodings[i];
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			const auto& encoding = this->consumableRtpEncodings[i];
 
 			if (encoding.ssrc == 0)
 			{
@@ -140,7 +140,7 @@ namespace RTC
 
 		// Fill RTP header extension ids and their mapped values.
 		// This may throw.
-		for (auto& exten : this->rtpParameters.headerExtensions)
+		for (const auto& exten : this->rtpParameters.headerExtensions)
 		{
 			if (exten.id == 0)
 			{
@@ -206,22 +206,25 @@ namespace RTC
 		}
 
 		// Fill supported codec payload types.
-		for (auto& codec : this->rtpParameters.codecs)
+		for (const auto& codec : this->rtpParameters.codecs)
 		{
 			if (codec.mimeType.IsMediaCodec())
 			{
+				// NOTE: RTC::RtpCodecParameters constructor validates that payloadType
+				// is <= 127.
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				this->supportedCodecPayloadTypes[codec.payloadType] = true;
 			}
 		}
 
 		// Fill media SSRCs vector.
-		for (auto& encoding : this->rtpParameters.encodings)
+		for (const auto& encoding : this->rtpParameters.encodings)
 		{
 			this->mediaSsrcs.push_back(encoding.ssrc);
 		}
 
 		// Fill RTX SSRCs vector.
-		for (auto& encoding : this->rtpParameters.encodings)
+		for (const auto& encoding : this->rtpParameters.encodings)
 		{
 			if (encoding.hasRtx)
 			{
@@ -239,7 +242,8 @@ namespace RTC
 			this->maxRtcpIntervalMs = RTC::Consts::MaxVideoRtcpIntervalMs;
 		}
 
-		auto& encoding = this->rtpParameters.encodings[0];
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+		const auto& encoding = this->rtpParameters.encodings[0];
 
 		// Determine keyFrameSupported.
 		const auto* mediaCodec       = this->rtpParameters.GetCodecForEncoding(encoding);
@@ -257,6 +261,7 @@ namespace RTC
 		{
 			this->type = RTC::RtpParameters::Type::SIMULCAST;
 		}
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		else if (this->consumableRtpEncodings[0].spatialLayers > 1 || this->consumableRtpEncodings[0].temporalLayers > 1)
 		{
 			// Single encoding with multiple layers is always SVC.
@@ -286,9 +291,9 @@ namespace RTC
 				  (mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::OPUS ||
 					 mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::MULTIOPUS))
 				{
-					RTC::RTP::Codecs::EncodingContext::Params params;
-
-					params.preferDependencyDescriptor = PrefersDependencyDescriptor();
+					RTC::RTP::Codecs::EncodingContext::Params params{
+						.preferDependencyDescriptor = PrefersDependencyDescriptor(),
+					};
 
 					encodingContext.reset(
 					  RTC::RTP::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
@@ -334,7 +339,7 @@ namespace RTC
 					}
 
 					if (
-					  auto preferredTemporalLayer = fbsPreferredLayers->temporalLayer();
+					  const auto preferredTemporalLayer = fbsPreferredLayers->temporalLayer();
 					  preferredTemporalLayer.has_value())
 					{
 						preferredLayers.temporal = preferredTemporalLayer.value();
@@ -364,12 +369,12 @@ namespace RTC
 					  "%s codec not supported for simulcast", mediaCodec->mimeType.ToString().c_str());
 				}
 
-				RTC::RTP::Codecs::EncodingContext::Params params;
-
-				params.spatialLayers              = encoding.spatialLayers;
-				params.temporalLayers             = encoding.temporalLayers;
-				params.simulcast                  = true;
-				params.preferDependencyDescriptor = PrefersDependencyDescriptor();
+				RTC::RTP::Codecs::EncodingContext::Params params{
+					.spatialLayers              = encoding.spatialLayers,
+					.temporalLayers             = encoding.temporalLayers,
+					.simulcast                  = true,
+					.preferDependencyDescriptor = PrefersDependencyDescriptor(),
+				};
 
 				std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext(
 				  RTC::RTP::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
@@ -413,9 +418,9 @@ namespace RTC
 					}
 
 					// preferredTemporalLayer is optional.
-					auto preferredTemporalLayer = data->preferredLayers()->temporalLayer();
+					const auto preferredTemporalLayer = data->preferredLayers()->temporalLayer();
 
-					if (preferredTemporalLayer)
+					if (preferredTemporalLayer.has_value())
 					{
 						preferredLayers.temporal = preferredTemporalLayer.value();
 
@@ -444,12 +449,12 @@ namespace RTC
 					  "%s codec not supported for svc", mediaCodec->mimeType.ToString().c_str());
 				}
 
-				RTC::RTP::Codecs::EncodingContext::Params params;
-
-				params.spatialLayers              = encoding.spatialLayers;
-				params.temporalLayers             = encoding.temporalLayers;
-				params.ksvc                       = encoding.ksvc;
-				params.preferDependencyDescriptor = PrefersDependencyDescriptor();
+				RTC::RTP::Codecs::EncodingContext::Params params{
+					.spatialLayers              = encoding.spatialLayers,
+					.temporalLayers             = encoding.temporalLayers,
+					.ksvc                       = encoding.ksvc,
+					.preferDependencyDescriptor = PrefersDependencyDescriptor(),
+				};
 
 				std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext(
 				  RTC::RTP::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
@@ -504,17 +509,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
-
-		for (auto* rtpStream : this->rtpStreams)
-		{
-			delete rtpStream;
-		}
-
-		this->rtpStreams.clear();
-		this->mapMappedSsrcSsrc.clear();
-		this->mapSsrcRtpStream.clear();
-		this->mapRtpStreamRtpSeqManager.clear();
-		this->mapRtpStreamTargetLayerRetransmissionBuffer.clear();
 	}
 
 	flatbuffers::Offset<FBS::Consumer::DumpResponse> Consumer::FillBuffer(
@@ -523,19 +517,21 @@ namespace RTC
 		MS_TRACE();
 
 		// Call the base method.
-		auto base = FillBufferBase(builder);
+		const auto base = FillBufferBase(builder);
+
 		// Add rtpStreams.
 		std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> rtpStreams;
+
 		rtpStreams.reserve(this->rtpStreams.size());
 
-		for (const auto* rtpStream : this->rtpStreams)
+		for (const auto& rtpStream : this->rtpStreams)
 		{
 			rtpStreams.emplace_back(rtpStream->FillBuffer(builder));
 		}
 
-		auto targetLayers = this->producerStreamManager->GetTargetLayers();
+		const auto targetLayers = this->producerStreamManager->GetTargetLayers();
 
-		auto dump = FBS::Consumer::CreateConsumerDumpDirect(
+		const auto dump = FBS::Consumer::CreateConsumerDumpDirect(
 		  builder,
 		  base,
 		  std::addressof(rtpStreams),
@@ -555,10 +551,11 @@ namespace RTC
 		MS_TRACE();
 
 		// Add rtpParameters.
-		auto rtpParameters = this->rtpParameters.FillBuffer(builder);
+		const auto rtpParameters = this->rtpParameters.FillBuffer(builder);
 
 		// Add consumableRtpEncodings.
 		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> consumableRtpEncodings;
+
 		consumableRtpEncodings.reserve(this->consumableRtpEncodings.size());
 
 		for (const auto& encoding : this->consumableRtpEncodings)
@@ -571,6 +568,7 @@ namespace RTC
 
 		for (auto i = 0; i < 128; ++i)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			if (this->supportedCodecPayloadTypes[i])
 			{
 				supportedCodecPayloadTypes.push_back(i);
@@ -623,10 +621,11 @@ namespace RTC
 		MS_TRACE();
 
 		std::vector<flatbuffers::Offset<FBS::RtpStream::Stats>> rtpStreams;
+
 		rtpStreams.reserve(this->rtpStreams.size());
 
 		// Add stats of our send streams.
-		for (auto* rtpStream : this->rtpStreams)
+		for (const auto& rtpStream : this->rtpStreams)
 		{
 			rtpStreams.emplace_back(rtpStream->FillBufferStats(builder));
 		}
@@ -655,10 +654,11 @@ namespace RTC
 			return FBS::Consumer::CreateConsumerScoreDirect(builder, 10, 10, this->producerRtpStreamScores);
 		}
 
-		auto* rtpStream = this->mapSsrcRtpStream.begin()->second;
+		const auto* rtpStream = this->mapSsrcRtpStream.begin()->second;
+
 		uint8_t producerScore{ 0 };
 
-		auto* producerCurrentRtpStream = this->producerStreamManager->GetProducerCurrentRtpStream();
+		const auto* producerCurrentRtpStream = this->producerStreamManager->GetProducerCurrentRtpStream();
 
 		if (producerCurrentRtpStream)
 		{
@@ -695,9 +695,9 @@ namespace RTC
 							return;
 						}
 
-						for (auto& consumableRtpEncoding : this->consumableRtpEncodings)
+						for (const auto& consumableRtpEncoding : this->consumableRtpEncodings)
 						{
-							auto mappedSsrc = consumableRtpEncoding.ssrc;
+							const uint32_t mappedSsrc = consumableRtpEncoding.ssrc;
 
 							this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
 						}
@@ -727,8 +727,8 @@ namespace RTC
 					break;
 				}
 
-				auto* rtpStream              = this->mapSsrcRtpStream.begin()->second;
-				auto previousPreferredLayers = this->producerStreamManager->GetPreferredLayers();
+				const auto* rtpStream              = this->mapSsrcRtpStream.begin()->second;
+				const auto previousPreferredLayers = this->producerStreamManager->GetPreferredLayers();
 
 				const auto* body = request->data->body_as<FBS::Consumer::SetPreferredLayersRequest>();
 				const auto* preferredLayers = body->preferredLayers();
@@ -768,8 +768,9 @@ namespace RTC
 				  newPreferredLayers.temporal,
 				  this->id.c_str());
 
-				preferredTemporalLayer     = static_cast<uint8_t>(newPreferredLayers.temporal);
-				auto preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
+				preferredTemporalLayer = static_cast<uint8_t>(newPreferredLayers.temporal);
+
+				const auto preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
 				  request->GetBufferBuilder(),
 				  static_cast<uint8_t>(newPreferredLayers.spatial),
 				  preferredTemporalLayer);
@@ -937,7 +938,7 @@ namespace RTC
 		return this->rtpHeaderExtensionIds.transportWideCc01 != 0 &&
 		       std::ranges::any_of(
 		         this->rtpParameters.codecs,
-		         [](const RTC::RtpCodecParameters& codec)
+		         [](const RTC::RtpCodecParameters& codec) -> bool
 		         {
 			         return codec.HasRtcpFeedbackType("transport-cc");
 		         });
@@ -950,7 +951,7 @@ namespace RTC
 		return this->rtpHeaderExtensionIds.absSendTime != 0 &&
 		       std::ranges::any_of(
 		         this->rtpParameters.codecs,
-		         [](const RTC::RtpCodecParameters& codec)
+		         [](const RTC::RtpCodecParameters& codec) -> bool
 		         {
 			         return codec.HasRtcpFeedbackType("goog-remb");
 		         });
@@ -1098,6 +1099,15 @@ namespace RTC
 		this->listener->OnConsumerProducerClosed(this);
 	}
 
+	void Consumer::SetBweManaged(bool bweManaged)
+	{
+		MS_TRACE();
+
+		this->bweManaged = bweManaged;
+
+		this->producerStreamManager->SetBweManaged(bweManaged);
+	}
+
 	const std::string& Consumer::GetBitrateAllocationId() const
 	{
 		MS_TRACE();
@@ -1157,6 +1167,7 @@ namespace RTC
 
 		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
 		// greater than computed one, then use it.
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		const auto maxBitrate = this->rtpParameters.encodings[0].maxBitrate;
 
 		return std::max(maxBitrate, desiredBitrate);
@@ -1177,7 +1188,8 @@ namespace RTC
 
 		if (this->pipe)
 		{
-			auto ssrc     = this->mapMappedSsrcSsrc.at(packet->GetSsrc());
+			const auto ssrc = this->mapMappedSsrcSsrc.at(packet->GetSsrc());
+
 			rtpStream     = this->mapSsrcRtpStream.at(ssrc);
 			rtpSeqManager = std::addressof(this->mapRtpStreamRtpSeqManager.at(rtpStream));
 			targetLayerRetransmissionBuffer =
@@ -1204,10 +1216,11 @@ namespace RTC
 			return;
 		}
 
-		auto payloadType = packet->GetPayloadType();
+		const auto payloadType = packet->GetPayloadType();
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those
 		// in the corresponding Producer.
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		if (!this->supportedCodecPayloadTypes[payloadType])
 		{
 			if (this->producerStreamManager->IsPacketForCurrentStream(packet))
@@ -1291,18 +1304,20 @@ namespace RTC
 
 		// Update RTP seq number and timestamp based on offset.
 		uint16_t seq;
+
 		const uint32_t timestamp = packet->GetTimestamp() - action.tsOffset;
 
 		rtpSeqManager->Input(packet->GetSequenceNumber(), seq);
 
 		// Save original packet fields.
-		auto origSsrc         = packet->GetSsrc();
-		auto origSeq          = packet->GetSequenceNumber();
-		auto origTimestamp    = packet->GetTimestamp();
-		const bool origMarker = packet->HasMarker();
+		const auto origSsrc      = packet->GetSsrc();
+		const auto origSeq       = packet->GetSequenceNumber();
+		const auto origTimestamp = packet->GetTimestamp();
+		const bool origMarker    = packet->HasMarker();
 
 		// Rewrite packet.
 		// For pipe each stream has its own SSRC; for non-pipe always encodings[0].
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		packet->SetSsrc(this->pipe ? rtpStream->GetSsrc() : this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);
@@ -1409,7 +1424,7 @@ namespace RTC
 				for (auto& kv : *targetLayerRetransmissionBuffer)
 				{
 					auto& bufferedSharedPacket = kv.second;
-					auto* bufferedPacket       = bufferedSharedPacket.get();
+					auto* const bufferedPacket = bufferedSharedPacket.get();
 
 					if (bufferedPacket->GetSequenceNumber() > origSeq)
 					{
@@ -1464,7 +1479,7 @@ namespace RTC
 
 		uint8_t worstRemoteFractionLost{ 0 };
 
-		for (const auto* rtpStream : this->rtpStreams)
+		for (const auto& rtpStream : this->rtpStreams)
 		{
 			const auto fractionLost = rtpStream->GetFractionLost();
 
@@ -1574,7 +1589,7 @@ namespace RTC
 
 		int64_t rate{ 0 };
 
-		for (auto* rtpStream : this->rtpStreams)
+		for (const auto& rtpStream : this->rtpStreams)
 		{
 			rate += rtpStream->GetBitrate(nowMs);
 		}
@@ -1588,7 +1603,7 @@ namespace RTC
 
 		std::optional<float> rttMs;
 
-		for (auto* rtpStream : this->rtpStreams)
+		for (const auto& rtpStream : this->rtpStreams)
 		{
 			const std::optional<float> streamRttMs = rtpStream->GetRttMs();
 
@@ -1612,7 +1627,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto* rtpStream : this->rtpStreams)
+		for (const auto& rtpStream : this->rtpStreams)
 		{
 			rtpStream->Pause();
 		}
@@ -1631,7 +1646,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto* rtpStream : this->rtpStreams)
+		for (const auto& rtpStream : this->rtpStreams)
 		{
 			rtpStream->Pause();
 		}
@@ -1665,24 +1680,26 @@ namespace RTC
 
 		for (size_t idx{ 0 }; idx < numStreams; ++idx)
 		{
-			auto& encoding           = this->rtpParameters.encodings[idx];
-			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
-			auto& consumableEncoding = this->consumableRtpEncodings[idx];
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			const auto& encoding   = this->rtpParameters.encodings[idx];
+			const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			const auto& consumableEncoding = this->consumableRtpEncodings[idx];
 
 			MS_DEBUG_TAG(
 			  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
 
 			// Set stream params.
-			RTC::RTP::RtpStream::Params params;
-
-			params.encodingIdx    = idx;
-			params.ssrc           = encoding.ssrc;
-			params.payloadType    = mediaCodec->payloadType;
-			params.mimeType       = mediaCodec->mimeType;
-			params.clockRate      = mediaCodec->clockRate;
-			params.cname          = this->rtpParameters.rtcp.cname;
-			params.spatialLayers  = encoding.spatialLayers;
-			params.temporalLayers = encoding.temporalLayers;
+			RTC::RTP::RtpStream::Params params{
+				.encodingIdx    = idx,
+				.ssrc           = encoding.ssrc,
+				.payloadType    = mediaCodec->payloadType,
+				.mimeType       = mediaCodec->mimeType,
+				.clockRate      = mediaCodec->clockRate,
+				.cname          = this->rtpParameters.rtcp.cname,
+				.spatialLayers  = encoding.spatialLayers,
+				.temporalLayers = encoding.temporalLayers,
+			};
 
 			// Check in band FEC in codec parameters.
 			if (mediaCodec->parameters.HasInteger("useinbandfec") && mediaCodec->parameters.GetInteger("useinbandfec") == 1)
@@ -1730,8 +1747,9 @@ namespace RTC
 				}
 			}
 
-			auto* rtpStream =
-			  new RTC::RTP::RtpStreamSend(this, this->shared, params, this->rtpParameters.mid);
+			auto rtpStreamUniquePtr = std::make_unique<RTC::RTP::RtpStreamSend>(
+			  this, this->shared, params, this->rtpParameters.mid);
+			auto* const rtpStream = rtpStreamUniquePtr.get();
 
 			// If the Consumer is paused, tell the RtpStreamSend.
 			if (IsPaused() || IsProducerPaused())
@@ -1746,7 +1764,7 @@ namespace RTC
 				rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
 			}
 
-			this->rtpStreams.push_back(rtpStream);
+			this->rtpStreams.push_back(std::move(rtpStreamUniquePtr));
 			this->mapMappedSsrcSsrc[consumableEncoding.ssrc] = encoding.ssrc;
 			this->mapSsrcRtpStream[encoding.ssrc]            = rtpStream;
 
@@ -1865,7 +1883,7 @@ namespace RTC
 			return;
 		}
 
-		auto traceInfo = FBS::Consumer::CreatePliTraceInfo(
+		const auto traceInfo = FBS::Consumer::CreatePliTraceInfo(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
 
 		const auto notification = FBS::Consumer::CreateTraceNotification(
@@ -1888,7 +1906,7 @@ namespace RTC
 			return;
 		}
 
-		auto traceInfo = FBS::Consumer::CreateFirTraceInfo(
+		const auto traceInfo = FBS::Consumer::CreateFirTraceInfo(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
 
 		const auto notification = FBS::Consumer::CreateTraceNotification(

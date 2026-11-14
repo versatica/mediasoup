@@ -5,10 +5,11 @@
 #include "handles/SendCallbacks.hpp"
 #include "handles/TcpConnectionHandle.hpp"
 #include "SharedInterface.hpp"
+#include <string>
 
 namespace RTC
 {
-	class TcpConnection : public ::TcpConnectionHandle
+	class TcpConnection : public TcpConnectionHandle
 	{
 	public:
 		class Listener
@@ -26,13 +27,23 @@ namespace RTC
 		};
 
 	public:
-		TcpConnection(Listener* listener, SharedInterface* shared, size_t bufferSize);
+		TcpConnection(
+		  Listener* listener,
+		  SharedInterface* shared,
+		  const std::string& announcedAddress,
+		  size_t bufferSize);
+
 		~TcpConnection() override;
+
+		const std::string& GetAnnouncedAddress() const
+		{
+			return this->announcedAddress;
+		}
 
 	public:
 		void Send(const uint8_t* data, size_t len, onSendCallback cb);
 
-		/* Pure virtual methods inherited from ::TcpConnectionHandle. */
+		/* Pure virtual methods inherited from TcpConnectionHandle. */
 	public:
 		void UserOnTcpConnectionRead() override;
 
@@ -40,6 +51,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* const listener;
 		SharedInterface* const shared;
+		const std::string announcedAddress;
 		// Others.
 		size_t frameStart{ 0 }; // Where the latest frame starts.
 	};

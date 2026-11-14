@@ -60,7 +60,7 @@ test('mediasoup.createWorker() succeeds', async () => {
 	const worker2 = await mediasoup.createWorker<{ foo: number; bar?: string }>({
 		logLevel: 'debug',
 		logTags: ['info'],
-		rtcMinPort: 0,
+		rtcMinPort: 1,
 		rtcMaxPort: 9999,
 		dtlsCertificateFile: path.join(__dirname, 'data', 'dtls-cert.pem'),
 		dtlsPrivateKeyFile: path.join(__dirname, 'data', 'dtls-key.pem'),

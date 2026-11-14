@@ -91,7 +91,10 @@ namespace RTC
 				return SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32;
 			}
 
-				NO_DEFAULT();
+			default:
+			{
+				MS_ABORT("invalid SRTP crypto suite [value:%" PRIu8 "]", static_cast<uint8_t>(cryptoSuite));
+			}
 		}
 	}
 
@@ -313,8 +316,9 @@ namespace RTC
 			return false;
 		}
 
-		uint8_t* encryptBuffer = EncryptBuffer;
-		size_t encryptLen      = EncryptBufferSize;
+		uint8_t* const encryptBuffer = EncryptBuffer;
+
+		size_t encryptLen = EncryptBufferSize;
 
 		const srtp_err_status_t err = srtp_protect(
 		  /*srtp_t ctx*/ this->session,
@@ -332,7 +336,7 @@ namespace RTC
 		}
 
 		// Update the given data pointer and len.
-		*data = const_cast<const uint8_t*>(encryptBuffer);
+		*data = encryptBuffer;
 		*len  = encryptLen;
 
 		return true;
@@ -376,8 +380,9 @@ namespace RTC
 			return false;
 		}
 
-		uint8_t* encryptBuffer = EncryptBuffer;
-		size_t encryptLen      = EncryptBufferSize;
+		uint8_t* const encryptBuffer = EncryptBuffer;
+
+		size_t encryptLen = EncryptBufferSize;
 
 		const srtp_err_status_t err = srtp_protect_rtcp(
 		  /*srtp_t ctx*/ this->session,
@@ -395,7 +400,7 @@ namespace RTC
 		}
 
 		// Update the given data pointer and len.
-		*data = const_cast<const uint8_t*>(EncryptBuffer);
+		*data = encryptBuffer;
 		*len  = encryptLen;
 
 		return true;

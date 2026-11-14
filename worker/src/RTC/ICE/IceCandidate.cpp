@@ -22,7 +22,10 @@ namespace RTC
 					return IceCandidate::CandidateType::HOST;
 				}
 
-					NO_DEFAULT();
+				default:
+				{
+					MS_ABORT("invalid ICE candidate type [value:%" PRIu8 "]", static_cast<uint8_t>(type));
+				}
 			}
 		}
 
@@ -54,7 +57,10 @@ namespace RTC
 					return IceCandidate::TcpCandidateType::PASSIVE;
 				}
 
-					NO_DEFAULT();
+				default:
+				{
+					MS_ABORT("invalid ICE candidate TCP type [value:%" PRIu8 "]", static_cast<uint8_t>(type));
+				}
 			}
 		}
 
@@ -75,6 +81,50 @@ namespace RTC
 		}
 
 		/* Instance methods. */
+
+		IceCandidate::IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority)
+		  : foundation("udpcandidate"),
+		    priority(priority),
+		    address(udpSocket->GetLocalIp()),
+		    protocol(Protocol::UDP),
+		    port(udpSocket->GetLocalPort())
+		{
+			MS_TRACE();
+		}
+
+		IceCandidate::IceCandidate(
+		  RTC::UdpSocket* udpSocket, uint32_t priority, const std::string& announcedAddress)
+		  : foundation("udpcandidate"),
+		    priority(priority),
+		    address(announcedAddress),
+		    protocol(Protocol::UDP),
+		    port(udpSocket->GetLocalPort())
+		{
+			MS_TRACE();
+		}
+
+		IceCandidate::IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority)
+		  : foundation("tcpcandidate"),
+		    priority(priority),
+		    address(tcpServer->GetLocalIp()),
+		    protocol(Protocol::TCP),
+		    port(tcpServer->GetLocalPort())
+
+		{
+			MS_TRACE();
+		}
+
+		IceCandidate::IceCandidate(
+		  RTC::TcpServer* tcpServer, uint32_t priority, const std::string& announcedAddress)
+		  : foundation("tcpcandidate"),
+		    priority(priority),
+		    address(announcedAddress),
+		    protocol(Protocol::TCP),
+		    port(tcpServer->GetLocalPort())
+
+		{
+			MS_TRACE();
+		}
 
 		flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate> IceCandidate::FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const

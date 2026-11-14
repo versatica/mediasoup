@@ -363,7 +363,7 @@ namespace RTC
 					return false;
 				}
 
-				Parameter* parameter{ nullptr }; // NOLINT(misc-const-correctness)
+				Parameter* parameter{ nullptr };
 
 				switch (parameterType)
 				{
@@ -569,7 +569,7 @@ namespace RTC
 					return false;
 				}
 
-				ErrorCause* errorCause{ nullptr }; // NOLINT(misc-const-correctness)
+				ErrorCause* errorCause{ nullptr };
 
 				switch (causeCode)
 				{

@@ -7,6 +7,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include <cmath> // std::lround()
 #include <map>   // std::multimap
+#include <vector>
 
 namespace RTC
 {
@@ -18,26 +19,16 @@ namespace RTC
 	  RTC::RtpObserver::Listener* listener,
 	  const FBS::AudioLevelObserver::AudioLevelObserverOptions* options)
 	  : RTC::RtpObserver(shared, id, listener),
+	    maxEntries(options->maxEntries()),
+	    threshold(options->threshold()),
+	    intervalMs(std::clamp<int64_t>(options->interval(), 250, 5000)),
 	    periodicTimer(shared->CreateTimer(this, "audio-level-observer"))
 	{
 		MS_TRACE();
 
-		this->maxEntries = options->maxEntries();
-		this->threshold  = options->threshold();
-		this->intervalMs = options->interval();
-
 		if (this->threshold > 0)
 		{
 			MS_THROW_TYPE_ERROR("invalid threshold value %" PRIi8, this->threshold);
-		}
-
-		if (this->intervalMs < 250)
-		{
-			this->intervalMs = 250;
-		}
-		else if (this->intervalMs > 5000)
-		{
-			this->intervalMs = 5000;
 		}
 
 		this->periodicTimer->Start(this->intervalMs, this->intervalMs);
@@ -146,17 +137,17 @@ namespace RTC
 
 		std::multimap<int8_t, RTC::Producer*> mapDBovsProducer;
 
-		for (auto& kv : this->mapProducerDBovs)
+		for (const auto& kv : this->mapProducerDBovs)
 		{
-			auto* producer = kv.first;
-			auto& dBovs    = kv.second;
+			auto* const producer = kv.first;
+			const auto& dBovs    = kv.second;
 
 			if (dBovs.count < 10)
 			{
 				continue;
 			}
 
-			auto avgDBov = -1 * static_cast<int8_t>(std::lround(dBovs.totalSum / dBovs.count));
+			const auto avgDBov = static_cast<int8_t>(-std::lround(dBovs.totalSum / dBovs.count));
 
 			if (avgDBov >= this->threshold)
 			{
@@ -178,11 +169,12 @@ namespace RTC
 
 			for (; idx < this->maxEntries && rit != mapDBovsProducer.crend(); ++idx, ++rit)
 			{
+				const int8_t avgDBov = rit->first;
+				const auto* producer = rit->second;
+
 				volumes.emplace_back(
 				  FBS::AudioLevelObserver::CreateVolumeDirect(
-				    this->shared->GetChannelNotifier()->GetBufferBuilder(),
-				    rit->second->id.c_str(),
-				    rit->first));
+				    this->shared->GetChannelNotifier()->GetBufferBuilder(), producer->id.c_str(), avgDBov));
 			}
 
 			const auto notification = FBS::AudioLevelObserver::CreateVolumesNotificationDirect(

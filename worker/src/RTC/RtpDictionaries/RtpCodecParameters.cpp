@@ -20,6 +20,12 @@ namespace RTC
 		// payloadType.
 		this->payloadType = data->payloadType();
 
+		// The payload type field of the RTP header is 7 bits long.
+		if (this->payloadType > 127)
+		{
+			MS_THROW_TYPE_ERROR("invalid payloadType %" PRIu8 " (greater than 127)", this->payloadType);
+		}
+
 		// clockRate.
 		this->clockRate = data->clockRate();
 

@@ -4,7 +4,7 @@
 #include "RTC/SctpListener.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/DataProducer.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -20,8 +20,8 @@ namespace RTC
 
 		for (const auto& kv : this->streamIdTable)
 		{
-			auto streamId      = kv.first;
-			auto* dataProducer = kv.second;
+			const auto streamId      = kv.first;
+			const auto* dataProducer = kv.second;
 
 			streamIdTable.emplace_back(
 			  FBS::Common::CreateUint16StringDirect(builder, streamId, dataProducer->id.c_str()));
@@ -77,7 +77,7 @@ namespace RTC
 
 		if (it != this->streamIdTable.end())
 		{
-			auto* dataProducer = it->second;
+			auto* const dataProducer = it->second;
 
 			return dataProducer;
 		}

@@ -129,7 +129,7 @@ namespace RTC
 
 		RtpPacketProcessResult result;
 
-		auto it = this->mapMappedSsrcSyncRequired.find(packet->GetSsrc());
+		const auto it = this->mapMappedSsrcSyncRequired.find(packet->GetSsrc());
 
 		MS_ASSERT(it != this->mapMappedSsrcSyncRequired.end(), "unknown mapped SSRC");
 
@@ -241,7 +241,9 @@ namespace RTC
 
 		for (auto& kv : this->mapMappedSsrcSyncRequired)
 		{
-			kv.second = true;
+			auto& syncRequired = kv.second;
+
+			syncRequired = true;
 		}
 
 		if (IsActive())
@@ -256,7 +258,9 @@ namespace RTC
 
 		for (auto& kv : this->mapMappedSsrcSyncRequired)
 		{
-			kv.second = false;
+			auto& syncRequired = kv.second;
+
+			syncRequired = false;
 		}
 	}
 
@@ -266,7 +270,9 @@ namespace RTC
 
 		for (auto& kv : this->mapMappedSsrcSyncRequired)
 		{
-			kv.second = false;
+			auto& syncRequired = kv.second;
+
+			syncRequired = false;
 		}
 
 		// This one never adapts, so the bitrate allocation takes what it puts out off
@@ -284,7 +290,9 @@ namespace RTC
 
 		for (auto& kv : this->mapMappedSsrcSyncRequired)
 		{
-			kv.second = true;
+			auto& syncRequired = kv.second;
+
+			syncRequired = true;
 		}
 
 		if (IsActive())

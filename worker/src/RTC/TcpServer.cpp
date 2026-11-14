@@ -3,8 +3,6 @@
 
 #include "RTC/TcpServer.hpp"
 #include "Logger.hpp"
-#include "RTC/PortManager.hpp"
-#include <string>
 
 namespace RTC
 {
@@ -19,13 +17,15 @@ namespace RTC
 	  RTC::TcpConnection::Listener* connListener,
 	  SharedInterface* shared,
 	  std::string& ip,
+	  const std::string& announcedAddress,
 	  uint16_t port,
-	  RTC::Transport::SocketFlags& flags)
+	  const RTC::Transport::SocketFlags& flags)
 	  : // This may throw.
-	    ::TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip, port, flags)),
+	    TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip, port, flags)),
 	    listener(listener),
 	    connListener(connListener),
 	    shared(shared),
+	    announcedAddress(announcedAddress),
 	    fixedPort(true)
 	{
 		MS_TRACE();
@@ -36,20 +36,21 @@ namespace RTC
 	  RTC::TcpConnection::Listener* connListener,
 	  SharedInterface* shared,
 	  std::string& ip,
+	  const std::string& announcedAddress,
 	  uint16_t minPort,
 	  uint16_t maxPort,
-	  RTC::Transport::SocketFlags& flags,
+	  const RTC::Transport::SocketFlags& flags,
 	  RTC::PortManager::PortRangeKey& portRangeKey)
 	  : // This may throw.
-	    ::TcpServerHandle::TcpServerHandle(
+	    TcpServerHandle::TcpServerHandle(
 	      RTC::PortManager::BindTcp(ip, minPort, maxPort, flags, portRangeKey)),
 	    listener(listener),
 	    connListener(connListener),
-	    shared(shared)
+	    shared(shared),
+	    announcedAddress(announcedAddress),
+	    portRangeKey(portRangeKey)
 	{
 		MS_TRACE();
-
-		this->portRangeKey = portRangeKey;
 	}
 
 	TcpServer::~TcpServer()
@@ -67,14 +68,14 @@ namespace RTC
 		MS_TRACE();
 
 		// Allocate a new RTC::TcpConnection for the TcpServer to handle it.
-		auto* connection =
-		  new RTC::TcpConnection(this->connListener, this->shared, TcpConnectionBufferSize);
+		auto* const connection = new RTC::TcpConnection(
+		  this->connListener, this->shared, this->announcedAddress, TcpConnectionBufferSize);
 
 		// Accept it.
 		AcceptTcpConnection(connection);
 	}
 
-	void TcpServer::UserOnTcpConnectionClosed(::TcpConnectionHandle* connection)
+	void TcpServer::UserOnTcpConnectionClosed(TcpConnectionHandle* connection)
 	{
 		MS_TRACE();
 

@@ -62,7 +62,7 @@ private:
 	bool SetLocalAddress();
 
 	/* Pure virtual methods that must be implemented by the subclass. */
-protected:
+public:
 	virtual void UserOnTcpConnectionAlloc() = 0;
 
 	virtual void UserOnTcpConnectionClosed(TcpConnectionHandle* connection) = 0;

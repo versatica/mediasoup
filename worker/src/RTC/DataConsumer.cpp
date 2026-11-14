@@ -5,7 +5,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/SubchannelsCodec.hpp"
-#include <vector>
 
 namespace RTC
 {
@@ -42,6 +41,11 @@ namespace RTC
 				this->type = DataConsumer::Type::DIRECT;
 
 				break;
+			}
+
+			default:
+			{
+				MS_THROW_TYPE_ERROR("invalid type");
 			}
 		}
 
@@ -106,7 +110,7 @@ namespace RTC
 
 		subchannels.reserve(this->subchannels.size());
 
-		for (auto subchannel : this->subchannels)
+		for (const auto subchannel : this->subchannels)
 		{
 			subchannels.emplace_back(subchannel);
 		}
@@ -283,7 +287,7 @@ namespace RTC
 				// callback is always invoked synchronously within this same call stack (never
 				// deferred).
 				onMessageQueuedCallback cb(
-				  [this, &request](bool queued, bool isSendBufferFull)
+				  [this, &request](bool queued, bool isSendBufferFull) -> void
 				  {
 					  if (queued)
 					  {
@@ -331,7 +335,7 @@ namespace RTC
 
 				subchannels.reserve(this->subchannels.size());
 
-				for (auto subchannel : this->subchannels)
+				for (const auto subchannel : this->subchannels)
 				{
 					subchannels.emplace_back(subchannel);
 				}
@@ -355,7 +359,7 @@ namespace RTC
 
 				subchannels.reserve(this->subchannels.size());
 
-				for (auto subchannel : this->subchannels)
+				for (const auto subchannel : this->subchannels)
 				{
 					subchannels.emplace_back(subchannel);
 				}
@@ -379,7 +383,7 @@ namespace RTC
 
 				subchannels.reserve(this->subchannels.size());
 
-				for (auto subchannel : this->subchannels)
+				for (const auto subchannel : this->subchannels)
 				{
 					subchannels.emplace_back(subchannel);
 				}

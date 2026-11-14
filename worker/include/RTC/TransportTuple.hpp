@@ -9,6 +9,7 @@
 #include "RTC/UdpSocket.hpp"
 #include "Utils.hpp"
 #include <flatbuffers/flatbuffers.h>
+#include <uv.h>
 #include <string>
 
 namespace RTC
@@ -19,29 +20,32 @@ namespace RTC
 		enum class Protocol : uint8_t
 		{
 			UDP = 1,
-			TCP = 2
+			TCP = 2,
 		};
 
+	public:
 		class TupleKey
 		{
 		private:
+			// Forward declaration.
 			friend class TransportTuple;
-			friend class TupleKeyHash;
 
 		public:
 			TupleKey() = default;
 
-			TupleKey(Protocol protocol, const void* udpSocketOrTcpConnection, const struct sockaddr* udpRemoteAddr)
+			TupleKey(Protocol protocol, const void* udpSocketOrTcpConnection, const sockaddr* udpRemoteAddr)
 			  : protocol(protocol),
 			    udpSocketOrTcpConnection(udpSocketOrTcpConnection),
-			    udpRemoteAddr(udpRemoteAddr) {};
+			    udpRemoteAddr(udpRemoteAddr)
+			{
+			}
 
 			bool operator==(const TupleKey& other) const noexcept;
 
 			bool operator!=(const TupleKey& other) const noexcept
 			{
 				return !(*this == other);
-			};
+			}
 
 		private:
 			Protocol protocol{ Protocol::UDP };
@@ -49,22 +53,24 @@ namespace RTC
 			// UdpSocket or the TcpConnection. For TCP the connection alone identifies
 			// the whole tuple, so `udpRemoteAddr` is unused.
 			const void* udpSocketOrTcpConnection{ nullptr };
-			const struct sockaddr* udpRemoteAddr{ nullptr };
+			const sockaddr* udpRemoteAddr{ nullptr };
 		};
 
+	public:
 		struct TupleKeyHash
 		{
 			size_t operator()(const TupleKey& key) const noexcept;
 		};
 
+	public:
 		static Protocol ProtocolFromFbs(FBS::Transport::Protocol protocol);
 
 		static FBS::Transport::Protocol ProtocolToFbs(Protocol protocol);
 
 	public:
-		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
+		TransportTuple(RTC::UdpSocket* udpSocket, const sockaddr* udpRemoteAddr)
 		  : udpSocket(udpSocket),
-		    udpRemoteAddr(const_cast<struct sockaddr*>(udpRemoteAddr)),
+		    udpRemoteAddr(const_cast<sockaddr*>(udpRemoteAddr)),
 		    protocol(Protocol::UDP),
 		    tupleKey(Protocol::UDP, udpSocket, udpRemoteAddr)
 		{
@@ -81,7 +87,6 @@ namespace RTC
 		  : udpSocket(tuple->udpSocket),
 		    udpRemoteAddr(tuple->udpRemoteAddr),
 		    tcpConnection(tuple->tcpConnection),
-		    localAnnouncedAddress(tuple->localAnnouncedAddress),
 		    protocol(tuple->protocol)
 		{
 			if (protocol == TransportTuple::Protocol::UDP)
@@ -95,20 +100,19 @@ namespace RTC
 		}
 
 	public:
-		void CloseTcpConnection();
+		void Dump(int indentation = 0) const;
 
 		flatbuffers::Offset<FBS::Transport::Tuple> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 
-		void Dump(int indentation = 0) const;
+		void CloseTcpConnection();
 
 		void StoreUdpRemoteAddress()
 		{
 			// Clone the given address into our address storage and make the sockaddr
 			// pointer point to it.
 			this->udpRemoteAddrStorage = Utils::IP::CopyAddress(this->udpRemoteAddr);
-			this->udpRemoteAddr =
-			  reinterpret_cast<struct sockaddr*>(std::addressof(this->udpRemoteAddrStorage));
-			this->tupleKey = TupleKey(this->protocol, this->udpSocket, this->udpRemoteAddr);
+			this->udpRemoteAddr = reinterpret_cast<sockaddr*>(std::addressof(this->udpRemoteAddrStorage));
+			this->tupleKey      = TupleKey(this->protocol, this->udpSocket, this->udpRemoteAddr);
 		}
 
 		bool Compare(const TransportTuple* tuple) const
@@ -134,11 +138,6 @@ namespace RTC
 			}
 
 			return true;
-		}
-
-		void SetLocalAnnouncedAddress(std::string& localAnnouncedAddress)
-		{
-			this->localAnnouncedAddress = localAnnouncedAddress;
 		}
 
 		void Send(const uint8_t* data, size_t len, onSendCallback cb = {})
@@ -214,7 +213,7 @@ namespace RTC
 			return overhead;
 		}
 
-		const struct sockaddr* GetLocalAddress() const
+		const sockaddr* GetLocalAddress() const
 		{
 			if (this->protocol == Protocol::UDP)
 			{
@@ -226,11 +225,23 @@ namespace RTC
 			}
 		}
 
-		const struct sockaddr* GetRemoteAddress() const
+		const std::string& GetLocalAnnouncedAddress() const
 		{
 			if (this->protocol == Protocol::UDP)
 			{
-				return static_cast<const struct sockaddr*>(this->udpRemoteAddr);
+				return this->udpSocket->GetAnnouncedAddress();
+			}
+			else
+			{
+				return this->tcpConnection->GetAnnouncedAddress();
+			}
+		}
+
+		const sockaddr* GetRemoteAddress() const
+		{
+			if (this->protocol == Protocol::UDP)
+			{
+				return this->udpRemoteAddr;
 			}
 			else
 			{
@@ -270,9 +281,8 @@ namespace RTC
 	private:
 		// Passed by argument.
 		RTC::UdpSocket* udpSocket{ nullptr };
-		struct sockaddr* udpRemoteAddr{ nullptr };
+		sockaddr* udpRemoteAddr{ nullptr };
 		RTC::TcpConnection* tcpConnection{ nullptr };
-		std::string localAnnouncedAddress;
 		// Others.
 		sockaddr_storage udpRemoteAddrStorage{};
 		Protocol protocol;

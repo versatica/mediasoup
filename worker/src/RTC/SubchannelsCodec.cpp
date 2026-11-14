@@ -159,7 +159,7 @@ namespace RTC
 
 		subchannels.reserve(subchannelsCount);
 
-		for (uint16_t i = 0; i < subchannelsCount; ++i)
+		for (uint16_t i{ 0 }; i < subchannelsCount; ++i)
 		{
 			subchannels.push_back(Utils::Byte::Get2Bytes(payload.data(), offset));
 			offset += 2;

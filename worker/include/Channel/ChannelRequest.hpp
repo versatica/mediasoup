@@ -74,7 +74,7 @@ namespace Channel
 		// Others.
 		const uint32_t id;
 		const Method method;
-		const char* methodCStr{ nullptr };
+		const char* methodCStr;
 		std::string handlerId;
 		bool replied{ false };
 	};

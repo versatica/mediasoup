@@ -203,7 +203,8 @@ namespace RTC
 		  this->msid.c_str());
 	}
 
-	const RTC::RtpCodecParameters* RtpParameters::GetCodecForEncoding(RtpEncodingParameters& encoding) const
+	const RTC::RtpCodecParameters* RtpParameters::GetCodecForEncoding(
+	  const RtpEncodingParameters& encoding) const
 	{
 		MS_TRACE();
 
@@ -223,7 +224,8 @@ namespace RTC
 		MS_ABORT("no valid codec payload type for the given encoding");
 	}
 
-	const RTC::RtpCodecParameters* RtpParameters::GetRtxCodecForEncoding(RtpEncodingParameters& encoding) const
+	const RTC::RtpCodecParameters* RtpParameters::GetRtxCodecForEncoding(
+	  const RtpEncodingParameters& encoding) const
 	{
 		MS_TRACE();
 

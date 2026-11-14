@@ -4,12 +4,15 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
+#include "FBS/dataConsumer.h"
+#include "FBS/transport.h"
 #include "handles/SendCallbacks.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include "SharedInterface.hpp"
 #include <ankerl/unordered_dense.h>
 #include <string>
+#include <vector>
 
 namespace RTC
 {
@@ -24,12 +27,16 @@ namespace RTC
 		public:
 			virtual void OnDataConsumerSendMessage(
 			  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onMessageQueuedCallback cb) = 0;
+
 			virtual void OnDataConsumerNeedBufferedAmount(
 			  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) const = 0;
+
 			virtual void OnDataConsumerNeedBufferedAmountLowThreshold(
 			  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmountLowThreshold) const = 0;
+
 			virtual void OnDataConsumerSetBufferedAmountLowThreshold(
-			  const RTC::DataConsumer* dataConsumer, uint32_t bytes) const                 = 0;
+			  const RTC::DataConsumer* dataConsumer, uint32_t bytes) const = 0;
+
 			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) = 0;
 		};
 
@@ -49,21 +56,26 @@ namespace RTC
 		  const FBS::Transport::ConsumeDataRequest* data,
 		  size_t maxMessageSize,
 		  bool pipe);
+
 		~DataConsumer() override;
 
 	public:
 		flatbuffers::Offset<FBS::DataConsumer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
+
 		flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) const;
+
 		Type GetType() const
 		{
 			return this->type;
 		}
+
 		const RTC::SctpStreamParameters& GetSctpStreamParameters() const
 		{
 			return this->sctpStreamParameters;
 		}
+
 		bool IsActive() const
 		{
 			// It's active it DataConsumer and DataProducer are not paused and the SCTP
@@ -77,20 +89,29 @@ namespace RTC
 			);
 			// clang-format on
 		}
+
 		bool IsPaused() const
 		{
 			return this->paused;
 		}
+
 		bool IsDataProducerPaused() const
 		{
 			return this->dataProducerPaused;
 		}
+
 		void DataProducerPaused();
+
 		void DataProducerResumed();
+
 		void SctpAssociationClosed();
+
 		void SctpBufferedAmountLow(uint32_t bufferedAmount) const;
+
 		void SctpSendBufferFull() const;
+
 		void DataProducerClosed();
+
 		/**
 		 * Verifies if given subchannels would allow a message to be delivered to
 		 * the DataConsumer endpoint or not.
@@ -103,6 +124,7 @@ namespace RTC
 		  const std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel,
 		  std::optional<uint16_t> ignoredSubchannel) const;
+
 		bool SendMessage(
 		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
