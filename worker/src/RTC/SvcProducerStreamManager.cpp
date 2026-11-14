@@ -431,6 +431,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		const auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
 
 		this->listener->OnProducerStreamManagerKeyFrameRequested(mappedSsrc);

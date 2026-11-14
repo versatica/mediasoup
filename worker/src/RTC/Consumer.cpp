@@ -123,6 +123,7 @@ namespace RTC
 			this->consumableRtpEncodings.emplace_back(entry);
 
 			// Verify that it has ssrc field.
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			const auto& encoding = this->consumableRtpEncodings[i];
 
 			if (encoding.ssrc == 0)
@@ -209,6 +210,9 @@ namespace RTC
 		{
 			if (codec.mimeType.IsMediaCodec())
 			{
+				// NOTE: RTC::RtpCodecParameters constructor validates that payloadType
+				// is <= 127.
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				this->supportedCodecPayloadTypes[codec.payloadType] = true;
 			}
 		}
@@ -238,6 +242,7 @@ namespace RTC
 			this->maxRtcpIntervalMs = RTC::Consts::MaxVideoRtcpIntervalMs;
 		}
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		const auto& encoding = this->rtpParameters.encodings[0];
 
 		// Determine keyFrameSupported.
@@ -256,6 +261,7 @@ namespace RTC
 		{
 			this->type = RTC::RtpParameters::Type::SIMULCAST;
 		}
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		else if (this->consumableRtpEncodings[0].spatialLayers > 1 || this->consumableRtpEncodings[0].temporalLayers > 1)
 		{
 			// Single encoding with multiple layers is always SVC.
@@ -285,8 +291,9 @@ namespace RTC
 				  (mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::OPUS ||
 					 mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::MULTIOPUS))
 				{
-					RTC::RTP::Codecs::EncodingContext::Params params{ .preferDependencyDescriptor =
-					                                                    PrefersDependencyDescriptor() };
+					RTC::RTP::Codecs::EncodingContext::Params params{
+						.preferDependencyDescriptor = PrefersDependencyDescriptor(),
+					};
 
 					encodingContext.reset(
 					  RTC::RTP::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
@@ -561,6 +568,7 @@ namespace RTC
 
 		for (auto i = 0; i < 128; ++i)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			if (this->supportedCodecPayloadTypes[i])
 			{
 				supportedCodecPayloadTypes.push_back(i);
@@ -1159,6 +1167,7 @@ namespace RTC
 
 		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
 		// greater than computed one, then use it.
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		const auto maxBitrate = this->rtpParameters.encodings[0].maxBitrate;
 
 		return std::max(maxBitrate, desiredBitrate);
@@ -1211,6 +1220,7 @@ namespace RTC
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those
 		// in the corresponding Producer.
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		if (!this->supportedCodecPayloadTypes[payloadType])
 		{
 			if (this->producerStreamManager->IsPacketForCurrentStream(packet))
@@ -1307,6 +1317,7 @@ namespace RTC
 
 		// Rewrite packet.
 		// For pipe each stream has its own SSRC; for non-pipe always encodings[0].
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		packet->SetSsrc(this->pipe ? rtpStream->GetSsrc() : this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);
@@ -1669,8 +1680,10 @@ namespace RTC
 
 		for (size_t idx{ 0 }; idx < numStreams; ++idx)
 		{
-			const auto& encoding           = this->rtpParameters.encodings[idx];
-			const auto* mediaCodec         = this->rtpParameters.GetCodecForEncoding(encoding);
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			const auto& encoding   = this->rtpParameters.encodings[idx];
+			const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			const auto& consumableEncoding = this->consumableRtpEncodings[idx];
 
 			MS_DEBUG_TAG(

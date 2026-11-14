@@ -145,8 +145,9 @@ void RTC::KeyFrameRequestManager::ForceKeyFrameNeeded(uint32_t ssrc)
 	if (this->keyFrameRequestDelayMs > 0)
 	{
 		// Create/replace a delayer for this ssrc.
-		// NOTE: The existing one must be deleted before creating the new one, since
-		// both would hold a timer with the same label at once.
+		// NOTE: The existing one is deleted before creating the new one only because
+		// of the worker tests: mocks::MockShared rejects two timers with the same
+		// label at once.
 		this->mapSsrcKeyFrameRequestDelayer.erase(ssrc);
 		this->mapSsrcKeyFrameRequestDelayer[ssrc] = std::make_unique<KeyFrameRequestDelayer>(
 		  this, this->shared, ssrc, this->keyFrameRequestDelayMs);

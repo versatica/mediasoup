@@ -49,10 +49,8 @@ namespace RTC
 
 		MS_DUMP_CLEAN(indentation, "<PortManager>");
 
-		for (const auto& kv : PortManager::mapPortRanges)
+		for (const auto& [key, portRange] : PortManager::mapPortRanges)
 		{
-			const auto& key         = kv.first;
-			const auto& portRange   = kv.second;
 			const char* protocolStr = (key.protocol == Protocol::UDP) ? "udp" : "tcp";
 
 			MS_DUMP_CLEAN(indentation + 1, "<PortRange>");
@@ -287,6 +285,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Port 0 would make the OS choose a random port out of the range.
+		if (minPort == 0)
+		{
+			MS_THROW_TYPE_ERROR("minPort cannot be 0");
+		}
+
 		if (maxPort < minPort)
 		{
 			MS_THROW_TYPE_ERROR("maxPort cannot be less than minPort");
@@ -401,6 +405,7 @@ namespace RTC
 				  numAttempts);
 
 				// Check whether this port is not available.
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				if (portRange.ports[portIdx])
 				{
 					MS_DEBUG_DEV(
@@ -630,6 +635,7 @@ namespace RTC
 		}
 
 		// If here, we got an available port. Mark it as unavailable.
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		portRange.ports[portIdx] = true;
 
 		// Increase number of used ports in the range.
@@ -671,6 +677,7 @@ namespace RTC
 		MS_ASSERT(portRange.numUsedPorts > 0, "number of used ports is 0");
 
 		// Mark the port as available.
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		portRange.ports[portIdx] = false;
 
 		// Decrease number of used ports in the range.

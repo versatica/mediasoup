@@ -151,31 +151,85 @@ namespace RTC
 			this->srtpKeyBase64 = Utils::String::Base64Encode(this->srtpKey);
 		}
 
-		try
+		if (this->listenInfo.portRange.min != 0 && this->listenInfo.portRange.max != 0)
 		{
-			if (this->listenInfo.portRange.min != 0 && this->listenInfo.portRange.max != 0)
+			RTC::PortManager::PortRangeKey portRangeKey;
+
+			this->udpSocket = std::make_unique<RTC::UdpSocket>(
+			  this,
+			  this->shared,
+			  this->listenInfo.ip,
+			  this->listenInfo.announcedAddress,
+			  this->listenInfo.portRange.min,
+			  this->listenInfo.portRange.max,
+			  this->listenInfo.flags,
+			  portRangeKey);
+		}
+		else if (this->listenInfo.port != 0)
+		{
+			this->udpSocket = std::make_unique<RTC::UdpSocket>(
+			  this,
+			  this->shared,
+			  this->listenInfo.ip,
+			  this->listenInfo.announcedAddress,
+			  this->listenInfo.port,
+			  this->listenInfo.flags);
+		}
+		// NOTE: This is temporal to allow deprecated usage of worker port range.
+		// In the future this should throw since |port| or |portRange| will be
+		// required.
+		else
+		{
+			RTC::PortManager::PortRangeKey portRangeKey;
+
+			this->udpSocket = std::make_unique<RTC::UdpSocket>(
+			  this,
+			  this->shared,
+			  this->listenInfo.ip,
+			  this->listenInfo.announcedAddress,
+			  Settings::configuration.rtcMinPort,
+			  Settings::configuration.rtcMaxPort,
+			  this->listenInfo.flags,
+			  portRangeKey);
+		}
+
+		if (this->listenInfo.sendBufferSize != 0)
+		{
+			// NOTE: This may throw.
+			this->udpSocket->SetSendBufferSize(this->listenInfo.sendBufferSize);
+		}
+
+		if (this->listenInfo.recvBufferSize != 0)
+		{
+			// NOTE: This may throw.
+			this->udpSocket->SetRecvBufferSize(this->listenInfo.recvBufferSize);
+		}
+
+		if (!this->rtcpMux)
+		{
+			if (this->rtcpListenInfo.portRange.min != 0 && this->rtcpListenInfo.portRange.max != 0)
 			{
 				RTC::PortManager::PortRangeKey portRangeKey;
 
-				this->udpSocket = std::make_unique<RTC::UdpSocket>(
+				this->rtcpUdpSocket = std::make_unique<RTC::UdpSocket>(
 				  this,
 				  this->shared,
-				  this->listenInfo.ip,
-				  this->listenInfo.announcedAddress,
-				  this->listenInfo.portRange.min,
-				  this->listenInfo.portRange.max,
-				  this->listenInfo.flags,
+				  this->rtcpListenInfo.ip,
+				  this->rtcpListenInfo.announcedAddress,
+				  this->rtcpListenInfo.portRange.min,
+				  this->rtcpListenInfo.portRange.max,
+				  this->rtcpListenInfo.flags,
 				  portRangeKey);
 			}
-			else if (this->listenInfo.port != 0)
+			else if (this->rtcpListenInfo.port != 0)
 			{
-				this->udpSocket = std::make_unique<RTC::UdpSocket>(
+				this->rtcpUdpSocket = std::make_unique<RTC::UdpSocket>(
 				  this,
 				  this->shared,
-				  this->listenInfo.ip,
-				  this->listenInfo.announcedAddress,
-				  this->listenInfo.port,
-				  this->listenInfo.flags);
+				  this->rtcpListenInfo.ip,
+				  this->rtcpListenInfo.announcedAddress,
+				  this->rtcpListenInfo.port,
+				  this->rtcpListenInfo.flags);
 			}
 			// NOTE: This is temporal to allow deprecated usage of worker port range.
 			// In the future this should throw since |port| or |portRange| will be
@@ -184,100 +238,35 @@ namespace RTC
 			{
 				RTC::PortManager::PortRangeKey portRangeKey;
 
-				this->udpSocket = std::make_unique<RTC::UdpSocket>(
+				this->rtcpUdpSocket = std::make_unique<RTC::UdpSocket>(
 				  this,
 				  this->shared,
-				  this->listenInfo.ip,
-				  this->listenInfo.announcedAddress,
+				  this->rtcpListenInfo.ip,
+				  this->rtcpListenInfo.announcedAddress,
 				  Settings::configuration.rtcMinPort,
 				  Settings::configuration.rtcMaxPort,
-				  this->listenInfo.flags,
+				  this->rtcpListenInfo.flags,
 				  portRangeKey);
 			}
 
-			if (this->listenInfo.sendBufferSize != 0)
+			if (this->rtcpListenInfo.sendBufferSize != 0)
 			{
 				// NOTE: This may throw.
-				this->udpSocket->SetSendBufferSize(this->listenInfo.sendBufferSize);
+				this->rtcpUdpSocket->SetSendBufferSize(this->rtcpListenInfo.sendBufferSize);
 			}
 
-			if (this->listenInfo.recvBufferSize != 0)
+			if (this->rtcpListenInfo.recvBufferSize != 0)
 			{
 				// NOTE: This may throw.
-				this->udpSocket->SetRecvBufferSize(this->listenInfo.recvBufferSize);
+				this->rtcpUdpSocket->SetRecvBufferSize(this->rtcpListenInfo.recvBufferSize);
 			}
-
-			if (!this->rtcpMux)
-			{
-				if (this->rtcpListenInfo.portRange.min != 0 && this->rtcpListenInfo.portRange.max != 0)
-				{
-					RTC::PortManager::PortRangeKey portRangeKey;
-
-					this->rtcpUdpSocket = std::make_unique<RTC::UdpSocket>(
-					  this,
-					  this->shared,
-					  this->rtcpListenInfo.ip,
-					  this->rtcpListenInfo.announcedAddress,
-					  this->rtcpListenInfo.portRange.min,
-					  this->rtcpListenInfo.portRange.max,
-					  this->rtcpListenInfo.flags,
-					  portRangeKey);
-				}
-				else if (this->rtcpListenInfo.port != 0)
-				{
-					this->rtcpUdpSocket = std::make_unique<RTC::UdpSocket>(
-					  this,
-					  this->shared,
-					  this->rtcpListenInfo.ip,
-					  this->rtcpListenInfo.announcedAddress,
-					  this->rtcpListenInfo.port,
-					  this->rtcpListenInfo.flags);
-				}
-				// NOTE: This is temporal to allow deprecated usage of worker port range.
-				// In the future this should throw since |port| or |portRange| will be
-				// required.
-				else
-				{
-					RTC::PortManager::PortRangeKey portRangeKey;
-
-					this->rtcpUdpSocket = std::make_unique<RTC::UdpSocket>(
-					  this,
-					  this->shared,
-					  this->rtcpListenInfo.ip,
-					  this->rtcpListenInfo.announcedAddress,
-					  Settings::configuration.rtcMinPort,
-					  Settings::configuration.rtcMaxPort,
-					  this->rtcpListenInfo.flags,
-					  portRangeKey);
-				}
-
-				if (this->rtcpListenInfo.sendBufferSize != 0)
-				{
-					// NOTE: This may throw.
-					this->rtcpUdpSocket->SetSendBufferSize(this->rtcpListenInfo.sendBufferSize);
-				}
-
-				if (this->rtcpListenInfo.recvBufferSize != 0)
-				{
-					// NOTE: This may throw.
-					this->rtcpUdpSocket->SetRecvBufferSize(this->rtcpListenInfo.recvBufferSize);
-				}
-			}
-
-			// NOTE: This may throw.
-			this->shared->GetChannelMessageRegistrator()->RegisterHandler(
-			  this->id,
-			  /*channelRequestHandler*/ this,
-			  /*channelNotificationHandler*/ this);
 		}
-		catch (const MediaSoupError&)
-		{
-			this->udpSocket.reset();
 
-			this->rtcpUdpSocket.reset();
-
-			throw;
-		}
+		// NOTE: This may throw.
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*channelNotificationHandler*/ this);
 	}
 
 	PlainTransport::~PlainTransport()
@@ -459,6 +448,16 @@ namespace RTC
 					MS_THROW_ERROR("connect() already called");
 				}
 
+				// In comedia mode a received packet may have already set the tuple and
+				// connected the transport.
+				const auto wasConnected = IsConnected();
+
+				// Keep the current SRTP parameters to restore them if connect() fails.
+				const auto previousSrtpCryptoSuite  = this->srtpCryptoSuite;
+				const auto previousSrtpMasterLength = this->srtpMasterLength;
+				const auto previousSrtpKey          = this->srtpKey;
+				const auto previousSrtpKeyBase64    = this->srtpKeyBase64;
+
 				try
 				{
 					std::string ip;
@@ -485,8 +484,6 @@ namespace RTC
 						const auto* const srtpParameters = body->srtpParameters();
 
 						// Update out SRTP crypto suite with the one used by the remote.
-						const auto previousSrtpCryptoSuite = this->srtpCryptoSuite;
-
 						this->srtpCryptoSuite = SrtpSession::CryptoSuiteFromFbs(srtpParameters->cryptoSuite());
 
 						switch (this->srtpCryptoSuite)
@@ -722,15 +719,18 @@ namespace RTC
 					}
 
 					this->srtpSendSession.reset();
-
 					this->srtpRecvSession.reset();
+
+					this->srtpCryptoSuite  = previousSrtpCryptoSuite;
+					this->srtpMasterLength = previousSrtpMasterLength;
+					this->srtpKey          = previousSrtpKey;
+					this->srtpKeyBase64    = previousSrtpKeyBase64;
 
 					throw;
 				}
 
 				this->connectCalled = true;
 
-				// Tell the caller about the selected local DTLS role.
 				flatbuffers::Offset<FBS::Transport::Tuple> tupleOffset;
 				flatbuffers::Offset<FBS::Transport::Tuple> rtcpTupleOffset;
 				flatbuffers::Offset<FBS::SrtpParameters::SrtpParameters> srtpParametersOffset;
@@ -759,8 +759,12 @@ namespace RTC
 				request->Accept(FBS::Response::Body::PlainTransport_ConnectResponse, responseOffset);
 
 				// Assume we are connected (there is no much more we can do to know it)
-				// and tell the parent class.
-				RTC::Transport::Connected();
+				// and tell the parent class. In comedia mode the tuple is set later by a
+				// received packet, which tells the parent class then.
+				if (!wasConnected && IsConnected())
+				{
+					RTC::Transport::Connected();
+				}
 
 				break;
 			}

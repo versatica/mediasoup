@@ -63,7 +63,7 @@ namespace RTC
 		// Passed by argument.
 		const uint16_t maxEntries;
 		const int8_t threshold;
-		int64_t intervalMs;
+		const int64_t intervalMs;
 		// Allocated by this.
 		const std::unique_ptr<TimerHandleInterface> periodicTimer;
 		// Others.

@@ -14,7 +14,7 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 - A member that the constructor must set gets no default initializer in the `.hpp`, so that the compiler complains if a constructor forgets it.
 - A member whose value comes verbatim from a constructor argument is set in the member initializer list, never assigned in the constructor body.
 - If every constructor is guaranteed to set a member, whether in the initializer list or in its body, the member gets no default initializer in the `.hpp`: the constructor always overwrites it, so a default would be dead code.
-- A member that not every constructor sets (several constructors, or a default constructor) keeps its default initializer.
+- A member that not every constructor sets (several constructors, or a default constructor) keeps its default initializer, unless its type already default-constructs to a defined value (a class or struct whose fields all have default initializers, `std::string`, containers, smart pointers...). Then no `{}` is added, since it would change nothing.
 - A member whose initial value is a constant that does not depend on any argument gets that value as its initializer in the `.hpp`, not in the initializer list.
 - A `std::optional` member that starts empty gets no initializer at all: `std::optional<uint16_t> frameNumber;`, never `{ std::nullopt }`, which is what it already is.
 - The initializer list follows the declaration order of the members. Never reorder members to fit the initializer list.
@@ -92,6 +92,7 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 - Never `&foo` to take an address: use `std::addressof(foo)`.
 - Never reach through an iterator (`it->second.field`): bind a named reference or copy first.
 - Never use `.first` / `.second` inline: bind them to a named variable first (`const bool inserted = set.insert(x).second;`).
+- Use a structured binding whenever both members of a pair or tuple are used: `for (const auto& [key, portRange] : mapPortRanges)`, never `const auto& key = kv.first;` plus `const auto& portRange = kv.second;`.
 - Aggregates are built with designated initializers: `{ .ssrc = ssrc, .lastSeq = seq }`, never `{ ssrc, seq }` (clang-tidy `modernize-use-designated-initializers`).
 - Never write the `struct` keyword before a variable, parameter or return type: `RttBackoff rttBackoff;`, never `struct RttBackoff rttBackoff;`. The only exception is where a function with the same name hides the type, as with `struct stat` and `struct sigaction` (POSIX declares the `stat()` and `sigaction()` functions, and without the keyword it does not compile). There it stays, with a one-line comment saying why, so that it is not "fixed" in a later pass.
 - Every lambda states its return type explicitly, `-> void` included. Hence a lambda never takes `auto` parameters (clang-tidy `fuchsia-trailing-return` rejects a trailing return type on a generic lambda): spell out the parameter type, e.g. `const std::pair<const uint16_t, OutgoingStream>& entry` for a `std::map` entry.

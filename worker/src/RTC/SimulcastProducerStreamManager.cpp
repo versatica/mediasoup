@@ -36,6 +36,7 @@ namespace RTC
 		// Build mapMappedSsrcSpatialLayer and reserve producerRtpStreams.
 		for (size_t idx{ 0 }; idx < this->consumableRtpEncodings.size(); ++idx)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			const auto& encoding = this->consumableRtpEncodings[idx];
 
 			this->mapMappedSsrcSpatialLayer[encoding.ssrc] = static_cast<int16_t>(idx);
@@ -117,6 +118,7 @@ namespace RTC
 
 		const int16_t spatialLayer = it->second;
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 	}
 
@@ -131,6 +133,7 @@ namespace RTC
 
 		const int16_t spatialLayer = it->second;
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 
 		// Emit the score event.
@@ -794,6 +797,7 @@ namespace RTC
 
 		if (producerTargetRtpStream)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			const auto mappedSsrc = this->consumableRtpEncodings[this->targetLayers.spatial].ssrc;
 
 			this->listener->OnProducerStreamManagerKeyFrameRequested(mappedSsrc);
@@ -801,6 +805,7 @@ namespace RTC
 
 		if (producerCurrentRtpStream && producerCurrentRtpStream != producerTargetRtpStream)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			const auto mappedSsrc = this->consumableRtpEncodings[this->currentSpatialLayer].ssrc;
 
 			this->listener->OnProducerStreamManagerKeyFrameRequested(mappedSsrc);
@@ -818,6 +823,7 @@ namespace RTC
 			return;
 		}
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		const auto mappedSsrc = this->consumableRtpEncodings[this->targetLayers.spatial].ssrc;
 
 		this->listener->OnProducerStreamManagerKeyFrameRequested(mappedSsrc);
@@ -834,6 +840,7 @@ namespace RTC
 			return;
 		}
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		const auto mappedSsrc = this->consumableRtpEncodings[this->currentSpatialLayer].ssrc;
 
 		this->listener->OnProducerStreamManagerKeyFrameRequested(mappedSsrc);

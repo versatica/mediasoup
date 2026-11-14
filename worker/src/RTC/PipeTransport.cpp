@@ -60,82 +60,71 @@ namespace RTC
 			this->srtpKeyBase64 = Utils::String::Base64Encode(this->srtpKey);
 		}
 
-		try
+		if (this->listenInfo.portRange.min != 0 && this->listenInfo.portRange.max != 0)
 		{
-			if (this->listenInfo.portRange.min != 0 && this->listenInfo.portRange.max != 0)
-			{
-				RTC::PortManager::PortRangeKey portRangeKey;
+			RTC::PortManager::PortRangeKey portRangeKey;
 
-				this->udpSocket = std::make_unique<RTC::UdpSocket>(
-				  this,
-				  this->shared,
-				  this->listenInfo.ip,
-				  this->listenInfo.announcedAddress,
-				  this->listenInfo.portRange.min,
-				  this->listenInfo.portRange.max,
-				  this->listenInfo.flags,
-				  portRangeKey);
-			}
-			else if (this->listenInfo.port != 0)
-			{
-				this->udpSocket = std::make_unique<RTC::UdpSocket>(
-				  this,
-				  this->shared,
-				  this->listenInfo.ip,
-				  this->listenInfo.announcedAddress,
-				  this->listenInfo.port,
-				  this->listenInfo.flags);
-			}
-			// NOTE: This is temporal to allow deprecated usage of worker port range.
-			// In the future this should throw since |port| or |portRange| will be
-			// required.
-			else
-			{
-				RTC::PortManager::PortRangeKey portRangeKey;
+			this->udpSocket = std::make_unique<RTC::UdpSocket>(
+			  this,
+			  this->shared,
+			  this->listenInfo.ip,
+			  this->listenInfo.announcedAddress,
+			  this->listenInfo.portRange.min,
+			  this->listenInfo.portRange.max,
+			  this->listenInfo.flags,
+			  portRangeKey);
+		}
+		else if (this->listenInfo.port != 0)
+		{
+			this->udpSocket = std::make_unique<RTC::UdpSocket>(
+			  this,
+			  this->shared,
+			  this->listenInfo.ip,
+			  this->listenInfo.announcedAddress,
+			  this->listenInfo.port,
+			  this->listenInfo.flags);
+		}
+		// NOTE: This is temporal to allow deprecated usage of worker port range.
+		// In the future this should throw since |port| or |portRange| will be
+		// required.
+		else
+		{
+			RTC::PortManager::PortRangeKey portRangeKey;
 
-				this->udpSocket = std::make_unique<RTC::UdpSocket>(
-				  this,
-				  this->shared,
-				  this->listenInfo.ip,
-				  this->listenInfo.announcedAddress,
-				  Settings::configuration.rtcMinPort,
-				  Settings::configuration.rtcMaxPort,
-				  this->listenInfo.flags,
-				  portRangeKey);
-			}
+			this->udpSocket = std::make_unique<RTC::UdpSocket>(
+			  this,
+			  this->shared,
+			  this->listenInfo.ip,
+			  this->listenInfo.announcedAddress,
+			  Settings::configuration.rtcMinPort,
+			  Settings::configuration.rtcMaxPort,
+			  this->listenInfo.flags,
+			  portRangeKey);
+		}
 
-			if (this->listenInfo.sendBufferSize != 0)
-			{
-				// NOTE: This may throw.
-				this->udpSocket->SetSendBufferSize(this->listenInfo.sendBufferSize);
-			}
-
-			if (this->listenInfo.recvBufferSize != 0)
-			{
-				// NOTE: This may throw.
-				this->udpSocket->SetRecvBufferSize(this->listenInfo.recvBufferSize);
-			}
-
-			MS_DEBUG_TAG(
-			  info,
-			  "UDP socket buffer sizes [send:%" PRIu32 ", recv:%" PRIu32 "]",
-			  this->udpSocket->GetSendBufferSize(),
-			  this->udpSocket->GetRecvBufferSize());
-
+		if (this->listenInfo.sendBufferSize != 0)
+		{
 			// NOTE: This may throw.
-			this->shared->GetChannelMessageRegistrator()->RegisterHandler(
-			  this->id,
-			  /*channelRequestHandler*/ this,
-			  /*channelNotificationHandler*/ this);
+			this->udpSocket->SetSendBufferSize(this->listenInfo.sendBufferSize);
 		}
-		catch (const MediaSoupError&)
+
+		if (this->listenInfo.recvBufferSize != 0)
 		{
-			// Must delete everything since the destructor won't be called.
-
-			this->udpSocket.reset();
-
-			throw;
+			// NOTE: This may throw.
+			this->udpSocket->SetRecvBufferSize(this->listenInfo.recvBufferSize);
 		}
+
+		MS_DEBUG_TAG(
+		  info,
+		  "UDP socket buffer sizes [send:%" PRIu32 ", recv:%" PRIu32 "]",
+		  this->udpSocket->GetSendBufferSize(),
+		  this->udpSocket->GetRecvBufferSize());
+
+		// NOTE: This may throw.
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*channelNotificationHandler*/ this);
 	}
 
 	PipeTransport::~PipeTransport()

@@ -15,21 +15,17 @@ namespace RTC
 
 		std::vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>> parameters;
 
-		for (const auto& kv : this->mapKeyValues)
+		for (const auto& [key, value] : this->mapKeyValues)
 		{
-			const auto& key   = kv.first;
-			const auto& value = kv.second;
-
-			flatbuffers::Offset<FBS::RtpParameters::Parameter> parameter;
-
 			switch (value.type)
 			{
 				case Value::Type::BOOLEAN:
 				{
 					auto valueOffset = FBS::RtpParameters::CreateBoolean(builder, value.booleanValue);
 
-					parameter = FBS::RtpParameters::CreateParameterDirect(
-					  builder, key.c_str(), FBS::RtpParameters::Value::Boolean, valueOffset.Union());
+					parameters.emplace_back(
+					  FBS::RtpParameters::CreateParameterDirect(
+					    builder, key.c_str(), FBS::RtpParameters::Value::Boolean, valueOffset.Union()));
 
 					break;
 				}

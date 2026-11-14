@@ -123,7 +123,7 @@ namespace RTC
 		double relativeSpeachActivities[RelativeSpeachActivitiesLen]{};
 		std::string dominantId;
 		const std::unique_ptr<TimerHandleInterface> periodicTimer;
-		int64_t intervalMs;
+		const int64_t intervalMs;
 		// Map of ProducerSpeakers indexed by Producer id.
 		ankerl::unordered_dense::map<std::string, std::unique_ptr<ProducerSpeaker>> mapProducerSpeakers;
 		int64_t lastLevelIdleAtMs{ 0 };

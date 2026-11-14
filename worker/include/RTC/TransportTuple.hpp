@@ -20,15 +20,15 @@ namespace RTC
 		enum class Protocol : uint8_t
 		{
 			UDP = 1,
-			TCP = 2
+			TCP = 2,
 		};
 
 	public:
 		class TupleKey
 		{
 		private:
+			// Forward declaration.
 			friend class TransportTuple;
-			friend struct TupleKeyHash;
 
 		public:
 			TupleKey() = default;

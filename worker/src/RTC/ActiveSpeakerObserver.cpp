@@ -79,14 +79,17 @@ namespace RTC
 
 			for (const uint32_t lEnd = l + littleLenPerBig; l < lEnd; ++l)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				if (littles[l] > threashold)
 				{
 					++sum;
 				}
 			}
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			if (bigs[b] != sum)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				bigs[b] = sum;
 				changed = true;
 			}
@@ -102,18 +105,9 @@ namespace RTC
 	  const FBS::ActiveSpeakerObserver::ActiveSpeakerObserverOptions* options)
 	  : RTC::RtpObserver(shared, id, listener),
 	    periodicTimer(shared->CreateTimer(this, "active-speaker-observer")),
-	    intervalMs(options->interval())
+	    intervalMs(std::clamp<int64_t>(options->interval(), 100, 5000))
 	{
 		MS_TRACE();
-
-		if (this->intervalMs < 100)
-		{
-			this->intervalMs = 100;
-		}
-		else if (this->intervalMs > 5000)
-		{
-			this->intervalMs = 5000;
-		}
 
 		this->periodicTimer->Start(this->intervalMs, this->intervalMs);
 
@@ -495,6 +489,7 @@ namespace RTC
 
 			for (uint32_t i{ 0 }; i < intervalsUpdated; ++i)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				this->levels[this->nextLevelIndex] = b;
 				this->nextLevelIndex               = (this->nextLevelIndex + 1) % LevelsBuffLen;
 			}
@@ -527,6 +522,7 @@ namespace RTC
 			                            ? this->nextLevelIndex - i - 1
 			                            : this->nextLevelIndex + LevelsBuffLen - i - 1;
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			auto level = this->levels[levelIndex];
 
 			if (level < minLevel)
@@ -536,8 +532,10 @@ namespace RTC
 
 			const uint8_t immediate = (level / SubunitLengthN1);
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			if (this->immediates[i] != immediate)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				this->immediates[i] = immediate;
 				changed             = true;
 			}
@@ -564,6 +562,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		this->immediateActivityScore = computeActivityScore(this->immediates[0], N1, 0.5, 0.78);
 	}
 
@@ -571,6 +570,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		this->mediumActivityScore = computeActivityScore(this->mediums[0], N2, 0.5, 24);
 	}
 
@@ -578,6 +578,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		this->longActivityScore = computeActivityScore(this->longs[0], N3, 0.5, 47);
 	}
 

@@ -21,7 +21,7 @@ namespace RTC
 	  : RTC::RtpObserver(shared, id, listener),
 	    maxEntries(options->maxEntries()),
 	    threshold(options->threshold()),
-	    intervalMs(options->interval()),
+	    intervalMs(std::clamp<int64_t>(options->interval(), 250, 5000)),
 	    periodicTimer(shared->CreateTimer(this, "audio-level-observer"))
 	{
 		MS_TRACE();
@@ -29,15 +29,6 @@ namespace RTC
 		if (this->threshold > 0)
 		{
 			MS_THROW_TYPE_ERROR("invalid threshold value %" PRIi8, this->threshold);
-		}
-
-		if (this->intervalMs < 250)
-		{
-			this->intervalMs = 250;
-		}
-		else if (this->intervalMs > 5000)
-		{
-			this->intervalMs = 5000;
 		}
 
 		this->periodicTimer->Start(this->intervalMs, this->intervalMs);
@@ -156,7 +147,7 @@ namespace RTC
 				continue;
 			}
 
-			const auto avgDBov = -1 * static_cast<int8_t>(std::lround(dBovs.totalSum / dBovs.count));
+			const auto avgDBov = static_cast<int8_t>(-std::lround(dBovs.totalSum / dBovs.count));
 
 			if (avgDBov >= this->threshold)
 			{

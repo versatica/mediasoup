@@ -78,6 +78,10 @@ HeaderFilterRegex: '.*/worker/(include|test/include|fuzzer/include)/.*'
 FormatStyle: 'file'
 User: mediasoup
 CheckOptions:
+  # Maps' operator[] inserts the key if missing, so it is never out of bounds.
+  # The first three are the default value, ankerl::unordered_dense::map is added.
+  - key: cppcoreguidelines-pro-bounds-avoid-unchecked-container-access.ExcludeClasses
+    value: '::std::map;::std::unordered_map;::std::flat_map;::ankerl::unordered_dense::.*::table'
   - key: cppcoreguidelines-pro-bounds-constant-array-index.GslHeader
     value: ''
   - key: cppcoreguidelines-pro-bounds-constant-array-index.IncludeStyle

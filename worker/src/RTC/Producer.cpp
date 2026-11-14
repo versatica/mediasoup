@@ -60,6 +60,7 @@ namespace RTC
 		this->rtpStreamByEncodingIdx.resize(this->rtpParameters.encodings.size(), nullptr);
 		this->rtpStreamScores.resize(this->rtpParameters.encodings.size(), 0);
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		const auto& encoding   = this->rtpParameters.encodings[0];
 		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
@@ -866,6 +867,7 @@ namespace RTC
 		// First, look for an encoding with matching media or RTX ssrc value.
 		for (size_t i{ 0 }; i < this->rtpParameters.encodings.size(); ++i)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			const auto& encoding     = this->rtpParameters.encodings[i];
 			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
 			const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
@@ -876,6 +878,7 @@ namespace RTC
 			{
 				// Ensure no stream was already created for this encoding (e.g. via RID
 				// lookup with a different ssrc).
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				if (this->rtpStreamByEncodingIdx[i])
 				{
 					MS_WARN_TAG(
@@ -890,17 +893,18 @@ namespace RTC
 			}
 			else if (isRtxPacket && encoding.hasRtx && encoding.rtx.ssrc != 0 && encoding.rtx.ssrc == ssrc)
 			{
-				const auto it = this->mapSsrcRtpStream.find(encoding.ssrc);
+				// NOTE: Look the stream up by encoding index, since it may have been
+				// created via RID lookup with a ssrc other than the encoding one.
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+				auto* const rtpStream = this->rtpStreamByEncodingIdx[i];
 
 				// Ignore if no stream has been created yet for the corresponding encoding.
-				if (it == this->mapSsrcRtpStream.end())
+				if (!rtpStream)
 				{
 					MS_DEBUG_2TAGS(rtp, rtx, "ignoring RTX packet for not yet created RtpStream (ssrc lookup)");
 
 					return nullptr;
 				}
-
-				auto* const rtpStream = it->second.get();
 
 				// Ensure no RTX ssrc was previously detected.
 				if (rtpStream->HasRtx())
@@ -927,6 +931,7 @@ namespace RTC
 		{
 			for (size_t i{ 0 }; i < this->rtpParameters.encodings.size(); ++i)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				const auto& encoding = this->rtpParameters.encodings[i];
 
 				if (encoding.rid != rid)
@@ -1000,9 +1005,12 @@ namespace RTC
 		// If not found, and there is a single encoding without ssrc and RID, this
 		// may be the media or RTX stream.
 		if (
+		  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		  this->rtpParameters.encodings.size() == 1 && this->rtpParameters.encodings[0].ssrc == 0 &&
+		  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		  this->rtpParameters.encodings[0].rid.empty())
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			const auto& encoding     = this->rtpParameters.encodings[0];
 			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
 			const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
@@ -1070,10 +1078,13 @@ namespace RTC
 
 		MS_ASSERT(!this->mapSsrcRtpStream.contains(ssrc), "RtpStream with given SSRC already exists");
 		MS_ASSERT(
+		  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		  !this->rtpStreamByEncodingIdx[encodingIdx],
 		  "RtpStream for given encoding index already exists");
 
-		const auto& encoding        = this->rtpParameters.encodings[encodingIdx];
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+		const auto& encoding = this->rtpParameters.encodings[encodingIdx];
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		const auto& encodingMapping = this->rtpMapping.encodings[encodingIdx];
 
 		MS_DEBUG_TAG(
@@ -1156,9 +1167,11 @@ namespace RTC
 		auto* const rtpStream = rtpStreamUniquePtr.get();
 
 		// Insert into the maps.
-		this->mapSsrcRtpStream[ssrc]              = std::move(rtpStreamUniquePtr);
+		this->mapSsrcRtpStream[ssrc] = std::move(rtpStreamUniquePtr);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		this->rtpStreamByEncodingIdx[encodingIdx] = rtpStream;
-		this->rtpStreamScores[encodingIdx]        = rtpStream->GetScore();
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+		this->rtpStreamScores[encodingIdx] = rtpStream->GetScore();
 
 		// Set the mapped SSRC.
 		this->mapRtpStreamMappedSsrc[rtpStream]             = encodingMapping.mappedSsrc;
@@ -1755,6 +1768,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update the vector of scores.
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		this->rtpStreamScores[rtpStream->GetEncodingIdx()] = score;
 
 		// Notify the listener.
