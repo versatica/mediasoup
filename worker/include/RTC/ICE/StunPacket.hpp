@@ -20,6 +20,17 @@ namespace RTC
 		class StunPacket : public Serializable
 		{
 		public:
+			static constexpr size_t FixedHeaderLength{ 20 };
+			static constexpr size_t TransactionIdLength{ 12 };
+			static constexpr size_t UsernameAttributeMaxLength{ 513 };
+			static constexpr size_t XorMappedAddressIPv4Length{ 8 };
+			static constexpr size_t XorMappedAddressIPv6Length{ 20 };
+			static constexpr size_t SoftwareAttributeMaxLength{ 763 };
+			static constexpr size_t ErrorCodeReasonPhraseMaxLength{ 763 };
+			static constexpr size_t MessageIntegrityAttributeLength{ 20 };
+			static constexpr size_t FingerprintAttributeLength{ 4 };
+
+		public:
 			/**
 			 * STUN Message Header.
 			 *
@@ -81,16 +92,20 @@ namespace RTC
 				INDICATION       = 1,
 				SUCCESS_RESPONSE = 2,
 				ERROR_RESPONSE   = 3,
-				UNSET            = 255
+				UNSET            = 255,
 			};
 
 			/**
 			 * STUN message method.
+			 *
+			 * @remarks
+			 * - uint16_t because the field takes 2 bytes.
 			 */
+			// NOLINTNEXTLINE(performance-enum-size)
 			enum class Method : uint16_t
 			{
 				BINDING = 1,
-				UNSET   = 255
+				UNSET   = 255,
 			};
 
 			/**
@@ -127,15 +142,17 @@ namespace RTC
 				 *
 				 * @see https://juberti.github.io/draft-renomination/draft-thatcher-tsvwg-renomination.html
 				 */
-				NOMINATION = 0x0030
+				NOMINATION = 0x0030,
 			};
 
-			// Authentication result.
+			/**
+			 * Authentication result.
+			 */
 			enum class AuthenticationResult : uint8_t
 			{
 				OK           = 0,
 				UNAUTHORIZED = 1,
-				BAD_MESSAGE  = 2
+				BAD_MESSAGE  = 2,
 			};
 
 		private:
@@ -148,7 +165,9 @@ namespace RTC
 			struct Attribute
 			{
 				Attribute(AttributeType type, uint16_t len, size_t offset)
-				  : type(type), len(len), offset(offset) {};
+				  : type(type), len(len), offset(offset)
+				{
+				}
 
 				/**
 				 * Attribute type.
@@ -165,15 +184,6 @@ namespace RTC
 			};
 
 		public:
-			static constexpr size_t FixedHeaderLength{ 20 };
-			static constexpr size_t TransactionIdLength{ 12 };
-			static constexpr size_t UsernameAttributeMaxLength{ 513 };
-			static constexpr size_t XorMappedAddressIPv4Length{ 8 };
-			static constexpr size_t XorMappedAddressIPv6Length{ 20 };
-			static constexpr size_t SoftwareAttributeMaxLength{ 763 };
-			static constexpr size_t MessageIntegrityAttributeLength{ 20 };
-			static constexpr size_t FingerprintAttributeLength{ 4 };
-
 			/**
 			 * Whether given buffer could be a valid STUN packet.
 			 */
@@ -243,9 +253,9 @@ namespace RTC
 				return this->attributes.find(type) != this->attributes.end();
 			}
 
-			const std::string_view GetUsername() const
+			std::string_view GetUsername() const
 			{
-				const auto* attribute = GetAttribute(StunPacket::AttributeType::USERNAME);
+				const auto* const attribute = GetAttribute(StunPacket::AttributeType::USERNAME);
 
 				if (!attribute)
 				{
@@ -260,7 +270,7 @@ namespace RTC
 
 			uint32_t GetPriority() const
 			{
-				const auto* attribute = GetAttribute(StunPacket::AttributeType::PRIORITY);
+				const auto* const attribute = GetAttribute(StunPacket::AttributeType::PRIORITY);
 
 				if (!attribute)
 				{
@@ -274,7 +284,7 @@ namespace RTC
 
 			uint64_t GetIceControlling() const
 			{
-				const auto* attribute = GetAttribute(StunPacket::AttributeType::ICE_CONTROLLING);
+				const auto* const attribute = GetAttribute(StunPacket::AttributeType::ICE_CONTROLLING);
 
 				if (!attribute)
 				{
@@ -288,7 +298,7 @@ namespace RTC
 
 			uint64_t GetIceControlled() const
 			{
-				const auto* attribute = GetAttribute(StunPacket::AttributeType::ICE_CONTROLLED);
+				const auto* const attribute = GetAttribute(StunPacket::AttributeType::ICE_CONTROLLED);
 
 				if (!attribute)
 				{
@@ -304,7 +314,7 @@ namespace RTC
 
 			uint32_t GetNomination() const
 			{
-				auto* attribute = GetAttribute(StunPacket::AttributeType::NOMINATION);
+				const auto* attribute = GetAttribute(StunPacket::AttributeType::NOMINATION);
 
 				if (!attribute)
 				{
@@ -321,9 +331,9 @@ namespace RTC
 
 			void AddNomination(uint32_t nomination);
 
-			const std::string_view GetSoftware() const
+			std::string_view GetSoftware() const
 			{
-				const auto* attribute = GetAttribute(StunPacket::AttributeType::SOFTWARE);
+				const auto* const attribute = GetAttribute(StunPacket::AttributeType::SOFTWARE);
 
 				if (!attribute)
 				{
@@ -336,24 +346,23 @@ namespace RTC
 
 			void AddSoftware(const std::string_view software);
 
-			bool GetXorMappedAddress(struct sockaddr_storage* xorMappedAddressStorage) const;
+			bool GetXorMappedAddress(sockaddr_storage* xorMappedAddressStorage) const;
 
-			void AddXorMappedAddress(const struct sockaddr* xorMappedAddress);
+			void AddXorMappedAddress(const sockaddr* xorMappedAddress);
 
 			uint16_t GetErrorCode(std::string_view& reasonPhrase) const
 			{
-				const auto* attribute = GetAttribute(StunPacket::AttributeType::ERROR_CODE);
+				const auto* const attribute = GetAttribute(StunPacket::AttributeType::ERROR_CODE);
 
 				if (!attribute)
 				{
 					return 0;
 				}
 
-				const auto* attributeValue = GetAttributeValue(attribute);
-
-				const uint8_t errorClass  = Utils::Byte::Get1Byte(attributeValue, 2) & 0b00000111;
-				const uint8_t errorNumber = Utils::Byte::Get1Byte(attributeValue, 3);
-				const auto errorCode      = static_cast<uint16_t>((errorClass * 100) + errorNumber);
+				const auto* const attributeValue = GetAttributeValue(attribute);
+				const uint8_t errorClass         = Utils::Byte::Get1Byte(attributeValue, 2) & 0b00000111;
+				const uint8_t errorNumber        = Utils::Byte::Get1Byte(attributeValue, 3);
+				const auto errorCode             = static_cast<uint16_t>((errorClass * 100) + errorNumber);
 
 				// Reason Phrase comes after the first 4 bytes (it could be zero
 				// length).
@@ -522,7 +531,7 @@ namespace RTC
 #endif
 			const uint8_t* GetMessageIntegrity() const
 			{
-				const auto* attribute = GetAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY);
+				const auto* const attribute = GetAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY);
 
 				if (!attribute)
 				{
@@ -534,7 +543,7 @@ namespace RTC
 
 			uint32_t GetFingerprint() const
 			{
-				const auto* attribute = GetAttribute(StunPacket::AttributeType::FINGERPRINT);
+				const auto* const attribute = GetAttribute(StunPacket::AttributeType::FINGERPRINT);
 
 				if (!attribute)
 				{

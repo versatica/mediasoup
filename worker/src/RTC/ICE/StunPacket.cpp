@@ -32,7 +32,7 @@ namespace RTC
 			  // STUN headers are 20 bytes.
 			  (bufferLength >= StunPacket::FixedHeaderLength) &&
 			  // @see RFC 7983.
-			  (buffer[0] < 3) &&
+			  (buffer[0] <= 3) &&
 			  // Magic cookie must match.
 			  (buffer[4] == StunPacket::MagicCookie[0]) && (buffer[5] == StunPacket::MagicCookie[1]) &&
 			  (buffer[6] == StunPacket::MagicCookie[2]) && (buffer[7] == StunPacket::MagicCookie[3]));
@@ -49,18 +49,20 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* packet = new StunPacket(const_cast<uint8_t*>(buffer), bufferLength);
+			auto* const packet = new StunPacket(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// `bufferLength` must be the exact length of the STUN packet, so let's
 			// assign it immediately.
 			packet->SetLength(bufferLength);
 
 			// Get STUN message type field.
-			const uint16_t typeField = Utils::Byte::Get2Bytes(buffer, 0);
+			// NOTE: Use `uint32_t` so that the bitwise operations below are not done
+			// on a signed `int`.
+			const uint32_t typeField = Utils::Byte::Get2Bytes(buffer, 0);
 
 			// Get STUN class.
 			const auto klass =
-			  static_cast<StunPacket::Class>(((buffer[0] & 0x01) << 1) | ((buffer[1] & 0x10) >> 4));
+			  static_cast<StunPacket::Class>(((typeField & 0x0100) >> 7) | ((typeField & 0x0010) >> 4));
 
 			// Get STUN method.
 			const auto method = static_cast<StunPacket::Method>(
@@ -92,7 +94,7 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("no space for fixed header");
 			}
 
-			auto* packet = new StunPacket(buffer, bufferLength);
+			auto* const packet = new StunPacket(buffer, bufferLength);
 
 			std::memset(packet->GetFixedHeaderPointer(), 0x00, packet->GetLength());
 
@@ -100,15 +102,20 @@ namespace RTC
 			packet->method = method;
 
 			// Merge class and method fields into type.
-			auto typeField = (static_cast<uint16_t>(method) & 0x0f80) << 2;
+			// NOTE: Use `uint32_t` so that the bitwise operations below are not done
+			// on a signed `int`.
+			const auto methodField = static_cast<uint32_t>(method);
+			const auto klassField  = static_cast<uint32_t>(klass);
 
-			typeField |= (static_cast<uint16_t>(method) & 0x0070) << 1;
-			typeField |= (static_cast<uint16_t>(method) & 0x000f);
-			typeField |= (static_cast<uint16_t>(klass) & 0x02) << 7;
-			typeField |= (static_cast<uint16_t>(klass) & 0x01) << 4;
+			uint32_t typeField = (methodField & 0x0f80) << 2;
+
+			typeField |= (methodField & 0x0070) << 1;
+			typeField |= (methodField & 0x000f);
+			typeField |= (klassField & 0x02) << 7;
+			typeField |= (klassField & 0x01) << 4;
 
 			// Set type field.
-			Utils::Byte::Set2Bytes(packet->GetFixedHeaderPointer(), 0, typeField);
+			Utils::Byte::Set2Bytes(packet->GetFixedHeaderPointer(), 0, static_cast<uint16_t>(typeField));
 
 			// NOTE: No need to write message length since it's already 0.
 
@@ -207,7 +214,7 @@ namespace RTC
 				  static_cast<uint16_t>(this->method));
 			}
 
-			char transactionId[(12 * 2) + 1]; // 12 bytes × 2 hex chars + null terminator.
+			char transactionId[(12 * 2) + 1]; // 12 bytes * 2 hex chars + null terminator.
 
 			for (uint8_t i{ 0 }; i < 12; ++i)
 			{
@@ -255,7 +262,13 @@ namespace RTC
 
 			if (HasAttribute(StunPacket::AttributeType::NOMINATION_OLD))
 			{
-				MS_DUMP_CLEAN(indentation + 1, "  nomination (old): %" PRIu32, GetNomination());
+				// NOTE: GetNomination() returns the NOMINATION value if both are present.
+				const auto* const attribute = GetAttribute(StunPacket::AttributeType::NOMINATION_OLD);
+
+				MS_DUMP_CLEAN(
+				  indentation + 1,
+				  "  nomination (old): %" PRIu32,
+				  Utils::Byte::Get4Bytes(GetAttributeValue(attribute), 0));
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::SOFTWARE))
@@ -324,14 +337,14 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "  </Attributes>");
 
-			MS_DUMP_CLEAN(indentation, "<ICE::StunPacket>");
+			MS_DUMP_CLEAN(indentation, "</ICE::StunPacket>");
 		}
 
 		StunPacket* StunPacket::Clone(uint8_t* buffer, size_t bufferLength) const
 		{
 			MS_TRACE();
 
-			auto* clonedPacket = new StunPacket(buffer, bufferLength);
+			auto* const clonedPacket = new StunPacket(buffer, bufferLength);
 
 			Serializable::CloneInto(clonedPacket);
 
@@ -431,27 +444,26 @@ namespace RTC
 			StoreNewAttribute(StunPacket::AttributeType::SOFTWARE, software.data(), software.length());
 		}
 
-		bool StunPacket::GetXorMappedAddress(struct sockaddr_storage* xorMappedAddressStorage) const
+		bool StunPacket::GetXorMappedAddress(sockaddr_storage* xorMappedAddressStorage) const
 		{
 			MS_TRACE();
 
-			std::memset(xorMappedAddressStorage, 0x00, sizeof(struct sockaddr_storage));
+			std::memset(xorMappedAddressStorage, 0x00, sizeof(sockaddr_storage));
 
-			const auto* attribute = GetAttribute(StunPacket::AttributeType::XOR_MAPPED_ADDRESS);
+			const auto* const attribute = GetAttribute(StunPacket::AttributeType::XOR_MAPPED_ADDRESS);
 
 			if (!attribute)
 			{
 				return false;
 			}
 
-			const auto* attributeValue = GetAttributeValue(attribute);
-			const uint8_t family       = attributeValue[1];
-			uint16_t port;
-
-			std::memcpy(std::addressof(port), attributeValue + 2, 2);
+			const auto* const attributeValue = GetAttributeValue(attribute);
+			const uint8_t family             = attributeValue[1];
 
 			// XOR with the first 2 bytes of the Magic Cookie.
-			port = ntohs(port) ^ (StunPacket::MagicCookie[0] << 8 | StunPacket::MagicCookie[1]);
+			const auto port = static_cast<uint16_t>(
+			  Utils::Byte::Get2Bytes(attributeValue, 2) ^
+			  Utils::Byte::Get2Bytes(StunPacket::MagicCookie, 0));
 
 			// IPv4.
 			if (family == 0x01)
@@ -466,16 +478,17 @@ namespace RTC
 					return false;
 				}
 
-				auto* addr4 = reinterpret_cast<struct sockaddr_in*>(xorMappedAddressStorage);
+				auto* const addr4 = reinterpret_cast<sockaddr_in*>(xorMappedAddressStorage);
 
 				addr4->sin_family = AF_INET;
 				addr4->sin_port   = htons(port);
 
 				uint32_t addr;
+
 				std::memcpy(std::addressof(addr), attributeValue + 4, 4);
 
 				// XOR with each byte of the Magic Cookie.
-				auto* addrBytes = reinterpret_cast<uint8_t*>(std::addressof(addr));
+				auto* const addrBytes = reinterpret_cast<uint8_t*>(std::addressof(addr));
 
 				for (size_t i{ 0 }; i < sizeof(StunPacket::MagicCookie); ++i)
 				{
@@ -499,12 +512,12 @@ namespace RTC
 					return false;
 				}
 
-				auto* addr6 = reinterpret_cast<struct sockaddr_in6*>(xorMappedAddressStorage);
+				auto* const addr6 = reinterpret_cast<sockaddr_in6*>(xorMappedAddressStorage);
 
 				addr6->sin6_family = AF_INET6;
 				addr6->sin6_port   = htons(port);
 
-				const auto* transactionId = GetTransactionId();
+				const auto* const transactionId = GetTransactionId();
 
 				// XOR with first 4 bytes with each byte of the Magic Cookie.
 				for (size_t i{ 0 }; i < sizeof(StunPacket::MagicCookie); ++i)
@@ -532,7 +545,7 @@ namespace RTC
 			}
 		}
 
-		void StunPacket::AddXorMappedAddress(const struct sockaddr* xorMappedAddress)
+		void StunPacket::AddXorMappedAddress(const sockaddr* xorMappedAddress)
 		{
 			MS_TRACE();
 
@@ -549,15 +562,14 @@ namespace RTC
 					// Set port and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 2,
-					  std::addressof(reinterpret_cast<const struct sockaddr_in*>(xorMappedAddress)->sin_port),
+					  std::addressof(reinterpret_cast<const sockaddr_in*>(xorMappedAddress)->sin_port),
 					  2);
 					AttributeFactoryBuffer[2] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[3] ^= StunPacket::MagicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 4,
-					  std::addressof(
-					    reinterpret_cast<const struct sockaddr_in*>(xorMappedAddress)->sin_addr.s_addr),
+					  std::addressof(reinterpret_cast<const sockaddr_in*>(xorMappedAddress)->sin_addr.s_addr),
 					  4);
 					AttributeFactoryBuffer[4] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[5] ^= StunPacket::MagicCookie[1];
@@ -574,6 +586,8 @@ namespace RTC
 
 				case AF_INET6:
 				{
+					const auto* const transactionId = GetTransactionId();
+
 					// Set first byte to 0.
 					AttributeFactoryBuffer[0] = 0;
 					// Set inet family.
@@ -581,18 +595,15 @@ namespace RTC
 					// Set port and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 2,
-					  std::addressof(reinterpret_cast<const struct sockaddr_in6*>(xorMappedAddress)->sin6_port),
+					  std::addressof(reinterpret_cast<const sockaddr_in6*>(xorMappedAddress)->sin6_port),
 					  2);
 					AttributeFactoryBuffer[2] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[3] ^= StunPacket::MagicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 4,
-					  std::addressof(
-					    reinterpret_cast<const struct sockaddr_in6*>(xorMappedAddress)->sin6_addr.s6_addr),
+					  std::addressof(reinterpret_cast<const sockaddr_in6*>(xorMappedAddress)->sin6_addr.s6_addr),
 					  16);
-					const auto* transactionId = GetTransactionId();
-
 					AttributeFactoryBuffer[4] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[5] ^= StunPacket::MagicCookie[1];
 					AttributeFactoryBuffer[6] ^= StunPacket::MagicCookie[2];
@@ -631,8 +642,15 @@ namespace RTC
 
 			AssertNotProtected();
 
+			if (reasonPhrase.length() > StunPacket::ErrorCodeReasonPhraseMaxLength)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "reason phrase of attribute ERROR-CODE must be at most %zu bytes",
+				  StunPacket::ErrorCodeReasonPhraseMaxLength);
+			}
+
 			const auto codeClass  = static_cast<uint8_t>(errorCode / 100);
-			const auto codeNumber = static_cast<uint8_t>(errorCode) - (codeClass * 100);
+			const auto codeNumber = static_cast<uint8_t>(errorCode % 100);
 
 			Utils::Byte::Set2Bytes(AttributeFactoryBuffer, 0, 0);
 			Utils::Byte::Set1Byte(AttributeFactoryBuffer, 2, codeClass);
@@ -649,8 +667,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto* messageIntegrity = GetMessageIntegrity();
-			const auto hasFingerprint    = HasAttribute(StunPacket::AttributeType::FINGERPRINT);
+			const auto* const messageIntegrity = GetMessageIntegrity();
+			const auto hasFingerprint          = HasAttribute(StunPacket::AttributeType::FINGERPRINT);
 
 			switch (this->klass)
 			{
@@ -690,7 +708,7 @@ namespace RTC
 					if (
 					  username.length() <= usernameFragment1.length() ||
 					  username.at(usernameFragment1.length()) != ':' ||
-					  username.compare(0, usernameFragment1.length(), usernameFragment1.data()) != 0)
+					  !username.starts_with(usernameFragment1))
 					{
 						return StunPacket::AuthenticationResult::UNAUTHORIZED;
 					}
@@ -725,7 +743,7 @@ namespace RTC
 				}
 			}
 
-			auto* fixedHeader = GetFixedHeaderPointer();
+			auto* const fixedHeader = GetFixedHeaderPointer();
 
 			// If there is FINGERPRINT it must be discarded for MESSAGE-INTEGRITY
 			// calculation, so the message length field must be modified (and later
@@ -742,7 +760,7 @@ namespace RTC
 			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY
 			// rules, this is, by checking the bytes from 0 to the beginning of the
 			// MESSAGE-INTEGRITY attribute.
-			const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHmacSha1(
+			const uint8_t* const computedMessageIntegrity = Utils::Crypto::GetHmacSha1(
 			  password.data(), password.length(), fixedHeader, (messageIntegrity - 4) - fixedHeader);
 
 			StunPacket::AuthenticationResult result;
@@ -752,7 +770,7 @@ namespace RTC
 			//
 			// NOTE: Use `CRYPTO_memcmp()` to have constant time memory comparison.
 			// See https://github.com/versatica/mediasoup/security/advisories/GHSA-xvjj-6cm4-ppgq
-			if (CRYPTO_memcmp(messageIntegrity, computedMessageIntegrity, StunPacket::FixedHeaderLength) == 0)
+			if (CRYPTO_memcmp(messageIntegrity, computedMessageIntegrity, StunPacket::MessageIntegrityAttributeLength) == 0)
 			{
 				result = StunPacket::AuthenticationResult::OK;
 			}
@@ -805,7 +823,7 @@ namespace RTC
 
 				// Calculate the HMAC-SHA1 of the STUN packet according to
 				// MESSAGE-INTEGRITY rules.
-				const uint8_t* computedMessageIntegrity =
+				const uint8_t* const computedMessageIntegrity =
 				  Utils::Crypto::GetHmacSha1(password.data(), password.length(), GetBuffer(), currentLength);
 
 				StoreNewAttribute(
@@ -846,7 +864,7 @@ namespace RTC
 				MS_THROW_ERROR("cannot create a success response, original STUN packet is not a request");
 			}
 
-			auto* successResponse = Factory(
+			auto* const successResponse = Factory(
 			  buffer, bufferLength, StunPacket::Class::SUCCESS_RESPONSE, this->method, GetTransactionId());
 
 			return successResponse;
@@ -862,7 +880,7 @@ namespace RTC
 				MS_THROW_ERROR("cannot create an error response, original STUN packet is not a request");
 			}
 
-			auto* errorResponse = Factory(
+			auto* const errorResponse = Factory(
 			  buffer, bufferLength, StunPacket::Class::ERROR_RESPONSE, this->method, GetTransactionId());
 
 			errorResponse->AddErrorCode(errorCode, reasonPhrase);
@@ -874,7 +892,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto* fixedHeader = GetFixedHeaderPointer();
+			const auto* const fixedHeader = GetFixedHeaderPointer();
 
 			// Get message length field.
 			const auto msgLength = GetMessageLength();
@@ -896,13 +914,13 @@ namespace RTC
 
 			if (!ParseAttributes(storeAttributes))
 			{
-				MS_WARN_TAG(rtp, "invalid STUN packet, invalid attributes");
+				MS_WARN_TAG(ice, "invalid STUN packet, invalid attributes");
 
 				return false;
 			}
 
 			// If it has FINGERPRINT attribute then verify it.
-			const auto* fingerprintAttr = GetAttribute(StunPacket::AttributeType::FINGERPRINT);
+			const auto* const fingerprintAttr = GetAttribute(StunPacket::AttributeType::FINGERPRINT);
 
 			if (fingerprintAttr)
 			{
@@ -931,9 +949,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const uint8_t* attributesStart = GetAttributesPointer();
-			const uint8_t* attributesEnd   = attributesStart + GetAttributesLength();
-			auto* ptr                      = const_cast<uint8_t*>(attributesStart);
+			const uint8_t* const attributesStart = GetAttributesPointer();
+			const uint8_t* const attributesEnd   = attributesStart + GetAttributesLength();
+			const uint8_t* ptr                   = attributesStart;
 
 			// Ensure there are at least 4 remaining bytes (attribute with 0 length).
 			while (ptr + 4 <= attributesEnd)
@@ -1116,7 +1134,7 @@ namespace RTC
 						{
 							MS_WARN_TAG(
 							  ice,
-							  "invalid STUN packet, attribute XOR_MAPPED_ADDRESS-CODE must be %zu or %zu bytes length",
+							  "invalid STUN packet, attribute XOR-MAPPED-ADDRESS must be %zu or %zu bytes length",
 							  StunPacket::XorMappedAddressIPv4Length,
 							  StunPacket::XorMappedAddressIPv6Length);
 
@@ -1187,7 +1205,7 @@ namespace RTC
 
 					default:
 					{
-						MS_DEBUG_DEV("unknown attribute with type %" PRIu16, attrType);
+						MS_DEBUG_DEV("unknown attribute with type %" PRIu16, static_cast<uint16_t>(attrType));
 					}
 				}
 
@@ -1248,9 +1266,11 @@ namespace RTC
 
 			const auto attrTotalPaddedLength = Utils::Byte::PadTo4Bytes(static_cast<size_t>(4 + len));
 
-			// Get the pointer in which the new attribute must be written.
+			// Get the offset and the pointer in which the new attribute must be
+			// written.
 			// NOTE: Do this before updating lengths.
-			auto* attrPtr = GetAttributesPointer() + GetAttributesLength();
+			const size_t attrOffset = GetAttributesLength();
+			auto* const attrPtr     = GetAttributesPointer() + attrOffset;
 
 			// First update STUN packet length (it may throw).
 			SetLength(GetLength() + attrTotalPaddedLength);
@@ -1265,14 +1285,10 @@ namespace RTC
 			{
 				std::memcpy(attrPtr + 4, data, len);
 				// Fill padding bytes with zeroes.
-				std::memset(attrPtr + 4 + len, 0x00, attrTotalPaddedLength - len);
+				std::memset(attrPtr + 4 + len, 0x00, attrTotalPaddedLength - 4 - len);
 			}
 
-			const auto [it, inserted] = this->attributes.try_emplace(type, type, len, 0);
-			auto& attribute           = it->second;
-
-			// Update stored attribute's offset.
-			attribute.offset = attrPtr - GetAttributesPointer();
+			const bool inserted = this->attributes.try_emplace(type, type, len, attrOffset).second;
 
 			MS_ASSERT(inserted, "attribute not inserted in the map (this shouldn't happen)");
 		}

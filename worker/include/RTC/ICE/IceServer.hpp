@@ -10,6 +10,7 @@
 #include <ankerl/unordered_dense.h>
 #include <list>
 #include <string>
+#include <string_view>
 
 namespace RTC
 {
@@ -70,7 +71,7 @@ namespace RTC
 			static FBS::WebRtcTransport::IceState IceStateToFbs(IceState state);
 
 		private:
-			static ankerl::unordered_dense::map<IceState, std::string> iceStateToString;
+			static const ankerl::unordered_dense::map<IceState, std::string> IceState2String;
 
 		public:
 			IceServer(
@@ -126,6 +127,12 @@ namespace RTC
 
 			void ProcessStunResponse(const RTC::ICE::StunPacket* response);
 
+			void SendStunErrorResponse(
+			  const RTC::ICE::StunPacket* request,
+			  RTC::TransportTuple* tuple,
+			  uint16_t errorCode,
+			  std::string_view reasonPhrase);
+
 			void HandleTuple(
 			  RTC::TransportTuple* tuple, bool hasUseCandidate, bool hasNomination, uint32_t nomination);
 
@@ -173,7 +180,7 @@ namespace RTC
 			SharedInterface* const shared;
 			std::string usernameFragment;
 			std::string password;
-			int64_t consentTimeoutMs{ 30000 };
+			int64_t consentTimeoutMs;
 			// Others.
 			std::string oldUsernameFragment;
 			std::string oldPassword;

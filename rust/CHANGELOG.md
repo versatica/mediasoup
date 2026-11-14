@@ -19,6 +19,10 @@
   - Fix `PlainTransport`: A failed `connect()` with SRTP left the SRTP crypto suite and local key changed.
   - Fix `PlainTransport`: With comedia, `connect()` notified the transport as connected before having a tuple, and again once the first packet set it.
   - Validate that `rtcMinPort` and any port range never start at port 0.
+  - Fix `ICE::StunPacket::CheckAuthentication()`: The username fragment was compared as a null terminated C string instead of by its length.
+  - Fix `ICE::StunPacket::IsStun()`: Packets whose first byte is 3 were not considered STUN (RFC 7983).
+  - Fix `ICE::IceServer`: In 'completed' state, a Binding request with USE-CANDIDATE and a nomination not higher than the current one changed the selected tuple (ICE renomination).
+  - Fix `ICE::IceServer`: A Binding request with ICE-CONTROLLED and a tie-breaker of 0 was not rejected with a 487 (role conflict).
 
 ### 0.33.2
 

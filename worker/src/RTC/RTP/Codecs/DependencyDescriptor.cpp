@@ -26,7 +26,8 @@ namespace RTC
 			/* Static members. */
 
 			// clang-format off
-			ankerl::unordered_dense::map<DependencyDescriptor::DecodeTargetIndication, std::string> DependencyDescriptor::dtiToString =
+			// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
+			const ankerl::unordered_dense::map<DependencyDescriptor::DecodeTargetIndication, std::string> DependencyDescriptor::Dti2String =
 			{
 				{ DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT, "-" },
 				{ DependencyDescriptor::DecodeTargetIndication::DISCARDABLE, "D" },
@@ -186,7 +187,7 @@ namespace RTC
 						std::string dtis;
 						for (const auto& dti : layer.decodeTargetIndications)
 						{
-							dtis += dtiToString[dti];
+							dtis += DependencyDescriptor::Dti2String.at(dti);
 						}
 						MS_DUMP_CLEAN(indentation + 3, "  decodeTargetIndications: %s", dtis.c_str());
 						std::string fdiffs;

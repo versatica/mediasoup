@@ -494,6 +494,7 @@ test_sources = [
   'test/src/RTC/BWE/TestTransportWideCcFeedbackGenerator.cpp',
   'test/src/RTC/BWE/TestTrendlineEstimator.cpp',
   'test/src/RTC/ICE/iceCommon.cpp',
+  'test/src/RTC/ICE/TestIceServer.cpp',
   'test/src/RTC/ICE/TestStunPacket.cpp',
   'test/src/RTC/RTP/rtpCommon.cpp',
   'test/src/RTC/RTP/TestPacket.cpp',

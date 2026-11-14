@@ -20,13 +20,13 @@ namespace RTC
 		public:
 			enum class CandidateType : uint8_t
 			{
-				HOST = 1
+				HOST = 1,
 			};
 
 		public:
 			enum class TcpCandidateType : uint8_t
 			{
-				PASSIVE = 1
+				PASSIVE = 1,
 			};
 
 		public:
@@ -36,26 +36,28 @@ namespace RTC
 			static FBS::WebRtcTransport::IceCandidateTcpType TcpCandidateTypeToFbs(TcpCandidateType type);
 
 		public:
-			IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority);
+			IceCandidate(const RTC::UdpSocket* udpSocket, uint32_t priority);
 
-			IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority, const std::string& announcedAddress);
+			IceCandidate(
+			  const RTC::UdpSocket* udpSocket, uint32_t priority, const std::string& announcedAddress);
 
-			IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority);
+			IceCandidate(const RTC::TcpServer* tcpServer, uint32_t priority);
 
-			IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority, const std::string& announcedAddress);
+			IceCandidate(
+			  const RTC::TcpServer* tcpServer, uint32_t priority, const std::string& announcedAddress);
 
 			flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate> FillBuffer(
 			  flatbuffers::FlatBufferBuilder& builder) const;
 
 		private:
 			// Others.
-			std::string foundation;
-			uint32_t priority;
-			std::string address;
-			Protocol protocol;
-			uint16_t port;
-			CandidateType type{ CandidateType::HOST };
-			TcpCandidateType tcpType{ TcpCandidateType::PASSIVE };
+			const std::string foundation;
+			const uint32_t priority;
+			const std::string address;
+			const Protocol protocol;
+			const uint16_t port;
+			const CandidateType type{ CandidateType::HOST };
+			const TcpCandidateType tcpType{ TcpCandidateType::PASSIVE };
 		};
 	} // namespace ICE
 } // namespace RTC

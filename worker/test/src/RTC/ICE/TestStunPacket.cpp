@@ -1245,4 +1245,189 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE_THROWS_AS(errorResponse->Protect("qweqwe"), MediaSoupError);
 		REQUIRE_THROWS_AS(errorResponse->Protect(), MediaSoupError);
 	}
+
+	SECTION("adding an attribute does not write beyond the end of the STUN packet")
+	{
+		// Room for the fixed header and a USERNAME attribute with a 5 bytes value
+		// (4 + 5 + 3 bytes of padding), plus 4 extra bytes that the STUN packet
+		// must never touch.
+		uint8_t buffer[RTC::ICE::StunPacket::FixedHeaderLength + 12 + 4];
+
+		std::memset(buffer, 0xAA, sizeof(buffer));
+
+		const std::unique_ptr<RTC::ICE::StunPacket> request{ RTC::ICE::StunPacket::Factory(
+			buffer,
+			sizeof(buffer) - 4,
+			RTC::ICE::StunPacket::Class::REQUEST,
+			RTC::ICE::StunPacket::Method::BINDING) };
+
+		request->AddUsername("abcde");
+
+		REQUIRE(request->GetLength() == RTC::ICE::StunPacket::FixedHeaderLength + 12);
+		REQUIRE(request->GetUsername() == "abcde");
+
+		// Padding bytes are zeroed.
+		REQUIRE(buffer[RTC::ICE::StunPacket::FixedHeaderLength + 9] == 0x00);
+		REQUIRE(buffer[RTC::ICE::StunPacket::FixedHeaderLength + 10] == 0x00);
+		REQUIRE(buffer[RTC::ICE::StunPacket::FixedHeaderLength + 11] == 0x00);
+
+		// Bytes beyond the STUN packet are untouched.
+		REQUIRE(buffer[sizeof(buffer) - 4] == 0xAA);
+		REQUIRE(buffer[sizeof(buffer) - 3] == 0xAA);
+		REQUIRE(buffer[sizeof(buffer) - 2] == 0xAA);
+		REQUIRE(buffer[sizeof(buffer) - 1] == 0xAA);
+	}
+
+	SECTION("StunPacket::IsStun() succeeds")
+	{
+		// Fixed header with the magic cookie and everything else zeroed.
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			0x00, 0x01, 0x00, 0x00,
+			0x21, 0x12, 0xA4, 0x42,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00
+		};
+		// clang-format on
+
+		// First byte in range 0..3 (RFC 7983).
+		for (uint8_t firstByte{ 0 }; firstByte <= 3; ++firstByte)
+		{
+			buffer[0] = firstByte;
+
+			REQUIRE(RTC::ICE::StunPacket::IsStun(buffer, sizeof(buffer)));
+		}
+
+		// First byte out of range.
+		buffer[0] = 4;
+
+		REQUIRE(!RTC::ICE::StunPacket::IsStun(buffer, sizeof(buffer)));
+
+		buffer[0] = 0;
+
+		// Shorter than the fixed header.
+		REQUIRE(!RTC::ICE::StunPacket::IsStun(buffer, sizeof(buffer) - 1));
+
+		// Wrong magic cookie.
+		buffer[7] = 0x43;
+
+		REQUIRE(!RTC::ICE::StunPacket::IsStun(buffer, sizeof(buffer)));
+	}
+
+	SECTION("StunPacket::CheckAuthentication() of a STUN request succeeds")
+	{
+		const std::unique_ptr<RTC::ICE::StunPacket> request{ RTC::ICE::StunPacket::Factory(
+			iceCommon::FactoryBuffer,
+			sizeof(iceCommon::FactoryBuffer),
+			RTC::ICE::StunPacket::Class::REQUEST,
+			RTC::ICE::StunPacket::Method::BINDING) };
+
+		request->AddUsername("abc:xyz");
+		request->Protect("password");
+
+		REQUIRE(
+		  request->CheckAuthentication("abc", "password") ==
+		  RTC::ICE::StunPacket::AuthenticationResult::OK);
+
+		// Wrong password.
+		REQUIRE(
+		  request->CheckAuthentication("abc", "wrong") ==
+		  RTC::ICE::StunPacket::AuthenticationResult::UNAUTHORIZED);
+
+		// Username fragment is a prefix of the USERNAME but not followed by ":".
+		REQUIRE(
+		  request->CheckAuthentication("ab", "password") ==
+		  RTC::ICE::StunPacket::AuthenticationResult::UNAUTHORIZED);
+
+		// Username fragment longer than the USERNAME.
+		REQUIRE(
+		  request->CheckAuthentication("abc:xyz:qwe", "password") ==
+		  RTC::ICE::StunPacket::AuthenticationResult::UNAUTHORIZED);
+
+		// Username fragment is the second part of the USERNAME.
+		REQUIRE(
+		  request->CheckAuthentication("xyz", "password") ==
+		  RTC::ICE::StunPacket::AuthenticationResult::UNAUTHORIZED);
+
+		// Empty username fragment.
+		REQUIRE(
+		  request->CheckAuthentication("", "password") ==
+		  RTC::ICE::StunPacket::AuthenticationResult::BAD_MESSAGE);
+
+		// The authentication check must leave the STUN packet as it was.
+		REQUIRE(request->Validate(/*storeAttributes*/ false));
+	}
+
+	SECTION(
+	  "StunPacket::CheckAuthentication() of a STUN request without MESSAGE-INTEGRITY or USERNAME fails")
+	{
+		const std::unique_ptr<RTC::ICE::StunPacket> requestWithoutMessageIntegrity{
+			RTC::ICE::StunPacket::Factory(
+			  iceCommon::FactoryBuffer,
+			  sizeof(iceCommon::FactoryBuffer),
+			  RTC::ICE::StunPacket::Class::REQUEST,
+			  RTC::ICE::StunPacket::Method::BINDING)
+		};
+
+		requestWithoutMessageIntegrity->AddUsername("abc:xyz");
+		// No password, so only FINGERPRINT is added.
+		requestWithoutMessageIntegrity->Protect();
+
+		REQUIRE(
+		  requestWithoutMessageIntegrity->CheckAuthentication("abc", "password") ==
+		  RTC::ICE::StunPacket::AuthenticationResult::BAD_MESSAGE);
+
+		const std::unique_ptr<RTC::ICE::StunPacket> requestWithoutUsername{ RTC::ICE::StunPacket::Factory(
+			iceCommon::ResponseFactoryBuffer,
+			sizeof(iceCommon::ResponseFactoryBuffer),
+			RTC::ICE::StunPacket::Class::REQUEST,
+			RTC::ICE::StunPacket::Method::BINDING) };
+
+		requestWithoutUsername->Protect("password");
+
+		REQUIRE(
+		  requestWithoutUsername->CheckAuthentication("abc", "password") ==
+		  RTC::ICE::StunPacket::AuthenticationResult::BAD_MESSAGE);
+	}
+
+	SECTION("StunPacket::AddErrorCode() succeeds")
+	{
+		const std::unique_ptr<RTC::ICE::StunPacket> errorResponse{ RTC::ICE::StunPacket::Factory(
+			iceCommon::FactoryBuffer,
+			sizeof(iceCommon::FactoryBuffer),
+			RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+			RTC::ICE::StunPacket::Method::BINDING) };
+
+		const std::string tooLongReasonPhrase(
+		  RTC::ICE::StunPacket::ErrorCodeReasonPhraseMaxLength + 1, 'x');
+
+		REQUIRE_THROWS_AS(errorResponse->AddErrorCode(487, tooLongReasonPhrase), MediaSoupTypeError);
+
+		errorResponse->AddErrorCode(487, "Role Conflict");
+
+		std::string_view reasonPhrase;
+
+		REQUIRE(errorResponse->GetErrorCode(reasonPhrase) == 487);
+		REQUIRE(reasonPhrase == "Role Conflict");
+	}
+
+	SECTION("StunPacket::AddErrorCode() with the longest reason phrase succeeds")
+	{
+		const std::unique_ptr<RTC::ICE::StunPacket> errorResponse{ RTC::ICE::StunPacket::Factory(
+			iceCommon::FactoryBuffer,
+			sizeof(iceCommon::FactoryBuffer),
+			RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+			RTC::ICE::StunPacket::Method::BINDING) };
+
+		const std::string longestReasonPhrase(RTC::ICE::StunPacket::ErrorCodeReasonPhraseMaxLength, 'x');
+
+		errorResponse->AddErrorCode(300, longestReasonPhrase);
+
+		std::string_view reasonPhrase;
+
+		REQUIRE(errorResponse->GetErrorCode(reasonPhrase) == 300);
+		REQUIRE(reasonPhrase == longestReasonPhrase);
+	}
 }

@@ -32,7 +32,7 @@ namespace RTC
 				};
 
 			private:
-				static ankerl::unordered_dense::map<DecodeTargetIndication, std::string> dtiToString;
+				static const ankerl::unordered_dense::map<DecodeTargetIndication, std::string> Dti2String;
 
 			private:
 				struct FrameDependencyTemplate
