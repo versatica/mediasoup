@@ -490,11 +490,15 @@ namespace RTC
 		if (DtlsTransport::privateKey)
 		{
 			EVP_PKEY_free(DtlsTransport::privateKey);
+
+			DtlsTransport::privateKey = nullptr;
 		}
 
 		if (DtlsTransport::certificate)
 		{
 			X509_free(DtlsTransport::certificate);
+
+			DtlsTransport::certificate = nullptr;
 		}
 
 		MS_THROW_ERROR("DTLS certificate and private key generation failed");
