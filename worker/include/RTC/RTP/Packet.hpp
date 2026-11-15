@@ -512,7 +512,7 @@ namespace RTC
 			 *
 			 * @see RFC 8285.
 			 */
-			void AssignExtensionIds(RTP::HeaderExtensionIds& headerExtensionIds);
+			void AssignExtensionIds(const RTP::HeaderExtensionIds& headerExtensionIds);
 
 			bool ReadMid(std::string& mid) const;
 

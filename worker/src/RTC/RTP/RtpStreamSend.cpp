@@ -27,8 +27,8 @@ namespace RTC
 		RtpStreamSend::RtpStreamSend(
 		  RTP::RtpStreamSend::Listener* listener,
 		  SharedInterface* shared,
-		  RTP::RtpStream::Params& params,
-		  std::string& mid)
+		  const RTP::RtpStream::Params& params,
+		  const std::string& mid)
 		  : RTP::RtpStream::RtpStream(listener, shared, params, 10),
 		    mid(mid),
 		    transmissionCounter(shared, /*ignorePaddingOnlyPackets*/ true),

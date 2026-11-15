@@ -6,6 +6,6 @@
 namespace FuzzerRtcRtpCodecsH264
 {
 	void Fuzz(const uint8_t* data, size_t len);
-}
+} // namespace FuzzerRtcRtpCodecsH264
 
 #endif

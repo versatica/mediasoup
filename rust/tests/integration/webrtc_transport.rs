@@ -465,7 +465,10 @@ fn create_with_fixed_port_succeeds() {
 fn create_with_port_range_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
-        let port_range = 11111..=11112;
+        // NOTE: Out of the default RTC port range of the other Workers and of the
+        // range in which pick_unused_port() looks for ports, since tests run in
+        // parallel and any of them could take a port of this range otherwise.
+        let port_range = 8888..=8889;
 
         let transport1 = router
             .create_webrtc_transport({

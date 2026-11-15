@@ -4,29 +4,11 @@
 #include "RTC/RateCalculator.hpp"
 #include "Utils.hpp"
 
-namespace
-{
-	// NOLINTBEGIN(readability-identifier-naming)
-	RTC::RateCalculator rateCalculator;
-	int64_t nowMs;
-	// NOLINTEND(readability-identifier-naming)
-
-	int init()
-	{
-		nowMs = DepLibUV::GetTimeMs();
-
-		return 0;
-	}
-} // namespace
-
 void FuzzerRtcRateCalculator::Fuzz(const uint8_t* data, size_t len)
 {
-	// Trick to initialize our stuff just once.
-	// NOLINTNEXTLINE(readability-identifier-naming)
-	static thread_local const int unused = init();
-
-	// Avoid [-Wunused-variable].
-	(void)unused;
+	// Initialize our stuff just once.
+	static thread_local RTC::RateCalculator rateCalculator;
+	static thread_local int64_t nowMs{ DepLibUV::GetTimeMs() };
 
 	// We need at least 2 bytes of |data|.
 	if (len < 2)
@@ -34,8 +16,7 @@ void FuzzerRtcRateCalculator::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	auto size = Utils::Crypto::GetRandomUInt<size_t>(
-	  0, static_cast<uint32_t>(RTC::Consts::IncomingRtpPacketMaxSize));
+	const auto size = Utils::Crypto::GetRandomUInt<size_t>(0, RTC::Consts::IncomingRtpPacketMaxSize);
 
 	nowMs += static_cast<int64_t>(Utils::Crypto::GetRandomUInt<uint64_t>(0, 1000));
 

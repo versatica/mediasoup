@@ -5,46 +5,45 @@
 #include "mocks/include/MockShared.hpp"
 #include <string>
 
-namespace
-{
-	// NOLINTNEXTLINE(readability-identifier-naming)
-	thread_local mocks::MockShared shared(/*getTimeUs*/
-	                                      []() -> int64_t
-	                                      {
-		                                      return 1000 * 1000;
-	                                      });
-} // namespace
-
 void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 {
+	static thread_local mocks::MockShared shared(/*getTimeUs*/
+	                                             []() -> int64_t
+	                                             {
+		                                             return 1000 * 1000;
+	                                             });
+
 	// clang-format off
 	uint8_t buffer[] =
 	{
 		0b10000000, 0b01111011, 0b01010010, 0b00001110,
 		0b01011011, 0b01101011, 0b11001010, 0b10110101,
-		0, 0, 0, 2
+		0, 0, 0, 2,
 	};
 	// clang-format on
 
 	// Create base RtpPacket instance.
 	const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, 12) };
 
-	// Create a RtpStreamSend instance.
-	TestRtpStreamListener testRtpStreamListener;
-
 	// Create RtpStreamSend instance.
-	RTC::RTP::RtpStream::Params params;
+	RTC::RtpCodecMimeType mimeType;
 
-	params.ssrc          = 1111;
-	params.clockRate     = 90000;
-	params.useNack       = true;
-	params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+	mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+	const RTC::RTP::RtpStream::Params params{
+		.ssrc      = 1111,
+		.mimeType  = mimeType,
+		.clockRate = 90000,
+		.useNack   = true,
+	};
+	const std::string mid;
+	TestRtpStreamListener testRtpStreamListener;
 
 	packet->SetSsrc(params.ssrc);
 
-	std::string mid;
 	const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 	  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
+
 	size_t offset{ 0 };
 
 	while (len >= 12)
@@ -72,7 +71,7 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 			.extendedHighestSeq         = Utils::Byte::Get4Bytes(data, offset + 6),
 			.jitter                     = 0,
 			.lastSenderReport           = 0,
-			.delaySinceLastSenderReport = 0
+			.delaySinceLastSenderReport = 0,
 		};
 
 		stream->ReceiveRtcpReportBlock(reportBlock, shared.GetTimeUs());

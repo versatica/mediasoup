@@ -281,7 +281,10 @@ test('router.createWebRtcTransport() with fixed port succeeds', async () => {
 }, 2000);
 
 test('router.createWebRtcTransport() with portRange succeeds', async () => {
-	const portRange = { min: 11111, max: 11112 };
+	// NOTE: Out of the default RTC port range of the other Workers and of the
+	// range in which pickPort() looks for ports, since tests run in parallel and
+	// any of them could take a port of this range otherwise.
+	const portRange = { min: 8888, max: 8889 };
 
 	const webRtcTransport1 = await ctx.router!.createWebRtcTransport({
 		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', portRange }],

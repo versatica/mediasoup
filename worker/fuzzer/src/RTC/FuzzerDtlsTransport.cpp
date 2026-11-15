@@ -6,84 +6,65 @@
 #include "Utils.hpp"
 #include "mocks/include/MockShared.hpp"
 
-namespace
+void FuzzerRtcDtlsTransport::Fuzz(const uint8_t* data, size_t len)
 {
-	// NOLINTNEXTLINE(readability-identifier-naming)
-	thread_local mocks::MockShared shared(/*getTimeUs*/
-	                                      []() -> int64_t
-	                                      {
-		                                      return 1000 * 1000;
-	                                      });
-
-	// DtlsTransport Listener instance. It's reset every time the DtlsTransport
-	// singletonDTLS is reset.
-	thread_local std::unique_ptr<FuzzerRtcDtlsTransport::DtlsTransportListener>
-	  // NOLINTNEXTLINE(readability-identifier-naming)
-	  dtlsTransportListenerSingleton{ nullptr };
+	// NOTE: These are destroyed in reverse order, so the DtlsTransport goes
+	// before the listener and the shared instance it points to.
+	static thread_local mocks::MockShared shared(/*getTimeUs*/
+	                                             []() -> int64_t
+	                                             {
+		                                             return 1000 * 1000;
+	                                             });
+	static thread_local DtlsTransportListener dtlsTransportListener;
 
 	// DtlsTransport instance. It's reset every time DTLS handshake fails or DTLS
 	// is closed.
-	// NOLINTNEXTLINE(readability-identifier-naming)
-	thread_local std::unique_ptr<RTC::DtlsTransport> dtlsTransportSingleton{ nullptr };
-} // namespace
+	static thread_local std::unique_ptr<RTC::DtlsTransport> dtlsTransport;
 
-void FuzzerRtcDtlsTransport::Fuzz(const uint8_t* data, size_t len)
-{
 	if (!RTC::DtlsTransport::IsDtls(data, len))
 	{
 		return;
 	}
 
-	if (!dtlsTransportSingleton)
+	if (!dtlsTransport)
 	{
-		MS_DEBUG_DEV("no DtlsTransport singleton, creating it");
+		MS_DEBUG_DEV("no DtlsTransport, creating it");
 
-		dtlsTransportListenerSingleton = std::make_unique<DtlsTransportListener>();
-
-		dtlsTransportSingleton = std::make_unique<RTC::DtlsTransport>(
-		  dtlsTransportListenerSingleton.get(), std::addressof(shared));
-
-		RTC::DtlsTransport::Role localRole;
-		RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
+		dtlsTransport = std::make_unique<RTC::DtlsTransport>(
+		  std::addressof(dtlsTransportListener), std::addressof(shared));
 
 		// Local DTLS role must be 'server' or 'client'. Choose it based on
 		// randomness of first given byte.
-		if (data[0] / 2 == 0)
-		{
-			localRole = RTC::DtlsTransport::Role::SERVER;
-		}
-		else
-		{
-			localRole = RTC::DtlsTransport::Role::CLIENT;
-		}
+		const auto localRole =
+		  data[0] % 2 == 0 ? RTC::DtlsTransport::Role::SERVER : RTC::DtlsTransport::Role::CLIENT;
 
 		// Remote DTLS fingerprint random generation.
 		// NOTE: Use a random integer in range 1..5 since FingerprintAlgorithm enum
 		// has 5 possible values starting with value 1.
-		dtlsRemoteFingerprint.algorithm = static_cast<RTC::DtlsTransport::FingerprintAlgorithm>(
-		  Utils::Crypto::GetRandomUInt<uint16_t>(1, 5));
+		const RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint{
+			.algorithm = static_cast<RTC::DtlsTransport::FingerprintAlgorithm>(
+			  Utils::Crypto::GetRandomUInt<uint16_t>(1, 5)),
+			.value = Utils::Crypto::GetRandomString(Utils::Crypto::GetRandomUInt<uint16_t>(3, 20)),
+		};
 
-		dtlsRemoteFingerprint.value =
-		  Utils::Crypto::GetRandomString(Utils::Crypto::GetRandomUInt<uint16_t>(3, 20));
-
-		dtlsTransportSingleton->Run(localRole);
-		dtlsTransportSingleton->SetRemoteFingerprint(dtlsRemoteFingerprint);
+		dtlsTransport->Run(localRole);
+		dtlsTransport->SetRemoteFingerprint(dtlsRemoteFingerprint);
 	}
 
-	dtlsTransportSingleton->ProcessDtlsData(data, len, shared.GetTimeUs());
+	dtlsTransport->ProcessDtlsData(data, len, shared.GetTimeUs());
 
 	// DTLS may have failed or closed after ProcessDtlsData(). If so, unset it.
 	if (
-	  dtlsTransportSingleton->GetState() == RTC::DtlsTransport::DtlsState::FAILED ||
-	  dtlsTransportSingleton->GetState() == RTC::DtlsTransport::DtlsState::CLOSED)
+	  dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::FAILED ||
+	  dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CLOSED)
 	{
-		MS_DEBUG_DEV("DtlsTransport singleton state is 'failed' or 'closed', unsetting it");
+		MS_DEBUG_DEV("DtlsTransport state is 'failed' or 'closed', unsetting it");
 
-		dtlsTransportSingleton.reset();
+		dtlsTransport.reset();
 	}
 	else
 	{
-		dtlsTransportSingleton->SendApplicationData(data, len);
+		dtlsTransport->SendApplicationData(data, len);
 	}
 }
 
