@@ -11,22 +11,17 @@ namespace RTC
 
 	RtpHeaderExtensionParameters::RtpHeaderExtensionParameters(
 	  const FBS::RtpParameters::RtpHeaderExtensionParameters* const data)
+	  : type(RTC::RtpHeaderExtensionUri::TypeFromFbs(data->uri())),
+	    id(data->id()),
+	    encrypt(data->encrypt())
 	{
 		MS_TRACE();
-
-		// Get the type.
-		this->type = RTC::RtpHeaderExtensionUri::TypeFromFbs(data->uri());
-
-		this->id = data->id();
 
 		// Don't allow id 0.
 		if (this->id == 0)
 		{
 			MS_THROW_TYPE_ERROR("invalid id 0");
 		}
-
-		// encrypt is false by default.
-		this->encrypt = data->encrypt();
 
 		// parameters is optional.
 		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpHeaderExtensionParameters::VT_PARAMETERS))
@@ -40,7 +35,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto parameters = this->parameters.FillBuffer(builder);
+		const auto parameters = this->parameters.FillBuffer(builder);
 
 		return FBS::RtpParameters::CreateRtpHeaderExtensionParametersDirect(
 		  builder,

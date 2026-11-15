@@ -11,11 +11,12 @@ namespace RTC
 	/* Class variables. */
 
 	// clang-format off
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const ankerl::unordered_dense::map<RtpParameters::Type, std::string> RtpParameters::Type2String = {
-		{ RtpParameters::Type::SIMPLE, "simple" },
+		{ RtpParameters::Type::SIMPLE,    "simple"    },
 		{ RtpParameters::Type::SIMULCAST, "simulcast" },
-		{ RtpParameters::Type::SVC, "svc" },
-		{ RtpParameters::Type::PIPE, "pipe" }
+		{ RtpParameters::Type::SVC,       "svc"       },
+		{ RtpParameters::Type::PIPE,      "pipe"      },
 	};
 	// clang-format on
 
@@ -29,9 +30,9 @@ namespace RTC
 
 		if (rtpParameters.encodings.size() == 1)
 		{
-			const auto& encoding = rtpParameters.encodings[0];
-			const auto* mediaCodec =
-			  rtpParameters.GetCodecForEncoding(const_cast<RTC::RtpEncodingParameters&>(encoding));
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			const auto& encoding         = rtpParameters.encodings[0];
+			const auto* const mediaCodec = rtpParameters.GetCodecForEncoding(encoding);
 
 			if (encoding.spatialLayers > 1 || encoding.temporalLayers > 1)
 			{
@@ -189,18 +190,16 @@ namespace RTC
 		}
 
 		// Add rtcp.
-		flatbuffers::Offset<FBS::RtpParameters::RtcpParameters> rtcp;
-
-		rtcp = this->rtcp.FillBuffer(builder);
+		const auto rtcp = this->rtcp.FillBuffer(builder);
 
 		return FBS::RtpParameters::CreateRtpParametersDirect(
 		  builder,
-		  this->mid.c_str(),
+		  !this->mid.empty() ? this->mid.c_str() : nullptr,
 		  std::addressof(codecs),
 		  std::addressof(headerExtensions),
 		  std::addressof(encodings),
 		  rtcp,
-		  this->msid.c_str());
+		  !this->msid.empty() ? this->msid.c_str() : nullptr);
 	}
 
 	const RTC::RtpCodecParameters* RtpParameters::GetCodecForEncoding(
@@ -237,7 +236,17 @@ namespace RTC
 
 		for (const auto& codec : this->codecs)
 		{
-			if (codec.mimeType.IsFeatureCodec() && codec.parameters.GetInteger(AptString) == payloadType)
+			// NOTE: Only RTX codecs are guaranteed to have an 'apt' parameter.
+			if (codec.mimeType.subtype != RTC::RtpCodecMimeType::Subtype::RTX)
+			{
+				continue;
+			}
+
+			// NOTE: RtpCodecParameters already checked that 'apt' is a positive
+			// integer.
+			const auto apt = static_cast<uint32_t>(codec.parameters.GetInteger(AptString));
+
+			if (apt == payloadType)
 			{
 				return std::addressof(codec);
 			}
@@ -254,39 +263,43 @@ namespace RTC
 
 		ankerl::unordered_dense::set<uint8_t> payloadTypes;
 
-		for (auto& codec : this->codecs)
+		for (const auto& codec : this->codecs)
 		{
-			if (payloadTypes.find(codec.payloadType) != payloadTypes.end())
+			const bool inserted = payloadTypes.insert(codec.payloadType).second;
+
+			if (!inserted)
 			{
 				MS_THROW_TYPE_ERROR("duplicated payloadType");
 			}
 
-			payloadTypes.insert(codec.payloadType);
-
+			// NOTE: We want a switch here, as in every other check per codec.
+			// NOLINTNEXTLINE(readability-trivial-switch)
 			switch (codec.mimeType.subtype)
 			{
 				// A RTX codec must have 'apt' parameter pointing to a non RTX codec.
 				case RTC::RtpCodecMimeType::Subtype::RTX:
 				{
-					// NOTE: RtpCodecParameters already asserted that there is apt parameter.
-					const int32_t apt = codec.parameters.GetInteger(AptString);
-					auto it           = this->codecs.begin();
+					// NOTE: RtpCodecParameters already checked that 'apt' is a positive
+					// integer.
+					const auto apt = static_cast<uint32_t>(codec.parameters.GetInteger(AptString));
+
+					auto it = this->codecs.begin();
 
 					for (; it != this->codecs.end(); ++it)
 					{
-						const auto& codec = *it;
+						const auto& otherCodec = *it;
 
-						if (static_cast<int32_t>(codec.payloadType) == apt)
+						if (otherCodec.payloadType == apt)
 						{
-							if (codec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::RTX)
+							if (otherCodec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::RTX)
 							{
 								MS_THROW_TYPE_ERROR("apt in RTX codec points to a RTX codec");
 							}
-							else if (codec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::ULPFEC)
+							else if (otherCodec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::ULPFEC)
 							{
 								MS_THROW_TYPE_ERROR("apt in RTX codec points to a ULPFEC codec");
 							}
-							else if (codec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::FLEXFEC)
+							else if (otherCodec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::FLEXFEC)
 							{
 								MS_THROW_TYPE_ERROR("apt in RTX codec points to a FLEXFEC codec");
 							}
@@ -321,7 +334,7 @@ namespace RTC
 
 			for (; it != this->codecs.end(); ++it)
 			{
-				auto& codec = *it;
+				const auto& codec = *it;
 
 				// Must be a media codec.
 				if (codec.mimeType.IsMediaCodec())

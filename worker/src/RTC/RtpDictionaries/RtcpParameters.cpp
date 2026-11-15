@@ -11,6 +11,7 @@ namespace RTC
 	/* Instance methods. */
 
 	RtcpParameters::RtcpParameters(const FBS::RtpParameters::RtcpParameters* data)
+	  : reducedSize(data->reducedSize())
 	{
 		MS_TRACE();
 
@@ -37,9 +38,6 @@ namespace RTC
 			  this->cname.size(),
 			  static_cast<size_t>(std::numeric_limits<uint8_t>::max()));
 		}
-
-		// reducedSize is optional, default value is true.
-		this->reducedSize = data->reducedSize();
 	}
 
 	flatbuffers::Offset<FBS::RtpParameters::RtcpParameters> RtcpParameters::FillBuffer(

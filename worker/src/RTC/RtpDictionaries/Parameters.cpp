@@ -21,7 +21,7 @@ namespace RTC
 			{
 				case Value::Type::BOOLEAN:
 				{
-					auto valueOffset = FBS::RtpParameters::CreateBoolean(builder, value.booleanValue);
+					const auto valueOffset = FBS::RtpParameters::CreateBoolean(builder, value.booleanValue);
 
 					parameters.emplace_back(
 					  FBS::RtpParameters::CreateParameterDirect(
@@ -32,7 +32,7 @@ namespace RTC
 
 				case Value::Type::INTEGER:
 				{
-					auto valueOffset = FBS::RtpParameters::CreateInteger32(builder, value.integerValue);
+					const auto valueOffset = FBS::RtpParameters::CreateInteger32(builder, value.integerValue);
 
 					parameters.emplace_back(
 					  FBS::RtpParameters::CreateParameterDirect(
@@ -43,7 +43,7 @@ namespace RTC
 
 				case Value::Type::DOUBLE:
 				{
-					auto valueOffset = FBS::RtpParameters::CreateDouble(builder, value.doubleValue);
+					const auto valueOffset = FBS::RtpParameters::CreateDouble(builder, value.doubleValue);
 
 					parameters.emplace_back(
 					  FBS::RtpParameters::CreateParameterDirect(
@@ -54,7 +54,7 @@ namespace RTC
 
 				case Value::Type::STRING:
 				{
-					auto valueOffset =
+					const auto valueOffset =
 					  FBS::RtpParameters::CreateStringDirect(builder, value.stringValue.c_str());
 
 					parameters.emplace_back(
@@ -66,7 +66,7 @@ namespace RTC
 
 				case Value::Type::ARRAY_OF_INTEGERS:
 				{
-					auto valueOffset = FBS::RtpParameters::CreateInteger32ArrayDirect(
+					const auto valueOffset = FBS::RtpParameters::CreateInteger32ArrayDirect(
 					  builder, std::addressof(value.arrayOfIntegers));
 
 					parameters.emplace_back(
@@ -141,7 +141,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -157,7 +157,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -173,7 +173,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -189,7 +189,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -205,7 +205,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -221,7 +221,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -237,7 +237,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -254,7 +254,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
@@ -267,7 +267,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
@@ -280,7 +280,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
@@ -293,7 +293,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
@@ -306,7 +306,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 

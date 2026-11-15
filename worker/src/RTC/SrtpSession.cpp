@@ -95,7 +95,8 @@ namespace RTC
 
 			default:
 			{
-				MS_ABORT("invalid SRTP crypto suite [value:%" PRIu8 "]", static_cast<uint8_t>(cryptoSuite));
+				MS_THROW_TYPE_ERROR(
+				  "invalid SRTP crypto suite [value:%" PRIu8 "]", static_cast<uint8_t>(cryptoSuite));
 			}
 		}
 	}

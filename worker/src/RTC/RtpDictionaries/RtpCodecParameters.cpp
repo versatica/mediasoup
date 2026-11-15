@@ -10,6 +10,7 @@ namespace RTC
 	/* Instance methods. */
 
 	RtpCodecParameters::RtpCodecParameters(const FBS::RtpParameters::RtpCodecParameters* data)
+	  : payloadType(data->payloadType()), clockRate(data->clockRate())
 	{
 		MS_TRACE();
 
@@ -17,20 +18,14 @@ namespace RTC
 		// This may throw.
 		this->mimeType.SetMimeType(data->mimeType()->str());
 
-		// payloadType.
-		this->payloadType = data->payloadType();
-
 		// The payload type field of the RTP header is 7 bits long.
 		if (this->payloadType > 127)
 		{
 			MS_THROW_TYPE_ERROR("invalid payloadType %" PRIu8 " (greater than 127)", this->payloadType);
 		}
 
-		// clockRate.
-		this->clockRate = data->clockRate();
-
 		// channels is optional.
-		if (auto channels = data->channels(); channels.has_value())
+		if (const auto channels = data->channels(); channels.has_value())
 		{
 			this->channels = channels.value();
 		}
@@ -61,7 +56,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto parameters = this->parameters.FillBuffer(builder);
+		const auto parameters = this->parameters.FillBuffer(builder);
 
 		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtcpFeedback>> rtcpFeedback;
 		rtcpFeedback.reserve(this->rtcpFeedback.size());
@@ -100,6 +95,8 @@ namespace RTC
 		static const std::string AptString{ "apt" };
 
 		// Check per MIME parameters and set default values.
+		// NOTE: We want a switch here, as in every other check per codec.
+		// NOLINTNEXTLINE(readability-trivial-switch)
 		switch (this->mimeType.subtype)
 		{
 			case RTC::RtpCodecMimeType::Subtype::RTX:

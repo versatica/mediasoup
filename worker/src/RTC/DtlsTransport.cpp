@@ -253,7 +253,7 @@ namespace RTC
 
 			default:
 			{
-				MS_ABORT("invalid DTLS role [value:%" PRIu8 "]", static_cast<uint8_t>(role));
+				MS_THROW_TYPE_ERROR("invalid DTLS role [value:%" PRIu8 "]", static_cast<uint8_t>(role));
 			}
 		}
 	}
@@ -352,7 +352,8 @@ namespace RTC
 
 			default:
 			{
-				MS_ABORT("invalid fingerprint algorithm [value:%" PRIu8 "]", static_cast<uint8_t>(algorithm));
+				MS_THROW_TYPE_ERROR(
+				  "invalid fingerprint algorithm [value:%" PRIu8 "]", static_cast<uint8_t>(algorithm));
 			}
 		}
 	}

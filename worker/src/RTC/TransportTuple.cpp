@@ -3,6 +3,7 @@
 
 #include "RTC/TransportTuple.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -27,7 +28,7 @@ namespace RTC
 
 			default:
 			{
-				MS_ABORT("invalid protocol [value:%" PRIu8 "]", static_cast<uint8_t>(protocol));
+				MS_THROW_TYPE_ERROR("invalid protocol [value:%" PRIu8 "]", static_cast<uint8_t>(protocol));
 			}
 		}
 	}

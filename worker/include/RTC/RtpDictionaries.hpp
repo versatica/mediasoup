@@ -17,7 +17,7 @@ namespace RTC
 		enum class Kind : uint8_t
 		{
 			AUDIO,
-			VIDEO
+			VIDEO,
 		};
 	};
 
@@ -28,11 +28,13 @@ namespace RTC
 		enum class Type : uint8_t
 		{
 			AUDIO,
-			VIDEO
+			VIDEO,
 		};
 
 	public:
-		enum class Subtype
+		// NOTE: Each group of codecs starts at its own hundred on purpose.
+		// NOLINTNEXTLINE(readability-enum-initial-value)
+		enum class Subtype : uint16_t
 		{
 			// Audio codecs:
 			OPUS = 100,
@@ -57,7 +59,7 @@ namespace RTC
 			ULPFEC,
 			X_ULPFECUC,
 			FLEXFEC,
-			RED
+			RED,
 		};
 
 	public:
@@ -67,6 +69,7 @@ namespace RTC
 		static const ankerl::unordered_dense::map<Subtype, std::string> Subtype2String;
 
 	public:
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 		RtpCodecMimeType() = default;
 
 		bool operator==(const RtpCodecMimeType& other) const
@@ -126,7 +129,7 @@ namespace RTC
 			VIDEO_ORIENTATION      = 8,
 			ABS_CAPTURE_TIME       = 9,
 			PLAYOUT_DELAY          = 10,
-			MEDIASOUP_PACKET_ID    = 11
+			MEDIASOUP_PACKET_ID    = 11,
 		};
 
 	public:
@@ -257,7 +260,7 @@ namespace RTC
 			SIMPLE,
 			SIMULCAST,
 			SVC,
-			PIPE
+			PIPE,
 		};
 
 	public:

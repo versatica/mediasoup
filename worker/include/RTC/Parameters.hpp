@@ -21,7 +21,7 @@ namespace RTC
 				INTEGER,
 				DOUBLE,
 				STRING,
-				ARRAY_OF_INTEGERS
+				ARRAY_OF_INTEGERS,
 			};
 
 		public:
