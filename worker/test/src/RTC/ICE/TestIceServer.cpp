@@ -365,6 +365,7 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 			iceCommon::FactoryBuffer,
 			sizeof(iceCommon::FactoryBuffer),
 			RTC::ICE::StunPacket::Class::REQUEST,
+			// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 			static_cast<RTC::ICE::StunPacket::Method>(0x003)) };
 
 		request->Protect(password);
