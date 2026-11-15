@@ -28,9 +28,10 @@ namespace RTC
 				PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH,
 				DROPPED_BY_CODEC,
 				TOO_HIGH_TIMESTAMP_EXTRA_NEEDED,
-				SEND_RTP_STREAM_DISCARDED
+				SEND_RTP_STREAM_DISCARDED,
 			};
 
+		private:
 			static const ankerl::unordered_dense::map<DiscardReason, std::string> DiscardReason2String;
 
 		public:

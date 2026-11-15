@@ -3,7 +3,7 @@
 
 #include "RTC/RtcLogger/SendBurst.hpp"
 #include "Logger.hpp"
-#include <sstream>
+#include <sstream> // std::stringstream
 
 namespace RTC
 {
@@ -66,11 +66,8 @@ namespace RTC
 
 			bool first{ true };
 
-			for (const auto& kv : this->bursts)
+			for (const auto& [packets, counters] : this->bursts)
 			{
-				const auto packets   = kv.first;
-				const auto& counters = kv.second;
-
 				if (!first)
 				{
 					ss << ", ";
