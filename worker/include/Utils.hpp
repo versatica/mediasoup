@@ -118,7 +118,7 @@ namespace Utils
 
 		static uint16_t Get2Bytes(const uint8_t* data, size_t i)
 		{
-			return uint16_t{ data[i + 1] } | uint16_t{ data[i] } << 8;
+			return static_cast<uint16_t>(uint32_t{ data[i + 1] } | uint32_t{ data[i] } << 8);
 		}
 
 		static uint32_t Get3Bytes(const uint8_t* data, size_t i)
@@ -135,8 +135,9 @@ namespace Utils
 			// Check bit 7 (sign).
 			const uint8_t extension = byte2 & 0b10000000 ? 0b11111111 : 0b00000000;
 
-			return int32_t{ byte0 } | (int32_t{ byte1 } << 8) | (int32_t{ byte2 } << 16) |
-			       (int32_t{ extension } << 24);
+			return static_cast<int32_t>(
+			  uint32_t{ byte0 } | (uint32_t{ byte1 } << 8) | (uint32_t{ byte2 } << 16) |
+			  (uint32_t{ extension } << 24));
 		}
 
 		static uint32_t Get4Bytes(const uint8_t* data, size_t i)
@@ -170,9 +171,11 @@ namespace Utils
 
 		static void Set3BytesSigned(uint8_t* data, size_t i, int32_t value)
 		{
-			data[i + 2] = static_cast<uint8_t>(value);
-			data[i + 1] = static_cast<uint8_t>(value >> 8);
-			data[i]     = static_cast<uint8_t>(value >> 16);
+			const auto unsignedValue = static_cast<uint32_t>(value);
+
+			data[i + 2] = static_cast<uint8_t>(unsignedValue);
+			data[i + 1] = static_cast<uint8_t>(unsignedValue >> 8);
+			data[i]     = static_cast<uint8_t>(unsignedValue >> 16);
 		}
 
 		static void Set4Bytes(uint8_t* data, size_t i, uint32_t value)
@@ -684,12 +687,13 @@ namespace Utils
 
 			if (compactNtpInterval > 0x80000000)
 			{
-				value -= (int64_t{ 1 } << 32);
+				value -= 0x100000000;
 			}
 
 			// NOTE: Right shifting a negative value rounds towards negative infinity,
 			// so adding half the divisor first rounds to the nearest value.
-			return ((value * 1000000) + (1 << 15)) >> 16;
+			// NOLINTNEXTLINE(bugprone-signed-bitwise)
+			return ((value * 1000000) + 32768) >> 16;
 		}
 
 		/**
@@ -721,7 +725,8 @@ namespace Utils
 			// as the positive time it's congruent with rather than a meaningless one.
 			const int64_t wrappedUs = ((timeUs % WrapPeriodUs) + WrapPeriodUs) % WrapPeriodUs;
 
-			return static_cast<uint32_t>(((wrappedUs << 18) + 500000) / 1000000) & 0x00FFFFFF;
+			return static_cast<uint32_t>(((static_cast<uint64_t>(wrappedUs) << 18) + 500000) / 1000000) &
+			       0x00FFFFFF;
 		}
 
 		/**

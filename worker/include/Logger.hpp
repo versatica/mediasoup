@@ -6,7 +6,7 @@
  * files (.hpp) MUST NOT include Logger.hpp.
  *
  * All the logging macros use the same format as printf(). The XXX_STD() version
- * of a macro logs to stdoud/stderr instead of using the ChannelSocket instance.
+ * of a macro logs to stdout/stderr instead of using the ChannelSocket instance.
  * However some macros such as MS_ABORT() and MS_ASSERT() always log to stderr.
  *
  * If the macro MS_LOG_STD is defined, all the macros log to stdout/stderr.
@@ -111,7 +111,7 @@
 #define _MS_TAG_ENABLED_2(tag1, tag2) (Settings::configuration.logTags.tag1 || Settings::configuration.logTags.tag2)
 // NOLINTEND
 
-#if !defined(MS_LOG_DEV_LEVEL)
+#ifndef MS_LOG_DEV_LEVEL
 	#define MS_LOG_DEV_LEVEL 0
 #elif MS_LOG_DEV_LEVEL < 0 || MS_LOG_DEV_LEVEL > 3
 	#error "invalid MS_LOG_DEV_LEVEL macro value"
@@ -323,7 +323,6 @@ public:
 	#define MS_DEBUG_DEV(desc, ...) {}
 	#define MS_DEBUG_DEV_STD(desc, ...) {}
 #endif
-
 
 #if MS_LOG_DEV_LEVEL >= 2
 	#define MS_WARN_DEV(desc, ...) \

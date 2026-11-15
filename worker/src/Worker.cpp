@@ -142,37 +142,26 @@ flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResour
 	  (uvRusage.ru_stime.tv_sec * static_cast<uint64_t>(1000)) + (uvRusage.ru_stime.tv_usec / 1000),
 	  // Add ru_maxrss (uint64_t, maximum resident set size).
 	  uvRusage.ru_maxrss,
-
 	  // Add ru_ixrss (uint64_t, integral shared memory size).
 	  uvRusage.ru_ixrss,
-
 	  // Add ru_idrss (uint64_t, integral unshared data size).
 	  uvRusage.ru_idrss,
-
 	  // Add ru_isrss (uint64_t, integral unshared stack size).
 	  uvRusage.ru_isrss,
-
 	  // Add ru_minflt (uint64_t, page reclaims, soft page faults).
 	  uvRusage.ru_minflt,
-
 	  // Add ru_majflt (uint64_t, page faults, hard page faults).
 	  uvRusage.ru_majflt,
-
 	  // Add ru_nswap (uint64_t, swaps).
 	  uvRusage.ru_nswap,
-
 	  // Add ru_inblock (uint64_t, block input operations).
 	  uvRusage.ru_inblock,
-
 	  // Add ru_oublock (uint64_t, block output operations).
 	  uvRusage.ru_oublock,
-
 	  // Add ru_msgsnd (uint64_t, IPC messages sent).
 	  uvRusage.ru_msgsnd,
-
 	  // Add ru_msgrcv (uint64_t, IPC messages received).
 	  uvRusage.ru_msgrcv,
-
 	  // Add ru_nsignals (uint64_t, signals received).
 	  uvRusage.ru_nsignals,
 	  // Add ru_nvcsw (uint64_t, voluntary context switches).
@@ -288,9 +277,10 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_WEBRTCSERVER_CLOSE:
 		{
-			const auto* body          = request->data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
+			const auto* const body    = request->data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
 			const auto webRtcServerId = body->webRtcServerId()->str();
-			const auto* webRtcServer  = AssertAndGetWebRtcServerById(webRtcServerId, request->methodCStr);
+			const auto* const webRtcServer =
+			  AssertAndGetWebRtcServerById(webRtcServerId, request->methodCStr);
 
 			// Remove it from the map. The extracted entry also keeps the WebRtcServer
 			// alive, so `webRtcServer` remains valid below, and deletes it when leaving
@@ -306,8 +296,8 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_CREATE_ROUTER:
 		{
-			const auto* body    = request->data->body_as<FBS::Worker::CreateRouterRequest>();
-			const auto routerId = body->routerId()->str();
+			const auto* const body = request->data->body_as<FBS::Worker::CreateRouterRequest>();
+			const auto routerId    = body->routerId()->str();
 
 			CheckNoRouter(routerId, request->methodCStr);
 
@@ -322,9 +312,9 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_CLOSE_ROUTER:
 		{
-			const auto* body    = request->data->body_as<FBS::Worker::CloseRouterRequest>();
-			const auto routerId = body->routerId()->str();
-			const auto* router  = AssertAndGetRouterById(routerId, request->methodCStr);
+			const auto* const body   = request->data->body_as<FBS::Worker::CloseRouterRequest>();
+			const auto routerId      = body->routerId()->str();
+			const auto* const router = AssertAndGetRouterById(routerId, request->methodCStr);
 
 			// Remove it from the map. The extracted entry also keeps the Router alive,
 			// so `router` remains valid below, and deletes it when leaving this block.
@@ -364,6 +354,8 @@ void Worker::HandleNotification(Channel::ChannelNotification* notification)
 
 	MS_DEBUG_DEV("Channel notification received [event:%s]", notification->eventCStr);
 
+	// NOTE: We want a switch here, as in every other notification handler.
+	// NOLINTNEXTLINE(readability-trivial-switch)
 	switch (notification->data->event())
 	{
 		case Channel::ChannelNotification::Event::WORKER_CLOSE:

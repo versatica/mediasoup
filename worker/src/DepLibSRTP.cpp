@@ -9,13 +9,14 @@
 /* Static variables. */
 
 static std::mutex GlobalSyncMutex;
-static size_t GlobalInstances = 0;
+static size_t GlobalInstances{ 0 };
 
 // NOTE: This map must always be in sync with the srtp_err_status_t in srtp.h
 // in libsrtp library:
 //   https://github.com/cisco/libsrtp/blob/main/include/srtp.h
 //
 // clang-format off
+// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 const ankerl::unordered_dense::map<srtp_err_status_t, std::string> DepLibSRTP::ErrorCode2String =
 {
 	{ srtp_err_status_ok,            "nothing to report" },
