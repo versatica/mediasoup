@@ -115,16 +115,13 @@ namespace RTC
 
 		this->consumableRtpEncodings.reserve(data->consumableRtpEncodings()->size());
 
-		for (size_t i{ 0 }; i < data->consumableRtpEncodings()->size(); ++i)
+		for (const auto* entry : *data->consumableRtpEncodings())
 		{
-			const auto* entry = data->consumableRtpEncodings()->Get(i);
-
 			// This may throw due the constructor of RTC::RtpEncodingParameters.
 			this->consumableRtpEncodings.emplace_back(entry);
 
 			// Verify that it has ssrc field.
-			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
-			const auto& encoding = this->consumableRtpEncodings[i];
+			const auto& encoding = this->consumableRtpEncodings.back();
 
 			if (encoding.ssrc == 0)
 			{
@@ -1058,7 +1055,7 @@ namespace RTC
 	}
 
 	void Consumer::ProducerRtpStreamScore(
-	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore)
+	  const RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
 
@@ -1067,7 +1064,7 @@ namespace RTC
 		this->producerStreamManager->ProducerRtpStreamScore(rtpStream, score, previousScore);
 	}
 
-	void Consumer::ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first)
+	void Consumer::ProducerRtcpSenderReport(const RTC::RTP::RtpStreamRecv* rtpStream, bool first)
 	{
 		MS_TRACE();
 
@@ -1075,7 +1072,7 @@ namespace RTC
 	}
 
 	void Consumer::ProducerSpatialLayerActivityChanged(
-	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive)
+	  const RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive)
 	{
 		MS_TRACE();
 

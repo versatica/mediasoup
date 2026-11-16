@@ -99,10 +99,10 @@ namespace RTC
 		  RTC::WebRtcTransport* webRtcTransport, const std::string& usernameFragment) override;
 
 		void OnWebRtcTransportTransportTupleAdded(
-		  RTC::WebRtcTransport* webRtcTransport, RTC::TransportTuple* tuple) override;
+		  RTC::WebRtcTransport* webRtcTransport, const RTC::TransportTuple* tuple) override;
 
 		void OnWebRtcTransportTransportTupleRemoved(
-		  RTC::WebRtcTransport* webRtcTransport, RTC::TransportTuple* tuple) override;
+		  RTC::WebRtcTransport* webRtcTransport, const RTC::TransportTuple* tuple) override;
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:

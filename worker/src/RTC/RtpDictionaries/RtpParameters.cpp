@@ -283,36 +283,31 @@ namespace RTC
 					// integer.
 					const auto apt = static_cast<uint32_t>(codec.parameters.GetInteger(AptString));
 
-					auto it = this->codecs.begin();
-
-					for (; it != this->codecs.end(); ++it)
-					{
-						const auto& otherCodec = *it;
-
-						if (otherCodec.payloadType == apt)
-						{
-							if (otherCodec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::RTX)
-							{
-								MS_THROW_TYPE_ERROR("apt in RTX codec points to a RTX codec");
-							}
-							else if (otherCodec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::ULPFEC)
-							{
-								MS_THROW_TYPE_ERROR("apt in RTX codec points to a ULPFEC codec");
-							}
-							else if (otherCodec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::FLEXFEC)
-							{
-								MS_THROW_TYPE_ERROR("apt in RTX codec points to a FLEXFEC codec");
-							}
-							else
-							{
-								break;
-							}
-						}
-					}
+					const auto it = std::ranges::find_if(
+					  this->codecs,
+					  [apt](const RTC::RtpCodecParameters& otherCodec) -> bool
+					  {
+						  return otherCodec.payloadType == apt;
+					  });
 
 					if (it == this->codecs.end())
 					{
 						MS_THROW_TYPE_ERROR("apt in RTX codec points to a non existing codec");
+					}
+
+					const auto& otherCodec = *it;
+
+					if (otherCodec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::RTX)
+					{
+						MS_THROW_TYPE_ERROR("apt in RTX codec points to a RTX codec");
+					}
+					else if (otherCodec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::ULPFEC)
+					{
+						MS_THROW_TYPE_ERROR("apt in RTX codec points to a ULPFEC codec");
+					}
+					else if (otherCodec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::FLEXFEC)
+					{
+						MS_THROW_TYPE_ERROR("apt in RTX codec points to a FLEXFEC codec");
 					}
 
 					break;
@@ -327,29 +322,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint8_t firstMediaPayloadType{ 0 };
+		const auto firstMediaCodecIt = std::ranges::find_if(
+		  this->codecs,
+		  [](const RTC::RtpCodecParameters& codec) -> bool
+		  {
+			  return codec.mimeType.IsMediaCodec();
+		  });
 
+		if (firstMediaCodecIt == this->codecs.end())
 		{
-			auto it = this->codecs.begin();
-
-			for (; it != this->codecs.end(); ++it)
-			{
-				const auto& codec = *it;
-
-				// Must be a media codec.
-				if (codec.mimeType.IsMediaCodec())
-				{
-					firstMediaPayloadType = codec.payloadType;
-
-					break;
-				}
-			}
-
-			if (it == this->codecs.end())
-			{
-				MS_THROW_TYPE_ERROR("no media codecs found");
-			}
+			MS_THROW_TYPE_ERROR("no media codecs found");
 		}
+
+		const auto& firstMediaCodec = *firstMediaCodecIt;
 
 		// Iterate all the encodings, set the first payloadType in all of them with
 		// codecPayloadType unset, and check that others point to a media codec.
@@ -366,31 +351,28 @@ namespace RTC
 
 			if (!encoding.codecPayloadType.has_value())
 			{
-				encoding.codecPayloadType = firstMediaPayloadType;
+				encoding.codecPayloadType = firstMediaCodec.payloadType;
 			}
 			else
 			{
-				auto it = this->codecs.begin();
-
-				for (; it != this->codecs.end(); ++it)
-				{
-					const auto& codec = *it;
-
-					if (codec.payloadType == encoding.codecPayloadType)
-					{
-						// Must be a media codec.
-						if (codec.mimeType.IsMediaCodec())
-						{
-							break;
-						}
-
-						MS_THROW_TYPE_ERROR("invalid codecPayloadType");
-					}
-				}
+				const auto it = std::ranges::find_if(
+				  this->codecs,
+				  [&encoding](const RTC::RtpCodecParameters& codec) -> bool
+				  {
+					  return codec.payloadType == encoding.codecPayloadType;
+				  });
 
 				if (it == this->codecs.end())
 				{
 					MS_THROW_TYPE_ERROR("unknown codecPayloadType");
+				}
+
+				const auto& codec = *it;
+
+				// Must be a media codec.
+				if (!codec.mimeType.IsMediaCodec())
+				{
+					MS_THROW_TYPE_ERROR("invalid codecPayloadType");
 				}
 			}
 		}

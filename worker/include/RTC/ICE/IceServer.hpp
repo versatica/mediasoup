@@ -39,30 +39,30 @@ namespace RTC
 				 * returns, so the given pointers are still usable.
 				 */
 				virtual void OnIceServerSendStunPacket(
-				  const RTC::ICE::IceServer* iceServer,
+				  RTC::ICE::IceServer* iceServer,
 				  const RTC::ICE::StunPacket* packet,
-				  RTC::TransportTuple* tuple) = 0;
+				  const RTC::TransportTuple* tuple) = 0;
 
 				virtual void OnIceServerLocalUsernameFragmentAdded(
-				  const RTC::ICE::IceServer* iceServer, const std::string& usernameFragment) = 0;
+				  RTC::ICE::IceServer* iceServer, const std::string& usernameFragment) = 0;
 
 				virtual void OnIceServerLocalUsernameFragmentRemoved(
-				  const RTC::ICE::IceServer* iceServer, const std::string& usernameFragment) = 0;
+				  RTC::ICE::IceServer* iceServer, const std::string& usernameFragment) = 0;
 
 				virtual void OnIceServerTupleAdded(
-				  const RTC::ICE::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
+				  RTC::ICE::IceServer* iceServer, const RTC::TransportTuple* tuple) = 0;
 
 				virtual void OnIceServerTupleRemoved(
-				  const RTC::ICE::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
+				  RTC::ICE::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
 
 				virtual void OnIceServerSelectedTuple(
-				  const RTC::ICE::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
+				  RTC::ICE::IceServer* iceServer, const RTC::TransportTuple* tuple) = 0;
 
-				virtual void OnIceServerConnected(const RTC::ICE::IceServer* iceServer) = 0;
+				virtual void OnIceServerConnected(RTC::ICE::IceServer* iceServer) = 0;
 
-				virtual void OnIceServerCompleted(const RTC::ICE::IceServer* iceServer) = 0;
+				virtual void OnIceServerCompleted(RTC::ICE::IceServer* iceServer) = 0;
 
-				virtual void OnIceServerDisconnected(const RTC::ICE::IceServer* iceServer) = 0;
+				virtual void OnIceServerDisconnected(RTC::ICE::IceServer* iceServer) = 0;
 			};
 
 		public:

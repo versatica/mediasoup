@@ -78,20 +78,20 @@ namespace RTC
 			virtual void OnTransportProducerRtpStreamScore(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
-			  RTC::RTP::RtpStreamRecv* rtpStream,
+			  const RTC::RTP::RtpStreamRecv* rtpStream,
 			  uint8_t score,
 			  uint8_t previousScore) = 0;
 
 			virtual void OnTransportProducerRtcpSenderReport(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
-			  RTC::RTP::RtpStreamRecv* rtpStream,
+			  const RTC::RTP::RtpStreamRecv* rtpStream,
 			  bool first) = 0;
 
 			virtual void OnTransportProducerSpatialLayerActivityChanged(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
-			  RTC::RTP::RtpStreamRecv* rtpStream,
+			  const RTC::RTP::RtpStreamRecv* rtpStream,
 			  uint8_t spatialLayer,
 			  bool isActive) = 0;
 
@@ -406,16 +406,16 @@ namespace RTC
 
 		void OnProducerRtpStreamScore(
 		  RTC::Producer* producer,
-		  RTC::RTP::RtpStreamRecv* rtpStream,
+		  const RTC::RTP::RtpStreamRecv* rtpStream,
 		  uint8_t score,
 		  uint8_t previousScore) override;
 
 		void OnProducerRtcpSenderReport(
-		  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
+		  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
 
 		void OnProducerSpatialLayerActivityChanged(
 		  RTC::Producer* producer,
-		  RTC::RTP::RtpStreamRecv* rtpStream,
+		  const RTC::RTP::RtpStreamRecv* rtpStream,
 		  uint8_t spatialLayer,
 		  bool isActive) override;
 
@@ -472,7 +472,7 @@ namespace RTC
 		  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmountLowThreshold) const override;
 
 		void OnDataConsumerSetBufferedAmountLowThreshold(
-		  const RTC::DataConsumer* dataConsumer, uint32_t bytes) const override;
+		  RTC::DataConsumer* dataConsumer, uint32_t bytes) const override;
 
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 

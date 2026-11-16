@@ -108,7 +108,7 @@ namespace RTC
 	}
 
 	void SvcProducerStreamManager::ProducerRtpStreamScore(
-	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t score, uint8_t previousScore)
+	  const RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
 
@@ -120,7 +120,7 @@ namespace RTC
 	}
 
 	void SvcProducerStreamManager::ProducerRtcpSenderReport(
-	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, bool /*first*/)
+	  const RTC::RTP::RtpStreamRecv* /*rtpStream*/, bool /*first*/)
 	{
 		MS_TRACE();
 
@@ -128,7 +128,7 @@ namespace RTC
 	}
 
 	void SvcProducerStreamManager::ProducerSpatialLayerActivityChanged(
-	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/)
+	  const RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/)
 	{
 		MS_TRACE();
 

@@ -56,7 +56,7 @@ public:
 	/* Pure virtual methods inherited from RTC::Router::Listener. */
 public:
 	RTC::WebRtcServer* OnRouterNeedWebRtcServer(
-	  const RTC::Router* router, const std::string& webRtcServerId) override;
+	  RTC::Router* router, const std::string& webRtcServerId) override;
 
 private:
 	// Passed by argument.

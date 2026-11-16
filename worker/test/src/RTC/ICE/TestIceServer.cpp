@@ -23,9 +23,9 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 	{
 	public:
 		void OnIceServerSendStunPacket(
-		  const RTC::ICE::IceServer* /*iceServer*/,
+		  RTC::ICE::IceServer* /*iceServer*/,
 		  const RTC::ICE::StunPacket* packet,
-		  RTC::TransportTuple* /*tuple*/) override
+		  const RTC::TransportTuple* /*tuple*/) override
 		{
 			std::string_view reasonPhrase;
 
@@ -37,46 +37,45 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 		}
 
 		void OnIceServerLocalUsernameFragmentAdded(
-		  const RTC::ICE::IceServer* /*iceServer*/, const std::string& usernameFragment) override
+		  RTC::ICE::IceServer* /*iceServer*/, const std::string& usernameFragment) override
 		{
 			this->addedUsernameFragments.push_back(usernameFragment);
 		}
 
 		void OnIceServerLocalUsernameFragmentRemoved(
-		  const RTC::ICE::IceServer* /*iceServer*/, const std::string& usernameFragment) override
+		  RTC::ICE::IceServer* /*iceServer*/, const std::string& usernameFragment) override
 		{
 			this->removedUsernameFragments.push_back(usernameFragment);
 		}
 
 		void OnIceServerTupleAdded(
-		  const RTC::ICE::IceServer* /*iceServer*/, RTC::TransportTuple* /*tuple*/) override
+		  RTC::ICE::IceServer* /*iceServer*/, const RTC::TransportTuple* /*tuple*/) override
 		{
 			++this->tupleAddedCount;
 		}
 
-		void OnIceServerTupleRemoved(
-		  const RTC::ICE::IceServer* /*iceServer*/, RTC::TransportTuple* /*tuple*/) override
+		void OnIceServerTupleRemoved(RTC::ICE::IceServer* /*iceServer*/, RTC::TransportTuple* /*tuple*/) override
 		{
 			++this->tupleRemovedCount;
 		}
 
 		void OnIceServerSelectedTuple(
-		  const RTC::ICE::IceServer* /*iceServer*/, RTC::TransportTuple* /*tuple*/) override
+		  RTC::ICE::IceServer* /*iceServer*/, const RTC::TransportTuple* /*tuple*/) override
 		{
 			++this->selectedTupleCount;
 		}
 
-		void OnIceServerConnected(const RTC::ICE::IceServer* /*iceServer*/) override
+		void OnIceServerConnected(RTC::ICE::IceServer* /*iceServer*/) override
 		{
 			++this->connectedCount;
 		}
 
-		void OnIceServerCompleted(const RTC::ICE::IceServer* /*iceServer*/) override
+		void OnIceServerCompleted(RTC::ICE::IceServer* /*iceServer*/) override
 		{
 			++this->completedCount;
 		}
 
-		void OnIceServerDisconnected(const RTC::ICE::IceServer* /*iceServer*/) override
+		void OnIceServerDisconnected(RTC::ICE::IceServer* /*iceServer*/) override
 		{
 			++this->disconnectedCount;
 		}

@@ -2871,7 +2871,10 @@ namespace RTC
 	}
 
 	void Transport::OnProducerRtpStreamScore(
-	  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore)
+	  RTC::Producer* producer,
+	  const RTC::RTP::RtpStreamRecv* rtpStream,
+	  uint8_t score,
+	  uint8_t previousScore)
 	{
 		MS_TRACE();
 
@@ -2879,7 +2882,7 @@ namespace RTC
 	}
 
 	void Transport::OnProducerRtcpSenderReport(
-	  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first)
+	  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, bool first)
 	{
 		MS_TRACE();
 
@@ -2898,7 +2901,7 @@ namespace RTC
 	}
 
 	void Transport::OnProducerSpatialLayerActivityChanged(
-	  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive)
+	  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive)
 	{
 		MS_TRACE();
 
@@ -3220,7 +3223,7 @@ namespace RTC
 	}
 
 	void Transport::OnDataConsumerSetBufferedAmountLowThreshold(
-	  const RTC::DataConsumer* dataConsumer, uint32_t bytes) const
+	  RTC::DataConsumer* dataConsumer, uint32_t bytes) const
 	{
 		MS_TRACE();
 

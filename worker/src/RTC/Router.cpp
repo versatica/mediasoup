@@ -615,7 +615,7 @@ namespace RTC
 	void Router::OnTransportProducerRtpStreamScore(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
-	  RTC::RTP::RtpStreamRecv* rtpStream,
+	  const RTC::RTP::RtpStreamRecv* rtpStream,
 	  uint8_t score,
 	  uint8_t previousScore)
 	{
@@ -630,7 +630,10 @@ namespace RTC
 	}
 
 	void Router::OnTransportProducerRtcpSenderReport(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first)
+	  RTC::Transport* /*transport*/,
+	  RTC::Producer* producer,
+	  const RTC::RTP::RtpStreamRecv* rtpStream,
+	  bool first)
 	{
 		MS_TRACE();
 
@@ -645,7 +648,7 @@ namespace RTC
 	void Router::OnTransportProducerSpatialLayerActivityChanged(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
-	  RTC::RTP::RtpStreamRecv* rtpStream,
+	  const RTC::RTP::RtpStreamRecv* rtpStream,
 	  uint8_t spatialLayer,
 	  bool isActive)
 	{

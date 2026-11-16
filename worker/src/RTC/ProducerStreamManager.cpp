@@ -35,7 +35,7 @@ namespace RTC
 	}
 
 	void ProducerStreamManager::ProducerSpatialLayerActivityChanged(
-	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/)
+	  const RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/)
 	{
 		MS_TRACE();
 	}

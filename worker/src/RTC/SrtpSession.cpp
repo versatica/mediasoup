@@ -139,7 +139,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	SrtpSession::SrtpSession(Type type, CryptoSuite cryptoSuite, uint8_t* key, size_t keyLen)
+	SrtpSession::SrtpSession(Type type, CryptoSuite cryptoSuite, const uint8_t* key, size_t keyLen)
 	{
 		MS_TRACE();
 

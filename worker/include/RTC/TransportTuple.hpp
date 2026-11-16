@@ -140,7 +140,7 @@ namespace RTC
 			return true;
 		}
 
-		void Send(const uint8_t* data, size_t len, onSendCallback cb = {})
+		void Send(const uint8_t* data, size_t len, onSendCallback cb = {}) const
 		{
 			if (this->protocol == Protocol::UDP)
 			{

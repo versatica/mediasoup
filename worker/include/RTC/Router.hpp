@@ -33,7 +33,7 @@ namespace RTC
 
 		public:
 			virtual RTC::WebRtcServer* OnRouterNeedWebRtcServer(
-			  const RTC::Router* router, const std::string& webRtcServerId) = 0;
+			  RTC::Router* router, const std::string& webRtcServerId) = 0;
 		};
 
 	public:
@@ -79,20 +79,20 @@ namespace RTC
 		void OnTransportProducerRtpStreamScore(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  RTC::RTP::RtpStreamRecv* rtpStream,
+		  const RTC::RTP::RtpStreamRecv* rtpStream,
 		  uint8_t score,
 		  uint8_t previousScore) override;
 
 		void OnTransportProducerRtcpSenderReport(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  RTC::RTP::RtpStreamRecv* rtpStream,
+		  const RTC::RTP::RtpStreamRecv* rtpStream,
 		  bool first) override;
 
 		void OnTransportProducerSpatialLayerActivityChanged(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  RTC::RTP::RtpStreamRecv* rtpStream,
+		  const RTC::RTP::RtpStreamRecv* rtpStream,
 		  uint8_t spatialLayer,
 		  bool isActive) override;
 

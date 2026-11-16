@@ -10,24 +10,21 @@ namespace FuzzerRtcDtlsTransport
 	{
 		/* Pure virtual methods inherited from RTC::DtlsTransport::Listener. */
 	public:
-		void OnDtlsTransportConnecting(const RTC::DtlsTransport* dtlsTransport) override;
+		void OnDtlsTransportConnecting(RTC::DtlsTransport* dtlsTransport) override;
 		void OnDtlsTransportConnected(
-		  const RTC::DtlsTransport* dtlsTransport,
+		  RTC::DtlsTransport* dtlsTransport,
 		  RTC::SrtpSession::CryptoSuite srtpCryptoSuite,
-		  uint8_t* srtpLocalKey,
+		  const uint8_t* srtpLocalKey,
 		  size_t srtpLocalKeyLen,
-		  uint8_t* srtpRemoteKey,
+		  const uint8_t* srtpRemoteKey,
 		  size_t srtpRemoteKeyLen,
 		  std::string& remoteCert) override;
-		void OnDtlsTransportFailed(const RTC::DtlsTransport* dtlsTransport) override;
-		void OnDtlsTransportClosed(const RTC::DtlsTransport* dtlsTransport) override;
+		void OnDtlsTransportFailed(RTC::DtlsTransport* dtlsTransport) override;
+		void OnDtlsTransportClosed(RTC::DtlsTransport* dtlsTransport) override;
 		void OnDtlsTransportSendData(
-		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
+		  RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 		void OnDtlsTransportApplicationDataReceived(
-		  const RTC::DtlsTransport* dtlsTransport,
-		  const uint8_t* data,
-		  size_t len,
-		  int64_t receivedAtUs) override;
+		  RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len, int64_t receivedAtUs) override;
 	};
 
 	void Fuzz(const uint8_t* data, size_t len);

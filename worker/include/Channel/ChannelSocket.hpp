@@ -24,9 +24,9 @@ namespace Channel
 
 		public:
 			virtual void OnConsumerSocketMessage(
-			  const ConsumerSocket* consumerSocket, char* msg, size_t msgLen) = 0;
+			  ConsumerSocket* consumerSocket, const char* msg, size_t msgLen) = 0;
 
-			virtual void OnConsumerSocketClosed(const ConsumerSocket* consumerSocket) = 0;
+			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) = 0;
 		};
 
 	public:
@@ -129,9 +129,9 @@ namespace Channel
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
-		void OnConsumerSocketMessage(const ConsumerSocket* consumerSocket, char* msg, size_t msgLen) override;
+		void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, const char* msg, size_t msgLen) override;
 
-		void OnConsumerSocketClosed(const ConsumerSocket* consumerSocket) override;
+		void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) override;
 
 	private:
 		// Passed by argument.

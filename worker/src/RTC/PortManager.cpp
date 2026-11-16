@@ -706,7 +706,10 @@ namespace RTC
 			return portRange;
 		}
 
-		const uint32_t numPorts = static_cast<uint32_t>(maxPort) - minPort + 1;
+		MS_ASSERT(minPort != 0, "minPort cannot be 0");
+		MS_ASSERT(maxPort >= minPort, "maxPort cannot be less than minPort");
+
+		const auto numPorts = static_cast<uint16_t>(maxPort - minPort + 1);
 
 		// Emplace a new vector filled with `numPorts` false values, meaning that
 		// all ports are available.

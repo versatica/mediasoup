@@ -35,7 +35,7 @@ namespace RTC
 			  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmountLowThreshold) const = 0;
 
 			virtual void OnDataConsumerSetBufferedAmountLowThreshold(
-			  const RTC::DataConsumer* dataConsumer, uint32_t bytes) const = 0;
+			  RTC::DataConsumer* dataConsumer, uint32_t bytes) const = 0;
 
 			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) = 0;
 		};

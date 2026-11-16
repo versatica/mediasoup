@@ -48,16 +48,16 @@ namespace RTC
 
 			virtual void OnProducerRtpStreamScore(
 			  RTC::Producer* producer,
-			  RTC::RTP::RtpStreamRecv* rtpStream,
+			  const RTC::RTP::RtpStreamRecv* rtpStream,
 			  uint8_t score,
 			  uint8_t previousScore) = 0;
 
 			virtual void OnProducerRtcpSenderReport(
-			  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
+			  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
 
 			virtual void OnProducerSpatialLayerActivityChanged(
 			  RTC::Producer* producer,
-			  RTC::RTP::RtpStreamRecv* rtpStream,
+			  const RTC::RTP::RtpStreamRecv* rtpStream,
 			  uint8_t spatialLayer,
 			  bool isActive) = 0;
 

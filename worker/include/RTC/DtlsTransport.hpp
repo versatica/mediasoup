@@ -74,7 +74,7 @@ namespace RTC
 			 * @remarks
 			 * - The caller MUST NOT call any method during this callback.
 			 */
-			virtual void OnDtlsTransportConnecting(const RTC::DtlsTransport* dtlsTransport) = 0;
+			virtual void OnDtlsTransportConnecting(RTC::DtlsTransport* dtlsTransport) = 0;
 
 			/**
 			 * DTLS has completed negotiation of a secure connection (including
@@ -85,11 +85,11 @@ namespace RTC
 			 * - The caller MUST NOT call any method during this callback.
 			 */
 			virtual void OnDtlsTransportConnected(
-			  const RTC::DtlsTransport* dtlsTransport,
+			  RTC::DtlsTransport* dtlsTransport,
 			  RTC::SrtpSession::CryptoSuite srtpCryptoSuite,
-			  uint8_t* srtpLocalKey,
+			  const uint8_t* srtpLocalKey,
 			  size_t srtpLocalKeyLen,
-			  uint8_t* srtpRemoteKey,
+			  const uint8_t* srtpRemoteKey,
 			  size_t srtpRemoteKeyLen,
 			  std::string& remoteCert) = 0;
 
@@ -97,28 +97,25 @@ namespace RTC
 			 * The DTLS connection has been closed as the result of an error (such as a
 			 * DTLS alert or a failure to validate the remote fingerprint).
 			 */
-			virtual void OnDtlsTransportFailed(const RTC::DtlsTransport* dtlsTransport) = 0;
+			virtual void OnDtlsTransportFailed(RTC::DtlsTransport* dtlsTransport) = 0;
 
 			/**
 			 * The DTLS connection has been closed due to receipt of a close_notify
 			 * alert.
 			 */
-			virtual void OnDtlsTransportClosed(const RTC::DtlsTransport* dtlsTransport) = 0;
+			virtual void OnDtlsTransportClosed(RTC::DtlsTransport* dtlsTransport) = 0;
 
 			/**
 			 * Need to send DTLS data to the peer.
 			 */
 			virtual void OnDtlsTransportSendData(
-			  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
+			  RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 
 			/**
 			 * DTLS application data received.
 			 */
 			virtual void OnDtlsTransportApplicationDataReceived(
-			  const RTC::DtlsTransport* dtlsTransport,
-			  const uint8_t* data,
-			  size_t len,
-			  int64_t receivedAtUs) = 0;
+			  RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len, int64_t receivedAtUs) = 0;
 		};
 
 	public:

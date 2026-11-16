@@ -524,7 +524,7 @@ namespace RTC
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportTransportTupleAdded(
-	  RTC::WebRtcTransport* webRtcTransport, RTC::TransportTuple* tuple)
+	  RTC::WebRtcTransport* webRtcTransport, const RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -541,7 +541,7 @@ namespace RTC
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportTransportTupleRemoved(
-	  RTC::WebRtcTransport* /*webRtcTransport*/, RTC::TransportTuple* tuple)
+	  RTC::WebRtcTransport* /*webRtcTransport*/, const RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 

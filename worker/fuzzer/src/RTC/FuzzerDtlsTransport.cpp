@@ -69,17 +69,17 @@ void FuzzerRtcDtlsTransport::Fuzz(const uint8_t* data, size_t len)
 }
 
 void FuzzerRtcDtlsTransport::DtlsTransportListener::OnDtlsTransportConnecting(
-  const RTC::DtlsTransport* /*dtlsTransport*/)
+  RTC::DtlsTransport* /*dtlsTransport*/)
 {
 	MS_DEBUG_DEV("DtlsTransport singleton connecting");
 }
 
 void FuzzerRtcDtlsTransport::DtlsTransportListener::OnDtlsTransportConnected(
-  const RTC::DtlsTransport* /*dtlsTransport*/,
+  RTC::DtlsTransport* /*dtlsTransport*/,
   RTC::SrtpSession::CryptoSuite /*srtpCryptoSuite*/,
-  uint8_t* /*srtpLocalKey*/,
+  const uint8_t* /*srtpLocalKey*/,
   size_t /*srtpLocalKeyLen*/,
-  uint8_t* /*srtpRemoteKey*/,
+  const uint8_t* /*srtpRemoteKey*/,
   size_t /*srtpRemoteKeyLen*/,
   std::string& /*remoteCert*/)
 {
@@ -87,28 +87,25 @@ void FuzzerRtcDtlsTransport::DtlsTransportListener::OnDtlsTransportConnected(
 }
 
 void FuzzerRtcDtlsTransport::DtlsTransportListener::OnDtlsTransportFailed(
-  const RTC::DtlsTransport* /*dtlsTransport*/)
+  RTC::DtlsTransport* /*dtlsTransport*/)
 {
 	MS_DEBUG_DEV("DtlsTransport singleton failed");
 }
 
 void FuzzerRtcDtlsTransport::DtlsTransportListener::OnDtlsTransportClosed(
-  const RTC::DtlsTransport* /*dtlsTransport*/)
+  RTC::DtlsTransport* /*dtlsTransport*/)
 {
 	MS_DEBUG_DEV("DtlsTransport singleton closed");
 }
 
 void FuzzerRtcDtlsTransport::DtlsTransportListener::OnDtlsTransportSendData(
-  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* /*data*/, size_t /*len*/)
+  RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* /*data*/, size_t /*len*/)
 {
 	MS_DEBUG_DEV("DtlsTransport singleton wants to send data");
 }
 
 void FuzzerRtcDtlsTransport::DtlsTransportListener::OnDtlsTransportApplicationDataReceived(
-  const RTC::DtlsTransport* /*dtlsTransport*/,
-  const uint8_t* /*data*/,
-  size_t /*len*/,
-  int64_t /*receivedAtUs*/)
+  RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* /*data*/, size_t /*len*/, int64_t /*receivedAtUs*/)
 {
 	MS_DEBUG_DEV("DtlsTransport singleton received application data");
 }

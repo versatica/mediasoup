@@ -644,18 +644,14 @@ namespace RTC
 		// not call SSL_CTX_set_ecdh_auto() or similar APIs anymore."
 
 		// Set the "use_srtp" DTLS extension.
-		for (auto it = DtlsTransport::SrtpCryptoSuites.begin();
-		     it != DtlsTransport::SrtpCryptoSuites.end();
-		     ++it)
+		for (const auto& cryptoSuiteEntry : DtlsTransport::SrtpCryptoSuites)
 		{
-			if (it != DtlsTransport::SrtpCryptoSuites.begin())
+			if (!dtlsSrtpCryptoSuites.empty())
 			{
 				dtlsSrtpCryptoSuites += ':';
 			}
 
-			const SrtpCryptoSuiteMapEntry* cryptoSuiteEntry = std::addressof(*it);
-
-			dtlsSrtpCryptoSuites += cryptoSuiteEntry->name;
+			dtlsSrtpCryptoSuites += cryptoSuiteEntry.name;
 		}
 
 		MS_DEBUG_2TAGS(

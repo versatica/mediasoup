@@ -130,10 +130,8 @@ namespace RTC
 
 			int64_t rate{ 0 };
 
-			for (size_t tIdx{ 0 }; tIdx < this->spatialLayerCounters[spatialLayer].size(); ++tIdx)
+			for (auto& temporalLayerCounter : this->spatialLayerCounters[spatialLayer])
 			{
-				auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
-
 				rate += temporalLayerCounter.GetBitrate(nowMs).value_or(0);
 			}
 

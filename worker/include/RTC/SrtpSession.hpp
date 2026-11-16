@@ -36,7 +36,7 @@ namespace RTC
 		static void OnSrtpEvent(srtp_event_data_t* data);
 
 	public:
-		SrtpSession(Type type, CryptoSuite cryptoSuite, uint8_t* key, size_t keyLen);
+		SrtpSession(Type type, CryptoSuite cryptoSuite, const uint8_t* key, size_t keyLen);
 
 		~SrtpSession();
 

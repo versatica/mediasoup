@@ -1127,9 +1127,9 @@ namespace RTC
 	}
 
 	void WebRtcTransport::OnIceServerSendStunPacket(
-	  const RTC::ICE::IceServer* /*iceServer*/,
+	  RTC::ICE::IceServer* /*iceServer*/,
 	  const RTC::ICE::StunPacket* packet,
-	  RTC::TransportTuple* tuple)
+	  const RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -1141,7 +1141,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::OnIceServerLocalUsernameFragmentAdded(
-	  const RTC::ICE::IceServer* /*iceServer*/, const std::string& usernameFragment)
+	  RTC::ICE::IceServer* /*iceServer*/, const std::string& usernameFragment)
 	{
 		MS_TRACE();
 
@@ -1153,7 +1153,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::OnIceServerLocalUsernameFragmentRemoved(
-	  const RTC::ICE::IceServer* /*iceServer*/, const std::string& usernameFragment)
+	  RTC::ICE::IceServer* /*iceServer*/, const std::string& usernameFragment)
 	{
 		MS_TRACE();
 
@@ -1165,7 +1165,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::OnIceServerTupleAdded(
-	  const RTC::ICE::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
+	  RTC::ICE::IceServer* /*iceServer*/, const RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -1176,7 +1176,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::OnIceServerTupleRemoved(
-	  const RTC::ICE::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
+	  RTC::ICE::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -1193,7 +1193,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::OnIceServerSelectedTuple(
-	  const RTC::ICE::IceServer* /*iceServer*/, RTC::TransportTuple* /*tuple*/)
+	  RTC::ICE::IceServer* /*iceServer*/, const RTC::TransportTuple* /*tuple*/)
 	{
 		MS_TRACE();
 
@@ -1223,7 +1223,7 @@ namespace RTC
 		RTC::Transport::RouteChanged();
 	}
 
-	void WebRtcTransport::OnIceServerConnected(const RTC::ICE::IceServer* /*iceServer*/)
+	void WebRtcTransport::OnIceServerConnected(RTC::ICE::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1249,7 +1249,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::OnIceServerCompleted(const RTC::ICE::IceServer* /*iceServer*/)
+	void WebRtcTransport::OnIceServerCompleted(RTC::ICE::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1275,7 +1275,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::OnIceServerDisconnected(const RTC::ICE::IceServer* /*iceServer*/)
+	void WebRtcTransport::OnIceServerDisconnected(RTC::ICE::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1298,7 +1298,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::OnDtlsTransportConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
+	void WebRtcTransport::OnDtlsTransportConnecting(RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1316,11 +1316,11 @@ namespace RTC
 	}
 
 	void WebRtcTransport::OnDtlsTransportConnected(
-	  const RTC::DtlsTransport* /*dtlsTransport*/,
+	  RTC::DtlsTransport* /*dtlsTransport*/,
 	  RTC::SrtpSession::CryptoSuite srtpCryptoSuite,
-	  uint8_t* srtpLocalKey,
+	  const uint8_t* srtpLocalKey,
 	  size_t srtpLocalKeyLen,
-	  uint8_t* srtpRemoteKey,
+	  const uint8_t* srtpRemoteKey,
 	  size_t srtpRemoteKeyLen,
 	  std::string& remoteCert)
 	{
@@ -1371,7 +1371,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::OnDtlsTransportFailed(const RTC::DtlsTransport* /*dtlsTransport*/)
+	void WebRtcTransport::OnDtlsTransportFailed(RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1388,7 +1388,7 @@ namespace RTC
 		  dtlsStateChangeOffset);
 	}
 
-	void WebRtcTransport::OnDtlsTransportClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
+	void WebRtcTransport::OnDtlsTransportClosed(RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1409,7 +1409,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::OnDtlsTransportSendData(
-	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
+	  RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -1427,7 +1427,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::OnDtlsTransportApplicationDataReceived(
-	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len, int64_t receivedAtUs)
+	  RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 

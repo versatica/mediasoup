@@ -433,7 +433,7 @@ void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 }
 
 RTC::WebRtcServer* Worker::OnRouterNeedWebRtcServer(
-  const RTC::Router* /*router*/, const std::string& webRtcServerId)
+  RTC::Router* /*router*/, const std::string& webRtcServerId)
 {
 	MS_TRACE();
 

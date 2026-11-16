@@ -318,7 +318,7 @@ namespace Channel
 	}
 
 	void ChannelSocket::OnConsumerSocketMessage(
-	  const ConsumerSocket* /*consumerSocket*/, char* msg, size_t /*msgLen*/)
+	  ConsumerSocket* /*consumerSocket*/, const char* msg, size_t /*msgLen*/)
 	{
 		MS_TRACE_STD();
 
@@ -330,7 +330,7 @@ namespace Channel
 
 #if MS_LOG_DEV_LEVEL == 3
 		const auto s = flatbuffers::FlatBufferToString(
-		  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
+		  reinterpret_cast<const uint8_t*>(msg), FBS::Message::MessageTypeTable());
 
 		MS_DUMP("%s", s.c_str());
 #endif
@@ -397,7 +397,7 @@ namespace Channel
 		}
 	}
 
-	void ChannelSocket::OnConsumerSocketClosed(const ConsumerSocket* /*consumerSocket*/)
+	void ChannelSocket::OnConsumerSocketClosed(ConsumerSocket* /*consumerSocket*/)
 	{
 		MS_TRACE_STD();
 

@@ -57,7 +57,7 @@ namespace RTC
 	}
 
 	void PipeProducerStreamManager::ProducerRtpStreamScore(
-	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
+	  const RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
 
@@ -65,7 +65,7 @@ namespace RTC
 	}
 
 	void PipeProducerStreamManager::ProducerRtcpSenderReport(
-	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, bool /*first*/)
+	  const RTC::RTP::RtpStreamRecv* /*rtpStream*/, bool /*first*/)
 	{
 		MS_TRACE();
 
