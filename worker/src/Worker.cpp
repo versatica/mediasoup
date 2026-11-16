@@ -66,23 +66,13 @@ void Worker::Close()
 	this->signalHandle.reset();
 
 	// Delete all Routers.
-	for (auto& kv : this->mapRouters)
-	{
-		auto* router = kv.second;
-
-		delete router;
-	}
-
+	// NOTE: Must be done here, before deleting the WebRtcServers (which the
+	// Routers may use) and before closing the Channel (since their destruction may
+	// emit notifications).
 	this->mapRouters.clear();
 
 	// Delete all WebRtcServers.
-	for (auto& kv : this->mapWebRtcServers)
-	{
-		auto* webRtcServer = kv.second;
-
-		delete webRtcServer;
-	}
-
+	// NOTE: Must be done here, before closing the Channel.
 	this->mapWebRtcServers.clear();
 
 	// Close the Channel.
@@ -135,10 +125,9 @@ flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResour
 {
 	MS_TRACE();
 
-	int err;
-	uv_rusage_t uvRusage{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+	uv_rusage_t uvRusage{};
 
-	err = uv_getrusage(std::addressof(uvRusage));
+	const int err = uv_getrusage(std::addressof(uvRusage));
 
 	if (err != 0)
 	{
@@ -153,37 +142,26 @@ flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResour
 	  (uvRusage.ru_stime.tv_sec * static_cast<uint64_t>(1000)) + (uvRusage.ru_stime.tv_usec / 1000),
 	  // Add ru_maxrss (uint64_t, maximum resident set size).
 	  uvRusage.ru_maxrss,
-
 	  // Add ru_ixrss (uint64_t, integral shared memory size).
 	  uvRusage.ru_ixrss,
-
 	  // Add ru_idrss (uint64_t, integral unshared data size).
 	  uvRusage.ru_idrss,
-
 	  // Add ru_isrss (uint64_t, integral unshared stack size).
 	  uvRusage.ru_isrss,
-
 	  // Add ru_minflt (uint64_t, page reclaims, soft page faults).
 	  uvRusage.ru_minflt,
-
 	  // Add ru_majflt (uint64_t, page faults, hard page faults).
 	  uvRusage.ru_majflt,
-
 	  // Add ru_nswap (uint64_t, swaps).
 	  uvRusage.ru_nswap,
-
 	  // Add ru_inblock (uint64_t, block input operations).
 	  uvRusage.ru_inblock,
-
 	  // Add ru_oublock (uint64_t, block output operations).
 	  uvRusage.ru_oublock,
-
 	  // Add ru_msgsnd (uint64_t, IPC messages sent).
 	  uvRusage.ru_msgsnd,
-
 	  // Add ru_msgrcv (uint64_t, IPC messages received).
 	  uvRusage.ru_msgrcv,
-
 	  // Add ru_nsignals (uint64_t, signals received).
 	  uvRusage.ru_nsignals,
 	  // Add ru_nvcsw (uint64_t, voluntary context switches).
@@ -204,8 +182,7 @@ RTC::WebRtcServer* Worker::AssertAndGetWebRtcServerById(
 		MS_THROW_NOT_FOUND_ERROR("WebRtcServer not found [method:%s]", method.c_str());
 	}
 
-	// NOLINTNEXTLINE(misc-const-correctness)
-	auto* webRtcServer = it->second;
+	auto* const webRtcServer = it->second.get();
 
 	return webRtcServer;
 }
@@ -221,8 +198,7 @@ RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId, const s
 		MS_THROW_NOT_FOUND_ERROR("Router not found [method:%s]", method.c_str());
 	}
 
-	// NOLINTNEXTLINE(misc-const-correctness)
-	auto* router = it->second;
+	auto* const router = it->second.get();
 
 	return router;
 }
@@ -289,9 +265,8 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			CheckNoWebRtcServer(webRtcServerId, request->methodCStr);
 
-			auto* webRtcServer = new RTC::WebRtcServer(this->shared, webRtcServerId, body->listenInfos());
-
-			this->mapWebRtcServers[webRtcServerId] = webRtcServer;
+			this->mapWebRtcServers[webRtcServerId] =
+			  std::make_unique<RTC::WebRtcServer>(this->shared, webRtcServerId, body->listenInfos());
 
 			MS_DEBUG_DEV("WebRtcServer created [webRtcServerId:%s]", webRtcServerId.c_str());
 
@@ -302,16 +277,17 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_WEBRTCSERVER_CLOSE:
 		{
-			const auto* body          = request->data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
+			const auto* const body    = request->data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
 			const auto webRtcServerId = body->webRtcServerId()->str();
-			const auto* webRtcServer  = AssertAndGetWebRtcServerById(webRtcServerId, request->methodCStr);
+			const auto* const webRtcServer =
+			  AssertAndGetWebRtcServerById(webRtcServerId, request->methodCStr);
 
-			// Remove it from the map and delete it.
-			this->mapWebRtcServers.erase(webRtcServer->GetId());
+			// Remove it from the map. The extracted entry also keeps the WebRtcServer
+			// alive, so `webRtcServer` remains valid below, and deletes it when leaving
+			// this block.
+			const auto extractedWebRtcServer = this->mapWebRtcServers.extract(webRtcServer->id);
 
 			MS_DEBUG_DEV("WebRtcServer closed [id:%s]", webRtcServer->id.c_str());
-
-			delete webRtcServer;
 
 			request->Accept();
 
@@ -320,14 +296,12 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_CREATE_ROUTER:
 		{
-			const auto* body    = request->data->body_as<FBS::Worker::CreateRouterRequest>();
-			const auto routerId = body->routerId()->str();
+			const auto* const body = request->data->body_as<FBS::Worker::CreateRouterRequest>();
+			const auto routerId    = body->routerId()->str();
 
 			CheckNoRouter(routerId, request->methodCStr);
 
-			auto* router = new RTC::Router(this->shared, routerId, this);
-
-			this->mapRouters[routerId] = router;
+			this->mapRouters[routerId] = std::make_unique<RTC::Router>(this->shared, routerId, this);
 
 			MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
 
@@ -338,16 +312,15 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_CLOSE_ROUTER:
 		{
-			const auto* body    = request->data->body_as<FBS::Worker::CloseRouterRequest>();
-			const auto routerId = body->routerId()->str();
-			const auto* router  = AssertAndGetRouterById(routerId, request->methodCStr);
+			const auto* const body   = request->data->body_as<FBS::Worker::CloseRouterRequest>();
+			const auto routerId      = body->routerId()->str();
+			const auto* const router = AssertAndGetRouterById(routerId, request->methodCStr);
 
-			// Remove it from the map and delete it.
-			this->mapRouters.erase(router->id);
+			// Remove it from the map. The extracted entry also keeps the Router alive,
+			// so `router` remains valid below, and deletes it when leaving this block.
+			const auto extractedRouter = this->mapRouters.extract(router->id);
 
 			MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
-
-			delete router;
 
 			request->Accept();
 
@@ -357,7 +330,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 		// Any other request must be delivered to the corresponding Router.
 		default:
 		{
-			auto* handler =
+			auto* const handler =
 			  this->shared->GetChannelMessageRegistrator()->GetChannelRequestHandler(request->handlerId);
 
 			if (!handler)
@@ -381,6 +354,8 @@ void Worker::HandleNotification(Channel::ChannelNotification* notification)
 
 	MS_DEBUG_DEV("Channel notification received [event:%s]", notification->eventCStr);
 
+	// NOTE: We want a switch here, as in every other notification handler.
+	// NOLINTNEXTLINE(readability-trivial-switch)
 	switch (notification->data->event())
 	{
 		case Channel::ChannelNotification::Event::WORKER_CLOSE:
@@ -399,8 +374,9 @@ void Worker::HandleNotification(Channel::ChannelNotification* notification)
 
 		default:
 		{
-			auto* handler = this->shared->GetChannelMessageRegistrator()->GetChannelNotificationHandler(
-			  notification->handlerId);
+			auto* const handler =
+			  this->shared->GetChannelMessageRegistrator()->GetChannelNotificationHandler(
+			    notification->handlerId);
 
 			if (handler == nullptr)
 			{
@@ -457,18 +433,18 @@ void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 }
 
 RTC::WebRtcServer* Worker::OnRouterNeedWebRtcServer(
-  const RTC::Router* /*router*/, const std::string& webRtcServerId)
+  RTC::Router* /*router*/, const std::string& webRtcServerId)
 {
 	MS_TRACE();
 
-	RTC::WebRtcServer* webRtcServer{ nullptr }; // NOLINT(misc-const-correctness)
-
 	const auto it = this->mapWebRtcServers.find(webRtcServerId);
 
-	if (it != this->mapWebRtcServers.end())
+	if (it == this->mapWebRtcServers.end())
 	{
-		webRtcServer = it->second;
+		return nullptr;
 	}
+
+	auto* const webRtcServer = it->second.get();
 
 	return webRtcServer;
 }

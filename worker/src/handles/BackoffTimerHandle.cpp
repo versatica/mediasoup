@@ -34,7 +34,7 @@ BackoffTimerHandle::BackoffTimerHandle(BackoffTimerHandleOptions options)
 	if (this->baseTimeoutMs > BackoffTimerHandleInterface::MaxTimeoutMs)
 	{
 		MS_THROW_TYPE_ERROR(
-		  "[%s] options.maxBackoffTimeoutMs (%" PRIi64 " ms) cannot be greater than %" PRIi64 " ms",
+		  "[%s] options.baseTimeoutMs (%" PRIi64 " ms) cannot be greater than %" PRIi64 " ms",
 		  this->label.c_str(),
 		  this->baseTimeoutMs,
 		  BackoffTimerHandleInterface::MaxTimeoutMs);

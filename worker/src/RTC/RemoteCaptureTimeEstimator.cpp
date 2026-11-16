@@ -43,6 +43,47 @@ namespace RTC
 			                                                                     : "Sender Report");
 	}
 
+	void RemoteCaptureTimeEstimator::SenderReportReceived(const RTC::RTP::RtpStreamRecv* rtpStream)
+	{
+		MS_TRACE();
+
+		const auto senderReportMapping      = rtpStream->GetSenderReportMapping();
+		const auto senderReportReceivedAtUs = rtpStream->GetSenderReportReceivedAtUs();
+
+		// Both are stored together, so either both are set or none of them is.
+		if (!senderReportMapping.has_value() || !senderReportReceivedAtUs.has_value())
+		{
+			return;
+		}
+
+		this->clockOffsetEstimator.AddSenderReport(
+		  senderReportMapping.value().ntpUs, senderReportReceivedAtUs.value(), rtpStream->GetRttMs());
+	}
+
+	std::optional<int64_t> RemoteCaptureTimeEstimator::GetLocalCaptureAtUs(
+	  const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts, int64_t nowUs)
+	{
+		MS_TRACE();
+
+		if (!this->source.has_value())
+		{
+			return std::nullopt;
+		}
+
+		MayFallBackToSenderReport(rtpStream, nowUs);
+
+		const auto remoteCaptureAtUs = this->source == RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME
+		                                 ? rtpStream->GetRemoteCaptureAtUsFromAbsCaptureTime(ts)
+		                                 : rtpStream->GetRemoteCaptureAtUsFromSenderReport(ts);
+
+		if (!remoteCaptureAtUs.has_value())
+		{
+			return std::nullopt;
+		}
+
+		return this->clockOffsetEstimator.RemoteUsToLocalUs(remoteCaptureAtUs.value());
+	}
+
 	void RemoteCaptureTimeEstimator::MayFallBackToSenderReport(
 	  const RTC::RTP::RtpStreamRecv* rtpStream, int64_t nowUs)
 	{
@@ -85,46 +126,5 @@ namespace RTC
 		  "abs-capture-time negotiated but never received, reading the capture instant from Sender Reports instead");
 
 		this->source = RemoteCaptureTimeEstimator::Source::SENDER_REPORT;
-	}
-
-	void RemoteCaptureTimeEstimator::SenderReportReceived(const RTC::RTP::RtpStreamRecv* rtpStream)
-	{
-		MS_TRACE();
-
-		const auto senderReportMapping      = rtpStream->GetSenderReportMapping();
-		const auto senderReportReceivedAtUs = rtpStream->GetSenderReportReceivedAtUs();
-
-		// Both are stored together, so either both are set or none of them is.
-		if (!senderReportMapping.has_value() || !senderReportReceivedAtUs.has_value())
-		{
-			return;
-		}
-
-		this->clockOffsetEstimator.AddSenderReport(
-		  senderReportMapping.value().ntpUs, senderReportReceivedAtUs.value(), rtpStream->GetRttMs());
-	}
-
-	std::optional<int64_t> RemoteCaptureTimeEstimator::GetLocalCaptureAtUs(
-	  const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts, int64_t nowUs)
-	{
-		MS_TRACE();
-
-		if (!this->source.has_value())
-		{
-			return std::nullopt;
-		}
-
-		MayFallBackToSenderReport(rtpStream, nowUs);
-
-		const auto remoteCaptureAtUs = this->source == RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME
-		                                 ? rtpStream->GetRemoteCaptureAtUsFromAbsCaptureTime(ts)
-		                                 : rtpStream->GetRemoteCaptureAtUsFromSenderReport(ts);
-
-		if (!remoteCaptureAtUs.has_value())
-		{
-			return std::nullopt;
-		}
-
-		return this->clockOffsetEstimator.RemoteUsToLocalUs(remoteCaptureAtUs.value());
 	}
 } // namespace RTC

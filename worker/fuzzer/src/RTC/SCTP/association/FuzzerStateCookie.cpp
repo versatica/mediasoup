@@ -3,35 +3,39 @@
 #include "Utils.hpp"
 #include <cstring> // std::memcpy()
 
-namespace
-{
-	alignas(4) thread_local uint8_t DataBuffer[65536];
-	alignas(4) thread_local uint8_t StateCookieSerializeBuffer[65536];
-	alignas(4) thread_local uint8_t StateCookieCloneBuffer[65536];
-} // namespace
-
 void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 {
+	alignas(4) static thread_local uint8_t dataBuffer[65536];
+	alignas(4) static thread_local uint8_t serializeBuffer[65536];
+	alignas(4) static thread_local uint8_t cloneBuffer[65536];
+
+	if (len > sizeof(dataBuffer))
+	{
+		return;
+	}
+
 	// NOTE: We need to copy given data into another buffer because we are gonna
 	// write into it.
-	std::memcpy(DataBuffer, data, len);
+	std::memcpy(dataBuffer, data, len);
 
 	// We need to force `data` to be a StateCookie since it's too hard that
 	// random data matches it.
 	if (len > RTC::SCTP::StateCookie::StateCookieLength)
 	{
+		// NOTE: Never beyond the given data, so a crash is reproducible with it.
 		len = Utils::Crypto::GetRandomUInt<size_t>(
-		  RTC::SCTP::StateCookie::StateCookieLength, RTC::SCTP::StateCookie::StateCookieLength + 10);
+		  RTC::SCTP::StateCookie::StateCookieLength,
+		  std::min(len, RTC::SCTP::StateCookie::StateCookieLength + 10));
 
 		if (len < RTC::SCTP::StateCookie::StateCookieLength + 5)
 		{
-			Utils::Byte::Set8Bytes(DataBuffer, 0, RTC::SCTP::StateCookie::Magic1);
+			Utils::Byte::Set8Bytes(dataBuffer, 0, RTC::SCTP::StateCookie::Magic1);
 			Utils::Byte::Set2Bytes(
-			  DataBuffer, RTC::SCTP::StateCookie::RemoteCapabilitiesOffset, RTC::SCTP::StateCookie::Magic2);
+			  dataBuffer, RTC::SCTP::StateCookie::RemoteCapabilitiesOffset, RTC::SCTP::StateCookie::Magic2);
 		}
 	}
 
-	std::unique_ptr<RTC::SCTP::StateCookie> stateCookie{ RTC::SCTP::StateCookie::Parse(DataBuffer, len) };
+	std::unique_ptr<RTC::SCTP::StateCookie> stateCookie{ RTC::SCTP::StateCookie::Parse(dataBuffer, len) };
 
 	if (!stateCookie)
 	{
@@ -46,7 +50,7 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 	stateCookie->GetTieTag();
 	stateCookie->GetRemoteCapabilities();
 
-	stateCookie->Serialize(StateCookieSerializeBuffer, len);
+	stateCookie->Serialize(serializeBuffer, len);
 
 	stateCookie->GetLocalVerificationTag();
 	stateCookie->GetRemoteVerificationTag();
@@ -57,7 +61,7 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 	stateCookie->GetRemoteCapabilities();
 
 	const std::unique_ptr<RTC::SCTP::StateCookie> clonedStateCookie{ stateCookie->Clone(
-		StateCookieCloneBuffer, len) };
+		cloneBuffer, len) };
 
 	stateCookie.reset();
 
@@ -69,5 +73,5 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 	clonedStateCookie->GetTieTag();
 	clonedStateCookie->GetRemoteCapabilities();
 
-	clonedStateCookie->Serialize(StateCookieSerializeBuffer, len);
+	clonedStateCookie->Serialize(serializeBuffer, len);
 }

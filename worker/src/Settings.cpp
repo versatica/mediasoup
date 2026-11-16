@@ -6,7 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <flatbuffers/flatbuffers.h>
-#include <cctype> // isprint()
+#include <cctype> // std::isprint()
 #include <exception>
 #include <iterator> // std::ostream_iterator
 #include <mutex>
@@ -24,6 +24,7 @@ static std::mutex GlobalSyncMutex;
 
 thread_local Settings::Configuration Settings::configuration;
 // clang-format off
+// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 const ankerl::unordered_dense::map<std::string, LogLevel> Settings::String2LogLevel =
 {
 	{ "debug", LogLevel::LOG_DEBUG },
@@ -31,6 +32,7 @@ const ankerl::unordered_dense::map<std::string, LogLevel> Settings::String2LogLe
 	{ "error", LogLevel::LOG_ERROR },
 	{ "none",  LogLevel::LOG_NONE  },
 };
+// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 const ankerl::unordered_dense::map<LogLevel, std::string> Settings::LogLevel2String =
 {
 	{ LogLevel::LOG_DEBUG, "debug" },
@@ -48,9 +50,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	/* Variables for getopt. */
 
-	int c;
-	int optionIdx{ 0 };
-
 	// clang-format off
 	const option options[] =
 	{
@@ -64,7 +63,31 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	};
 	// clang-format on
 
-	std::string stringValue;
+	// Parse a port given by command line, which must fit in 16 bits and cannot
+	// be 0.
+	const auto parsePort = [](const char* name, const char* value) -> uint16_t
+	{
+		int port{ 0 };
+
+		try
+		{
+			port = std::stoi(value);
+		}
+		catch (const std::exception& error)
+		{
+			MS_THROW_TYPE_ERROR("invalid %s '%s': %s", name, value, error.what());
+		}
+
+		if (port < 1 || port > 65535)
+		{
+			MS_THROW_TYPE_ERROR("%s must be between 1 and 65535 [value:%d]", name, port);
+		}
+
+		return static_cast<uint16_t>(port);
+	};
+
+	int c;
+	int optionIdx{ 0 };
 	std::vector<std::string> logTags;
 
 	/* Parse command line options. */
@@ -77,7 +100,9 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	while ((c = getopt_long_only(argc, argv, "", options, std::addressof(optionIdx))) != -1)
 	{
-		if (!optarg)
+		// NOTE: getopt also leaves optarg unset for an invalid option, which must
+		// be reported as such.
+		if (!optarg && c != '?')
 		{
 			MS_THROW_TYPE_ERROR("missing value in command line argument in option '%c'", c);
 		}
@@ -86,60 +111,44 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{
 			case 'l':
 			{
-				stringValue = std::string(optarg);
-				SetLogLevel(stringValue);
+				std::string logLevel{ optarg };
+
+				SetLogLevel(logLevel);
 
 				break;
 			}
 
 			case 't':
 			{
-				stringValue = std::string(optarg);
-				logTags.push_back(stringValue);
+				logTags.emplace_back(optarg);
 
 				break;
 			}
 
 			case 'm':
 			{
-				try
-				{
-					Settings::configuration.rtcMinPort = static_cast<uint16_t>(std::stoi(optarg));
-				}
-				catch (const std::exception& error)
-				{
-					MS_THROW_TYPE_ERROR("%s", error.what());
-				}
+				Settings::configuration.rtcMinPort = parsePort("rtcMinPort", optarg);
 
 				break;
 			}
 
 			case 'M':
 			{
-				try
-				{
-					Settings::configuration.rtcMaxPort = static_cast<uint16_t>(std::stoi(optarg));
-				}
-				catch (const std::exception& error)
-				{
-					MS_THROW_TYPE_ERROR("%s", error.what());
-				}
+				Settings::configuration.rtcMaxPort = parsePort("rtcMaxPort", optarg);
 
 				break;
 			}
 
 			case 'c':
 			{
-				stringValue                                 = std::string(optarg);
-				Settings::configuration.dtlsCertificateFile = stringValue;
+				Settings::configuration.dtlsCertificateFile = optarg;
 
 				break;
 			}
 
 			case 'p':
 			{
-				stringValue                                = std::string(optarg);
-				Settings::configuration.dtlsPrivateKeyFile = stringValue;
+				Settings::configuration.dtlsPrivateKeyFile = optarg;
 
 				break;
 			}
@@ -147,9 +156,9 @@ void Settings::SetConfiguration(int argc, char* argv[])
 			// Invalid option.
 			case '?':
 			{
-				if (isprint(optopt) != 0)
+				if (std::isprint(optopt) != 0)
 				{
-					MS_THROW_TYPE_ERROR("invalid option '-%c'", (char)optopt);
+					MS_THROW_TYPE_ERROR("invalid option '-%c'", static_cast<char>(optopt));
 				}
 				else
 				{
@@ -160,7 +169,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 			// Valid option, but it requires and argument that is not given.
 			case ':':
 			{
-				MS_THROW_TYPE_ERROR("option '%c' requires an argument", (char)optopt);
+				MS_THROW_TYPE_ERROR("option '%c' requires an argument", static_cast<char>(optopt));
 			}
 
 			// This should never happen.
@@ -180,6 +189,11 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	}
 
 	// Validate RTC ports.
+	if (Settings::configuration.rtcMinPort == 0)
+	{
+		MS_THROW_TYPE_ERROR("rtcMinPort cannot be 0");
+	}
+
 	if (Settings::configuration.rtcMaxPort < Settings::configuration.rtcMinPort)
 	{
 		MS_THROW_TYPE_ERROR("rtcMaxPort cannot be less than rtcMinPort");
@@ -196,12 +210,16 @@ void Settings::SetLogLevel(std::string& level)
 	// Lowcase given level.
 	Utils::String::ToLowerCase(level);
 
-	if (!Settings::String2LogLevel.contains(level))
+	const auto it = Settings::String2LogLevel.find(level);
+
+	if (it == Settings::String2LogLevel.end())
 	{
 		MS_THROW_TYPE_ERROR("invalid value '%s' for logLevel", level.c_str());
 	}
 
-	Settings::configuration.logLevel = Settings::String2LogLevel.at(level);
+	const auto& [levelString, logLevel] = *it;
+
+	Settings::configuration.logLevel = logLevel;
 }
 
 void Settings::SetLogTags(const std::vector<std::string>& tags)
@@ -367,11 +385,13 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 {
 	MS_TRACE();
 
+	// NOTE: We want a switch here, as in every other request handler.
+	// NOLINTNEXTLINE(readability-trivial-switch)
 	switch (request->method)
 	{
 		case Channel::ChannelRequest::Method::WORKER_UPDATE_SETTINGS:
 		{
-			const auto* body = request->data->body_as<FBS::Worker::UpdateSettingsRequest>();
+			const auto* const body = request->data->body_as<FBS::Worker::UpdateSettingsRequest>();
 
 			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateSettingsRequest::VT_LOGLEVEL))
 			{

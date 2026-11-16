@@ -5,9 +5,12 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memmove(), std::memset()
+#include <exception>
 
 namespace RTC
 {
+	/* Instance methods. */
+
 	Serializable::Serializable(const uint8_t* buffer, size_t bufferLength)
 	  : buffer(const_cast<uint8_t*>(buffer)), bufferLength(bufferLength)
 	{
@@ -20,7 +23,14 @@ namespace RTC
 
 		if (this->bufferReleasedListener)
 		{
-			(*this->bufferReleasedListener)(this, this->buffer);
+			try
+			{
+				(*this->bufferReleasedListener)(this, this->buffer);
+			}
+			catch (const std::exception& e)
+			{
+				MS_ERROR("error calling buffer released listener: %s", e.what());
+			}
 		}
 	}
 

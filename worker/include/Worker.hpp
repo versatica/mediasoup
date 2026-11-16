@@ -51,12 +51,12 @@ public:
 
 	/* Methods inherited from SignalHandle::Listener. */
 public:
-	void OnSignal(SignalHandle* signalsHandler, int signum) override;
+	void OnSignal(SignalHandle* signalHandle, int signum) override;
 
 	/* Pure virtual methods inherited from RTC::Router::Listener. */
 public:
 	RTC::WebRtcServer* OnRouterNeedWebRtcServer(
-	  const RTC::Router* router, const std::string& webRtcServerId) override;
+	  RTC::Router* router, const std::string& webRtcServerId) override;
 
 private:
 	// Passed by argument.
@@ -64,8 +64,8 @@ private:
 	SharedInterface* const shared;
 	// Allocated by this.
 	std::unique_ptr<SignalHandle> signalHandle;
-	ankerl::unordered_dense::map<std::string, RTC::WebRtcServer*> mapWebRtcServers;
-	ankerl::unordered_dense::map<std::string, RTC::Router*> mapRouters;
+	ankerl::unordered_dense::map<std::string, std::unique_ptr<RTC::WebRtcServer>> mapWebRtcServers;
+	ankerl::unordered_dense::map<std::string, std::unique_ptr<RTC::Router>> mapRouters;
 	// Others.
 	bool closed{ false };
 };

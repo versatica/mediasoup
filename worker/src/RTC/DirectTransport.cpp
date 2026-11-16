@@ -51,7 +51,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Add base transport dump.
-		auto base = Transport::FillBuffer(builder);
+		const auto base = Transport::FillBuffer(builder);
 
 		return FBS::DirectTransport::CreateDumpResponse(builder, base);
 	}
@@ -62,7 +62,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Base Transport stats.
-		auto base = Transport::FillBufferStats(builder);
+		const auto base = Transport::FillBufferStats(builder);
 
 		return FBS::DirectTransport::CreateGetStatsResponse(builder, base);
 	}
@@ -103,6 +103,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOTE: We want a switch here, as in every other notification handler.
+		// NOLINTNEXTLINE(readability-trivial-switch)
 		switch (notification->data->event())
 		{
 			case Channel::ChannelNotification::Event::TRANSPORT_SEND_RTCP:
@@ -248,7 +250,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(
+		const auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(
 		  message.GetPayload().data(), message.GetPayloadLength());
 
 		const auto notification = FBS::DataConsumer::CreateMessageNotification(

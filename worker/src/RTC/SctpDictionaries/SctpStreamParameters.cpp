@@ -10,10 +10,11 @@ namespace RTC
 	/* Instance methods. */
 
 	SctpStreamParameters::SctpStreamParameters(const FBS::SctpParameters::SctpStreamParameters* data)
+	  : streamId(data->streamId()),
+	    maxPacketLifeTime(data->maxPacketLifeTime()),
+	    maxRetransmits(data->maxRetransmits())
 	{
 		MS_TRACE();
-
-		this->streamId = data->streamId();
 
 		if (this->streamId > 65534)
 		{
@@ -23,22 +24,10 @@ namespace RTC
 		// ordered is optional.
 		bool orderedGiven = false;
 
-		if (auto ordered = data->ordered(); ordered.has_value())
+		if (const auto ordered = data->ordered(); ordered.has_value())
 		{
 			orderedGiven  = true;
 			this->ordered = ordered.value();
-		}
-
-		// maxPacketLifeTime is optional.
-		if (auto maxPacketLifeTime = data->maxPacketLifeTime(); maxPacketLifeTime.has_value())
-		{
-			this->maxPacketLifeTime = maxPacketLifeTime.value();
-		}
-
-		// maxRetransmits is optional.
-		if (auto maxRetransmits = data->maxRetransmits(); maxRetransmits.has_value())
-		{
-			this->maxRetransmits = maxRetransmits.value();
 		}
 
 		if (this->maxPacketLifeTime.has_value() && this->maxRetransmits.has_value())

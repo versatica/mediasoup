@@ -16,7 +16,7 @@ namespace FuzzerRtcRtpStreamSend
 		}
 
 		void OnRtpStreamRetransmitRtpPacket(
-		  RTC::RTP::RtpStreamSend* /*rtpStream*/, RTC::RTP::Packet* packet) override
+		  RTC::RTP::RtpStreamSend* /*rtpStream*/, RTC::RTP::Packet* /*packet*/) override
 		{
 		}
 	};

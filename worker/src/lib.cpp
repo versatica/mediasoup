@@ -124,7 +124,7 @@ extern "C" int mediasoup_worker_run(
 		// 40 is a custom exit code to notify "unknown error" caller.
 		return 40;
 	}
-	catch (const std::runtime_error& error)
+	catch (const std::runtime_error&)
 	{
 		// 134 is the exit code for SIGABRT.
 		return 134;
@@ -153,12 +153,20 @@ extern "C" int mediasoup_worker_run(
 	DepLibUV::PrintVersion();
 
 #ifndef MS_EXECUTABLE
+	// NOTE: DepLibSRTP::ClassDestroy() must only be called if
+	// DepLibSRTP::ClassInit() succeeded, since it decrements a counter shared by
+	// every Worker in the process.
+	bool depLibSrtpInitialized{ false };
+
 	try
 	{
 #endif
 		// Initialize static stuff.
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
+#ifndef MS_EXECUTABLE
+		depLibSrtpInitialized = true;
+#endif
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
@@ -186,10 +194,24 @@ extern "C" int mediasoup_worker_run(
 	{
 		MS_ERROR_STD("failure exit: %s", error.what());
 
+		// Free everything initialized above, since other Workers keep running in
+		// this same process.
+		channel->Close();
+		DepLibUV::RunLoop();
+
+		if (depLibSrtpInitialized)
+		{
+			DepLibSRTP::ClassDestroy();
+		}
+
+		Utils::Crypto::ClassDestroy();
+		RTC::DtlsTransport::ClassDestroy();
+		DepLibUV::ClassDestroy();
+
 		// 40 is a custom exit code to notify "unknown error" caller.
 		return 40;
 	}
-	catch (const std::runtime_error& error)
+	catch (const std::runtime_error&)
 	{
 		// 134 is the exit code for SIGABRT.
 		return 134;
@@ -203,12 +225,6 @@ static void ignoreSignals()
 
 #ifdef MS_EXECUTABLE
 #ifndef _WIN32
-	int err;
-
-	// NOTE: The `struct` keyword is required since the POSIX function of the same
-	// name hides the type.
-	struct sigaction act{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
 	// clang-format off
 	const ankerl::unordered_dense::map<std::string, int> ignoredSignals =
 	{
@@ -216,25 +232,25 @@ static void ignoreSignals()
 		{ "HUP",  SIGHUP  },
 		{ "ALRM", SIGALRM },
 		{ "USR1", SIGUSR1 },
-		{ "USR2", SIGUSR2 }
+		{ "USR2", SIGUSR2 },
 	};
 	// clang-format on
 
+	// NOTE: The `struct` keyword is required since the POSIX function of the same
+	// name hides the type.
+	struct sigaction act{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
 	act.sa_handler = SIG_IGN; // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
 	act.sa_flags   = 0;
-	err            = sigfillset(std::addressof(act.sa_mask));
 
-	if (err != 0)
+	if (sigfillset(std::addressof(act.sa_mask)) != 0)
 	{
 		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
 	}
 
-	for (const auto& kv : ignoredSignals)
+	for (const auto& [sigName, sigId] : ignoredSignals)
 	{
-		const auto& sigName = kv.first;
-		const auto sigId    = kv.second;
-
-		err = sigaction(sigId, std::addressof(act), nullptr);
+		const int err = sigaction(sigId, std::addressof(act), nullptr);
 
 		if (err != 0)
 		{

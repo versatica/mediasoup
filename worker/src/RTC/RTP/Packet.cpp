@@ -861,7 +861,7 @@ namespace RTC
 			return true;
 		}
 
-		void Packet::AssignExtensionIds(RTP::HeaderExtensionIds& headerExtensionIds)
+		void Packet::AssignExtensionIds(const RTP::HeaderExtensionIds& headerExtensionIds)
 		{
 			MS_TRACE();
 

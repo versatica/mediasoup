@@ -1,5 +1,5 @@
-#ifndef RTC_SEQ_MANAGER_HPP
-#define RTC_SEQ_MANAGER_HPP
+#ifndef MS_RTC_SEQ_MANAGER_HPP
+#define MS_RTC_SEQ_MANAGER_HPP
 
 #include "common.hpp"
 #include <limits> // std::numeric_limits
@@ -21,6 +21,7 @@ namespace RTC
 			bool operator()(T lhs, T rhs) const;
 		};
 
+	public:
 		struct SeqHigherThan
 		{
 			bool operator()(T lhs, T rhs) const;
@@ -28,23 +29,33 @@ namespace RTC
 
 	public:
 		static bool IsSeqHigherThan(T lhs, T rhs);
+
 		static bool IsSeqLowerThan(T lhs, T rhs);
 
 	public:
 		SeqManager() = default;
+
 		explicit SeqManager(T initialOutput);
 
 	public:
 		void Sync(T input);
+
 		void Drop(T input);
+
 		bool Input(T input, T& output);
+
 		T GetMaxInput() const;
+
 		T GetMaxOutput() const;
 
 	private:
 		void AddDropped(T input);
+
 		void ClearDropped();
-		// Number of dropped inputs held, excluding the already consumed prefix.
+
+		/**
+		 * Number of dropped inputs held, excluding the already consumed prefix.
+		 */
 		size_t DroppedSize() const;
 
 	private:

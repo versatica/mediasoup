@@ -3,8 +3,6 @@
 
 #include "RTC/UdpSocket.hpp"
 #include "Logger.hpp"
-#include "RTC/PortManager.hpp"
-#include <string>
 
 namespace RTC
 {
@@ -14,12 +12,14 @@ namespace RTC
 	  Listener* listener,
 	  SharedInterface* shared,
 	  std::string& ip,
+	  const std::string& announcedAddress,
 	  uint16_t port,
-	  RTC::Transport::SocketFlags& flags)
+	  const RTC::Transport::SocketFlags& flags)
 	  : // This may throw.
-	    ::UdpSocketHandle::UdpSocketHandle(RTC::PortManager::BindUdp(ip, port, flags)),
+	    UdpSocketHandle::UdpSocketHandle(RTC::PortManager::BindUdp(ip, port, flags)),
 	    listener(listener),
 	    shared(shared),
+	    announcedAddress(announcedAddress),
 	    fixedPort(true)
 	{
 		MS_TRACE();
@@ -29,19 +29,20 @@ namespace RTC
 	  Listener* listener,
 	  SharedInterface* shared,
 	  std::string& ip,
+	  const std::string& announcedAddress,
 	  uint16_t minPort,
 	  uint16_t maxPort,
-	  RTC::Transport::SocketFlags& flags,
+	  const RTC::Transport::SocketFlags& flags,
 	  RTC::PortManager::PortRangeKey& portRangeKey)
 	  : // This may throw.
-	    ::UdpSocketHandle::UdpSocketHandle(
+	    UdpSocketHandle::UdpSocketHandle(
 	      RTC::PortManager::BindUdp(ip, minPort, maxPort, flags, portRangeKey)),
 	    listener(listener),
-	    shared(shared)
+	    shared(shared),
+	    announcedAddress(announcedAddress),
+	    portRangeKey(portRangeKey)
 	{
 		MS_TRACE();
-
-		this->portRangeKey = portRangeKey;
 	}
 
 	UdpSocket::~UdpSocket()
@@ -55,7 +56,7 @@ namespace RTC
 	}
 
 	void UdpSocket::UserOnUdpDatagramReceived(
-	  const uint8_t* data, size_t len, size_t bufferLen, const struct sockaddr* addr)
+	  const uint8_t* data, size_t len, size_t bufferLen, const sockaddr* addr)
 	{
 		MS_TRACE();
 

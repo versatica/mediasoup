@@ -104,7 +104,7 @@ namespace RTC
 		std::vector<int64_t> sortedSamples(this->samples);
 		const auto middle = sortedSamples.begin() + (sortedSamples.size() / 2);
 
-		std::nth_element(sortedSamples.begin(), middle, sortedSamples.end());
+		std::ranges::nth_element(sortedSamples, middle);
 
 		this->offsetUs = *middle;
 	}

@@ -6,6 +6,7 @@
 
 /* Class variables. */
 
+// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 const uint64_t Logger::Pid{ static_cast<uint64_t>(uv_os_getpid()) };
 thread_local Channel::ChannelSocket* Logger::channel{ nullptr };
 thread_local char Logger::buffer[Logger::BufferSize];

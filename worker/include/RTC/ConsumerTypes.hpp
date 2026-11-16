@@ -19,9 +19,10 @@ namespace RTC
 			}
 
 			VideoLayers(const VideoLayers& other) = default;
+
 			bool operator==(const VideoLayers& other) const
 			{
-				return spatial == other.spatial && temporal == other.temporal;
+				return this->spatial == other.spatial && this->temporal == other.temporal;
 			}
 
 			bool operator!=(const VideoLayers& other) const
@@ -31,8 +32,8 @@ namespace RTC
 
 			void Reset()
 			{
-				spatial  = -1;
-				temporal = -1;
+				this->spatial  = -1;
+				this->temporal = -1;
 			}
 		};
 	} // namespace ConsumerTypes

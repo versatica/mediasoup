@@ -8,11 +8,9 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpRtxParameters::RtpRtxParameters(const FBS::RtpParameters::Rtx* data)
+	RtpRtxParameters::RtpRtxParameters(const FBS::RtpParameters::Rtx* data) : ssrc(data->ssrc())
 	{
 		MS_TRACE();
-
-		this->ssrc = data->ssrc();
 	}
 
 	flatbuffers::Offset<FBS::RtpParameters::Rtx> RtpRtxParameters::FillBuffer(

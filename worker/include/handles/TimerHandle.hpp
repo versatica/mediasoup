@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
 #include <uv.h>
+#include <string>
 
 // Forward declaration.
 class Shared;

@@ -18,7 +18,7 @@ namespace RTC
 		RtpStream::RtpStream(
 		  RTP::RtpStream::Listener* listener,
 		  SharedInterface* shared,
-		  RTP::RtpStream::Params& params,
+		  const RTP::RtpStream::Params& params,
 		  uint8_t initialScore)
 		  : listener(listener), shared(shared), params(params), score(initialScore)
 		{

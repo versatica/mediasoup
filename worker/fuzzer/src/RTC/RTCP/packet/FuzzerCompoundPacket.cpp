@@ -30,14 +30,17 @@
 #include "fuzzer/include/RTC/RTCP/packet/FuzzerUnknownTransportLayerFeedbackPacket.hpp"
 #include "fuzzer/include/RTC/RTCP/packet/FuzzerXrPacket.hpp"
 
-namespace
-{
-	thread_local uint8_t CompoundPacketSerializeBuffer[65536];
-	thread_local uint8_t CompoundPacketCloneBuffer[65536];
-} // namespace
-
 void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 {
+	static thread_local uint8_t serializeBuffer[65536];
+	static thread_local uint8_t cloneBuffer[65536];
+
+	// NOTE: The packet is serialized and cloned into buffers of that same length.
+	if (len > sizeof(serializeBuffer))
+	{
+		return;
+	}
+
 	const auto fuzzPackets = [](const RTC::RTCP::CompoundPacket* compoundPacket) -> void
 	{
 		compoundPacket->HasPackets();
@@ -248,18 +251,18 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 
 	fuzzPackets(compoundPacket.get());
 
-	compoundPacket->Serialize(CompoundPacketSerializeBuffer, len);
+	compoundPacket->Serialize(serializeBuffer, len);
 
 	fuzzPackets(compoundPacket.get());
 
 	const std::unique_ptr<RTC::RTCP::CompoundPacket> clonedCompoundPacket{ compoundPacket->Clone(
-		CompoundPacketCloneBuffer, len) };
+		cloneBuffer, len) };
 
 	compoundPacket.reset();
 
 	fuzzPackets(clonedCompoundPacket.get());
 
-	clonedCompoundPacket->Serialize(CompoundPacketSerializeBuffer, len);
+	clonedCompoundPacket->Serialize(serializeBuffer, len);
 
 	fuzzPackets(clonedCompoundPacket.get());
 }

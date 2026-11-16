@@ -15,28 +15,24 @@ namespace RTC
 
 		std::vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>> parameters;
 
-		for (const auto& kv : this->mapKeyValues)
+		for (const auto& [key, value] : this->mapKeyValues)
 		{
-			const auto& key   = kv.first;
-			const auto& value = kv.second;
-
-			flatbuffers::Offset<FBS::RtpParameters::Parameter> parameter;
-
 			switch (value.type)
 			{
 				case Value::Type::BOOLEAN:
 				{
-					auto valueOffset = FBS::RtpParameters::CreateBoolean(builder, value.booleanValue);
+					const auto valueOffset = FBS::RtpParameters::CreateBoolean(builder, value.booleanValue);
 
-					parameter = FBS::RtpParameters::CreateParameterDirect(
-					  builder, key.c_str(), FBS::RtpParameters::Value::Boolean, valueOffset.Union());
+					parameters.emplace_back(
+					  FBS::RtpParameters::CreateParameterDirect(
+					    builder, key.c_str(), FBS::RtpParameters::Value::Boolean, valueOffset.Union()));
 
 					break;
 				}
 
 				case Value::Type::INTEGER:
 				{
-					auto valueOffset = FBS::RtpParameters::CreateInteger32(builder, value.integerValue);
+					const auto valueOffset = FBS::RtpParameters::CreateInteger32(builder, value.integerValue);
 
 					parameters.emplace_back(
 					  FBS::RtpParameters::CreateParameterDirect(
@@ -47,7 +43,7 @@ namespace RTC
 
 				case Value::Type::DOUBLE:
 				{
-					auto valueOffset = FBS::RtpParameters::CreateDouble(builder, value.doubleValue);
+					const auto valueOffset = FBS::RtpParameters::CreateDouble(builder, value.doubleValue);
 
 					parameters.emplace_back(
 					  FBS::RtpParameters::CreateParameterDirect(
@@ -58,7 +54,7 @@ namespace RTC
 
 				case Value::Type::STRING:
 				{
-					auto valueOffset =
+					const auto valueOffset =
 					  FBS::RtpParameters::CreateStringDirect(builder, value.stringValue.c_str());
 
 					parameters.emplace_back(
@@ -70,7 +66,7 @@ namespace RTC
 
 				case Value::Type::ARRAY_OF_INTEGERS:
 				{
-					auto valueOffset = FBS::RtpParameters::CreateInteger32ArrayDirect(
+					const auto valueOffset = FBS::RtpParameters::CreateInteger32ArrayDirect(
 					  builder, std::addressof(value.arrayOfIntegers));
 
 					parameters.emplace_back(
@@ -125,7 +121,13 @@ namespace RTC
 
 				case FBS::RtpParameters::Value::Integer32Array:
 				{
-					this->mapKeyValues.emplace(key, Value(parameter->value_as_Integer32Array()->value()));
+					const auto* const arrayOfIntegers = parameter->value_as_Integer32Array()->value();
+
+					this->mapKeyValues.emplace(
+					  key,
+					  Value(
+					    arrayOfIntegers ? std::vector<int32_t>(arrayOfIntegers->begin(), arrayOfIntegers->end())
+							                : std::vector<int32_t>()));
 
 					break;
 				}
@@ -139,7 +141,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -155,7 +157,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -171,7 +173,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -187,7 +189,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -203,7 +205,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -219,7 +221,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -235,7 +237,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
 		{
@@ -252,7 +254,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
@@ -265,7 +267,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
@@ -278,7 +280,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
@@ -291,7 +293,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
@@ -304,7 +306,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapKeyValues.find(key);
+		const auto it = this->mapKeyValues.find(key);
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 

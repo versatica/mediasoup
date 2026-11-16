@@ -35,6 +35,7 @@ namespace RTC
 			virtual void OnProducerStreamManagerScore() = 0;
 		};
 
+	public:
 		struct RtpPacketProcessResult
 		{
 			enum class Type : uint8_t
@@ -60,7 +61,7 @@ namespace RTC
 			 * How the payload descriptor handler rewrote the packet for this
 			 * Consumer, so that its retransmissions are rewritten the very same way.
 			 */
-			std::unique_ptr<RTC::RTP::Codecs::PayloadDescriptor::Encoder> encoder{ nullptr };
+			std::unique_ptr<RTC::RTP::Codecs::PayloadDescriptor::Encoder> encoder;
 		};
 
 	public:
@@ -108,26 +109,23 @@ namespace RTC
 			return this->preferredLayers;
 		}
 
-		void SetPreferredLayers(const RTC::ConsumerTypes::VideoLayers& layers)
-		{
-			this->preferredLayers = layers;
-		}
+		void SetPreferredLayers(const RTC::ConsumerTypes::VideoLayers& layers);
 
 		virtual void ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
 
 		virtual void ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
 
 		virtual void ProducerRtpStreamScore(
-		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) = 0;
+		  const RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) = 0;
 
-		virtual void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
+		virtual void ProducerRtcpSenderReport(const RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
 
 		/**
 		 * Only spatial layers within a same RTP stream can start or stop separately,
 		 * so just SVC cares about this.
 		 */
 		virtual void ProducerSpatialLayerActivityChanged(
-		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive);
+		  const RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive);
 
 		/**
 		 * Tell whether a bitrate allocation is running for this Transport, which is
@@ -137,10 +135,7 @@ namespace RTC
 		 * - While it is false there is nobody to ask for bitrate, so this one
 		 *   applies what it works out and tells the Transport nothing.
 		 */
-		void SetBweManaged(bool bweManaged)
-		{
-			this->bweManaged = bweManaged;
-		}
+		void SetBweManaged(bool bweManaged);
 
 		/**
 		 * The points this one may run at right now and which of them it is
@@ -174,6 +169,7 @@ namespace RTC
 		virtual void RequestKeyFrameForCurrentSpatialLayer() = 0;
 
 		virtual void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer) = 0;
+
 		virtual bool RecalculateTargetLayers(RTC::ConsumerTypes::VideoLayers& newTargetLayers) const = 0;
 
 		void MayChangeLayers();

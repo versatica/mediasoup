@@ -170,7 +170,7 @@ namespace RTC
 			RtpStreamRecv(
 			  RTP::RtpStreamRecv::Listener* listener,
 			  SharedInterface* shared,
-			  RTP::RtpStream::Params& params,
+			  const RTP::RtpStream::Params& params,
 			  int64_t sendNackDelayMs,
 			  bool useRtpInactivityCheck);
 

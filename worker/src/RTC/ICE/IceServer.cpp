@@ -3,7 +3,6 @@
 
 #include "RTC/ICE/IceServer.hpp"
 #include "Logger.hpp"
-#include <string_view>
 
 namespace RTC
 {
@@ -20,7 +19,8 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		ankerl::unordered_dense::map<IceServer::IceState, std::string> IceServer::iceStateToString =
+		// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
+		const ankerl::unordered_dense::map<IceServer::IceState, std::string> IceServer::IceState2String =
 		{
 			{ IceServer::IceState::NEW,          "new"          },
 			{ IceServer::IceState::CONNECTED,    "connected"    },
@@ -35,7 +35,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			return IceServer::iceStateToString.at(iceState);
+			return IceServer::IceState2String.at(iceState);
 		}
 
 		FBS::WebRtcTransport::IceState IceServer::IceStateToFbs(IceServer::IceState state)
@@ -116,33 +116,20 @@ namespace RTC
 			// Here we must notify the listener about the removal of current
 			// usernameFragments (and also the old one if any) and all tuples.
 
-			this->listener->OnIceServerLocalUsernameFragmentRemoved(this, usernameFragment);
+			this->listener->OnIceServerLocalUsernameFragmentRemoved(this, this->usernameFragment);
 
 			if (!this->oldUsernameFragment.empty())
 			{
 				this->listener->OnIceServerLocalUsernameFragmentRemoved(this, this->oldUsernameFragment);
 			}
 
-			// Clear all tuples.
+			// Notify the listener about the removal of all tuples.
 			this->isRemovingTuples = true;
 
-			for (const auto& it : this->tuples)
+			for (auto& storedTuple : this->tuples)
 			{
-				auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
-
-				// Notify the listener.
-				this->listener->OnIceServerTupleRemoved(this, storedTuple);
+				this->listener->OnIceServerTupleRemoved(this, std::addressof(storedTuple));
 			}
-
-			this->isRemovingTuples = false;
-
-			// Clear all tuples.
-			// NOTE: Do it after notifying the listener since the listener may need to
-			// use/read the tuple being removed so we cannot free it yet.
-			this->tuples.clear();
-
-			// Unset selected tuple.
-			this->selectedTuple = nullptr;
 		}
 
 		void IceServer::Dump(int indentation) const
@@ -262,7 +249,7 @@ namespace RTC
 
 			for (; it != this->tuples.end(); ++it)
 			{
-				RTC::TransportTuple* storedTuple = std::addressof(*it);
+				RTC::TransportTuple* const storedTuple = std::addressof(*it);
 
 				if (storedTuple->Compare(tuple))
 				{
@@ -328,6 +315,29 @@ namespace RTC
 			}
 		}
 
+		void IceServer::MayForceSelectedTuple(const RTC::TransportTuple* tuple)
+		{
+			MS_TRACE();
+
+			if (this->state != IceState::CONNECTED && this->state != IceState::COMPLETED)
+			{
+				MS_WARN_TAG(ice, "cannot force selected tuple if not in state 'connected' or 'completed'");
+
+				return;
+			}
+
+			auto* const storedTuple = HasTuple(tuple);
+
+			if (!storedTuple)
+			{
+				MS_WARN_TAG(ice, "cannot force selected tuple if the given tuple was not already a valid one");
+
+				return;
+			}
+
+			SetSelectedTuple(storedTuple);
+		}
+
 		void IceServer::ProcessStunRequest(const RTC::ICE::StunPacket* request, RTC::TransportTuple* tuple)
 		{
 			MS_TRACE();
@@ -343,14 +353,7 @@ namespace RTC
 				  static_cast<unsigned int>(request->GetMethod()));
 
 				// Reply 400.
-				auto* response = request->CreateErrorResponse(
-				  StunResponseFactoryBuffer, sizeof(StunResponseFactoryBuffer), 400, "unknown method");
-
-				response->Protect();
-
-				this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-				delete response;
+				SendStunErrorResponse(request, tuple, 400, "unknown method");
 
 				return;
 			}
@@ -361,17 +364,8 @@ namespace RTC
 				MS_WARN_TAG(ice, "STUN Binding request without FINGERPRINT attribute => 400");
 
 				// Reply 400.
-				auto* response = request->CreateErrorResponse(
-				  StunResponseFactoryBuffer,
-				  sizeof(StunResponseFactoryBuffer),
-				  400,
-				  "missing FINGERPRINT attribute in STUN Binding request");
-
-				response->Protect();
-
-				this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-				delete response;
+				SendStunErrorResponse(
+				  request, tuple, 400, "missing FINGERPRINT attribute in STUN Binding request");
 
 				return;
 			}
@@ -382,17 +376,8 @@ namespace RTC
 				MS_WARN_TAG(ice, "STUN Binding request without PRIORITY attribute => 400");
 
 				// Reply 400.
-				auto* response = request->CreateErrorResponse(
-				  StunResponseFactoryBuffer,
-				  sizeof(StunResponseFactoryBuffer),
-				  400,
-				  "missing PRIORITY attribute in STUN Binding request");
-
-				response->Protect();
-
-				this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-				delete response;
+				SendStunErrorResponse(
+				  request, tuple, 400, "missing PRIORITY attribute in STUN Binding request");
 
 				return;
 			}
@@ -433,17 +418,7 @@ namespace RTC
 					MS_WARN_TAG(ice, "wrong authentication in STUN Binding request => 401");
 
 					// Reply 401.
-					auto* response = request->CreateErrorResponse(
-					  StunResponseFactoryBuffer,
-					  sizeof(StunResponseFactoryBuffer),
-					  401,
-					  "wrong authentication in STUN Binding request");
-
-					response->Protect();
-
-					this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-					delete response;
+					SendStunErrorResponse(request, tuple, 401, "wrong authentication in STUN Binding request");
 
 					return;
 				}
@@ -453,39 +428,21 @@ namespace RTC
 					MS_WARN_TAG(ice, "cannot check authentication in STUN Binding request => 400");
 
 					// Reply 400.
-					auto* response = request->CreateErrorResponse(
-					  StunResponseFactoryBuffer,
-					  sizeof(StunResponseFactoryBuffer),
-					  400,
-					  "cannot check authentication in STUN Binding request");
-
-					response->Protect();
-
-					this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-					delete response;
+					SendStunErrorResponse(
+					  request, tuple, 400, "cannot check authentication in STUN Binding request");
 
 					return;
 				}
 			}
 
 			// The remote peer must be ICE controlling.
-			if (request->GetIceControlled())
+			if (request->HasAttribute(StunPacket::AttributeType::ICE_CONTROLLED))
 			{
 				MS_WARN_TAG(ice, "peer indicates ICE-CONTROLLED in STUN Binding request => 487");
 
 				// Reply 487 (Role Conflict).
-				auto* response = request->CreateErrorResponse(
-				  StunResponseFactoryBuffer,
-				  sizeof(StunResponseFactoryBuffer),
-				  487,
-				  "invalid ICE-CONTROLLED attribute in STUN Binding request");
-
-				response->Protect();
-
-				this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-				delete response;
+				SendStunErrorResponse(
+				  request, tuple, 487, "invalid ICE-CONTROLLED attribute in STUN Binding request");
 
 				return;
 			}
@@ -496,8 +453,8 @@ namespace RTC
 			  request->HasAttribute(RTC::ICE::StunPacket::AttributeType::USE_CANDIDATE) ? "true" : "false");
 
 			// Create a success response.
-			auto* response =
-			  request->CreateSuccessResponse(StunResponseFactoryBuffer, sizeof(StunResponseFactoryBuffer));
+			const std::unique_ptr<RTC::ICE::StunPacket> response{ request->CreateSuccessResponse(
+				StunResponseFactoryBuffer, sizeof(StunResponseFactoryBuffer)) };
 
 			// Add XOR-MAPPED-ADDRESS.
 			response->AddXorMappedAddress(tuple->GetRemoteAddress());
@@ -511,9 +468,7 @@ namespace RTC
 				response->Protect(this->oldPassword);
 			}
 
-			this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-			delete response;
+			this->listener->OnIceServerSendStunPacket(this, response.get(), tuple);
 
 			// Handle the tuple.
 			HandleTuple(
@@ -544,7 +499,7 @@ namespace RTC
 
 			MS_DEBUG_DEV("STUN indication received, ignored");
 
-			// Nothig else to do. We just ignore STUN indications.
+			// Nothing else to do. We just ignore STUN indications.
 		}
 
 		void IceServer::ProcessStunResponse(const RTC::ICE::StunPacket* response)
@@ -559,7 +514,7 @@ namespace RTC
 			{
 // For debugging purposes.
 #if MS_LOG_DEV_LEVEL == 3
-				static thread_local std::string_view errorReasonPhrase;
+				std::string_view errorReasonPhrase;
 
 				const uint16_t errorCode = response->GetErrorCode(errorReasonPhrase);
 
@@ -571,31 +526,24 @@ namespace RTC
 #endif
 			}
 
-			// Nothig else to do. We just ignore STUN responses because we do not
+			// Nothing else to do. We just ignore STUN responses because we do not
 			// generate STUN requests.
 		}
 
-		void IceServer::MayForceSelectedTuple(const RTC::TransportTuple* tuple)
+		void IceServer::SendStunErrorResponse(
+		  const RTC::ICE::StunPacket* request,
+		  RTC::TransportTuple* tuple,
+		  uint16_t errorCode,
+		  std::string_view reasonPhrase)
 		{
 			MS_TRACE();
 
-			if (this->state != IceState::CONNECTED && this->state != IceState::COMPLETED)
-			{
-				MS_WARN_TAG(ice, "cannot force selected tuple if not in state 'connected' or 'completed'");
+			const std::unique_ptr<RTC::ICE::StunPacket> response{ request->CreateErrorResponse(
+				StunResponseFactoryBuffer, sizeof(StunResponseFactoryBuffer), errorCode, reasonPhrase) };
 
-				return;
-			}
+			response->Protect();
 
-			auto* storedTuple = HasTuple(tuple);
-
-			if (!storedTuple)
-			{
-				MS_WARN_TAG(ice, "cannot force selected tuple if the given tuple was not already a valid one");
-
-				return;
-			}
-
-			SetSelectedTuple(storedTuple);
+			this->listener->OnIceServerSendStunPacket(this, response.get(), tuple);
 		}
 
 		void IceServer::HandleTuple(
@@ -621,7 +569,7 @@ namespace RTC
 						  nomination);
 
 						// Store the tuple.
-						auto* storedTuple = AddTuple(tuple);
+						auto* const storedTuple = AddTuple(tuple);
 
 						// Update state.
 						this->state = IceState::CONNECTED;
@@ -635,7 +583,7 @@ namespace RTC
 					else
 					{
 						// Store the tuple.
-						auto* storedTuple          = AddTuple(tuple);
+						auto* const storedTuple    = AddTuple(tuple);
 						const auto isNewNomination = hasNomination && nomination > this->remoteNomination;
 
 						if (isNewNomination || !hasNomination)
@@ -684,7 +632,7 @@ namespace RTC
 						  nomination);
 
 						// Store the tuple.
-						auto* storedTuple = AddTuple(tuple);
+						auto* const storedTuple = AddTuple(tuple);
 
 						// Update state.
 						this->state = IceState::CONNECTED;
@@ -698,7 +646,7 @@ namespace RTC
 					else
 					{
 						// Store the tuple.
-						auto* storedTuple          = AddTuple(tuple);
+						auto* const storedTuple    = AddTuple(tuple);
 						const auto isNewNomination = hasNomination && nomination > this->remoteNomination;
 
 						if (isNewNomination || !hasNomination)
@@ -746,20 +694,20 @@ namespace RTC
 					}
 					else
 					{
-						MS_DEBUG_TAG(
-						  ice,
-						  "transition from state 'connected' to 'completed' [hasUseCandidate:%s, hasNomination:%s, nomination:%" PRIu32
-						  "]",
-						  hasUseCandidate ? "true" : "false",
-						  hasNomination ? "true" : "false",
-						  nomination);
-
 						// Store the tuple.
-						auto* storedTuple          = AddTuple(tuple);
+						auto* const storedTuple    = AddTuple(tuple);
 						const auto isNewNomination = hasNomination && nomination > this->remoteNomination;
 
 						if (isNewNomination || !hasNomination)
 						{
+							MS_DEBUG_TAG(
+							  ice,
+							  "transition from state 'connected' to 'completed' [hasUseCandidate:%s, hasNomination:%s, nomination:%" PRIu32
+							  "]",
+							  hasUseCandidate ? "true" : "false",
+							  hasNomination ? "true" : "false",
+							  nomination);
+
 							// Update state.
 							this->state = IceState::COMPLETED;
 
@@ -796,12 +744,14 @@ namespace RTC
 					else
 					{
 						// Store the tuple.
-						auto* storedTuple          = AddTuple(tuple);
+						auto* const storedTuple    = AddTuple(tuple);
 						const auto isNewNomination = hasNomination && nomination > this->remoteNomination;
 
-						// When in completed state, update selected tuple if there is ICE
-						// nomination or useCandidate.
-						if (isNewNomination || hasUseCandidate)
+						// When in completed state, update selected tuple if there is a new
+						// ICE nomination, or useCandidate without nomination. A nomination
+						// not higher than the current one is ignored even if useCandidate is
+						// present.
+						if (isNewNomination || (hasUseCandidate && !hasNomination))
 						{
 							// Mark it as selected tuple.
 							SetSelectedTuple(storedTuple);
@@ -850,7 +800,7 @@ namespace RTC
 			// Don't allow more than MaxTuples.
 			if (this->tuples.size() > MaxTuples)
 			{
-				MS_WARN_TAG(ice, "too too many tuples, removing the oldest non selected one");
+				MS_WARN_TAG(ice, "too many tuples, removing the oldest non selected one");
 
 				// Find the oldest tuple which is neither the added one nor the selected
 				// one (if any), and remove it.
@@ -859,7 +809,7 @@ namespace RTC
 
 				for (; it != this->tuples.rend(); ++it)
 				{
-					RTC::TransportTuple* otherStoredTuple = std::addressof(*it);
+					RTC::TransportTuple* const otherStoredTuple = std::addressof(*it);
 
 					if (otherStoredTuple != storedTuple && otherStoredTuple != this->selectedTuple)
 					{
@@ -900,9 +850,9 @@ namespace RTC
 			}
 
 			// Otherwise check other stored tuples.
-			for (const auto& it : this->tuples)
+			for (const auto& entry : this->tuples)
 			{
-				auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
+				auto* const storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(entry));
 
 				if (storedTuple->Compare(tuple))
 				{
@@ -995,12 +945,10 @@ namespace RTC
 				// Clear all tuples.
 				this->isRemovingTuples = true;
 
-				for (const auto& it : this->tuples)
+				for (auto& storedTuple : this->tuples)
 				{
-					auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
-
 					// Notify the listener.
-					this->listener->OnIceServerTupleRemoved(this, storedTuple);
+					this->listener->OnIceServerTupleRemoved(this, std::addressof(storedTuple));
 				}
 
 				this->isRemovingTuples = false;

@@ -4,7 +4,7 @@
 #include "RTC/RtpListener.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/Producer.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -20,8 +20,8 @@ namespace RTC
 
 		for (const auto& kv : this->ssrcTable)
 		{
-			auto ssrc      = kv.first;
-			auto* producer = kv.second;
+			const auto ssrc      = kv.first;
+			const auto* producer = kv.second;
 
 			ssrcTable.emplace_back(
 			  FBS::Common::CreateUint32StringDirect(builder, ssrc, producer->id.c_str()));
@@ -32,8 +32,8 @@ namespace RTC
 
 		for (const auto& kv : this->midTable)
 		{
-			const auto& mid = kv.first;
-			auto* producer  = kv.second;
+			const auto& mid      = kv.first;
+			const auto* producer = kv.second;
 
 			midTable.emplace_back(
 			  FBS::Common::CreateStringStringDirect(builder, mid.c_str(), producer->id.c_str()));
@@ -44,8 +44,8 @@ namespace RTC
 
 		for (const auto& kv : this->ridTable)
 		{
-			const auto& rid = kv.first;
-			auto* producer  = kv.second;
+			const auto& rid      = kv.first;
+			const auto* producer = kv.second;
 
 			ridTable.emplace_back(
 			  FBS::Common::CreateStringStringDirect(builder, rid.c_str(), producer->id.c_str()));
@@ -201,7 +201,7 @@ namespace RTC
 
 			if (it != this->ssrcTable.end())
 			{
-				auto* producer = it->second;
+				auto* const producer = it->second;
 
 				return producer;
 			}
@@ -220,7 +220,7 @@ namespace RTC
 
 			if (it != this->midTable.end())
 			{
-				auto* producer = it->second;
+				auto* const producer = it->second;
 
 				// Fill the ssrc table.
 
@@ -244,7 +244,7 @@ namespace RTC
 
 			if (it != this->ridTable.end())
 			{
-				auto* producer = it->second;
+				auto* const producer = it->second;
 
 				// Fill the ssrc table.
 
@@ -272,7 +272,7 @@ namespace RTC
 
 		if (it != this->ssrcTable.end())
 		{
-			auto* producer = it->second;
+			auto* const producer = it->second;
 
 			return producer;
 		}

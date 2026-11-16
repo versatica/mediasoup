@@ -3,6 +3,7 @@
 
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
+#include "FBS/message.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <ankerl/unordered_dense.h>
@@ -12,6 +13,7 @@ namespace Channel
 	/* Static. */
 
 	// clang-format off
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	static const ankerl::unordered_dense::map<FBS::Request::Method, const char*> Method2String =
 	{
 		{ FBS::Request::Method::WORKER_DUMP,                                    "worker.dump"                                },
@@ -87,6 +89,7 @@ namespace Channel
 
 	/* Class variables. */
 
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	thread_local flatbuffers::FlatBufferBuilder ChannelRequest::bufferBuilder{};
 
 	/* Instance methods. */
@@ -95,7 +98,11 @@ namespace Channel
 	 * `request` contains the request flatbuffer.
 	 */
 	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, const FBS::Request::Request* request)
-	  : channel(channel), data(request), id(request->id()), method(request->method())
+	  : channel(channel),
+	    data(request),
+	    id(request->id()),
+	    method(request->method()),
+	    handlerId(request->handlerId()->str())
 	{
 		MS_TRACE();
 
@@ -109,7 +116,6 @@ namespace Channel
 		}
 
 		this->methodCStr = methodCStrIt->second;
-		this->handlerId  = this->data->handlerId()->str();
 	}
 
 	void ChannelRequest::Accept()
@@ -124,6 +130,21 @@ namespace Channel
 
 		const auto response =
 		  FBS::Response::CreateResponse(builder, this->id, true, FBS::Response::Body::NONE, 0);
+
+		SendResponse(response);
+	}
+
+	void ChannelRequest::Accept(FBS::Response::Body type, flatbuffers::Offset<void> body)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(!this->replied, "request already replied");
+
+		this->replied = true;
+
+		auto& builder = ChannelRequest::bufferBuilder;
+
+		const auto response = FBS::Response::CreateResponse(builder, this->id, true, type, body);
 
 		SendResponse(response);
 	}

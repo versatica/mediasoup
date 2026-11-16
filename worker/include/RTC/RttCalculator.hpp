@@ -63,7 +63,8 @@ namespace RTC
 
 		~RttCalculator() override = default;
 
-		RttCalculator(const RttCalculator&)            = delete;
+		RttCalculator(const RttCalculator&) = delete;
+
 		RttCalculator& operator=(const RttCalculator&) = delete;
 
 		/**

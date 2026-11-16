@@ -3,6 +3,10 @@
 
 #include "RTC/NackGenerator.hpp"
 #include "Logger.hpp"
+#if MS_LOG_DEV_LEVEL == 3
+#include <iterator> // std::ostream_iterator
+#include <sstream>  // std::ostringstream
+#endif
 
 namespace RTC
 {
@@ -176,7 +180,7 @@ namespace RTC
 		// libwebrtc may use RTX for probation and such packets may contain
 		// RTX-encoded real RTP packets that were sent before but didn't arrive yet
 		// to us or they were lost. Let's deal with them as normal packets.
-		return isRecovered ? true : false;
+		return isRecovered;
 	}
 
 	void NackGenerator::AddPacketsToNackList(uint16_t seqStart, uint16_t seqEnd)
@@ -217,6 +221,7 @@ namespace RTC
 				}
 
 				this->nackList.clear();
+
 				this->listener->OnNackGeneratorKeyFrameRequired();
 
 				return;
@@ -283,14 +288,16 @@ namespace RTC
 		MS_TRACE();
 
 		const int64_t nowMs = this->shared->GetTimeMs();
+
 		std::vector<uint16_t> nackBatch;
 
 		auto it = this->nackList.begin();
 
 		while (it != this->nackList.end())
 		{
-			auto& nackInfo     = it->second;
-			const uint16_t seq = nackInfo.seq;
+			auto& nackInfo = it->second;
+
+			const auto seq = nackInfo.seq;
 
 			if (this->sendNackDelayMs > 0 && nowMs - nackInfo.createdAtMs < this->sendNackDelayMs)
 			{
@@ -365,6 +372,7 @@ namespace RTC
 		if (!nackBatch.empty())
 		{
 			std::ostringstream seqsStream;
+
 			std::ranges::copy(
 			  nackBatch.begin(), nackBatch.end() - 1, std::ostream_iterator<uint32_t>(seqsStream, ","));
 			seqsStream << nackBatch.back();
@@ -381,6 +389,13 @@ namespace RTC
 #endif
 
 		return nackBatch;
+	}
+
+	void NackGenerator::UpdateRttMs(int64_t rttMs)
+	{
+		MS_TRACE();
+
+		this->rttMs = rttMs;
 	}
 
 	void NackGenerator::Reset()

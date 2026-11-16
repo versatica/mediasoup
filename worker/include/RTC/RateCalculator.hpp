@@ -22,6 +22,11 @@ namespace RTC
 	 */
 	class RateCalculator
 	{
+	public:
+		static constexpr int64_t DefaultWindowSizeMs{ 1000 };
+		static constexpr float DefaultBpsScale{ 8000.0F };
+		static constexpr uint16_t DefaultWindowItems{ 100 };
+
 	private:
 		struct Item
 		{
@@ -34,11 +39,6 @@ namespace RTC
 			 */
 			uint64_t samples{ 0 };
 		};
-
-	public:
-		static constexpr int64_t DefaultWindowSizeMs{ 1000 };
-		static constexpr float DefaultBpsScale{ 8000.0f };
-		static constexpr uint16_t DefaultWindowItems{ 100 };
 
 	public:
 		explicit RateCalculator(
@@ -94,15 +94,15 @@ namespace RTC
 
 	private:
 		// Window size (in milliseconds). Always >= 1.
-		int64_t windowSizeMs{ DefaultWindowSizeMs };
+		int64_t windowSizeMs;
 		// Item size (in milliseconds). Always >= 1.
-		int64_t itemSizeMs{ 1 };
+		int64_t itemSizeMs;
 		// Factor the in-window count is multiplied by before being divided by the
 		// period it spans.
-		double scale{ 0.0 };
+		double scale;
 		// How long after a sample the next one still counts as the same stretch of
 		// traffic (in milliseconds). Derived from the window size.
-		int64_t recentSampleMarginMs{ 0 };
+		int64_t recentSampleMarginMs;
 		// Ring of items. Never empty, and always long enough to cover the whole
 		// window.
 		std::vector<Item> buffer;

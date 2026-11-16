@@ -544,15 +544,13 @@ namespace RTC
 
 // For debugging purposes.
 #if MS_LOG_DEV_LEVEL == 3
-			const auto* packet = RTC::SCTP::Packet::Parse(data, len);
+			const std::unique_ptr<const RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Parse(data, len) };
 
 			if (packet)
 			{
 				MS_DUMP("<<< received SCTP packet:");
 
 				packet->Dump();
-
-				delete packet;
 			}
 			else
 			{

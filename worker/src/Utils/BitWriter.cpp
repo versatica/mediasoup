@@ -32,7 +32,7 @@ namespace Utils
 
 		if (bit)
 		{
-			this->data[byteOffset] |= (1 << (7 - (this->offset & 0x7)));
+			this->data[byteOffset] |= static_cast<uint8_t>(1 << (7 - (this->offset & 0x7)));
 		}
 
 		++this->offset;

@@ -24,7 +24,7 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	// below will try to write into packet memory.
 	//
 	// NOTE: Let's make the buffer bigger to test API that increases packet size.
-	const std::unique_ptr<uint8_t[]> buffer(new uint8_t[len + 512]);
+	const auto buffer = std::make_unique<uint8_t[]>(len + 512);
 
 	packet->Serialize(buffer.get(), len + 512);
 
@@ -70,16 +70,16 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasOneByteExtensions();
 	packet->HasTwoBytesExtensions();
 
-	RTC::RTP::HeaderExtensionIds headerExtensionIds{};
-
-	headerExtensionIds.mid               = 5;
-	headerExtensionIds.rid               = 6;
-	headerExtensionIds.absSendTime       = 3;
-	headerExtensionIds.transportWideCc01 = 4;
-	headerExtensionIds.ssrcAudioLevel    = 1;
-	headerExtensionIds.videoOrientation  = 2;
-	headerExtensionIds.playoutDelay      = 8;
-	headerExtensionIds.absCaptureTime    = 9;
+	const RTC::RTP::HeaderExtensionIds headerExtensionIds{
+		.mid               = 5,
+		.rid               = 6,
+		.absSendTime       = 3,
+		.transportWideCc01 = 4,
+		.ssrcAudioLevel    = 1,
+		.videoOrientation  = 2,
+		.absCaptureTime    = 9,
+		.playoutDelay      = 8,
+	};
 
 	packet->AssignExtensionIds(headerExtensionIds);
 
@@ -158,8 +158,10 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions));
 	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions));
 
-	uint8_t value3[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
-	                     0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
+	uint8_t value3[] = {
+		0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
+		0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+	};
 
 	extensions.emplace_back(
 	  RTC::RtpHeaderExtensionUri::Type::MID, // type
@@ -238,7 +240,7 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	{
 		0x11, 0x22, 0x33, 0x44,
 		0x55, 0x66, 0x77, 0x88,
-		0x99, 0xAA
+		0x99, 0xAA,
 	};
 	// clang-format on
 
@@ -261,7 +263,7 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	// packet->GetSpatialLayer();
 	// packet->GetTemporalLayer();
 
-	const std::unique_ptr<uint8_t[]> buffer2(new uint8_t[len + 512]);
+	const auto buffer2 = std::make_unique<uint8_t[]>(len + 512);
 
 	packet.reset(packet->Clone(buffer2.get(), len + 512));
 
@@ -276,10 +278,11 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	// the fixed code must return false without writing out of bounds; when it
 	// fits it must succeed. AddressSanitizer will catch any regression here.
 	{
-		constexpr size_t BufferLenght{ 512 };
-		static thread_local uint8_t buffer[BufferLenght];
+		constexpr size_t BufferLength{ 512 };
 
-		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(buffer, BufferLenght) };
+		static thread_local uint8_t buffer[BufferLength];
+
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(buffer, BufferLength) };
 
 		if (!packet)
 		{
@@ -298,18 +301,18 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 				RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
 				static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
 				extenLen,
-				extenValue
-			}
+				extenValue,
+			},
 		};
-		// clang-format off
+		// clang-format on
 
 		static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions));
 
 		// Call UpdateDependencyDescriptor() with the full fuzzer input as
 		// the replacement bytes. This covers:
-		//   len > slotLen  → no OOB write (was the bug).
-		//   len <= slotLen → in-place update.
-		//   len == 0       → must not crash.
+		//   len > slotLen  -> no OOB write (was the bug).
+		//   len <= slotLen -> in-place update.
+		//   len == 0       -> must not crash.
 		packet->UpdateDependencyDescriptor(data, len);
 	}
 }

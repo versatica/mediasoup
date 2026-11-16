@@ -27,21 +27,28 @@ namespace RTC
 
 	public:
 		static void ClassInit();
+
 		static FBS::SrtpParameters::SrtpCryptoSuite CryptoSuiteToFbs(CryptoSuite cryptoSuite);
+
 		static CryptoSuite CryptoSuiteFromFbs(FBS::SrtpParameters::SrtpCryptoSuite cryptoSuite);
 
 	private:
 		static void OnSrtpEvent(srtp_event_data_t* data);
 
 	public:
-		SrtpSession(Type type, CryptoSuite cryptoSuite, uint8_t* key, size_t keyLen);
+		SrtpSession(Type type, CryptoSuite cryptoSuite, const uint8_t* key, size_t keyLen);
+
 		~SrtpSession();
 
 	public:
 		bool EncryptRtp(const uint8_t** data, size_t* len);
+
 		bool DecryptSrtp(uint8_t* data, size_t* len);
+
 		bool EncryptRtcp(const uint8_t** data, size_t* len);
+
 		bool DecryptSrtcp(uint8_t* data, size_t* len);
+
 		void RemoveStream(uint32_t ssrc)
 		{
 			srtp_stream_remove(this->session, htonl(ssrc));

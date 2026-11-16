@@ -22,6 +22,6 @@ namespace Utils
 		MS_ASSERT(
 		  byteOffset < len, "given offset is past the data [offset:%" PRIu32 ", len:%zu]", offset, len);
 
-		return (data[byteOffset] >> (7 - (offset & 0x7))) & 0x1;
+		return static_cast<uint8_t>(data[byteOffset] >> (7 - (offset & 0x7))) & 0x1;
 	}
 } // namespace Utils

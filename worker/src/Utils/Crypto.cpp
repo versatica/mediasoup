@@ -3,8 +3,8 @@
 
 #include "Logger.hpp"
 #include "Utils.hpp"
-#include <openssl/core.h>   // OSSL_PARAM, OSSL_PARAM_UTF8_STRING
-#include <openssl/params.h> // OSSL_PARAM_END
+#include <openssl/core.h>   // OSSL_PARAM
+#include <openssl/params.h> // OSSL_PARAM_construct_utf8_string(), OSSL_PARAM_construct_end()
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 
@@ -23,6 +23,9 @@ namespace Utils
 
 	/* Class variables. */
 
+	// NOTE: Seeded with std::random_device in ClassInit(), before any use. And
+	// its constructor cannot actually throw, since its state is an internal array.
+	// NOLINTNEXTLINE(bugprone-random-generator-seed, bugprone-throwing-static-initialization)
 	thread_local std::mt19937_64 Crypto::rng;
 	thread_local EVP_MAC* Crypto::mac{ nullptr };
 	thread_local EVP_MAC_CTX* Crypto::hmacSha1Ctx{ nullptr };
@@ -52,16 +55,20 @@ namespace Utils
 				crc = (crc >> 1) ^ (polynomial & (0 - (crc & 1)));
 			}
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			tables[0][i] = crc;
 		}
 
 		for (uint32_t i{ 0 }; i < 256; ++i)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			uint32_t crc{ tables[0][i] };
 
 			for (size_t slice{ 1 }; slice < CrcSlices; ++slice)
 			{
-				crc              = tables[0][crc & 0xFF] ^ (crc >> 8);
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+				crc = tables[0][crc & 0xFF] ^ (crc >> 8);
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				tables[slice][i] = crc;
 			}
 		}
@@ -106,8 +113,11 @@ namespace Utils
 
 			const uint32_t next{ Crypto::ReadLe32(data + 4) };
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			crc = tables[7][crc & 0xFF] ^ tables[6][(crc >> 8) & 0xFF] ^ tables[5][(crc >> 16) & 0xFF] ^
+			      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			      tables[4][(crc >> 24) & 0xFF] ^ tables[3][next & 0xFF] ^ tables[2][(next >> 8) & 0xFF] ^
+			      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			      tables[1][(next >> 16) & 0xFF] ^ tables[0][(next >> 24) & 0xFF];
 
 			data += CrcSlices;
@@ -116,6 +126,7 @@ namespace Utils
 
 		while (size-- > 0)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			crc = (crc >> 8) ^ tables[0][(crc ^ *data++) & 0xFF];
 		}
 
@@ -127,13 +138,25 @@ namespace Utils
 		MS_TRACE();
 
 		std::random_device rd;
-		const uint64_t seed = (uint64_t(rd()) << 32) | uint64_t(rd());
+
+		const uint64_t seed = (static_cast<uint64_t>(rd()) << 32) | static_cast<uint64_t>(rd());
 
 		Crypto::rng.seed(seed);
 
 		// Create an OpenSSL HMAC_CTX context for HMAC SHA1 calculation.
-		Crypto::mac         = EVP_MAC_fetch(nullptr, "HMAC", nullptr);
-		Crypto::hmacSha1Ctx = EVP_MAC_CTX_new(mac);
+		Crypto::mac = EVP_MAC_fetch(nullptr, "HMAC", nullptr);
+
+		if (Crypto::mac == nullptr)
+		{
+			MS_ABORT("OpenSSL EVP_MAC_fetch() failed");
+		}
+
+		Crypto::hmacSha1Ctx = EVP_MAC_CTX_new(Crypto::mac);
+
+		if (Crypto::hmacSha1Ctx == nullptr)
+		{
+			MS_ABORT("OpenSSL EVP_MAC_CTX_new() failed");
+		}
 	}
 
 	void Crypto::ClassDestroy()
@@ -157,9 +180,10 @@ namespace Utils
 
 		char buffer[64];
 
-		static constexpr char Chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
-		                                  'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-		                                  'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+		static constexpr char Chars[] = {
+			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+			'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+		};
 
 		len = std::min<size_t>(len, 64);
 
@@ -206,32 +230,32 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		int ret;
-
 		const OSSL_PARAM sha1[] = {
-			{ "digest", OSSL_PARAM_UTF8_STRING, (void*)"sha1", 4, 0 },
-      OSSL_PARAM_END
+			OSSL_PARAM_construct_utf8_string("digest", const_cast<char*>("sha1"), 0),
+			OSSL_PARAM_construct_end(),
 		};
+
+		int ret;
 
 		ret =
 		  EVP_MAC_init(Crypto::hmacSha1Ctx, reinterpret_cast<const unsigned char*>(key), keyLen, sha1);
 
-		MS_ASSERT(ret == 1, "OpenSSL EVP_MAC_init() failed with key '%s'", key);
+		MS_ASSERT(ret == 1, "OpenSSL EVP_MAC_init() failed");
 
 		ret = EVP_MAC_update(Crypto::hmacSha1Ctx, data, len);
 
-		MS_ASSERT(
-		  ret == 1, "OpenSSL EVP_MAC_update() failed with key '%s' and data length %zu bytes", key, len);
+		MS_ASSERT(ret == 1, "OpenSSL EVP_MAC_update() failed");
 
 		size_t resultLen;
 
 		ret = EVP_MAC_final(
 		  Crypto::hmacSha1Ctx, Crypto::hmacSha1Buffer, std::addressof(resultLen), SHA_DIGEST_LENGTH);
 
+		MS_ASSERT(ret == 1, "OpenSSL EVP_MAC_final() failed");
 		MS_ASSERT(
-		  ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes", key, len);
-		MS_ASSERT(
-		  resultLen == SHA_DIGEST_LENGTH, "OpenSSL HMAC_Final() resultLen is %zu instead of 20", resultLen);
+		  resultLen == SHA_DIGEST_LENGTH,
+		  "OpenSSL EVP_MAC_final() resultLen is %zu instead of 20",
+		  resultLen);
 
 		return Crypto::hmacSha1Buffer;
 	}

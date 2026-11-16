@@ -42,7 +42,7 @@ fn create_worker_succeeds() {
 
                 settings.log_level = WorkerLogLevel::Debug;
                 settings.log_tags = vec![WorkerLogTag::Info];
-                settings.rtc_port_range = 0..=9999;
+                settings.rtc_port_range = 1..=9999;
                 settings.dtls_files = Some(WorkerDtlsFiles {
                     certificate: "tests/integration/data/dtls-cert.pem".into(),
                     private_key: "tests/integration/data/dtls-key.pem".into(),

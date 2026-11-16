@@ -22,8 +22,8 @@ namespace Channel
 		const FBS::Notification::Notification* const data;
 		const int64_t receivedAtUs;
 		// Others.
-		const char* eventCStr{ nullptr };
-		std::string handlerId;
+		const char* eventCStr;
+		const std::string handlerId;
 	};
 } // namespace Channel
 

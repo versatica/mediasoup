@@ -8,6 +8,8 @@
 
 /* Static methods for UV callbacks. */
 
+// libuv imposes the callback signature.
+// NOLINTNEXTLINE(misc-const-correctness)
 static void onTimer(uv_timer_t* handle)
 {
 	MS_TRACE();
@@ -129,7 +131,7 @@ void TimerHandle::Stop()
 
 	if (err != 0)
 	{
-		MS_THROW_ERROR("uv_timer_stop() failed: %s", uv_strerror(err));
+		MS_THROW_ERROR("[%s] uv_timer_stop() failed: %s", this->label.c_str(), uv_strerror(err));
 	}
 }
 

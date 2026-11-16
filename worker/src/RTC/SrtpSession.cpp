@@ -6,6 +6,8 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/Consts.hpp"
+#include <cstdlib> // std::abort()
+#include <exception>
 
 namespace RTC
 {
@@ -91,7 +93,11 @@ namespace RTC
 				return SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32;
 			}
 
-				NO_DEFAULT();
+			default:
+			{
+				MS_THROW_TYPE_ERROR(
+				  "invalid SRTP crypto suite [value:%" PRIu8 "]", static_cast<uint8_t>(cryptoSuite));
+			}
 		}
 	}
 
@@ -133,7 +139,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	SrtpSession::SrtpSession(Type type, CryptoSuite cryptoSuite, uint8_t* key, size_t keyLen)
+	SrtpSession::SrtpSession(Type type, CryptoSuite cryptoSuite, const uint8_t* key, size_t keyLen)
 	{
 		MS_TRACE();
 
@@ -291,11 +297,11 @@ namespace RTC
 				{
 					MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
 				}
-				catch (const std::exception&) // NOLINT(bugprone-empty-catch)
+				// NOTE: MS_ABORT() throws in the lib build, and an exception cannot
+				// leave a destructor.
+				catch (const std::exception&)
 				{
-					// NOTE: This is to avoid a warning:
-					// '~SrtpSession' has a non-throwing exception specification but can
-					// still throw [-Wexceptions]
+					std::abort();
 				}
 			}
 		}
@@ -313,8 +319,9 @@ namespace RTC
 			return false;
 		}
 
-		uint8_t* encryptBuffer = EncryptBuffer;
-		size_t encryptLen      = EncryptBufferSize;
+		uint8_t* const encryptBuffer = EncryptBuffer;
+
+		size_t encryptLen = EncryptBufferSize;
 
 		const srtp_err_status_t err = srtp_protect(
 		  /*srtp_t ctx*/ this->session,
@@ -332,7 +339,7 @@ namespace RTC
 		}
 
 		// Update the given data pointer and len.
-		*data = const_cast<const uint8_t*>(encryptBuffer);
+		*data = encryptBuffer;
 		*len  = encryptLen;
 
 		return true;
@@ -376,8 +383,9 @@ namespace RTC
 			return false;
 		}
 
-		uint8_t* encryptBuffer = EncryptBuffer;
-		size_t encryptLen      = EncryptBufferSize;
+		uint8_t* const encryptBuffer = EncryptBuffer;
+
+		size_t encryptLen = EncryptBufferSize;
 
 		const srtp_err_status_t err = srtp_protect_rtcp(
 		  /*srtp_t ctx*/ this->session,
@@ -395,7 +403,7 @@ namespace RTC
 		}
 
 		// Update the given data pointer and len.
-		*data = const_cast<const uint8_t*>(EncryptBuffer);
+		*data = encryptBuffer;
 		*len  = encryptLen;
 
 		return true;

@@ -63,7 +63,7 @@ namespace RTC
 					return nullptr;
 				}
 
-				Packet* packet{ nullptr }; // NOLINT(misc-const-correctness)
+				Packet* packet{ nullptr };
 
 				MS_DEBUG_DEV(
 				  "parsing RTCP packet [ptr:%zu, type:%" PRIu8 " (%s)]",
@@ -325,7 +325,7 @@ namespace RTC
 			// NOTE: It may throw.
 			SetLength(previousLength + packet->GetLength());
 
-			Packet* clonedPacket{ nullptr }; // NOLINT(misc-const-correctness)
+			Packet* clonedPacket{ nullptr };
 
 			try
 			{

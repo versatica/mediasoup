@@ -2,11 +2,14 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/ChannelSocket.hpp"
+#include "FBS/log.h"
+#include "FBS/message.h"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "SharedInterface.hpp"
 #include <cstring> // std::memcpy(), std::memmove()
+#include <exception>
 
 namespace Channel
 {
@@ -15,7 +18,9 @@ namespace Channel
 
 	/* Static methods for UV callbacks. */
 
-	inline static void onAsync(uv_handle_t* handle)
+	// libuv imposes the callback signature.
+	// NOLINTNEXTLINE(misc-const-correctness)
+	inline static void onAsync(uv_async_t* handle)
 	{
 		MS_TRACE_STD();
 
@@ -65,8 +70,7 @@ namespace Channel
 
 		this->uvReadHandle->data = static_cast<void*>(this);
 
-		err =
-		  uv_async_init(DepLibUV::GetLoop(), this->uvReadHandle, reinterpret_cast<uv_async_cb>(onAsync));
+		err = uv_async_init(DepLibUV::GetLoop(), this->uvReadHandle, onAsync);
 
 		if (err != 0)
 		{
@@ -80,7 +84,11 @@ namespace Channel
 
 		if (err != 0)
 		{
-			delete this->uvReadHandle;
+			// NOTE: The handle is already initialized in the loop, so it must be
+			// closed (which deletes it in its close callback) rather than deleted.
+			uv_close(
+			  reinterpret_cast<uv_handle_t*>(this->uvReadHandle), static_cast<uv_close_cb>(onCloseAsync));
+
 			this->uvReadHandle = nullptr;
 
 			MS_THROW_ERROR_STD("uv_async_send() failed: %s", uv_strerror(err));
@@ -227,14 +235,14 @@ namespace Channel
 
 			if (message->data_type() == FBS::Message::Body::Request)
 			{
-				ChannelRequest* request{ nullptr };
+				std::unique_ptr<ChannelRequest> request;
 
 				try
 				{
-					request = new ChannelRequest(this, message->data_as<FBS::Request::Request>());
+					request = std::make_unique<ChannelRequest>(this, message->data_as<FBS::Request::Request>());
 
 					// Notify the listener.
-					this->listener->HandleRequest(request);
+					this->listener->HandleRequest(request.get());
 				}
 				catch (const MediaSoupTypeError& error)
 				{
@@ -257,27 +265,29 @@ namespace Channel
 						request->Error(error.what());
 					}
 				}
-
-				delete request;
+				catch (const std::exception& error)
+				{
+					MS_ABORT("request failed with unexpected error: %s", error.what());
+				}
 			}
 			else if (message->data_type() == FBS::Message::Body::Notification)
 			{
-				ChannelNotification* notification{ nullptr };
-
 				try
 				{
-					notification = new ChannelNotification(
+					const auto notification = std::make_unique<ChannelNotification>(
 					  message->data_as<FBS::Notification::Notification>(), receivedAtUs);
 
 					// Notify the listener.
-					this->listener->HandleNotification(notification);
+					this->listener->HandleNotification(notification.get());
 				}
 				catch (const MediaSoupError& error)
 				{
 					MS_ERROR("notification failed: %s", error.what());
 				}
-
-				delete notification;
+				catch (const std::exception& error)
+				{
+					MS_ABORT("notification failed with unexpected error: %s", error.what());
+				}
 			}
 			else
 			{
@@ -308,9 +318,9 @@ namespace Channel
 	}
 
 	void ChannelSocket::OnConsumerSocketMessage(
-	  const ConsumerSocket* /*consumerSocket*/, char* msg, size_t /*msgLen*/)
+	  ConsumerSocket* /*consumerSocket*/, const char* msg, size_t /*msgLen*/)
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 
 		// NOTE: Take the arrival time before the message is parsed, so that it
 		// doesn't include the cost of processing it.
@@ -320,21 +330,21 @@ namespace Channel
 
 #if MS_LOG_DEV_LEVEL == 3
 		const auto s = flatbuffers::FlatBufferToString(
-		  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
+		  reinterpret_cast<const uint8_t*>(msg), FBS::Message::MessageTypeTable());
 
 		MS_DUMP("%s", s.c_str());
 #endif
 
 		if (message->data_type() == FBS::Message::Body::Request)
 		{
-			ChannelRequest* request{ nullptr };
+			std::unique_ptr<ChannelRequest> request;
 
 			try
 			{
-				request = new ChannelRequest(this, message->data_as<FBS::Request::Request>());
+				request = std::make_unique<ChannelRequest>(this, message->data_as<FBS::Request::Request>());
 
 				// Notify the listener.
-				this->listener->HandleRequest(request);
+				this->listener->HandleRequest(request.get());
 			}
 			catch (const MediaSoupTypeError& error)
 			{
@@ -357,27 +367,29 @@ namespace Channel
 					request->Error(error.what());
 				}
 			}
-
-			delete request;
+			catch (const std::exception& error)
+			{
+				MS_ABORT("request failed with unexpected error: %s", error.what());
+			}
 		}
 		else if (message->data_type() == FBS::Message::Body::Notification)
 		{
-			ChannelNotification* notification{ nullptr };
-
 			try
 			{
-				notification =
-				  new ChannelNotification(message->data_as<FBS::Notification::Notification>(), receivedAtUs);
+				const auto notification = std::make_unique<ChannelNotification>(
+				  message->data_as<FBS::Notification::Notification>(), receivedAtUs);
 
 				// Notify the listener.
-				this->listener->HandleNotification(notification);
+				this->listener->HandleNotification(notification.get());
 			}
 			catch (const MediaSoupError& error)
 			{
 				MS_ERROR("notification failed: %s", error.what());
 			}
-
-			delete notification;
+			catch (const std::exception& error)
+			{
+				MS_ABORT("notification failed with unexpected error: %s", error.what());
+			}
 		}
 		else
 		{
@@ -385,7 +397,7 @@ namespace Channel
 		}
 	}
 
-	void ChannelSocket::OnConsumerSocketClosed(const ConsumerSocket* /*consumerSocket*/)
+	void ChannelSocket::OnConsumerSocketClosed(ConsumerSocket* /*consumerSocket*/)
 	{
 		MS_TRACE_STD();
 
@@ -449,7 +461,7 @@ namespace Channel
 
 		if (msgStart != 0)
 		{
-			this->bufferDataLen = this->bufferDataLen - msgStart;
+			this->bufferDataLen -= msgStart;
 
 			if (this->bufferDataLen != 0)
 			{

@@ -117,7 +117,7 @@ namespace RTC
 					return nullptr;
 				}
 
-				ExtendedReport* extendedReport{ nullptr }; // NOLINT(misc-const-correctness)
+				ExtendedReport* extendedReport{ nullptr };
 
 				switch (blockType)
 				{

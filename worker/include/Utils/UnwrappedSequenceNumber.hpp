@@ -2,9 +2,9 @@
 #define MS_UTILS_UNWRAPPED_SEQUENCE_NUMBER_HPP
 
 #include "common.hpp"
-#include <limits>
+#include <limits> // std::numeric_limits
 #include <ostream>
-#include <typeinfo>
+#include <typeinfo> // typeid
 
 namespace Utils
 {
@@ -21,6 +21,9 @@ namespace Utils
 	template<typename T>
 	class UnwrappedSequenceNumber
 	{
+	private:
+		static constexpr auto ValueLimit = static_cast<int64_t>(1) << std::numeric_limits<T>::digits;
+
 	public:
 		static_assert(!std::numeric_limits<T>::is_signed, "the wrapped type must be unsigned");
 		static_assert(
@@ -140,9 +143,6 @@ namespace Utils
 			return (lhs.value > rhs.value) ? (lhs.value - rhs.value) : (rhs.value - lhs.value);
 		}
 
-	private:
-		static constexpr auto ValueLimit = static_cast<int64_t>(1) << std::numeric_limits<T>::digits;
-
 	public:
 		explicit UnwrappedSequenceNumber(int64_t value) : value(value)
 		{
@@ -245,13 +245,13 @@ namespace Utils
 	template<typename T>
 	inline std::ostream& operator<<(std::ostream& os, const UnwrappedSequenceNumber<T>& s)
 	{
-		return os << "{T:" << typeid(T).name() << ", wrapped:" << s.Wrap();
+		return os << "{T:" << typeid(T).name() << ", wrapped:" << s.Wrap() << "}";
 	}
 
 	template<>
 	inline std::ostream& operator<<(std::ostream& os, const UnwrappedSequenceNumber<uint8_t>& s)
 	{
-		return os << "{T:uint8_t, wrapped:" << s.Wrap() << "}";
+		return os << "{T:uint8_t, wrapped:" << static_cast<unsigned int>(s.Wrap()) << "}";
 	}
 
 	template<>

@@ -119,9 +119,9 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 4294967288 }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 4294967292 }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 4294967295 }) == false);
-		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 18446744073709551608u }) == true);
-		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 18446744073709551612u }) == true);
-		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 18446744073709551615u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 18446744073709551608U }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 18446744073709551612U }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 18446744073709551615U }) == false);
 
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 0 }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 1 }) == false);
@@ -142,9 +142,9 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 
 // Check if size_t in current host is 64 bits. Otherwise the test would fail.
 #if SIZE_MAX == 0xFFFFFFFFFFFFFFFF
-		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551608u }) == true);
-		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551612u }) == true);
-		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551615u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551608U }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551612U }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551615U }) == false);
 #endif
 	}
 
@@ -208,9 +208,9 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 4294967288 }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 4294967292 }) == false);
 		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 4294967295 }) == false);
-		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 18446744073709551608u }) == true);
-		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 18446744073709551612u }) == false);
-		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 18446744073709551615u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 18446744073709551608U }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 18446744073709551612U }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 18446744073709551615U }) == false);
 
 		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 0 }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 1 }) == false);
@@ -231,9 +231,9 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 
 // Check if size_t in current host is 64 bits. Otherwise the test would fail.
 #if SIZE_MAX == 0xFFFFFFFFFFFFFFFF
-		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 18446744073709551608u }) == true);
-		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 18446744073709551612u }) == false);
-		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 18446744073709551615u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 18446744073709551608U }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 18446744073709551612U }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 18446744073709551615U }) == false);
 #endif
 	}
 
@@ -305,9 +305,9 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 4294967288 }) == 4294967288);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 4294967292 }) == 4294967292);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 4294967295 }) == 4294967296);
-		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 18446744073709551608u }) == 18446744073709551608u);
-		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 18446744073709551612u }) == 18446744073709551612u);
-		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 18446744073709551615u }) == 0);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 18446744073709551608U }) == 18446744073709551608U);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 18446744073709551612U }) == 18446744073709551612U);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 18446744073709551615U }) == 0);
 
 		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 0 }) == 0);
 		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 1 }) == 4);
@@ -329,9 +329,9 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 
 // Check if size_t in current host is 64 bits. Otherwise the test would fail.
 #if SIZE_MAX == 0xFFFFFFFFFFFFFFFF
-		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551608u }) == 18446744073709551608u);
-		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551612u }) == 18446744073709551612u);
-		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551615u }) == 0);
+		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551608U }) == 18446744073709551608U);
+		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551612U }) == 18446744073709551612U);
+		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551615U }) == 0);
 #endif
 	}
 
@@ -403,9 +403,9 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 4294967288 }) == 4294967288);
 		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 4294967292 }) == 4294967292);
 		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 4294967295 }) == 4294967292);
-		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 18446744073709551608u }) == 18446744073709551608u);
-		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 18446744073709551612u }) == 18446744073709551612u);
-		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 18446744073709551615u }) == 18446744073709551612u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 18446744073709551608U }) == 18446744073709551608U);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 18446744073709551612U }) == 18446744073709551612U);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 18446744073709551615U }) == 18446744073709551612U);
 
 		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 0 }) == 0);
 		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 1 }) == 0);
@@ -427,9 +427,9 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 
 // Check if size_t in current host is 64 bits. Otherwise the test would fail.
 #if SIZE_MAX == 0xFFFFFFFFFFFFFFFF
-		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 18446744073709551608u }) == 18446744073709551608u);
-		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 18446744073709551612u }) == 18446744073709551612u);
-		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 18446744073709551615u }) == 18446744073709551612u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 18446744073709551608U }) == 18446744073709551608U);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 18446744073709551612U }) == 18446744073709551612U);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 18446744073709551615U }) == 18446744073709551612U);
 #endif
 	}
 
@@ -513,9 +513,9 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 4294967288 }) == 4294967288);
 		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 4294967292 }) == 4294967296);
 		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 4294967295 }) == 4294967296);
-		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 18446744073709551608u }) == 18446744073709551608u);
-		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 18446744073709551612u }) == 0);
-		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 18446744073709551615u }) == 0);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 18446744073709551608U }) == 18446744073709551608U);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 18446744073709551612U }) == 0);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 18446744073709551615U }) == 0);
 
 		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 0 }) == 0);
 		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 1 }) == 8);
@@ -539,9 +539,9 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 // Check if size_t in current host is 64 bits. Otherwise the test would fail.
 #if SIZE_MAX == 0xFFFFFFFFFFFFFFFF
 		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 4294967292 }) == 4294967296);
-		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 18446744073709551608u }) == 18446744073709551608u);
-		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 18446744073709551612u }) == 0);
-		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 18446744073709551615u }) == 0);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 18446744073709551608U }) == 18446744073709551608U);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 18446744073709551612U }) == 0);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 18446744073709551615U }) == 0);
 #endif
 	}
 }

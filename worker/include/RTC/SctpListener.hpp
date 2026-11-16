@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_LISTENER_HPP
 
 #include "common.hpp"
+#include "FBS/transport.h"
 #include "RTC/DataProducer.hpp"
 #include <ankerl/unordered_dense.h>
 
@@ -12,8 +13,11 @@ namespace RTC
 	public:
 		flatbuffers::Offset<FBS::Transport::SctpListener> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
+
 		void AddDataProducer(RTC::DataProducer* dataProducer);
+
 		void RemoveDataProducer(RTC::DataProducer* dataProducer);
+
 		RTC::DataProducer* GetDataProducer(uint16_t streamId);
 
 	public:

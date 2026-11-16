@@ -13,11 +13,12 @@ namespace RTC
 	/* Instance methods. */
 
 	RtpEncodingParameters::RtpEncodingParameters(const FBS::RtpParameters::RtpEncodingParameters* data)
+	  : codecPayloadType(data->codecPayloadType()), dtx(data->dtx())
 	{
 		MS_TRACE();
 
 		// ssrc is optional.
-		if (auto ssrc = data->ssrc(); ssrc.has_value())
+		if (const auto ssrc = data->ssrc(); ssrc.has_value())
 		{
 			this->ssrc = ssrc.value();
 		}
@@ -28,9 +29,6 @@ namespace RTC
 			this->rid = data->rid()->str();
 		}
 
-		// codecPayloadType is optional.
-		this->codecPayloadType = data->codecPayloadType();
-
 		// rtx is optional.
 		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_RTX))
 		{
@@ -39,15 +37,12 @@ namespace RTC
 		}
 
 		// maxBitrate is optional.
-		if (auto maxBitrate = data->maxBitrate(); maxBitrate.has_value())
+		if (const auto maxBitrate = data->maxBitrate(); maxBitrate.has_value())
 		{
 			// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
 			this->maxBitrate = static_cast<int64_t>(std::min<uint64_t>(
 			  maxBitrate.value(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
 		}
-
-		// dtx is optional, default is false.
-		this->dtx = data->dtx();
 
 		// scalabilityMode is optional.
 		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_SCALABILITYMODE))
@@ -65,13 +60,17 @@ namespace RTC
 			{
 				this->scalabilityMode = scalabilityMode;
 
+				// NOTE: The regex always has these 3 groups when it matches.
 				try
 				{
-					this->spatialLayers  = std::stoul(match[1].str());
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+					this->spatialLayers = std::stoul(match[1].str());
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					this->temporalLayers = std::stoul(match[2].str());
-					this->ksvc           = match.size() >= 4 && match[3].str() == "_KEY";
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+					this->ksvc = match.size() >= 4 && match[3].str() == "_KEY";
 				}
-				catch (std::exception& e)
+				catch (const std::exception& e)
 				{
 					MS_THROW_TYPE_ERROR("invalid scalabilityMode: %s", e.what());
 				}

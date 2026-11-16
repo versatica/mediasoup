@@ -49,7 +49,7 @@ namespace RTC
 		 * @param remoteNtpUs - NTP field of the Sender Report, in microseconds.
 		 * @param localArrivalAtUs - Our local time at which the Sender Report arrived.
 		 * @param rttMs - RTT towards the sender, or no value if not known yet, in
-		 * which case the sample carries the one way delay uncorrected.
+		 *   which case the sample carries the one way delay uncorrected.
 		 */
 		void AddSenderReport(int64_t remoteNtpUs, int64_t localArrivalAtUs, std::optional<float> rttMs);
 

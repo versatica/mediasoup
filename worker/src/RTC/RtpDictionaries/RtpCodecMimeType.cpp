@@ -11,16 +11,19 @@ namespace RTC
 	/* Class variables. */
 
 	// clang-format off
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const ankerl::unordered_dense::map<std::string, RtpCodecMimeType::Type> RtpCodecMimeType::String2Type =
 	{
 		{ "audio", RtpCodecMimeType::Type::AUDIO },
-		{ "video", RtpCodecMimeType::Type::VIDEO }
+		{ "video", RtpCodecMimeType::Type::VIDEO },
 	};
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const ankerl::unordered_dense::map<RtpCodecMimeType::Type, std::string> RtpCodecMimeType::Type2String =
 	{
 		{ RtpCodecMimeType::Type::AUDIO, "audio" },
-		{ RtpCodecMimeType::Type::VIDEO, "video" }
+		{ RtpCodecMimeType::Type::VIDEO, "video" },
 	};
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const ankerl::unordered_dense::map<std::string, RtpCodecMimeType::Subtype> RtpCodecMimeType::String2Subtype =
 	{
 		// Audio codecs:
@@ -45,8 +48,9 @@ namespace RTC
 		{ "ulpfec",          RtpCodecMimeType::Subtype::ULPFEC          },
 		{ "flexfec",         RtpCodecMimeType::Subtype::FLEXFEC         },
 		{ "x-ulpfecuc",      RtpCodecMimeType::Subtype::X_ULPFECUC      },
-		{ "red",             RtpCodecMimeType::Subtype::RED             }
+		{ "red",             RtpCodecMimeType::Subtype::RED             },
 	};
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const ankerl::unordered_dense::map<RtpCodecMimeType::Subtype, std::string> RtpCodecMimeType::Subtype2String =
 	{
 		// Audio codecs:
@@ -71,7 +75,7 @@ namespace RTC
 		{ RtpCodecMimeType::Subtype::ULPFEC,          "ulpfec"          },
 		{ RtpCodecMimeType::Subtype::FLEXFEC,         "flexfec"         },
 		{ RtpCodecMimeType::Subtype::X_ULPFECUC,      "x-ulpfecuc"      },
-		{ RtpCodecMimeType::Subtype::RED,             "red"             }
+		{ RtpCodecMimeType::Subtype::RED,             "red"             },
 	};
 	// clang-format on
 
@@ -81,7 +85,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto slashPos = mimeType.find('/');
+		const auto slashPos = mimeType.find('/');
 
 		if (slashPos == std::string::npos || slashPos == 0 || slashPos == mimeType.length() - 1)
 		{
@@ -97,26 +101,30 @@ namespace RTC
 
 		// Set MIME type.
 		{
-			auto it = RtpCodecMimeType::String2Type.find(type);
+			const auto it = RtpCodecMimeType::String2Type.find(type);
 
 			if (it == RtpCodecMimeType::String2Type.end())
 			{
 				MS_THROW_TYPE_ERROR("unknown codec MIME type '%s'", type.c_str());
 			}
 
-			this->type = it->second;
+			const auto& [typeString, typeValue] = *it;
+
+			this->type = typeValue;
 		}
 
 		// Set MIME subtype.
 		{
-			auto it = RtpCodecMimeType::String2Subtype.find(subtype);
+			const auto it = RtpCodecMimeType::String2Subtype.find(subtype);
 
 			if (it == RtpCodecMimeType::String2Subtype.end())
 			{
 				MS_THROW_TYPE_ERROR("unknown codec MIME subtype '%s'", subtype.c_str());
 			}
 
-			this->subtype = it->second;
+			const auto& [subtypeString, subtypeValue] = *it;
+
+			this->subtype = subtypeValue;
 		}
 
 		// Set mimeType.

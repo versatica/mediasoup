@@ -11,6 +11,7 @@ namespace Channel
 	/* Static. */
 
 	// clang-format off
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	static const ankerl::unordered_dense::map<FBS::Notification::Event, const char*> Event2String =
 	{
 		{ FBS::Notification::Event::WORKER_CLOSE,        "worker.close"       },
@@ -24,7 +25,7 @@ namespace Channel
 
 	ChannelNotification::ChannelNotification(
 	  const FBS::Notification::Notification* notification, int64_t receivedAtUs)
-	  : data(notification), receivedAtUs(receivedAtUs)
+	  : data(notification), receivedAtUs(receivedAtUs), handlerId(notification->handlerId()->str())
 	{
 		MS_TRACE();
 
@@ -36,6 +37,5 @@ namespace Channel
 		}
 
 		this->eventCStr = eventCStrIt->second;
-		this->handlerId = this->data->handlerId()->str();
 	}
 } // namespace Channel

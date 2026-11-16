@@ -133,7 +133,7 @@ public:
 	void OnUvWrite(int status, const onSendCallback& cb);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
-protected:
+public:
 	virtual void UserOnTcpConnectionRead() = 0;
 
 protected:

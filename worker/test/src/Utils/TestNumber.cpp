@@ -207,7 +207,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 
 	SECTION("ForwardDiff()")
 	{
-		REQUIRE(static_cast<uint64_t>(Utils::Number::ForwardDiff(4711u, 4711u)) == 0);
+		REQUIRE(static_cast<uint64_t>(Utils::Number::ForwardDiff(4711U, 4711U)) == 0);
 
 		uint8_t x{ 0 };
 		uint8_t y{ 255 };
@@ -242,7 +242,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 
 	SECTION("ReverseDiff()")
 	{
-		REQUIRE(static_cast<uint64_t>(Utils::Number::ReverseDiff(4711u, 4711u)) == 0);
+		REQUIRE(static_cast<uint64_t>(Utils::Number::ReverseDiff(4711U, 4711U)) == 0);
 
 		uint8_t x{ 0 };
 		uint8_t y{ 255 };

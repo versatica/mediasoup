@@ -130,10 +130,9 @@ namespace RTC
 
 			int64_t rate{ 0 };
 
-			for (size_t tIdx{ 0 }; tIdx < this->spatialLayerCounters[spatialLayer].size(); ++tIdx)
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			for (auto& temporalLayerCounter : this->spatialLayerCounters[spatialLayer])
 			{
-				auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
-
 				rate += temporalLayerCounter.GetBitrate(nowMs).value_or(0);
 			}
 
@@ -214,7 +213,7 @@ namespace RTC
 		RtpStreamRecv::RtpStreamRecv(
 		  RTP::RtpStreamRecv::Listener* listener,
 		  SharedInterface* shared,
-		  RTP::RtpStream::Params& params,
+		  const RTP::RtpStream::Params& params,
 		  int64_t sendNackDelayMs,
 		  bool useRtpInactivityCheck)
 		  : RTP::RtpStream::RtpStream(listener, shared, params, 10),

@@ -10,7 +10,7 @@
 
 namespace RTC
 {
-	class UdpSocket : public ::UdpSocketHandle
+	class UdpSocket : public UdpSocketHandle
 	{
 	public:
 		class Listener
@@ -24,7 +24,7 @@ namespace RTC
 			  const uint8_t* data,
 			  size_t len,
 			  size_t bufferLen,
-			  const struct sockaddr* remoteAddr,
+			  const sockaddr* remoteAddr,
 			  int64_t receivedAtUs) = 0;
 		};
 
@@ -33,29 +33,39 @@ namespace RTC
 		  Listener* listener,
 		  SharedInterface* shared,
 		  std::string& ip,
+		  const std::string& announcedAddress,
 		  uint16_t port,
-		  RTC::Transport::SocketFlags& flags);
+		  const RTC::Transport::SocketFlags& flags);
+
 		UdpSocket(
 		  Listener* listener,
 		  SharedInterface* shared,
 		  std::string& ip,
+		  const std::string& announcedAddress,
 		  uint16_t minPort,
 		  uint16_t maxPort,
-		  RTC::Transport::SocketFlags& flags,
+		  const RTC::Transport::SocketFlags& flags,
 		  RTC::PortManager::PortRangeKey& portRangeKey);
+
 		~UdpSocket() override;
 
-		/* Pure virtual methods inherited from ::UdpSocketHandle. */
+		const std::string& GetAnnouncedAddress() const
+		{
+			return this->announcedAddress;
+		}
+
+		/* Pure virtual methods inherited from UdpSocketHandle. */
 	public:
 		void UserOnUdpDatagramReceived(
-		  const uint8_t* data, size_t len, size_t bufferLen, const struct sockaddr* addr) override;
+		  const uint8_t* data, size_t len, size_t bufferLen, const sockaddr* addr) override;
 
 	private:
 		// Passed by argument.
 		Listener* const listener;
 		SharedInterface* const shared;
+		const std::string announcedAddress;
 		bool fixedPort{ false };
-		RTC::PortManager::PortRangeKey portRangeKey{};
+		RTC::PortManager::PortRangeKey portRangeKey;
 	};
 } // namespace RTC
 

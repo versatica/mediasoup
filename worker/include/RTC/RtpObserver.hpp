@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_OBSERVER_HPP
 
 #include "common.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "SharedInterface.hpp"
@@ -20,34 +21,45 @@ namespace RTC
 		public:
 			virtual RTC::Producer* RtpObserverGetProducer(
 			  RTC::RtpObserver* rtpObserver, const std::string& id) = 0;
+
 			virtual void OnRtpObserverAddProducer(RTC::RtpObserver* rtpObserver, RTC::Producer* producer) = 0;
+
 			virtual void OnRtpObserverRemoveProducer(
 			  RTC::RtpObserver* rtpObserver, RTC::Producer* producer) = 0;
 		};
 
 	public:
 		RtpObserver(SharedInterface* shared, const std::string& id, RTC::RtpObserver::Listener* listener);
+
 		~RtpObserver() override;
 
 	public:
 		void Pause();
+
 		void Resume();
+
 		bool IsPaused() const
 		{
 			return this->paused;
 		}
-		virtual void AddProducer(RTC::Producer* producer)                                = 0;
-		virtual void RemoveProducer(RTC::Producer* producer)                             = 0;
+
+		virtual void AddProducer(RTC::Producer* producer) = 0;
+
+		virtual void RemoveProducer(RTC::Producer* producer) = 0;
+
 		virtual void ReceiveRtpPacket(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
-		virtual void ProducerPaused(RTC::Producer* producer)                             = 0;
-		virtual void ProducerResumed(RTC::Producer* producer)                            = 0;
+
+		virtual void ProducerPaused(RTC::Producer* producer) = 0;
+
+		virtual void ProducerResumed(RTC::Producer* producer) = 0;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	protected:
-		virtual void Paused()  = 0;
+		virtual void Paused() = 0;
+
 		virtual void Resumed() = 0;
 
 	public:

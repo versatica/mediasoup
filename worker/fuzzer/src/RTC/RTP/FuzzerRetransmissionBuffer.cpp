@@ -7,27 +7,28 @@
 
 void FuzzerRtcRtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 {
-	const uint16_t maxItems{ 2500 };
-	const int64_t maxRetransmissionDelayMs{ 2000 };
-	const uint32_t clockRate{ 90000 };
+	constexpr uint16_t MaxItems{ 2500 };
+	constexpr int64_t MaxRetransmissionDelayMs{ 2000 };
+	constexpr uint32_t ClockRate{ 90000 };
 
-	// Trick to initialize our stuff just once (use static).
-	static RTC::RTP::RetransmissionBuffer retransmissionBuffer(
-	  maxItems, maxRetransmissionDelayMs, clockRate);
+	// Initialize our stuff just once.
+	static thread_local RTC::RTP::RetransmissionBuffer retransmissionBuffer(
+	  MaxItems, MaxRetransmissionDelayMs, ClockRate);
 
 	// clang-format off
 	uint8_t buffer[] =
 	{
 		0b10000000, 0b01111011, 0b01010010, 0b00001110,
 		0b01011011, 0b01101011, 0b11001010, 0b10110101,
-		0, 0, 0, 2
+		0, 0, 0, 2,
 	};
 	// clang-format on
 
 	// Create base RtpPacket instance.
 	const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, 12) };
+
 	size_t offset{ 0 };
-	int64_t nowMs = DepLibUV::GetTimeMs();
+	int64_t nowMs{ DepLibUV::GetTimeMs() };
 
 	while (len >= 4)
 	{

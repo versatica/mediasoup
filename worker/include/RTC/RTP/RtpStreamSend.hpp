@@ -137,8 +137,8 @@ namespace RTC
 			RtpStreamSend(
 			  RTP::RtpStreamSend::Listener* listener,
 			  SharedInterface* shared,
-			  RTP::RtpStream::Params& params,
-			  std::string& mid);
+			  const RTP::RtpStream::Params& params,
+			  const std::string& mid);
 
 			~RtpStreamSend() override;
 

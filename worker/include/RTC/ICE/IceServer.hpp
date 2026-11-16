@@ -10,6 +10,7 @@
 #include <ankerl/unordered_dense.h>
 #include <list>
 #include <string>
+#include <string_view>
 
 namespace RTC
 {
@@ -38,30 +39,30 @@ namespace RTC
 				 * returns, so the given pointers are still usable.
 				 */
 				virtual void OnIceServerSendStunPacket(
-				  const RTC::ICE::IceServer* iceServer,
+				  RTC::ICE::IceServer* iceServer,
 				  const RTC::ICE::StunPacket* packet,
-				  RTC::TransportTuple* tuple) = 0;
+				  const RTC::TransportTuple* tuple) = 0;
 
 				virtual void OnIceServerLocalUsernameFragmentAdded(
-				  const RTC::ICE::IceServer* iceServer, const std::string& usernameFragment) = 0;
+				  RTC::ICE::IceServer* iceServer, const std::string& usernameFragment) = 0;
 
 				virtual void OnIceServerLocalUsernameFragmentRemoved(
-				  const RTC::ICE::IceServer* iceServer, const std::string& usernameFragment) = 0;
+				  RTC::ICE::IceServer* iceServer, const std::string& usernameFragment) = 0;
 
 				virtual void OnIceServerTupleAdded(
-				  const RTC::ICE::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
+				  RTC::ICE::IceServer* iceServer, const RTC::TransportTuple* tuple) = 0;
 
 				virtual void OnIceServerTupleRemoved(
-				  const RTC::ICE::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
+				  RTC::ICE::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
 
 				virtual void OnIceServerSelectedTuple(
-				  const RTC::ICE::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
+				  RTC::ICE::IceServer* iceServer, const RTC::TransportTuple* tuple) = 0;
 
-				virtual void OnIceServerConnected(const RTC::ICE::IceServer* iceServer) = 0;
+				virtual void OnIceServerConnected(RTC::ICE::IceServer* iceServer) = 0;
 
-				virtual void OnIceServerCompleted(const RTC::ICE::IceServer* iceServer) = 0;
+				virtual void OnIceServerCompleted(RTC::ICE::IceServer* iceServer) = 0;
 
-				virtual void OnIceServerDisconnected(const RTC::ICE::IceServer* iceServer) = 0;
+				virtual void OnIceServerDisconnected(RTC::ICE::IceServer* iceServer) = 0;
 			};
 
 		public:
@@ -70,7 +71,7 @@ namespace RTC
 			static FBS::WebRtcTransport::IceState IceStateToFbs(IceState state);
 
 		private:
-			static ankerl::unordered_dense::map<IceState, std::string> iceStateToString;
+			static const ankerl::unordered_dense::map<IceState, std::string> IceState2String;
 
 		public:
 			IceServer(
@@ -126,6 +127,12 @@ namespace RTC
 
 			void ProcessStunResponse(const RTC::ICE::StunPacket* response);
 
+			void SendStunErrorResponse(
+			  const RTC::ICE::StunPacket* request,
+			  RTC::TransportTuple* tuple,
+			  uint16_t errorCode,
+			  std::string_view reasonPhrase);
+
 			void HandleTuple(
 			  RTC::TransportTuple* tuple, bool hasUseCandidate, bool hasNomination, uint32_t nomination);
 
@@ -173,7 +180,7 @@ namespace RTC
 			SharedInterface* const shared;
 			std::string usernameFragment;
 			std::string password;
-			int64_t consentTimeoutMs{ 30000 };
+			int64_t consentTimeoutMs;
 			// Others.
 			std::string oldUsernameFragment;
 			std::string oldPassword;

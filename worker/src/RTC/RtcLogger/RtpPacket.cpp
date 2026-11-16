@@ -3,13 +3,14 @@
 
 #include "RTC/RtcLogger/RtpPacket.hpp"
 #include "Logger.hpp"
-#include <sstream>
+#include <sstream> // std::stringstream
 
 namespace RTC
 {
 	namespace RtcLogger
 	{
 		// clang-format off
+		// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 		const ankerl::unordered_dense::map<RtpPacket::DiscardReason, std::string> RtpPacket::DiscardReason2String = {
 			{ RtpPacket::DiscardReason::NONE,                                    "None"                               },
 			{ RtpPacket::DiscardReason::PRODUCER_NOT_FOUND,                      "ProducerNotFound"                   },
@@ -24,8 +25,8 @@ namespace RTC
 			{ RtpPacket::DiscardReason::SPATIAL_LAYER_MISMATCH,                  "SpatialLayerMismatch"               },
 			{ RtpPacket::DiscardReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH, "PacketPreviousToSpatialLayerSwitch" },
 			{ RtpPacket::DiscardReason::DROPPED_BY_CODEC,                        "DroppedByCodec"                     },
-			{ RtpPacket::DiscardReason::TOO_HIGH_TIMESTAMP_EXTRA_NEEDED,         "TooHighTimestampExtraNeeded"},
-			{ RtpPacket::DiscardReason::SEND_RTP_STREAM_DISCARDED, "SendRtpStreamDiscarded"}
+			{ RtpPacket::DiscardReason::TOO_HIGH_TIMESTAMP_EXTRA_NEEDED,         "TooHighTimestampExtraNeeded"        },
+			{ RtpPacket::DiscardReason::SEND_RTP_STREAM_DISCARDED,               "SendRtpStreamDiscarded"             },
 		};
 		// clang-format on
 

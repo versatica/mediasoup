@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
@@ -70,7 +71,11 @@ namespace RTC
 				return RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID;
 			}
 
-				NO_DEFAULT();
+			default:
+			{
+				MS_THROW_TYPE_ERROR(
+				  "invalid RTP header extension URI [value:%" PRIu8 "]", static_cast<uint8_t>(uri));
+			}
 		}
 	}
 
@@ -139,5 +144,4 @@ namespace RTC
 				NO_DEFAULT();
 		}
 	}
-
 } // namespace RTC

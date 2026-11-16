@@ -3,6 +3,7 @@
 
 #include "RTC/TransportTuple.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -25,7 +26,10 @@ namespace RTC
 				return TransportTuple::Protocol::TCP;
 			}
 
-				NO_DEFAULT();
+			default:
+			{
+				MS_THROW_TYPE_ERROR("invalid protocol [value:%" PRIu8 "]", static_cast<uint8_t>(protocol));
+			}
 		}
 	}
 
@@ -50,45 +54,6 @@ namespace RTC
 	}
 
 	/* Instance methods. */
-
-	void TransportTuple::CloseTcpConnection()
-	{
-		MS_TRACE();
-
-		if (this->protocol == Protocol::UDP)
-		{
-			MS_ABORT("cannot delete a UDP socket");
-		}
-
-		this->tcpConnection->TriggerClose();
-	}
-
-	flatbuffers::Offset<FBS::Transport::Tuple> TransportTuple::FillBuffer(
-	  flatbuffers::FlatBufferBuilder& builder) const
-	{
-		MS_TRACE();
-
-		int family;
-		std::string localIp;
-		uint16_t localPort;
-
-		Utils::IP::GetAddressInfo(GetLocalAddress(), family, localIp, localPort);
-
-		std::string remoteIp;
-		uint16_t remotePort;
-
-		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, remoteIp, remotePort);
-
-		auto protocol = TransportTuple::ProtocolToFbs(GetProtocol());
-
-		return FBS::Transport::CreateTupleDirect(
-		  builder,
-		  (this->localAnnouncedAddress.empty() ? localIp : this->localAnnouncedAddress).c_str(),
-		  localPort,
-		  remoteIp.c_str(),
-		  remotePort,
-		  protocol);
-	}
 
 	void TransportTuple::Dump(int indentation) const
 	{
@@ -128,6 +93,46 @@ namespace RTC
 		}
 
 		MS_DUMP_CLEAN(indentation, "</TransportTuple>");
+	}
+
+	flatbuffers::Offset<FBS::Transport::Tuple> TransportTuple::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
+	{
+		MS_TRACE();
+
+		int family;
+		std::string localIp;
+		uint16_t localPort;
+
+		Utils::IP::GetAddressInfo(GetLocalAddress(), family, localIp, localPort);
+
+		std::string remoteIp;
+		uint16_t remotePort;
+
+		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, remoteIp, remotePort);
+
+		const auto protocol               = TransportTuple::ProtocolToFbs(GetProtocol());
+		const auto& localAnnouncedAddress = GetLocalAnnouncedAddress();
+
+		return FBS::Transport::CreateTupleDirect(
+		  builder,
+		  (localAnnouncedAddress.empty() ? localIp : localAnnouncedAddress).c_str(),
+		  localPort,
+		  remoteIp.c_str(),
+		  remotePort,
+		  protocol);
+	}
+
+	void TransportTuple::CloseTcpConnection()
+	{
+		MS_TRACE();
+
+		if (this->protocol == Protocol::UDP)
+		{
+			MS_ABORT("cannot delete a UDP socket");
+		}
+
+		this->tcpConnection->TriggerClose();
 	}
 
 	bool TransportTuple::TupleKey::operator==(const TupleKey& other) const noexcept

@@ -3,6 +3,7 @@
 
 #include "RTC/ICE/IceCandidate.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 
 namespace RTC
 {
@@ -15,6 +16,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// NOTE: We want a switch here, as in every other enum conversion.
+			// NOLINTNEXTLINE(readability-trivial-switch)
 			switch (type)
 			{
 				case FBS::WebRtcTransport::IceCandidateType::HOST:
@@ -22,7 +25,11 @@ namespace RTC
 					return IceCandidate::CandidateType::HOST;
 				}
 
-					NO_DEFAULT();
+				default:
+				{
+					MS_THROW_TYPE_ERROR(
+					  "invalid ICE candidate type [value:%" PRIu8 "]", static_cast<uint8_t>(type));
+				}
 			}
 		}
 
@@ -31,6 +38,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// NOTE: We want a switch here, as in every other enum conversion.
+			// NOLINTNEXTLINE(readability-trivial-switch)
 			switch (type)
 			{
 				case IceCandidate::CandidateType::HOST:
@@ -47,6 +56,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// NOTE: We want a switch here, as in every other enum conversion.
+			// NOLINTNEXTLINE(readability-trivial-switch)
 			switch (type)
 			{
 				case FBS::WebRtcTransport::IceCandidateTcpType::PASSIVE:
@@ -54,7 +65,11 @@ namespace RTC
 					return IceCandidate::TcpCandidateType::PASSIVE;
 				}
 
-					NO_DEFAULT();
+				default:
+				{
+					MS_THROW_TYPE_ERROR(
+					  "invalid ICE candidate TCP type [value:%" PRIu8 "]", static_cast<uint8_t>(type));
+				}
 			}
 		}
 
@@ -63,6 +78,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// NOTE: We want a switch here, as in every other enum conversion.
+			// NOLINTNEXTLINE(readability-trivial-switch)
 			switch (type)
 			{
 				case IceCandidate::TcpCandidateType::PASSIVE:
@@ -76,13 +93,56 @@ namespace RTC
 
 		/* Instance methods. */
 
+		IceCandidate::IceCandidate(const RTC::UdpSocket* udpSocket, uint32_t priority)
+		  : foundation("udpcandidate"),
+		    priority(priority),
+		    address(udpSocket->GetLocalIp()),
+		    protocol(Protocol::UDP),
+		    port(udpSocket->GetLocalPort())
+		{
+			MS_TRACE();
+		}
+
+		IceCandidate::IceCandidate(
+		  const RTC::UdpSocket* udpSocket, uint32_t priority, const std::string& announcedAddress)
+		  : foundation("udpcandidate"),
+		    priority(priority),
+		    address(announcedAddress),
+		    protocol(Protocol::UDP),
+		    port(udpSocket->GetLocalPort())
+		{
+			MS_TRACE();
+		}
+
+		IceCandidate::IceCandidate(const RTC::TcpServer* tcpServer, uint32_t priority)
+		  : foundation("tcpcandidate"),
+		    priority(priority),
+		    address(tcpServer->GetLocalIp()),
+		    protocol(Protocol::TCP),
+		    port(tcpServer->GetLocalPort())
+		{
+			MS_TRACE();
+		}
+
+		IceCandidate::IceCandidate(
+		  const RTC::TcpServer* tcpServer, uint32_t priority, const std::string& announcedAddress)
+		  : foundation("tcpcandidate"),
+		    priority(priority),
+		    address(announcedAddress),
+		    protocol(Protocol::TCP),
+		    port(tcpServer->GetLocalPort())
+		{
+			MS_TRACE();
+		}
+
 		flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate> IceCandidate::FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const
 		{
 			MS_TRACE();
 
-			auto protocol = TransportTuple::ProtocolToFbs(this->protocol);
-			auto type     = CandidateTypeToFbs(this->type);
+			const auto protocol = TransportTuple::ProtocolToFbs(this->protocol);
+			const auto type     = CandidateTypeToFbs(this->type);
+
 			flatbuffers::Optional<FBS::WebRtcTransport::IceCandidateTcpType> tcpType;
 
 			if (this->protocol == Protocol::TCP)

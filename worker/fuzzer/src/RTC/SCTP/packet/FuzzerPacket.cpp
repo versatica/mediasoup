@@ -102,20 +102,23 @@
 #include "fuzzer/include/RTC/SCTP/packet/parameters/FuzzerUnrecognizedParameterParameter.hpp"
 #include "fuzzer/include/RTC/SCTP/packet/parameters/FuzzerZeroChecksumAcceptableParameter.hpp"
 
-namespace
-{
-	thread_local uint8_t PacketSerializeBuffer[65536];
-	thread_local uint8_t PacketCloneBuffer[65536];
-	thread_local uint8_t ChunkSerializeBuffer[65536];
-	thread_local uint8_t ChunkCloneBuffer[65536];
-	thread_local uint8_t ParameterSerializeBuffer[65536];
-	thread_local uint8_t ParameterCloneBuffer[65536];
-	thread_local uint8_t ErrorCauseSerializeBuffer[65536];
-	thread_local uint8_t ErrorCauseCloneBuffer[65536];
-} // namespace
-
 void FuzzerRtcSctpPacket::Fuzz(const uint8_t* data, size_t len)
 {
+	static thread_local uint8_t packetSerializeBuffer[65536];
+	static thread_local uint8_t packetCloneBuffer[65536];
+	static thread_local uint8_t chunkSerializeBuffer[65536];
+	static thread_local uint8_t chunkCloneBuffer[65536];
+	static thread_local uint8_t parameterSerializeBuffer[65536];
+	static thread_local uint8_t parameterCloneBuffer[65536];
+	static thread_local uint8_t errorCauseSerializeBuffer[65536];
+	static thread_local uint8_t errorCauseCloneBuffer[65536];
+
+	// NOTE: The packet is serialized and cloned into buffers of that same length.
+	if (len > sizeof(packetSerializeBuffer))
+	{
+		return;
+	}
+
 	const auto fuzzChunks = [](const RTC::SCTP::Packet* packet) -> void
 	{
 		packet->GetSourcePort();
@@ -201,9 +204,9 @@ void FuzzerRtcSctpPacket::Fuzz(const uint8_t* data, size_t len)
 			chunk->GetFirstErrorCauseOfCode<RTC::SCTP::UnknownErrorCause>();
 
 			const std::unique_ptr<RTC::SCTP::Chunk> clonedChunk{ chunk->Clone(
-				ChunkCloneBuffer, chunk->GetLength()) };
+				chunkCloneBuffer, chunk->GetLength()) };
 
-			clonedChunk->Serialize(ChunkSerializeBuffer, clonedChunk->GetLength());
+			clonedChunk->Serialize(chunkSerializeBuffer, clonedChunk->GetLength());
 
 			switch (chunk->GetType())
 			{
@@ -383,9 +386,9 @@ void FuzzerRtcSctpPacket::Fuzz(const uint8_t* data, size_t len)
 				parameter->GetActionForUnknownParameterType();
 
 				const std::unique_ptr<RTC::SCTP::Parameter> clonedParameter{ parameter->Clone(
-					ParameterCloneBuffer, parameter->GetLength()) };
+					parameterCloneBuffer, parameter->GetLength()) };
 
-				clonedParameter->Serialize(ParameterSerializeBuffer, clonedParameter->GetLength());
+				clonedParameter->Serialize(parameterSerializeBuffer, clonedParameter->GetLength());
 
 				switch (parameter->GetType())
 				{
@@ -569,9 +572,9 @@ void FuzzerRtcSctpPacket::Fuzz(const uint8_t* data, size_t len)
 				errorCause->ToString();
 
 				const std::unique_ptr<RTC::SCTP::ErrorCause> clonedErrorCause{ errorCause->Clone(
-					ErrorCauseCloneBuffer, errorCause->GetLength()) };
+					errorCauseCloneBuffer, errorCause->GetLength()) };
 
-				clonedErrorCause->Serialize(ErrorCauseSerializeBuffer, clonedErrorCause->GetLength());
+				clonedErrorCause->Serialize(errorCauseSerializeBuffer, clonedErrorCause->GetLength());
 
 				switch (errorCause->GetCode())
 				{
@@ -731,7 +734,7 @@ void FuzzerRtcSctpPacket::Fuzz(const uint8_t* data, size_t len)
 
 	fuzzChunks(packet.get());
 
-	packet->Serialize(PacketSerializeBuffer, len);
+	packet->Serialize(packetSerializeBuffer, len);
 
 	fuzzChunks(packet.get());
 
@@ -743,7 +746,7 @@ void FuzzerRtcSctpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->WriteCRC32cChecksum();
 	packet->ValidateCRC32cChecksum();
 
-	const std::unique_ptr<RTC::SCTP::Packet> clonedPacket{ packet->Clone(PacketCloneBuffer, len) };
+	const std::unique_ptr<RTC::SCTP::Packet> clonedPacket{ packet->Clone(packetCloneBuffer, len) };
 
 	packet.reset();
 
@@ -757,7 +760,7 @@ void FuzzerRtcSctpPacket::Fuzz(const uint8_t* data, size_t len)
 	clonedPacket->WriteCRC32cChecksum();
 	clonedPacket->ValidateCRC32cChecksum();
 
-	clonedPacket->Serialize(PacketSerializeBuffer, len);
+	clonedPacket->Serialize(packetSerializeBuffer, len);
 
 	fuzzChunks(clonedPacket.get());
 }

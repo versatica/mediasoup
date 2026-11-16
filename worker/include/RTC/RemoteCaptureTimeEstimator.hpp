@@ -45,7 +45,7 @@ namespace RTC
 		 * Take a Producer of this sender into account to choose the source.
 		 *
 		 * @param absCaptureTimeNegotiated - Whether the Producer negotiated the
-		 * `abs-capture-time` RTP header extension.
+		 *   `abs-capture-time` RTP header extension.
 		 */
 		void UpdateSource(bool absCaptureTimeNegotiated);
 

@@ -9,13 +9,13 @@ namespace RTC
 	/* Static. */
 
 	// How long a measurement counts towards the average (ms).
-	constexpr int64_t MeasurementWindowMs{ 1500 };
+	static constexpr int64_t MeasurementWindowMs{ 1500 };
 	// How often the average is worked out again even if nothing was measured,
 	// since a measurement ageing out moves it just as much (ms).
-	constexpr int64_t UpdateIntervalMs{ 1000 };
+	static constexpr int64_t UpdateIntervalMs{ 1000 };
 	// How much of the average the measurements of the window make up, the rest
 	// being the previous average.
-	constexpr float WeightFactor{ 0.3f };
+	static constexpr float WeightFactor{ 0.3F };
 
 	/* Instance methods. */
 
@@ -39,6 +39,16 @@ namespace RTC
 		this->measurements.push_back({ .rttMs = rttMs, .atMs = nowMs });
 
 		UpdateAndReport(nowMs);
+	}
+
+	void RttCalculator::OnTimer(TimerHandleInterface* timer)
+	{
+		MS_TRACE();
+
+		if (timer == this->updateTimer.get())
+		{
+			UpdateAndReport(this->shared->GetTimeMs());
+		}
 	}
 
 	void RttCalculator::UpdateAndReport(int64_t nowMs)
@@ -81,22 +91,12 @@ namespace RTC
 		else
 		{
 			this->avgRttMs = static_cast<int64_t>(
-			  (static_cast<float>(this->avgRttMs.value()) * (1.0f - WeightFactor)) +
+			  (static_cast<float>(this->avgRttMs.value()) * (1.0F - WeightFactor)) +
 			  (static_cast<float>(windowRttMs) * WeightFactor));
 		}
 
 		this->lastRttMs = this->avgRttMs;
 
 		this->listener->OnRttCalculatorRttUpdated(this, this->avgRttMs.value(), maxRttMs);
-	}
-
-	void RttCalculator::OnTimer(TimerHandleInterface* timer)
-	{
-		MS_TRACE();
-
-		if (timer == this->updateTimer.get())
-		{
-			UpdateAndReport(this->shared->GetTimeMs());
-		}
 	}
 } // namespace RTC

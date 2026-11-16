@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SIMULCAST_CONSUMER_STREAM_HPP
-#define MS_RTC_SIMULCAST_CONSUMER_STREAM_HPP
+#ifndef MS_RTC_SIMULCAST_PRODUCER_STREAM_MANAGER_HPP
+#define MS_RTC_SIMULCAST_PRODUCER_STREAM_MANAGER_HPP
 
 #include "common.hpp"
 #include "RTC/ProducerStreamManager.hpp"
@@ -62,9 +62,9 @@ namespace RTC
 		void ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
 
 		void ProducerRtpStreamScore(
-		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
+		  const RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
 
-		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
+		void ProducerRtcpSenderReport(const RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
 
 		RTC::BWE::BitrateAllocator::Candidate::BitrateOptions GetBitrateOptions(int64_t nowMs) const override;
 

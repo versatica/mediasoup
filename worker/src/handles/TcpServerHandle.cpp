@@ -12,11 +12,13 @@ static constexpr int ListenBacklog{ 512 };
 
 /* Static methods for UV callbacks. */
 
+// libuv imposes the callback signature.
+// NOLINTNEXTLINE(misc-const-correctness)
 inline static void onConnection(uv_stream_t* handle, int status)
 {
 	MS_TRACE();
 
-	auto* server = static_cast<TcpServerHandle*>(handle->data);
+	auto* const server = static_cast<TcpServerHandle*>(handle->data);
 
 	if (server)
 	{
@@ -38,11 +40,9 @@ TcpServerHandle::TcpServerHandle(uv_tcp_t* uvHandle) : uvHandle(uvHandle)
 {
 	MS_TRACE();
 
-	int err;
-
 	this->uvHandle->data = static_cast<void*>(this);
 
-	err = uv_listen(
+	const int err = uv_listen(
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
 	  ListenBacklog,
 	  static_cast<uv_connection_cb>(onConnection));
@@ -159,7 +159,7 @@ void TcpServerHandle::SetRecvBufferSize(uint32_t size)
 	}
 }
 
-void TcpServerHandle::AcceptTcpConnection(TcpConnectionHandle* connection)
+void TcpServerHandle::AcceptTcpConnection(std::unique_ptr<TcpConnectionHandle> connection)
 {
 	MS_TRACE();
 
@@ -171,8 +171,6 @@ void TcpServerHandle::AcceptTcpConnection(TcpConnectionHandle* connection)
 	}
 	catch (const MediaSoupError&)
 	{
-		delete connection;
-
 		return;
 	}
 
@@ -189,13 +187,13 @@ void TcpServerHandle::AcceptTcpConnection(TcpConnectionHandle* connection)
 	// Start receiving data.
 	if (!connection->Start())
 	{
-		delete connection;
-
 		return;
 	}
 
 	// Store it.
-	this->connections.insert(connection);
+	// NOTE: std::move() is just a cast, the unique_ptr is moved inside
+	// try_emplace(), once connection.get() has already been evaluated.
+	this->connections.try_emplace(connection.get(), std::move(connection));
 }
 
 void TcpServerHandle::InternalClose()
@@ -214,11 +212,6 @@ void TcpServerHandle::InternalClose()
 
 	MS_DEBUG_DEV("closing %zu active connections", this->connections.size());
 
-	for (auto* connection : this->connections)
-	{
-		delete connection;
-	}
-
 	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 }
 
@@ -226,10 +219,9 @@ bool TcpServerHandle::SetLocalAddress()
 {
 	MS_TRACE();
 
-	int err;
 	int len = sizeof(this->localAddr);
 
-	err = uv_tcp_getsockname(
+	const int err = uv_tcp_getsockname(
 	  this->uvHandle, reinterpret_cast<sockaddr*>(std::addressof(this->localAddr)), std::addressof(len));
 
 	if (err != 0)
@@ -276,12 +268,11 @@ inline void TcpServerHandle::OnTcpConnectionClosed(TcpConnectionHandle* connecti
 
 	MS_DEBUG_DEV("TCP connection closed");
 
-	// Remove the TcpConnectionHandle from the set.
-	this->connections.erase(connection);
+	// Remove it from the map. The extracted entry also keeps the
+	// TcpConnectionHandle alive, so `connection` remains valid below, and deletes
+	// it when leaving this block.
+	const auto extractedConnection = this->connections.extract(connection);
 
 	// Notify the subclass.
 	UserOnTcpConnectionClosed(connection);
-
-	// Delete it.
-	delete connection;
 }

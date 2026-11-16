@@ -93,7 +93,7 @@ namespace RTC
 			RtpStream(
 			  RTP::RtpStream::Listener* listener,
 			  SharedInterface* shared,
-			  RTP::RtpStream::Params& params,
+			  const RTP::RtpStream::Params& params,
 			  uint8_t initialScore);
 
 			virtual ~RtpStream();

@@ -25,41 +25,42 @@
 #include "fuzzer/include/RTC/SCTP/packet/FuzzerPacket.hpp"
 #include <cstdlib> // std::getenv()
 #include <iostream>
-#include <sstream> // std::istringstream()
+#include <sstream> // std::istringstream
 #include <string>
 #include <vector>
 
 namespace
 {
-	// NOLINTBEGIN(readability-identifier-naming)
-	bool fuzzStun   = false;
-	bool fuzzDtls   = false;
-	bool fuzzSctp   = false;
-	bool fuzzRtp    = false;
-	bool fuzzRtcp   = false;
-	bool fuzzCodecs = false;
-	bool fuzzUtils  = false;
-	// NOLINTEND(readability-identifier-naming)
-
-	int init()
+	struct EnabledFuzzers
 	{
-		std::string logLevel{ "none" };
-		std::vector<std::string> logTags = { "info" };
+		bool stun{ false };
+		bool dtls{ false };
+		bool sctp{ false };
+		bool rtp{ false };
+		bool rtcp{ false };
+		bool codecs{ false };
+		bool utils{ false };
+	};
 
-		const auto* logLevelPtr = std::getenv("MS_FUZZ_LOG_LEVEL");
-		const auto* logTagsPtr  = std::getenv("MS_FUZZ_LOG_TAGS");
+	EnabledFuzzers init()
+	{
+		const char* const logLevelPtr = std::getenv("MS_FUZZ_LOG_LEVEL");
+		const char* const logTagsPtr  = std::getenv("MS_FUZZ_LOG_TAGS");
+
+		std::string logLevel{ "none" };
+		std::vector<std::string> logTags{ "info" };
+		EnabledFuzzers enabledFuzzers;
 
 		// Get logLevel from ENV variable.
 		if (logLevelPtr)
 		{
-			logLevel = std::string(logLevelPtr);
+			logLevel = logLevelPtr;
 		}
 
 		// Get logTags from ENV variable.
 		if (logTagsPtr)
 		{
-			auto logTagsStr = std::string(logTagsPtr);
-			std::istringstream iss(logTagsStr);
+			std::istringstream iss{ logTagsPtr };
 			std::string logTag;
 
 			while (iss >> logTag)
@@ -78,62 +79,66 @@ namespace
 		{
 			std::cout << "[fuzzer] STUN fuzzer enabled" << std::endl;
 
-			fuzzStun = true;
+			enabledFuzzers.stun = true;
 		}
 
 		if (std::getenv("MS_FUZZ_DTLS"))
 		{
 			std::cout << "[fuzzer] DTLS fuzzer enabled" << std::endl;
 
-			fuzzDtls = true;
+			enabledFuzzers.dtls = true;
 		}
 
 		if (std::getenv("MS_FUZZ_SCTP"))
 		{
 			std::cout << "[fuzzer] SCTP fuzzer enabled" << std::endl;
 
-			fuzzSctp = true;
+			enabledFuzzers.sctp = true;
 		}
 
 		if (std::getenv("MS_FUZZ_RTP"))
 		{
 			std::cout << "[fuzzer] RTP fuzzer enabled" << std::endl;
 
-			fuzzRtp = true;
+			enabledFuzzers.rtp = true;
 		}
 
 		if (std::getenv("MS_FUZZ_RTCP"))
 		{
 			std::cout << "[fuzzer] RTCP fuzzer enabled" << std::endl;
 
-			fuzzRtcp = true;
+			enabledFuzzers.rtcp = true;
 		}
 
 		if (std::getenv("MS_FUZZ_CODECS"))
 		{
 			std::cout << "[fuzzer] codecs fuzzer enabled" << std::endl;
 
-			fuzzCodecs = true;
+			enabledFuzzers.codecs = true;
 		}
 
 		if (std::getenv("MS_FUZZ_UTILS"))
 		{
 			std::cout << "[fuzzer] Utils fuzzer enabled" << std::endl;
 
-			fuzzUtils = true;
+			enabledFuzzers.utils = true;
 		}
 
-		if (!fuzzStun && !fuzzDtls && !fuzzSctp && !fuzzRtp && !fuzzRtcp && !fuzzCodecs && !fuzzUtils)
+		if (
+		  !enabledFuzzers.stun && !enabledFuzzers.dtls && !enabledFuzzers.sctp && !enabledFuzzers.rtp &&
+		  !enabledFuzzers.rtcp && !enabledFuzzers.codecs && !enabledFuzzers.utils)
 		{
 			std::cout << "[fuzzer] all fuzzers enabled" << std::endl;
 
-			fuzzStun   = true;
-			fuzzDtls   = true;
-			fuzzSctp   = true;
-			fuzzRtp    = true;
-			fuzzRtcp   = true;
-			fuzzCodecs = true;
-			fuzzUtils  = true;
+			enabledFuzzers = {
+				.stun   = true,
+				.dtls   = true,
+				.sctp   = true,
+				.rtp    = true,
+				.rtcp   = true,
+				.codecs = true,
+				.utils  = true,
+			};
 		}
 
 		// Initialize static stuff.
@@ -143,36 +148,32 @@ namespace
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 
-		return 0;
+		return enabledFuzzers;
 	}
 } // namespace
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 {
-	// Trick to initialize our stuff just once.
-	// NOLINTNEXTLINE(readability-identifier-naming)
-	static thread_local const int unused = init();
+	// Initialize our stuff just once.
+	static thread_local const EnabledFuzzers Enabled = init();
 
-	// Avoid [-Wunused-variable].
-	(void)unused;
-
-	if (fuzzStun)
+	if (Enabled.stun)
 	{
 		FuzzerRtcIceStunPacket::Fuzz(data, len);
 	}
 
-	if (fuzzDtls)
+	if (Enabled.dtls)
 	{
 		FuzzerRtcDtlsTransport::Fuzz(data, len);
 	}
 
-	if (fuzzSctp)
+	if (Enabled.sctp)
 	{
 		FuzzerRtcSctpPacket::Fuzz(data, len);
 		FuzzerRtcSctpStateCookie::Fuzz(data, len);
 	}
 
-	if (fuzzRtp)
+	if (Enabled.rtp)
 	{
 		FuzzerRtcRtpPacket::Fuzz(data, len);
 		FuzzerRtcRtpStreamSend::Fuzz(data, len);
@@ -181,12 +182,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 		FuzzerRtcRateCalculator::Fuzz(data, len);
 	}
 
-	if (fuzzRtcp)
+	if (Enabled.rtcp)
 	{
 		FuzzerRtcRtcpCompoundPacket::Fuzz(data, len);
 	}
 
-	if (fuzzCodecs)
+	if (Enabled.codecs)
 	{
 		FuzzerRtcRtpCodecsOpus::Fuzz(data, len);
 		FuzzerRtcRtpCodecsVP8::Fuzz(data, len);
@@ -196,7 +197,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 		FuzzerRtcRtpCodecsDependencyDescriptor::Fuzz(data, len);
 	}
 
-	if (fuzzUtils)
+	if (Enabled.utils)
 	{
 		FuzzerUtils::Fuzz(data, len);
 	}

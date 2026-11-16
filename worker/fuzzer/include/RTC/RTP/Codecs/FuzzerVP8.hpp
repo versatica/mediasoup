@@ -5,8 +5,7 @@
 
 namespace FuzzerRtcRtpCodecsVP8
 {
-
 	void Fuzz(const uint8_t* data, size_t len);
-}
+} // namespace FuzzerRtcRtpCodecsVP8
 
 #endif
