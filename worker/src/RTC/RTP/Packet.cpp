@@ -7,6 +7,7 @@
 #include "RTC/Consts.hpp"
 #include <cstring>  // std::memmove(), std::memset()
 #include <iterator> // std::ostream_iterator
+#include <limits>   // std::numeric_limits
 #include <sstream>  // std::ostringstream
 
 namespace RTC
@@ -15,8 +16,10 @@ namespace RTC
 	{
 		/* Class variables. */
 
-		thread_local uint32_t Packet::nextMediasoupPacketId{ Utils::Crypto::GetRandomUInt<uint32_t>(
-			0, std::numeric_limits<uint32_t>::max() / 2) };
+		// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
+		thread_local uint32_t Packet::nextMediasoupPacketId{
+			Utils::Crypto::GetRandomUInt<uint32_t>(0, std::numeric_limits<uint32_t>::max() / 2),
+		};
 
 		/* Class methods. */
 
@@ -174,7 +177,8 @@ namespace RTC
 							continue;
 						}
 
-						auto* extension = reinterpret_cast<OneByteExtension*>(GetHeaderExtensionValue() + offset);
+						const auto* extension =
+						  reinterpret_cast<OneByteExtension*>(GetHeaderExtensionValue() + offset);
 
 						extIds.push_back(
 						  "{id:" + std::to_string(extension->id) +
@@ -194,7 +198,7 @@ namespace RTC
 							continue;
 						}
 
-						auto* extension =
+						const auto* extension =
 						  reinterpret_cast<TwoBytesExtension*>(GetHeaderExtensionValue() + offset);
 
 						extIds.push_back(
@@ -247,7 +251,7 @@ namespace RTC
 				{
 					std::string rrid;
 
-					if (ReadRid(rrid))
+					if (ReadRrid(rrid))
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
@@ -300,6 +304,7 @@ namespace RTC
 
 				{
 					uint8_t extenLen;
+
 					const uint8_t* extenValue =
 					  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
 
@@ -462,7 +467,7 @@ namespace RTC
 			// Add rrid.
 			std::string rrid;
 
-			ReadRid(rrid);
+			ReadRrid(rrid);
 
 			// Add wideSequenceNumber.
 			std::optional<uint16_t> wideSequenceNumber;
@@ -540,7 +545,7 @@ namespace RTC
 
 			const auto headerExtensionLength = GetHeaderExtensionLength();
 
-			auto* payload            = GetPayloadPointer();
+			auto* const payload      = GetPayloadPointer();
 			const auto payloadLength = GetPayloadLength();
 			const auto paddingLength = GetPaddingLength();
 
@@ -641,7 +646,7 @@ namespace RTC
 				}
 			}
 
-			auto paddedExtensionsLength          = Utils::Byte::PadTo4Bytes(extensionsLength);
+			const auto paddedExtensionsLength    = Utils::Byte::PadTo4Bytes(extensionsLength);
 			const size_t extensionsPaddingLength = paddedExtensionsLength - extensionsLength;
 
 			// Calculate the number of bytes to shift (may be negative if the packet
@@ -701,7 +706,7 @@ namespace RTC
 				}
 			}
 
-			auto* payload            = GetPayloadPointer();
+			auto* const payload      = GetPayloadPointer();
 			const auto payloadLength = GetPayloadLength();
 			const auto paddingLength = GetPaddingLength();
 
@@ -724,7 +729,7 @@ namespace RTC
 				// Set the header extension flag.
 				GetFixedHeaderPointer()->extension = 1;
 
-				auto* headerExtension = GetHeaderExtensionPointer();
+				auto* const headerExtension = GetHeaderExtensionPointer();
 
 				// Shift the payload.
 				// NOTE: We need to move payload before code below, otherwise we would
@@ -745,8 +750,9 @@ namespace RTC
 				headerExtension->len = htons(paddedExtensionsLength / 4);
 			}
 
-			const uint8_t* extensionsStart = GetHeaderExtensionValue();
-			auto* ptr                      = const_cast<uint8_t*>(extensionsStart);
+			uint8_t* const extensionsStart = GetHeaderExtensionValue();
+
+			uint8_t* ptr = extensionsStart;
 
 			if (type == ExtensionsType::OneByte)
 			{
@@ -755,9 +761,11 @@ namespace RTC
 					// Store the One-Byte extension offset in the array.
 					// `-1` because we have 14 elements total 0..13 and `id` is in the
 					// range 1..14.
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					this->oneByteExtensions[extension.id - 1] = ptr - extensionsStart;
 
-					*ptr = (extension.id << 4) | ((extension.len - 1) & 0x0F);
+					*ptr = static_cast<uint8_t>(
+					  (static_cast<uint32_t>(extension.id) << 4U) | ((extension.len - 1U) & 0x0FU));
 					++ptr;
 					std::memmove(ptr, extension.value, extension.len);
 					ptr += extension.len;
@@ -879,6 +887,7 @@ namespace RTC
 			}
 
 			uint8_t extenLen;
+
 			const uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.mid, extenLen);
 
 			if (!extenValue || extenLen == 0)
@@ -896,7 +905,8 @@ namespace RTC
 			MS_TRACE();
 
 			uint8_t extenLen;
-			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.mid, extenLen);
+
+			uint8_t* const extenValue = GetExtensionValue(this->headerExtensionIds.mid, extenLen);
 
 			if (!extenValue)
 			{
@@ -918,7 +928,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  rtp,
-				  "no enough space for MID value [len:%zu, max len:%" PRIu8 ", mid:'%s']",
+				  "not enough space for MID value [len:%zu, max len:%" PRIu8 ", mid:'%s']",
 				  midLen,
 				  RTC::Consts::MidRtpExtensionMaxLength,
 				  mid.c_str());
@@ -944,6 +954,7 @@ namespace RTC
 
 			// First try with the RID id then with the Repaired RID id.
 			uint8_t extenLen;
+
 			const uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.rid, extenLen);
 
 			if (extenValue && extenLen > 0)
@@ -965,6 +976,29 @@ namespace RTC
 			return false;
 		}
 
+		bool Packet::ReadRrid(std::string& rrid) const
+		{
+			MS_TRACE();
+
+			if (this->headerExtensionIds.rrid == 0)
+			{
+				return false;
+			}
+
+			uint8_t extenLen;
+
+			const uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.rrid, extenLen);
+
+			if (!extenValue || extenLen == 0)
+			{
+				return false;
+			}
+
+			rrid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
+
+			return true;
+		}
+
 		bool Packet::ReadAbsSendTime(uint32_t& absSendtime) const
 		{
 			MS_TRACE();
@@ -975,6 +1009,7 @@ namespace RTC
 			}
 
 			uint8_t extenLen;
+
 			const uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
 
 			if (!extenValue || extenLen != 3)
@@ -992,7 +1027,8 @@ namespace RTC
 			MS_TRACE();
 
 			uint8_t extenLen;
-			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
+
+			uint8_t* const extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
 
 			if (!extenValue)
 			{
@@ -1021,6 +1057,7 @@ namespace RTC
 			}
 
 			uint8_t extenLen;
+
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
 
@@ -1039,7 +1076,9 @@ namespace RTC
 			MS_TRACE();
 
 			uint8_t extenLen;
-			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
+
+			uint8_t* const extenValue =
+			  GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
 
 			if (!extenValue)
 			{
@@ -1068,6 +1107,7 @@ namespace RTC
 			}
 
 			uint8_t extenLen;
+
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.ssrcAudioLevel, extenLen);
 
@@ -1077,8 +1117,8 @@ namespace RTC
 			}
 
 			volume = Utils::Byte::Get1Byte(extenValue, 0);
-			voice  = (volume & (1 << 7)) != 0;
-			volume &= ~(1 << 7);
+			voice  = (volume & (1U << 7U)) != 0;
+			volume &= ~(1U << 7U);
 
 			return true;
 		}
@@ -1095,6 +1135,7 @@ namespace RTC
 			}
 
 			uint8_t extenLen;
+
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
 
@@ -1116,7 +1157,8 @@ namespace RTC
 			MS_TRACE();
 
 			uint8_t extenLen;
-			uint8_t* extenValue =
+
+			uint8_t* const extenValue =
 			  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
 
 			if (!extenValue)
@@ -1147,7 +1189,8 @@ namespace RTC
 				const auto offset = static_cast<size_t>(extenValue - GetHeaderExtensionValue());
 				// In One-Byte extensions the length field holds 1..16.
 				const size_t maxLen = HasOneByteExtensions() ? 16 : Consts::TwoBytesRtpExtensionMaxLength;
-				bool fits           = len <= maxLen && offset + len <= GetHeaderExtensionValueLength();
+
+				bool fits = len <= maxLen && offset + len <= GetHeaderExtensionValueLength();
 
 				for (size_t idx{ extenLen }; fits && idx < len; ++idx)
 				{
@@ -1158,7 +1201,7 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  rtp,
-					  "no enough space for updated dependency descriptor [needed:%zu, available:%" PRIu8 "]",
+					  "not enough space for updated dependency descriptor [needed:%zu, available:%" PRIu8 "]",
 					  len,
 					  extenLen);
 
@@ -1183,6 +1226,7 @@ namespace RTC
 			}
 
 			uint8_t extenLen;
+
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.videoOrientation, extenLen);
 
@@ -1192,9 +1236,9 @@ namespace RTC
 			}
 
 			const uint8_t cvoByte       = Utils::Byte::Get1Byte(extenValue, 0);
-			const uint8_t cameraValue   = ((cvoByte & 0b00001000) >> 3);
-			const uint8_t flipValue     = ((cvoByte & 0b00000100) >> 2);
-			const uint8_t rotationValue = (cvoByte & 0b00000011);
+			const uint8_t cameraValue   = ((cvoByte & 0b00001000U) >> 3U);
+			const uint8_t flipValue     = ((cvoByte & 0b00000100U) >> 2U);
+			const uint8_t rotationValue = (cvoByte & 0b00000011U);
 
 			camera = cameraValue != 0;
 			flip   = flipValue != 0;
@@ -1240,6 +1284,7 @@ namespace RTC
 			}
 
 			uint8_t extenLen;
+
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.absCaptureTime, extenLen);
 
@@ -1271,7 +1316,9 @@ namespace RTC
 			MS_TRACE();
 
 			uint8_t extenLen;
-			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absCaptureTime, extenLen);
+
+			uint8_t* const extenValue =
+			  GetExtensionValue(this->headerExtensionIds.absCaptureTime, extenLen);
 
 			if (!extenValue)
 			{
@@ -1302,6 +1349,7 @@ namespace RTC
 			}
 
 			uint8_t extenLen;
+
 			const uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.playoutDelay, extenLen);
 
 			if (extenLen != 3)
@@ -1326,6 +1374,7 @@ namespace RTC
 			}
 
 			uint8_t extenLen;
+
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.mediasoupPacketId, extenLen);
 
@@ -1394,10 +1443,10 @@ namespace RTC
 				return;
 			}
 
-			auto* payload            = GetPayloadPointer();
+			auto* const payload      = GetPayloadPointer();
 			const auto payloadLength = GetPayloadLength();
-			const auto absDelta =
-			  delta < 0 ? static_cast<uint32_t>(-(int64_t)delta) : static_cast<uint32_t>(delta);
+			const auto absDelta      = delta < 0 ? static_cast<uint32_t>(-static_cast<int64_t>(delta))
+			                                     : static_cast<uint32_t>(delta);
 
 			if (payloadOffset >= payloadLength)
 			{
@@ -1522,9 +1571,9 @@ namespace RTC
 			// Rewrite the SSRC.
 			SetSsrc(ssrc);
 
-			auto* payload = GetPayloadPointer();
+			auto* const payload = GetPayloadPointer();
 
-			// Write the original sequence number at the begining of the payload.
+			// Write the original sequence number at the beginning of the payload.
 			std::memmove(payload + RTC::Consts::RtxOverhead, payload, payloadLength);
 			Utils::Byte::Set2Bytes(payload, 0, GetSequenceNumber());
 
@@ -1536,7 +1585,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* payload            = GetPayloadPointer();
+			auto* const payload      = GetPayloadPointer();
 			const auto payloadLength = GetPayloadLength();
 
 			// NOTE: libwebrtc sends some RTX packets with no payload when the stream
@@ -1660,7 +1709,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Here we are at the beginning of the packet.
-			const auto* ptr = const_cast<uint8_t*>(GetBuffer());
+			const uint8_t* ptr = GetBuffer();
 
 			if (GetVersion() != 2)
 			{
@@ -1671,10 +1720,10 @@ namespace RTC
 
 			ptr += Packet::FixedHeaderMinLength;
 
-			// Here we are at the beginning of the optional CCRS list.
+			// Here we are at the beginning of the optional CSRC list.
 			if (HasCsrcs())
 			{
-				auto csrcsLength = GetCsrcCount();
+				const auto csrcsLength = GetCsrcsLength();
 
 				if (GetLength() < static_cast<size_t>(ptr - GetBuffer()) + csrcsLength)
 				{
@@ -1754,12 +1803,12 @@ namespace RTC
 			{
 				const uint8_t* extensionsStart = GetHeaderExtensionValue();
 				const uint8_t* extensionsEnd   = extensionsStart + GetHeaderExtensionValueLength();
-				auto* ptr                      = const_cast<uint8_t*>(extensionsStart);
+				const uint8_t* ptr             = extensionsStart;
 
 				// One-Byte extensions cannot have length 0.
 				while (ptr < extensionsEnd)
 				{
-					const auto* extension = reinterpret_cast<OneByteExtension*>(ptr);
+					const auto* extension = reinterpret_cast<const OneByteExtension*>(ptr);
 					const uint8_t id      = extension->id;
 					// NOTE: In One-Byte extensions, announced value must be incremented
 					// by 1.
@@ -1793,6 +1842,7 @@ namespace RTC
 							// Store the One-Byte extension offset in the array.
 							// `-1` because we have 14 elements total 0..13 and `id` is in the
 							// range 1..14.
+							// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 							this->oneByteExtensions[id - 1] = ptr - extensionsStart;
 						}
 
@@ -1814,12 +1864,12 @@ namespace RTC
 				const uint8_t* extensionsEnd   = extensionsStart + GetHeaderExtensionValueLength();
 				// ptr points to the extension id field (1 byte).
 				// ptr+1 points to the length field (1 byte, can have value 0).
-				auto* ptr = const_cast<uint8_t*>(extensionsStart);
+				const uint8_t* ptr = extensionsStart;
 
 				// Two-Byte extensions can have length 0.
 				while (ptr + 1 < extensionsEnd)
 				{
-					const auto* extension = reinterpret_cast<TwoBytesExtension*>(ptr);
+					const auto* extension = reinterpret_cast<const TwoBytesExtension*>(ptr);
 					const uint8_t id      = extension->id;
 					const size_t len      = extension->len;
 
@@ -1859,7 +1909,7 @@ namespace RTC
 
 				return true;
 			}
-			// If there is no header extension of if there is but it doesn't conform
+			// If there is no header extension or if there is but it doesn't conform
 			// to RFC 8285 extensions, then this is ok.
 			else
 			{
@@ -1877,6 +1927,7 @@ namespace RTC
 			{
 				// `-1` because we have 14 elements total 0..13 and `id` is in the
 				// range 1..14.
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				const auto offset = this->oneByteExtensions[id - 1];
 
 				MS_ASSERT(offset != -1, "extension with id %" PRIu8 " not found", id);
@@ -1884,12 +1935,13 @@ namespace RTC
 				// 1, so 0 cannot be represented.
 				MS_ASSERT(len > 0, "One-Byte extension with id %" PRIu8 " cannot have length 0", id);
 
-				auto* extension = reinterpret_cast<OneByteExtension*>(GetHeaderExtensionValue() + offset);
+				auto* const extension =
+				  reinterpret_cast<OneByteExtension*>(GetHeaderExtensionValue() + offset);
 
 				// In One-Byte extensions value length 0 means 1.
 				const auto currentLen = extension->len + 1;
 
-				// Fill with 0's if new length is minor.
+				// Fill with 0's if new length is smaller.
 				//
 				// NOTE: `UpdateDependencyDescriptor()` relies on this to tell the room it
 				// may grow into from the extensions that follow.
@@ -1908,11 +1960,12 @@ namespace RTC
 
 				const auto offset = it->second;
 
-				auto* extension = reinterpret_cast<TwoBytesExtension*>(GetHeaderExtensionValue() + offset);
+				auto* const extension =
+				  reinterpret_cast<TwoBytesExtension*>(GetHeaderExtensionValue() + offset);
 
 				const auto currentLen = extension->len;
 
-				// Fill with 0's if new length is minor.
+				// Fill with 0's if new length is smaller.
 				//
 				// NOTE: `UpdateDependencyDescriptor()` relies on this to tell the room it
 				// may grow into from the extensions that follow.

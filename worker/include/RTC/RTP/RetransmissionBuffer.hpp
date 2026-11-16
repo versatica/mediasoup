@@ -26,7 +26,7 @@ namespace RTC
 				 * - Insert() leaves it empty and returns the item so that the caller
 				 *   fills it once the packet has been restored to its original state.
 				 */
-				std::shared_ptr<RTP::Packet> sharedPacket{ nullptr };
+				std::shared_ptr<RTP::Packet> sharedPacket;
 				/**
 				 * Payload descriptor encoder, holding how the packet was rewritten so
 				 * that its retransmissions are rewritten the very same way.
@@ -36,7 +36,7 @@ namespace RTC
 				 *   packet was rewritten is up to the Consumer, since one packet is
 				 *   given to all of them and each rewrites it its own way.
 				 */
-				std::unique_ptr<RTP::Codecs::PayloadDescriptor::Encoder> encoder{ nullptr };
+				std::unique_ptr<RTP::Codecs::PayloadDescriptor::Encoder> encoder;
 				/**
 				 * Correct SSRC since original packet may not have the same.
 				 */
@@ -68,7 +68,7 @@ namespace RTC
 			};
 
 		private:
-			static Item* CreateItem(RTP::Packet* packet, int64_t nowMs);
+			static Item* CreateItem(const RTP::Packet* packet, int64_t nowMs);
 
 		public:
 			RetransmissionBuffer(uint16_t maxItems, int64_t maxRetransmissionDelayMs, uint32_t clockRate);
@@ -87,7 +87,7 @@ namespace RTC
 			 *   next call that may evict items (Insert(), Clear() or the buffer
 			 *   destruction), so the caller must fill it right away.
 			 */
-			Item* Insert(RTP::Packet* packet, int64_t nowMs);
+			Item* Insert(const RTP::Packet* packet, int64_t nowMs);
 			void Clear();
 			/**
 			 * Whether the given stored item was stored longer than the maximum
@@ -109,9 +109,9 @@ namespace RTC
 
 		private:
 			// Given as argument.
-			uint16_t maxItems;
-			int64_t maxRetransmissionDelayMs;
-			uint32_t clockRate;
+			const uint16_t maxItems;
+			const int64_t maxRetransmissionDelayMs;
+			const uint32_t clockRate;
 		};
 	} // namespace RTP
 } // namespace RTC

@@ -1616,6 +1616,79 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(readWideSeqNumber == newWideSeqNumber);
 	}
 
+	SECTION("Packet::ReadRid() and Packet::ReadRrid() read the RID and RRID extensions")
+	{
+		const RTC::RTP::HeaderExtensionIds headerExtensionIds{ .rid = 1, .rrid = 2 };
+
+		std::string rid{ "r1" };
+		std::string rrid{ "r2" };
+		std::string readRid;
+		std::string readRrid;
+
+		// Packet with just the RID extension.
+		const std::unique_ptr<RTC::RTP::Packet> ridPacket{ RTC::RTP::Packet::Factory(
+			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
+
+		// clang-format off
+		const std::vector<RTC::RTP::Packet::Extension> ridExtensions
+		{
+			{
+				RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID,
+				headerExtensionIds.rid,
+				static_cast<uint8_t>(rid.size()),
+				reinterpret_cast<uint8_t*>(rid.data())
+			}
+		};
+		// clang-format on
+
+		REQUIRE(ridPacket->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, ridExtensions));
+
+		const std::unique_ptr<RTC::RTP::Packet> parsedRidPacket{ RTC::RTP::Packet::Parse(
+			ridPacket->GetBuffer(), ridPacket->GetLength()) };
+
+		REQUIRE(parsedRidPacket);
+
+		parsedRidPacket->AssignExtensionIds(headerExtensionIds);
+
+		REQUIRE(parsedRidPacket->ReadRid(readRid));
+		REQUIRE(readRid == rid);
+		REQUIRE(!parsedRidPacket->ReadRrid(readRrid));
+
+		// Packet with just the RRID extension, as a RTX packet carries.
+		const std::unique_ptr<RTC::RTP::Packet> rridPacket{ RTC::RTP::Packet::Factory(
+			rtpCommon::CloneBuffer, sizeof(rtpCommon::CloneBuffer)) };
+
+		// clang-format off
+		const std::vector<RTC::RTP::Packet::Extension> rridExtensions
+		{
+			{
+				RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID,
+				headerExtensionIds.rrid,
+				static_cast<uint8_t>(rrid.size()),
+				reinterpret_cast<uint8_t*>(rrid.data())
+			}
+		};
+		// clang-format on
+
+		REQUIRE(rridPacket->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, rridExtensions));
+
+		const std::unique_ptr<RTC::RTP::Packet> parsedRridPacket{ RTC::RTP::Packet::Parse(
+			rridPacket->GetBuffer(), rridPacket->GetLength()) };
+
+		REQUIRE(parsedRridPacket);
+
+		parsedRridPacket->AssignExtensionIds(headerExtensionIds);
+
+		readRid.clear();
+		readRrid.clear();
+
+		// ReadRid() falls back to the RRID extension.
+		REQUIRE(parsedRridPacket->ReadRid(readRid));
+		REQUIRE(readRid == rrid);
+		REQUIRE(parsedRridPacket->ReadRrid(readRrid));
+		REQUIRE(readRrid == rrid);
+	}
+
 	SECTION("Packet::SetExtensions() fails if wrong extensions are given")
 	{
 		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(

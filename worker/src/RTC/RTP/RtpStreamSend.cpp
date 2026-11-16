@@ -32,35 +32,18 @@ namespace RTC
 		  : RTP::RtpStream::RtpStream(listener, shared, params, 10),
 		    mid(mid),
 		    transmissionCounter(shared, /*ignorePaddingOnlyPackets*/ true),
+		    retransmissionBuffer(
+		      params.useNack ? std::make_unique<RTP::RetransmissionBuffer>(
+		                         RetransmissionBufferMaxItems,
+		                         params.mimeType.type == RTC::RtpCodecMimeType::Type::VIDEO
+		                           ? RtpStreamSend::MaxRetransmissionDelayForVideoMs
+															 : RtpStreamSend::MaxRetransmissionDelayForAudioMs,
+		                         params.clockRate)
+												 : nullptr),
 		    retransmissionTimer(
 		      params.useNack ? shared->CreateTimer(this, "rtp-stream-send-retransmissions") : nullptr)
 		{
 			MS_TRACE();
-
-			if (this->params.useNack)
-			{
-				int64_t maxRetransmissionDelayMs{ 0 };
-
-				switch (params.mimeType.type)
-				{
-					case RTC::RtpCodecMimeType::Type::VIDEO:
-					{
-						maxRetransmissionDelayMs = RtpStreamSend::MaxRetransmissionDelayForVideoMs;
-
-						break;
-					}
-
-					case RTC::RtpCodecMimeType::Type::AUDIO:
-					{
-						maxRetransmissionDelayMs = RtpStreamSend::MaxRetransmissionDelayForAudioMs;
-
-						break;
-					}
-				}
-
-				this->retransmissionBuffer = std::make_unique<RTC::RTP::RetransmissionBuffer>(
-				  RetransmissionBufferMaxItems, maxRetransmissionDelayMs, params.clockRate);
-			}
 		}
 
 		RtpStreamSend::~RtpStreamSend()
@@ -95,7 +78,7 @@ namespace RTC
 			this->rtxSeq = Utils::Crypto::GetRandomUInt<uint16_t>(0, 0xFFFF);
 		}
 
-		RtpStreamSend::ReceivePacketResult RtpStreamSend::ReceivePacket(RTP::Packet* packet)
+		RtpStreamSend::ReceivePacketResult RtpStreamSend::ReceivePacket(const RTP::Packet* packet)
 		{
 			MS_TRACE();
 
@@ -240,14 +223,10 @@ namespace RTC
 			// Get the NTP representation of the time at which the Receiver Report
 			// arrived, which is what the round trip is measured against.
 			const auto ntp = Utils::Time::TimeUsToNtp(receivedAtUs + this->shared->GetNtpOffsetUs());
-
 			// Get the compact NTP representation of the arrival time.
-			uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
-
-			compactNtp |= (ntp.fractions & 0xFFFF0000) >> 16;
-
-			const uint32_t lastSr = reportBlock.lastSenderReport;
-			const uint32_t dlsr   = reportBlock.delaySinceLastSenderReport;
+			const uint32_t compactNtp = Utils::Time::NtpToCompactNtp(ntp);
+			const uint32_t lastSr     = reportBlock.lastSenderReport;
+			const uint32_t dlsr       = reportBlock.delaySinceLastSenderReport;
 
 			std::optional<float> measuredRttMs;
 
@@ -343,12 +322,12 @@ namespace RTC
 			// the maximum of its type rather than let overflow.
 			this->packetsLost = static_cast<int32_t>(std::min<int64_t>(
 			  int64_t{ this->packetsLost } + reportedLostPackets, std::numeric_limits<int32_t>::max()));
-			// NOTE: The fraction is in 1/256 units, hence the shift, which is the
-			// scale a Receiver Report uses for its own.
-			this->fractionLost =
-			  expectedPackets > 0
-			    ? static_cast<uint8_t>(std::min<int64_t>((reportedLostPackets << 8) / expectedPackets, 255))
-			    : 0;
+			// NOTE: The fraction is in 1/256 units, which is the scale a Receiver
+			// Report uses for its own.
+			this->fractionLost = expectedPackets > 0
+			                       ? static_cast<uint8_t>(std::min<int64_t>(
+			                           (reportedLostPackets * 256) / expectedPackets, 255))
+			                       : 0;
 
 			return Loss{ .lostPackets = reportedLostPackets, .expectedPackets = expectedPackets };
 		}

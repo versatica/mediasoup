@@ -112,7 +112,7 @@
 		"h264-profile-level-id": "^2.3.3",
 		"node-fetch": "^3.3.2",
 		"supports-color": "^11.0.0",
-		"tar": "^7.5.22"
+		"tar": "^7.5.23"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -120,9 +120,9 @@
 		"@types/ini": "^4.1.1",
 		"@types/jest": "^30.0.0",
 		"@types/node": "^26.6.6",
-		"eslint": "^10.14.0",
+		"eslint": "^10.15.0",
 		"eslint-config-prettier": "^10.1.8",
-		"eslint-plugin-jest": "^29.17.0",
+		"eslint-plugin-jest": "^29.17.1",
 		"eslint-plugin-prettier": "^5.5.7",
 		"globals": "^17.14.0",
 		"ini": "^7.0.0",
@@ -131,7 +131,7 @@
 		"marked": "^18.2.0",
 		"open-cli": "^9.0.0",
 		"pick-port": "^2.2.1",
-		"prettier": "^3.9.10",
+		"prettier": "^3.10.1",
 		"ts-jest": "^29.4.15",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.72.2",

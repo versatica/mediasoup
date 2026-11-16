@@ -43,6 +43,7 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	uint16_t wideSeqNumber;
 	std::string mid;
 	std::string rid;
+	std::string rrid;
 
 	packet->GetBuffer();
 	packet->GetBufferLength();
@@ -73,6 +74,7 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	const RTC::RTP::HeaderExtensionIds headerExtensionIds{
 		.mid               = 5,
 		.rid               = 6,
+		.rrid              = 7,
 		.absSendTime       = 3,
 		.transportWideCc01 = 4,
 		.ssrcAudioLevel    = 1,
@@ -91,6 +93,10 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasExtension(6);
 	packet->GetExtensionValue(6, extenLen);
 	packet->ReadRid(rid);
+
+	packet->HasExtension(7);
+	packet->GetExtensionValue(7, extenLen);
+	packet->ReadRrid(rrid);
 
 	packet->HasExtension(3);
 	packet->GetExtensionValue(3, extenLen);

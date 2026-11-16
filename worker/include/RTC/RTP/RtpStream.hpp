@@ -318,7 +318,7 @@ namespace RTC
 			uint32_t badSeq{ 0 };
 			// Highest timestamp seen.
 			uint32_t maxPacketTs{ 0 };
-			// When the packet with highest timestammp was seen.
+			// When the packet with highest timestamp was seen.
 			int64_t maxPacketAtUs{ 0 };
 			// When the media in the packet with highest timestamp was captured, in our own
 			// monotonic clock.

@@ -64,8 +64,10 @@ namespace RTC
 
 			// Sanity check. Do not allow temporal layers higher than defined.
 			temporalLayer =
+			  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			  std::min(static_cast<size_t>(temporalLayer), this->spatialLayerCounters[0].size() - 1);
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
 			temporalLayerCounter.Update(packet);
@@ -95,7 +97,9 @@ namespace RTC
 
 			MS_ASSERT(spatialLayer < this->spatialLayerCounters.size(), "spatialLayer too high");
 			MS_ASSERT(
-			  temporalLayer < this->spatialLayerCounters[spatialLayer].size(), "temporalLayer too high");
+			  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			  temporalLayer < this->spatialLayerCounters[spatialLayer].size(),
+			  "temporalLayer too high");
 
 			// Return 0 if specified layers are not being received.
 			if (GetTemporalLayerBitrate(nowMs, spatialLayer, temporalLayer) <= 0)
@@ -113,6 +117,7 @@ namespace RTC
 			{
 				for (uint8_t tIdx{ 0 }; tIdx <= temporalLayer; ++tIdx)
 				{
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					auto& temporalLayerCounter = this->spatialLayerCounters[sIdx][tIdx];
 
 					rate += temporalLayerCounter.GetBitrate(nowMs).value_or(0);
@@ -146,12 +151,15 @@ namespace RTC
 
 			MS_ASSERT(spatialLayer < this->spatialLayerCounters.size(), "spatialLayer too high");
 			MS_ASSERT(
-			  temporalLayer < this->spatialLayerCounters[spatialLayer].size(), "temporalLayer too high");
+			  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			  temporalLayer < this->spatialLayerCounters[spatialLayer].size(),
+			  "temporalLayer too high");
 
 			int64_t rate{ 0 };
 
 			for (uint8_t tIdx{ 0 }; tIdx <= temporalLayer; ++tIdx)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
 
 				rate += temporalLayerCounter.GetBitrate(nowMs).value_or(0);
@@ -167,8 +175,11 @@ namespace RTC
 
 			MS_ASSERT(spatialLayer < this->spatialLayerCounters.size(), "spatialLayer too high");
 			MS_ASSERT(
-			  temporalLayer < this->spatialLayerCounters[spatialLayer].size(), "temporalLayer too high");
+			  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			  temporalLayer < this->spatialLayerCounters[spatialLayer].size(),
+			  "temporalLayer too high");
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
 			return temporalLayerCounter.GetBitrate(nowMs).value_or(0);
@@ -217,8 +228,10 @@ namespace RTC
 		  int64_t sendNackDelayMs,
 		  bool useRtpInactivityCheck)
 		  : RTP::RtpStream::RtpStream(listener, shared, params, 10),
-		    sendNackDelayMs(sendNackDelayMs),
 		    useRtpInactivityCheck(useRtpInactivityCheck),
+		    nackGenerator(
+		      params.useNack ? std::make_unique<RTC::NackGenerator>(this, shared, sendNackDelayMs)
+					               : nullptr),
 		    inactivityCheckPeriodicTimer(
 		      useRtpInactivityCheck ? shared->CreateTimer(this, "rtp-stream-recv-inactivity-check")
 					                      : nullptr),
@@ -231,13 +244,6 @@ namespace RTC
 		    mediaTransmissionCounter(shared, /*ignorePaddingOnlyPackets*/ true)
 		{
 			MS_TRACE();
-
-			if (this->params.useNack)
-			{
-				this->nackGenerator.reset(new RTC::NackGenerator(this, this->shared, this->sendNackDelayMs));
-			}
-
-			this->inactive = false;
 
 			if (this->useRtpInactivityCheck)
 			{
@@ -392,10 +398,10 @@ namespace RTC
 				// NOTE: A zeroed capture timestamp gives no capture instant to store.
 				if (packet->ReadAbsCaptureTime(absCaptureTimestamp, estimatedCaptureClockOffset) && absCaptureTimestamp != 0)
 				{
-					Utils::Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-					ntp.seconds   = static_cast<uint32_t>(absCaptureTimestamp >> 32);
-					ntp.fractions = static_cast<uint32_t>(absCaptureTimestamp);
+					const Utils::Time::Ntp ntp{
+						.seconds   = static_cast<uint32_t>(absCaptureTimestamp >> 32),
+						.fractions = static_cast<uint32_t>(absCaptureTimestamp),
+					};
 
 					// The capture timestamp belongs to the clock of the capture system, which is
 					// not the clock of the sender of this stream when the media comes from
@@ -658,7 +664,7 @@ namespace RTC
 				// A fixed point number with 8 bits of fraction, so a whole interval lost
 				// gives 256, one more than the field can hold.
 				this->fractionLost =
-				  static_cast<uint8_t>(std::min<int64_t>((lostInterval << 8) / expectedInterval, 255));
+				  static_cast<uint8_t>(std::min<int64_t>((lostInterval * 256) / expectedInterval, 255));
 			}
 
 			// Worst remote fraction lost is not worse than local one.
@@ -676,7 +682,9 @@ namespace RTC
 				// NOTE: Clamped as the fraction lost above, since the difference read as
 				// signed may come out negative.
 				const auto newLostInterval = static_cast<uint32_t>(
-				  (worstRemoteFractionLost * std::max<int64_t>(expectedInterval, 0)) >> 8);
+				  (static_cast<uint64_t>(worstRemoteFractionLost) *
+					 static_cast<uint64_t>(std::max<int64_t>(expectedInterval, 0))) >>
+				  8U);
 
 				this->reportedPacketsLost += newLostInterval;
 
@@ -696,7 +704,7 @@ namespace RTC
 				const int64_t delayUs = nowUs - senderReportTiming.receivedAtUs;
 
 				// Express delay in units of 1/65536 seconds.
-				auto dlsr = static_cast<uint32_t>((delayUs / 1000000) << 16);
+				auto dlsr = static_cast<uint32_t>(delayUs / 1000000) << 16U;
 
 				dlsr |= static_cast<uint32_t>(((delayUs % 1000000) * 65536) / 1000000);
 
@@ -1189,11 +1197,13 @@ namespace RTC
 					const bool isActive =
 					  this->transmissionCounter.GetSpatialLayerBitrate(nowMs, spatialLayer) > 0;
 
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					if (isActive == this->spatialLayersActivity[spatialLayer])
 					{
 						continue;
 					}
 
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					this->spatialLayersActivity[spatialLayer] = isActive;
 
 					MS_DEBUG_2TAGS(
@@ -1220,6 +1230,7 @@ namespace RTC
 			  rtx,
 			  "triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
 			  this->params.ssrc,
+			  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			  seqNumbers[0],
 			  seqNumbers.size());
 
@@ -1261,7 +1272,7 @@ namespace RTC
 						break;
 					}
 
-					bitmask |= (1 << shift);
+					bitmask |= (1U << shift);
 					++it;
 				}
 
