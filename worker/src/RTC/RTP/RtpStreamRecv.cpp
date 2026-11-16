@@ -130,6 +130,7 @@ namespace RTC
 
 			int64_t rate{ 0 };
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			for (auto& temporalLayerCounter : this->spatialLayerCounters[spatialLayer])
 			{
 				rate += temporalLayerCounter.GetBitrate(nowMs).value_or(0);
