@@ -59,11 +59,9 @@ namespace RTC
 				if (weight > 0)
 				{
 					entries.push_back(
-					  Entry{
-					    .candidate     = candidate,
-					    .options       = std::move(bitrateOptions.options),
-					    .currentOption = bitrateOptions.currentOption,
-					  });
+					  Entry{ .candidate     = candidate,
+						       .options       = std::move(bitrateOptions.options),
+						       .currentOption = bitrateOptions.currentOption });
 
 					totalWeight += weight;
 				}

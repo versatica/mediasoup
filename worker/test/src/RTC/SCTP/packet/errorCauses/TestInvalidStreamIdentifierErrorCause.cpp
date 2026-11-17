@@ -22,7 +22,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -94,7 +94,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
 			// Stream Identifier: 12345
-			0x30, 0x39, 0x00, 0x00,
+			0x30, 0x39, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -107,7 +107,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 			// Code:1 (INVALID-STREAM-IDENTIFIER), Length: 7
 			0x00, 0x01, 0x00, 0x07,
 			// Stream Identifier: 12345
-			0x30, 0x39, 0x00,
+			0x30, 0x39, 0x00
 		};
 		// clang-format on
 
@@ -121,7 +121,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 			0x00, 0x01, 0x00, 0x09,
 			// Stream Identifier: 12345
 			0x30, 0x39, 0x00, 0x00,
-			0xEE,
+			0xEE
 		};
 		// clang-format on
 
@@ -134,7 +134,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 			// Code:1 (INVALID-STREAM-IDENTIFIER), Length: 8
 			0x00, 0x01, 0x00, 0x08,
 			// Stream Identifier: 12345
-			0x30, 0x39, 0x00,
+			0x30, 0x39, 0x00
 		};
 		// clang-format on
 

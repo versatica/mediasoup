@@ -43,7 +43,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 			0x60, 0x01, 0x00, 0x00,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC, 0xDD,
+			0xAA, 0xBB, 0xCC, 0xDD
 		};
 		// clang-format on
 
@@ -100,9 +100,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 
 		REQUIRE(parameter2->GetReconfigurationRequestSequenceNumber() == 0x44332211);
 
-		const std::vector<uint16_t> expectedStreamIds2{
-			0x6001,
-		};
+		const std::vector<uint16_t> expectedStreamIds2{ 0x6001 };
 
 		REQUIRE(parameter2->GetStreamIds() == expectedStreamIds2);
 

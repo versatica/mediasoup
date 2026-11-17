@@ -359,7 +359,7 @@ namespace RTC
 				const Codecs::DependencyDescriptor::RewriteParams rewriteParams{
 					.frameNumber = forwardedFrameNumber,
 					.activeDecodeTargetsBitmask =
-					  this->payloadDescriptor->GetDecodeTargetsBitmask(maxSpatialLayer, maxTemporalLayer),
+					  this->payloadDescriptor->GetDecodeTargetsBitmask(maxSpatialLayer, maxTemporalLayer)
 				};
 
 				this->payloadDescriptor->Rewrite(rewriteParams, packet);

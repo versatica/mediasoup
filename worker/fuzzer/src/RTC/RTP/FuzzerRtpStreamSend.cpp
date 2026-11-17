@@ -18,7 +18,7 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	{
 		0b10000000, 0b01111011, 0b01010010, 0b00001110,
 		0b01011011, 0b01101011, 0b11001010, 0b10110101,
-		0, 0, 0, 2,
+		0, 0, 0, 2
 	};
 	// clang-format on
 
@@ -31,10 +31,7 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 	const RTC::RTP::RtpStream::Params params{
-		.ssrc      = 1111,
-		.mimeType  = mimeType,
-		.clockRate = 90000,
-		.useNack   = true,
+		.ssrc = 1111, .mimeType = mimeType, .clockRate = 90000, .useNack = true
 	};
 	const std::string mid;
 	TestRtpStreamListener testRtpStreamListener;
@@ -71,7 +68,7 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 			.extendedHighestSeq         = Utils::Byte::Get4Bytes(data, offset + 6),
 			.jitter                     = 0,
 			.lastSenderReport           = 0,
-			.delaySinceLastSenderReport = 0,
+			.delaySinceLastSenderReport = 0
 		};
 
 		stream->ReceiveRtcpReportBlock(reportBlock, shared.GetTimeUs());

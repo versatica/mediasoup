@@ -8,9 +8,8 @@
 
 namespace
 {
-	constexpr uint8_t DependencyDescriptorId{
-		static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
-	};
+	constexpr uint8_t DependencyDescriptorId{ static_cast<uint8_t>(
+		RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR) };
 } // namespace
 
 SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
@@ -32,9 +31,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		std::memcpy(value, data, len);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
-			 DependencyDescriptorId, reservedLen,
-			 value },
+			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, DependencyDescriptorId, reservedLen, value }
 		};
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
@@ -122,7 +119,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		const uint8_t data[] =
 		{
 			0x80, 0x01, 0x2F, 0x80, 0x02, 0x14, 0xEA, 0xA8,
-			0x60, 0x41, 0x4D, 0x14, 0x10, 0x20, 0x84, 0x26,
+			0x60, 0x41, 0x4D, 0x14, 0x10, 0x20, 0x84, 0x26
 		};
 		// clang-format on
 
@@ -147,11 +144,9 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(templateStructure->templateLayers[0].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[0].temporalLayer == 0);
 
-		dtis = {
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
-		};
+		dtis = { RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
+		         RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
+		         RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH };
 
 		REQUIRE(templateStructure->templateLayers[0].decodeTargetIndications == dtis);
 
@@ -166,11 +161,9 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(templateStructure->templateLayers[1].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[1].temporalLayer == 0);
 
-		dtis = {
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
-		};
+		dtis = { RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
+		         RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
+		         RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH };
 
 		REQUIRE(templateStructure->templateLayers[1].decodeTargetIndications == dtis);
 
@@ -185,11 +178,9 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(templateStructure->templateLayers[2].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[2].temporalLayer == 1);
 
-		dtis = {
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::DISCARDABLE,
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
-		};
+		dtis = { RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
+		         RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::DISCARDABLE,
+		         RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH };
 
 		REQUIRE(templateStructure->templateLayers[2].decodeTargetIndications == dtis);
 
@@ -204,11 +195,9 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(templateStructure->templateLayers[3].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[3].temporalLayer == 2);
 
-		dtis = {
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::DISCARDABLE,
-		};
+		dtis = { RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
+		         RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
+		         RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::DISCARDABLE };
 
 		REQUIRE(templateStructure->templateLayers[3].decodeTargetIndications == dtis);
 
@@ -223,11 +212,9 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(templateStructure->templateLayers[4].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[4].temporalLayer == 2);
 
-		dtis = {
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
-			RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::DISCARDABLE,
-		};
+		dtis = { RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
+		         RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
+		         RTC::RTP::Codecs::DependencyDescriptor::DecodeTargetIndication::DISCARDABLE };
 
 		REQUIRE(templateStructure->templateLayers[4].decodeTargetIndications == dtis);
 
@@ -288,7 +275,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 		// clang-format on
 
@@ -305,7 +292,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		//  000000 4D 00 D8
 		const uint8_t data2[] =
 		{
-			0x00, 0x00, 0xE8,
+			0x00, 0x00, 0xE8
 		};
 		// clang-format on
 
@@ -355,13 +342,13 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 
 		// Mandatory fields only, so nothing tells about the active decode targets.
 		const uint8_t deltaFrameData[] =
 		{
-			0x00, 0x00, 0xE8,
+			0x00, 0x00, 0xE8
 		};
 		// clang-format on
 
@@ -436,12 +423,12 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 
 		const uint8_t deltaFrameData[] =
 		{
-			0x00, 0x00, 0xE8,
+			0x00, 0x00, 0xE8
 		};
 		// clang-format on
 
@@ -495,12 +482,12 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 
 		const uint8_t deltaFrameData[] =
 		{
-			0x00, 0x00, 0xE8,
+			0x00, 0x00, 0xE8
 		};
 		// clang-format on
 
@@ -568,7 +555,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 		// clang-format on
 
@@ -616,13 +603,13 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 
 		// Mandatory fields only, so it depends on the structure above.
 		const uint8_t deltaFrameData[] =
 		{
-			0x00, 0x00, 0xE8,
+			0x00, 0x00, 0xE8
 		};
 		// clang-format on
 
@@ -688,7 +675,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 		// clang-format on
 
@@ -712,7 +699,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		const uint8_t deltaFrameData[] =
 		{
 			0xC0, 0x00, 0xE8, 0x7F,
-			0x6A, 0x94, 0xA0,
+			0x6A, 0x94, 0xA0
 		};
 		// clang-format on
 
@@ -753,7 +740,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		const uint8_t rewrittenData[] =
 		{
 			0xC0, 0x00, 0xE8, 0x7B,
-			0x6A, 0x94, 0xA0,
+			0x6A, 0x94, 0xA0
 		};
 		// clang-format on
 
@@ -782,7 +769,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 		// clang-format on
 
@@ -863,7 +850,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 
 		// The same one, frame number 242.
@@ -872,7 +859,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x80, 0x00, 0xF2, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 
 		// And frame number 252, in a packet that is not the first one of its frame.
@@ -881,7 +868,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x00, 0x00, 0xFC, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 		// clang-format on
 

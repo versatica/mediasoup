@@ -16,7 +16,7 @@ namespace RTC
 		{
 			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE,            "NONE"            },
 			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS,  "SCTP_OVER_DTLS"  },
-			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK, "TRUSTED_NETWORK" },
+			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK, "TRUSTED_NETWORK" }
 		};
 		// clang-format on
 

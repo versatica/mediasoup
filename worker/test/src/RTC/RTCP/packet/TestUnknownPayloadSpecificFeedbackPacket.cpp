@@ -37,7 +37,7 @@ SCENARIO("RTCP Unknown Payload-Specific Feedback Packet (206)", "[serializable][
 			0x01, 0x93, 0x2D, 0xB4,
 			// 8 bytes of value
 			0x11, 0x22, 0x33, 0x44,
-			0x55, 0x66, 0x77, 0x88,
+			0x55, 0x66, 0x77, 0x88
 		};
 		// clang-format on
 
@@ -106,7 +106,7 @@ SCENARIO("RTCP Unknown Payload-Specific Feedback Packet (206)", "[serializable][
 			// SSRC of media source: 0
 			0x00, 0x00, 0x00, 0x00,
 			// 4 bytes of value
-			0x00, 0x00, 0x00, 0x01,
+			0x00, 0x00, 0x00, 0x01
 		};
 		// clang-format on
 
@@ -145,7 +145,7 @@ SCENARIO("RTCP Unknown Payload-Specific Feedback Packet (206)", "[serializable][
 			// Media SSRC: 2222
 			0x00, 0x00, 0x08, 0xAE,
 			// 2 bytes of value, Padding: 2 bytes
-			0xAA, 0xBB, 0x00, 0x02,
+			0xAA, 0xBB, 0x00, 0x02
 		};
 		// clang-format on
 
@@ -181,7 +181,7 @@ SCENARIO("RTCP Unknown Payload-Specific Feedback Packet (206)", "[serializable][
 			// SSRC of packet sender: 1111
 			0x00, 0x00, 0x04, 0x57,
 			// SSRC of media source: 2222
-			0x00, 0x00, 0x08, 0xAE,
+			0x00, 0x00, 0x08, 0xAE
 		};
 		// clang-format on
 
@@ -215,7 +215,7 @@ SCENARIO("RTCP Unknown Payload-Specific Feedback Packet (206)", "[serializable][
 			// V=2, P=0, FMT=2, PT:206, Length: 1
 			0b10000010, 0xCE, 0x00, 0x01,
 			// SSRC of packet sender: 1111
-			0x00, 0x00, 0x04, 0x57,
+			0x00, 0x00, 0x04, 0x57
 		};
 		// clang-format on
 

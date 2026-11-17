@@ -17,7 +17,6 @@
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownChunk.hpp"
-#include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
@@ -43,7 +42,7 @@ namespace
 	// to fire whichever timers have expired after advancing time.
 	constexpr std::array<std::string_view, 8> SctpTimerLabels{
 		"sctp-t1-init",     "sctp-t1-cookie",          "sctp-t2-shutdown",       "sctp-t3-rtx",
-		"sctp-delayed-ack", "sctp-heartbeat-interval", "sctp-heartbeat-timeout", "sctp-re-config",
+		"sctp-delayed-ack", "sctp-heartbeat-interval", "sctp-heartbeat-timeout", "sctp-re-config"
 	};
 
 	/**

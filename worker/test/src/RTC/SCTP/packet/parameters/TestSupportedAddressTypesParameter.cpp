@@ -22,7 +22,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 			// Address type 3: 0x3003, 2 bytes of padding
 			0x30, 0x03, 0x00, 0x00,
 			// Extra bytes that should be ignored
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -97,7 +97,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 			// Type:12 (SUPPORTED-ADDRESS-TYPES), Length: 7
 			0x00, 0x0C, 0x00, 0x0A,
 			// Address type 1: 0x1001, Address Type 2: 0x2002
-			0x10, 0x01, 0x20, 0x02,
+			0x10, 0x01, 0x20, 0x02
 		};
 		// clang-format on
 

@@ -24,7 +24,7 @@ namespace RTC
 			{ SdesPacket::ItemType::LOC,   "LOC"   },
 			{ SdesPacket::ItemType::TOOL,  "TOOL"  },
 			{ SdesPacket::ItemType::NOTE,  "NOTE"  },
-			{ SdesPacket::ItemType::PRIV,  "PRIV"  },
+			{ SdesPacket::ItemType::PRIV,  "PRIV"  }
 		};
 		// clang-format on
 
@@ -297,12 +297,10 @@ namespace RTC
 					const uint8_t itemLength = Utils::Byte::Get1Byte(buffer, offset + 1);
 
 					items.push_back(
-					  {
-					    .ssrc = ssrc,
-					    .type = type,
-					    .value =
-					      std::string_view(reinterpret_cast<const char*>(buffer + offset + 2), itemLength),
-					  });
+					  { .ssrc = ssrc,
+						  .type = type,
+						  .value =
+						    std::string_view(reinterpret_cast<const char*>(buffer + offset + 2), itemLength) });
 
 					offset += 2 + itemLength;
 				}

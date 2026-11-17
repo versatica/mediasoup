@@ -25,7 +25,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// Num SSRC: 0, BR Exp: 0, BR Mantissa: 1000
 			0x00, 0x00, 0x03, 0xE8,
 			// Padding: 4 bytes
-			0x00, 0x00, 0x00, 0x04,
+			0x00, 0x00, 0x00, 0x04
 		};
 		// clang-format on
 
@@ -46,7 +46,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// Num SSRC: 0, BR Exp: 0, BR Mantissa: 1000
 			0x00, 0x00, 0x03, 0xE8,
 			// Extra bytes.
-			0xFF, 0xFF, 0xFF, 0xFF,
+			0xFF, 0xFF, 0xFF, 0xFF
 		};
 		// clang-format on
 
@@ -64,7 +64,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// SSRC of media source: 0
 			0x00, 0x00, 0x00, 0x00,
 			// Unique identifier: 'R' 'E' 'M' 'B'
-			0x52, 0x45, 0x4D, 0x42,
+			0x52, 0x45, 0x4D, 0x42
 		};
 		// clang-format on
 
@@ -86,7 +86,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// Unique identifier: 'N' 'E' 'M' 'B'
 			0x4E, 0x45, 0x4D, 0x42,
 			// Num SSRC: 0, BR Exp: 0, BR Mantissa: 1000
-			0x00, 0x00, 0x03, 0xE8,
+			0x00, 0x00, 0x03, 0xE8
 		};
 		// clang-format on
 
@@ -105,7 +105,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// Unique identifier: 'R' 'E' 'M' 'B'
 			0x52, 0x45, 0x4D, 0x42,
 			// Num SSRC: 0, BR Exp: 0, BR Mantissa: 1000
-			0x00, 0x00, 0x03, 0xE8,
+			0x00, 0x00, 0x03, 0xE8
 		};
 		// clang-format on
 
@@ -124,7 +124,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// Unique identifier: 'R' 'E' 'M' 'B'
 			0x52, 0x45, 0x4D, 0x42,
 			// Num SSRC: 0, BR Exp: 0, BR Mantissa: 1000
-			0x00, 0x00, 0x03, 0xE8,
+			0x00, 0x00, 0x03, 0xE8
 		};
 		// clang-format on
 
@@ -142,7 +142,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// SSRC of media source: 0
 			0x00, 0x00, 0x00, 0x00,
 			// Extra bytes: 'R' 'E' 'M' 'B'
-			0x52, 0x45, 0x4D, 0x42,
+			0x52, 0x45, 0x4D, 0x42
 		};
 		// clang-format on
 
@@ -152,7 +152,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 		// clang-format off
 		alignas(4) const uint8_t buffer5[] =
 		{
-			0b10001111, 0xCE, 0x00,
+			0b10001111, 0xCE, 0x00
 		};
 		// clang-format on
 
@@ -189,7 +189,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// SSRC feedback: 0x02D03702
 			0x02, 0xD0, 0x37, 0x02,
 			// SSRC feedback: 0x04A76747
-			0x04, 0xA7, 0x67, 0x47,
+			0x04, 0xA7, 0x67, 0x47
 		};
 		// clang-format on
 
@@ -270,7 +270,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// SSRC 1: 3333
 			0x00, 0x00, 0x0D, 0x05,
 			// Padding: 4 bytes
-			0x00, 0x00, 0x00, 0x04,
+			0x00, 0x00, 0x00, 0x04
 		};
 		// clang-format on
 
@@ -323,7 +323,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// SSRC of media source: 0
 			0x00, 0x00, 0x00, 0x00,
 			// Unique identifier: 'R' 'E' 'M' 'B'
-			0x52, 0x45, 0x4D, 0x42,
+			0x52, 0x45, 0x4D, 0x42
 		};
 		// clang-format on
 
@@ -342,7 +342,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// Unique identifier: 'N' 'E' 'M' 'B'
 			0x4E, 0x45, 0x4D, 0x42,
 			// Num SSRC: 0, BR Exp: 1, BR Mantissa: 0x3FB93
-			0x00, 0x07, 0xFB, 0x93,
+			0x00, 0x07, 0xFB, 0x93
 		};
 		// clang-format on
 
@@ -361,7 +361,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// Unique identifier: 'R' 'E' 'M' 'B'
 			0x52, 0x45, 0x4D, 0x42,
 			// Num SSRC: 0, BR Exp: 63, BR Mantissa: 0x3FB93
-			0x00, 0xFF, 0xFB, 0x93,
+			0x00, 0xFF, 0xFB, 0x93
 		};
 		// clang-format on
 
@@ -380,7 +380,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// Unique identifier: 'R' 'E' 'M' 'B'
 			0x52, 0x45, 0x4D, 0x42,
 			// Num SSRC: 0, BR Exp: 56, BR Mantissa: 200
-			0x00, 0xE0, 0x00, 0xC8,
+			0x00, 0xE0, 0x00, 0xC8
 		};
 		// clang-format on
 
@@ -401,7 +401,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// Num SSRC: 2, BR Exp: 1, BR Mantissa: 0x3FB93
 			0x02, 0x07, 0xFB, 0x93,
 			// SSRC feedback: 0x23456789
-			0x23, 0x45, 0x67, 0x89,
+			0x23, 0x45, 0x67, 0x89
 		};
 		// clang-format on
 
@@ -420,7 +420,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// Unique identifier: 'R' 'E' 'M' 'B'
 			0x52, 0x45, 0x4D, 0x42,
 			// Num SSRC: 0, BR Exp: 1, BR Mantissa: 0x3FB93
-			0x00, 0x07, 0xFB, 0x93,
+			0x00, 0x07, 0xFB, 0x93
 		};
 		// clang-format on
 
@@ -447,7 +447,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 			// SSRC feedback: 0x2345678A
 			0x23, 0x45, 0x67, 0x8A,
 			// SSRC feedback: 0x2345678B
-			0x23, 0x45, 0x67, 0x8B,
+			0x23, 0x45, 0x67, 0x8B
 		};
 		// clang-format on
 

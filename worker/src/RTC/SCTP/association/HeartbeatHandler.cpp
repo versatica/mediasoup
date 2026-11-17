@@ -36,8 +36,7 @@ namespace RTC
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::FIXED,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
-		        .maxRestarts         = std::nullopt,
-		      })),
+		        .maxRestarts         = std::nullopt })),
 		    timeoutTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
@@ -45,8 +44,7 @@ namespace RTC
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = std::nullopt,
-		        .maxRestarts         = 0,
-		      }))
+		        .maxRestarts         = 0 }))
 		{
 			MS_TRACE();
 

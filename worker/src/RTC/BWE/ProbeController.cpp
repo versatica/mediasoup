@@ -338,10 +338,8 @@ namespace RTC
 			{
 				return InitiateProbing(
 				  nowUs,
-				  {
-				    BitrateUtils::ApplyBitrateFactor(
-				      this->estimatedBitrate, this->options.firstExponentialProbeScale),
-				  },
+				  { BitrateUtils::ApplyBitrateFactor(
+				    this->estimatedBitrate, this->options.firstExponentialProbeScale) },
 				  /*probeFurther*/ true);
 			}
 
@@ -379,9 +377,8 @@ namespace RTC
 			MS_ASSERT(this->state == State::INIT, "probing already started");
 			MS_ASSERT(this->startBitrate > 0, "no bitrate to start from");
 
-			std::vector<int64_t> probes{
-				BitrateUtils::ApplyBitrateFactor(this->startBitrate, this->options.firstExponentialProbeScale),
-			};
+			std::vector<int64_t> probes{ BitrateUtils::ApplyBitrateFactor(
+				this->startBitrate, this->options.firstExponentialProbeScale) };
 
 			if (
 			  this->options.secondExponentialProbeScale.has_value() &&

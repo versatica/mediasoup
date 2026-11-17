@@ -25,7 +25,7 @@ namespace RTC
 			{ IceServer::IceState::NEW,          "new"          },
 			{ IceServer::IceState::CONNECTED,    "connected"    },
 			{ IceServer::IceState::COMPLETED,    "completed"    },
-			{ IceServer::IceState::DISCONNECTED, "disconnected" },
+			{ IceServer::IceState::DISCONNECTED, "disconnected" }
 		};
 		// clang-format on
 

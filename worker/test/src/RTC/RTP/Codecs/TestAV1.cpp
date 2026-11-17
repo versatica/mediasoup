@@ -16,9 +16,8 @@
 
 namespace
 {
-	constexpr uint8_t DependencyDescriptorId{
-		static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
-	};
+	constexpr uint8_t DependencyDescriptorId{ static_cast<uint8_t>(
+		RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR) };
 
 	/**
 	 * Key frame of an L3T3_KEY stream captured from Chrome. Its contents do not
@@ -34,7 +33,7 @@ namespace
 		0x24, 0x90, 0x6d, 0x54, 0x92, 0x31, 0x57, 0xe0, 0x01, 0x97, 0x4c, 0xa8,
 		0x64, 0x33, 0x0e, 0x22, 0x23, 0x96, 0xec, 0xa8, 0x65, 0x53, 0x04, 0x22,
 		0x43, 0x90, 0xec, 0xa8, 0x77, 0x53, 0x01, 0x3f, 0x00, 0xb3, 0x02, 0x7f,
-		0x01, 0x67, 0x04, 0xff, 0x02, 0xcf,
+		0x01, 0x67, 0x04, 0xff, 0x02, 0xcf
 	};
 	// clang-format on
 } // namespace
@@ -55,10 +54,9 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 		std::memcpy(value, KeyFrameData, sizeof(KeyFrameData));
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{
-			 RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
+			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
 			 DependencyDescriptorId, static_cast<uint8_t>(sizeof(KeyFrameData)),
-			 value, },
+			 value }
 		};
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);

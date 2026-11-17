@@ -315,7 +315,7 @@ namespace RTC
 				// costs its temporal layers up to this one and nothing else.
 				const RTC::BWE::BitrateAllocator::Candidate::BitrateOption option{
 					.bitrate = producerRtpStream->GetCumulativeTemporalLayerBitrate(nowMs, 0, temporalLayer),
-					.layers  = { spatialLayer, temporalLayer },
+					.layers  = { spatialLayer, temporalLayer }
 				};
 
 				// Lowering the frame rate is only on offer within the lowest usable

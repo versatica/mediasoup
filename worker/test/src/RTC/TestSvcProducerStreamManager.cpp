@@ -102,11 +102,7 @@ namespace
 		static RTC::RTP::Codecs::EncodingContext::Params BuildParams(
 		  uint8_t spatialLayers, uint8_t temporalLayers, bool ksvc)
 		{
-			return {
-				.spatialLayers  = spatialLayers,
-				.temporalLayers = temporalLayers,
-				.ksvc           = ksvc,
-			};
+			return { .spatialLayers = spatialLayers, .temporalLayers = temporalLayers, .ksvc = ksvc };
 		}
 	};
 
@@ -1210,15 +1206,15 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		  rtpStream.get(),
 		  {
 		    { 0, 0 },
-		    { 0, 1 },
-		    { 0, 2 },
-		    { 1, 0 },
-		    { 1, 1 },
-		    { 1, 2 },
-		    { 2, 0 },
-		    { 2, 1 },
-		    { 2, 2 },
-		});
+        { 0, 1 },
+        { 0, 2 },
+        { 1, 0 },
+        { 1, 1 },
+        { 1, 2 },
+        { 2, 0 },
+        { 2, 1 },
+        { 2, 2 }
+    });
 
 		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
 
@@ -1229,7 +1225,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
       { 0, 1 },
       { 0, 2 },
       { 1, 2 },
-      { 2, 2 },
+      { 2, 2 }
 		};
 
 		REQUIRE(bitrateOptions.options.size() == expectedLayers.size() + 1);
@@ -1258,14 +1254,14 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		  rtpStream.get(),
 		  {
 		    { 0, 0 },
-		    { 0, 1 },
-		    { 0, 2 },
-		    { 1, 0 },
-		    { 1, 1 },
-		    { 2, 0 },
-		    { 2, 1 },
-		    { 2, 2 },
-		});
+        { 0, 1 },
+        { 0, 2 },
+        { 1, 0 },
+        { 1, 1 },
+        { 2, 0 },
+        { 2, 1 },
+        { 2, 2 }
+    });
 
 		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
 
@@ -1274,7 +1270,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
       { 0, 1 },
       { 0, 2 },
       { 1, 1 },
-      { 2, 2 },
+      { 2, 2 }
 		};
 
 		REQUIRE(bitrateOptions.options.size() == expectedLayers.size() + 1);

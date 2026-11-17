@@ -125,14 +125,12 @@ namespace RTC
 	// AES-GCM: http://tools.ietf.org/html/rfc7714
 	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32 };
 	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12 };
-	static constexpr size_t SrtpAesGcm256MasterLength{
-		SrtpAesGcm256MasterKeyLength + SrtpAesGcm256MasterSaltLength,
-	};
+	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength +
+	                                                   SrtpAesGcm256MasterSaltLength };
 	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16 };
 	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12 };
-	static constexpr size_t SrtpAesGcm128MasterLength{
-		SrtpAesGcm128MasterKeyLength + SrtpAesGcm128MasterSaltLength,
-	};
+	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength +
+	                                                   SrtpAesGcm128MasterSaltLength };
 
 	/* Class variables. */
 
@@ -147,7 +145,7 @@ namespace RTC
 		  { "sha-224", DtlsTransport::FingerprintAlgorithm::SHA224 },
 		  { "sha-256", DtlsTransport::FingerprintAlgorithm::SHA256 },
 		  { "sha-384", DtlsTransport::FingerprintAlgorithm::SHA384 },
-		  { "sha-512", DtlsTransport::FingerprintAlgorithm::SHA512 },
+		  { "sha-512", DtlsTransport::FingerprintAlgorithm::SHA512 }
 	};
 	const ankerl::unordered_dense::map<DtlsTransport::FingerprintAlgorithm, std::string>
 	  // NOLINTNEXTLINE(bugprone-throwing-static-initialization)
@@ -156,33 +154,25 @@ namespace RTC
 		  { DtlsTransport::FingerprintAlgorithm::SHA224, "sha-224" },
 		  { DtlsTransport::FingerprintAlgorithm::SHA256, "sha-256" },
 		  { DtlsTransport::FingerprintAlgorithm::SHA384, "sha-384" },
-		  { DtlsTransport::FingerprintAlgorithm::SHA512, "sha-512" },
+		  { DtlsTransport::FingerprintAlgorithm::SHA512, "sha-512" }
 	};
 	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const ankerl::unordered_dense::map<std::string, DtlsTransport::Role> DtlsTransport::String2Role = {
 		{ "auto",   DtlsTransport::Role::AUTO   },
 		{ "client", DtlsTransport::Role::CLIENT },
-		{ "server", DtlsTransport::Role::SERVER },
+		{ "server", DtlsTransport::Role::SERVER }
 	};
 	thread_local std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
 	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::SrtpCryptoSuites = {
-		{
-		 .cryptoSuite = RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM,
-		 .name        = "SRTP_AEAD_AES_256_GCM",
-		 },
-		{
-		 .cryptoSuite = RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM,
-		 .name        = "SRTP_AEAD_AES_128_GCM",
-		 },
-		{
-		 .cryptoSuite = RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80,
-		 .name        = "SRTP_AES128_CM_SHA1_80",
-		 },
-		{
-		 .cryptoSuite = RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32,
-		 .name        = "SRTP_AES128_CM_SHA1_32",
-		 },
+		{ .cryptoSuite = RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM,
+		 .name        = "SRTP_AEAD_AES_256_GCM"  },
+		{ .cryptoSuite = RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM,
+		 .name        = "SRTP_AEAD_AES_128_GCM"  },
+		{ .cryptoSuite = RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80,
+		 .name        = "SRTP_AES128_CM_SHA1_80" },
+		{ .cryptoSuite = RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32,
+		 .name        = "SRTP_AES128_CM_SHA1_32" }
 	};
 
 	/* Class methods. */

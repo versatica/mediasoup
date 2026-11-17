@@ -37,7 +37,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 			0x21, 0x32, 0x43, 0x54,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -173,7 +173,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 			0xFF, 0x00, 0x66, 0x77,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -202,7 +202,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 			0xFF, 0x00, 0x66, 0x78,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -221,7 +221,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 			// Number of Gap Ack Blocks: 1, Number of Duplicate TSNs: 0
 			0x00, 0x01, 0x00, 0x00,
 			// Gap Ack Block 1: Start: 1000, End: 1999
-			0x03, 0xE8, 0x07, 0xCF,
+			0x03, 0xE8, 0x07, 0xCF
 		};
 		// clang-format on
 

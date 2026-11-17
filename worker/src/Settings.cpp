@@ -30,7 +30,7 @@ const ankerl::unordered_dense::map<std::string, LogLevel> Settings::String2LogLe
 	{ "debug", LogLevel::LOG_DEBUG },
 	{ "warn",  LogLevel::LOG_WARN  },
 	{ "error", LogLevel::LOG_ERROR },
-	{ "none",  LogLevel::LOG_NONE  },
+	{ "none",  LogLevel::LOG_NONE  }
 };
 // NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 const ankerl::unordered_dense::map<LogLevel, std::string> Settings::LogLevel2String =
@@ -38,7 +38,7 @@ const ankerl::unordered_dense::map<LogLevel, std::string> Settings::LogLevel2Str
 	{ LogLevel::LOG_DEBUG, "debug" },
 	{ LogLevel::LOG_WARN,  "warn"  },
 	{ LogLevel::LOG_ERROR, "error" },
-	{ LogLevel::LOG_NONE,  "none"  },
+	{ LogLevel::LOG_NONE,  "none"  }
 };
 // clang-format on
 
@@ -59,7 +59,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ .name="rtcMaxPort",           .has_arg=optional_argument, .flag=nullptr, .val='M' },
 		{ .name="dtlsCertificateFile",  .has_arg=optional_argument, .flag=nullptr, .val='c' },
 		{ .name="dtlsPrivateKeyFile",   .has_arg=optional_argument, .flag=nullptr, .val='p' },
-		{ .name=nullptr,                .has_arg=0,                 .flag=nullptr,  .val=0  },
+		{ .name=nullptr,                .has_arg=0,                 .flag=nullptr,  .val=0  }
 	};
 	// clang-format on
 

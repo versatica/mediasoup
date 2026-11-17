@@ -40,15 +40,13 @@ namespace RTC
 				const auto* const ptr = reportBlocksPointer + (idx * AnyReportPacket::ReportBlockLength);
 
 				reportBlocks.push_back(
-				  {
-				    .ssrc                       = Utils::Byte::Get4Bytes(ptr, 0),
-				    .fractionLost               = Utils::Byte::Get1Byte(ptr, 4),
-				    .totalLost                  = Utils::Byte::Get3BytesSigned(ptr, 5),
-				    .extendedHighestSeq         = Utils::Byte::Get4Bytes(ptr, 8),
-				    .jitter                     = Utils::Byte::Get4Bytes(ptr, 12),
-				    .lastSenderReport           = Utils::Byte::Get4Bytes(ptr, 16),
-				    .delaySinceLastSenderReport = Utils::Byte::Get4Bytes(ptr, 20),
-				  });
+				  { .ssrc                       = Utils::Byte::Get4Bytes(ptr, 0),
+					  .fractionLost               = Utils::Byte::Get1Byte(ptr, 4),
+					  .totalLost                  = Utils::Byte::Get3BytesSigned(ptr, 5),
+					  .extendedHighestSeq         = Utils::Byte::Get4Bytes(ptr, 8),
+					  .jitter                     = Utils::Byte::Get4Bytes(ptr, 12),
+					  .lastSenderReport           = Utils::Byte::Get4Bytes(ptr, 16),
+					  .delaySinceLastSenderReport = Utils::Byte::Get4Bytes(ptr, 20) });
 			}
 
 			return reportBlocks;

@@ -46,7 +46,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 			// Suggested Cookie Life-Span Increment: 556942164
 			0x21, 0x32, 0x43, 0x54,
 			// Extra bytes that should be ignored
-			0xAA, 0xBB, 0xCC, 0xDD,
+			0xAA, 0xBB, 0xCC, 0xDD
 		};
 		// clang-format on
 
@@ -318,10 +318,8 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		auto* parameter2 = chunk->BuildParameterInPlace<RTC::SCTP::IPv6AddressParameter>();
 
 		// 2345:0425:2CA1:0000:0000:0567:5673:23b5 IPv6 in network order.
-		uint8_t ipBuffer2[] = {
-			0x23, 0x45, 0x04, 0x25, 0x2C, 0xA1, 0x00, 0x00,
-			0x00, 0x00, 0x05, 0x67, 0x56, 0x73, 0x23, 0xB5,
-		};
+		uint8_t ipBuffer2[] = { 0x23, 0x45, 0x04, 0x25, 0x2C, 0xA1, 0x00, 0x00,
+		                        0x00, 0x00, 0x05, 0x67, 0x56, 0x73, 0x23, 0xB5 };
 
 		parameter2->SetIPv6Address(ipBuffer2);
 		parameter2->Consolidate();

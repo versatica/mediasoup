@@ -27,7 +27,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -126,7 +126,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 			// Missing Param 1: 5 (IPV4-ADDRESS), Missing Param 2: 6 (IPV6-ADDRESS)
 			0x00, 0x05, 0x00, 0x06,
 			// Missing Param 3: 9 (COOKIE-PRESERVATIVE), 2 bytes of padding
-			0x00, 0x09, 0x00, 0x00,
+			0x00, 0x09, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -144,7 +144,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 			0x00, 0x05, 0x00, 0x06,
 			// Missing Param 3: 9 (COOKIE-PRESERVATIVE) (exceeds number of missing
 			// parameters), 2 bytes of padding
-			0x00, 0x09, 0x00, 0x00,
+			0x00, 0x09, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -159,7 +159,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 			// Number of missing params: 4
 			0x00, 0x00, 0x00, 0x02,
 			// Missing Param 1: 5 (IPV4-ADDRESS), Missing Param 2: 6 (IPV6-ADDRESS)
-			0x00, 0x05, 0x00, 0x06,
+			0x00, 0x05, 0x00, 0x06
 		};
 		// clang-format on
 
@@ -183,7 +183,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 			// Number of missing params: 0x80000001 (2147483649)
 			0x80, 0x00, 0x00, 0x01,
 			// A single param type (2 bytes) plus 2 bytes of padding
-			0x00, 0x05, 0x00, 0x00,
+			0x00, 0x05, 0x00, 0x00
 		};
 		// clang-format on
 

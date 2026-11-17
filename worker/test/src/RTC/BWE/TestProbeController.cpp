@@ -52,10 +52,9 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("and both can be configured")
 	{
-		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.minProbePacketsSent = 2,
-			.minProbeDurationUs  = 123 * 1000,
-		};
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .minProbePacketsSent = 2,
+		                                                                 .minProbeDurationUs =
+		                                                                   123 * 1000 };
 
 		RTC::BWE::ProbeController probeController(options);
 
@@ -86,8 +85,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("the factors of the first bursts can be configured")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.firstExponentialProbeScale  = 2.0,
-			.secondExponentialProbeScale = 3.0,
+			.firstExponentialProbeScale = 2.0, .secondExponentialProbeScale = 3.0
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -104,8 +102,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("and a factor of zero leaves just the first one")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.firstExponentialProbeScale  = 2.0,
-			.secondExponentialProbeScale = 0.0,
+			.firstExponentialProbeScale = 2.0, .secondExponentialProbeScale = 0.0
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -140,7 +137,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("asking for more is probed while not filling the link even when told not to otherwise")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.probeOnMaxAllocatedBitrateChangeWithoutAlr = false,
+			.probeOnMaxAllocatedBitrateChangeWithoutAlr = false
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -204,7 +201,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		constexpr int64_t ScreenShareMaxBitrate{ 3500000 };
 
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.probeOnMaxAllocatedBitrateChangeWithoutAlr = false,
+			.probeOnMaxAllocatedBitrateChangeWithoutAlr = false
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -295,7 +292,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("probing what is asked for can be turned off")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.probeOnMaxAllocatedBitrateChange = false,
+			.probeOnMaxAllocatedBitrateChange = false
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -366,7 +363,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("and stops climbing once the maximum is already reached")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.abortFurtherProbeIfMaxLowerThanCurrent = true,
+			.abortFurtherProbeIfMaxLowerThanCurrent = true
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -390,7 +387,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("or once what is asked for is already reached")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.abortFurtherProbeIfMaxLowerThanCurrent = true,
+			.abortFurtherProbeIfMaxLowerThanCurrent = true
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -640,9 +637,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("while not filling the link a burst goes out every five seconds")
 	{
-		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.enablePeriodicAlrProbing = true,
-		};
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
 
 		RTC::BWE::ProbeController probeController(options);
 
@@ -696,9 +692,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("and starting over leaves nothing to probe until there are bitrates again")
 	{
-		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.enablePeriodicAlrProbing = true,
-		};
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
 
 		RTC::BWE::ProbeController probeController(options);
 
@@ -732,9 +727,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("nothing is probed while nothing can be sent")
 	{
-		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.enablePeriodicAlrProbing = true,
-		};
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
 
 		RTC::BWE::ProbeController probeController(options);
 
@@ -781,9 +775,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("nor above twice what the application wants to send")
 	{
-		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.enablePeriodicAlrProbing = true,
-		};
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
 
 		RTC::BWE::ProbeController probeController(options);
 
@@ -829,7 +822,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 			.firstAllocationProbeScale          = 2.0,
 			.secondAllocationProbeScale         = std::nullopt,
 			.allocationProbeLimitByCurrentScale = 1000.0,
-			.minProbePacketsSent                = 2,
+			.minProbePacketsSent                = 2
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -871,9 +864,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("while loss is what holds the estimate back a burst barely goes above it")
 	{
-		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.enablePeriodicAlrProbing = true,
-		};
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
 
 		RTC::BWE::ProbeController probeController(options);
 
@@ -918,7 +910,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("a known upper bound of the link capacity is probed periodically")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000,
+			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -950,7 +942,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("and it's what bounds the burst when loss holds the estimate back")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000,
+			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -984,8 +976,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("and it bounds the periodic bursts as soon as there is one")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.enablePeriodicAlrProbing              = true,
-			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000,
+			.enablePeriodicAlrProbing = true, .networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -1021,8 +1012,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("and those bursts may be told to last longer than the usual ones")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000,
-			.networkStateProbeDurationUs           = 100 * 1000,
+			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000, .networkStateProbeDurationUs = 100 * 1000
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -1049,9 +1039,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("loss growing back while not filling the link is worth a burst")
 	{
-		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.enablePeriodicAlrProbing = true,
-		};
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
 
 		RTC::BWE::ProbeController probeController(options);
 
@@ -1082,9 +1071,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("but loss that isn't growing back is not")
 	{
-		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.enablePeriodicAlrProbing = true,
-		};
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
 
 		RTC::BWE::ProbeController probeController(options);
 
@@ -1112,9 +1100,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("nor is it worth one while the link is being filled")
 	{
-		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.enablePeriodicAlrProbing = true,
-		};
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
 
 		RTC::BWE::ProbeController probeController(options);
 
@@ -1145,7 +1132,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("a burst that stays below the measured link capacity leads to another one")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000,
+			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -1187,7 +1174,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
 			.probeIfEstimateLowerThanNetworkStateEstimateRatio      = 0.5,
-			.estimateLowerThanNetworkStateEstimateProbingIntervalUs = 1000 * 1000,
+			.estimateLowerThanNetworkStateEstimateProbingIntervalUs = 1000 * 1000
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -1243,7 +1230,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("a good result leads to another burst only while loss isn't the limit")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000,
+			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -1281,7 +1268,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("and while the delay is, it climbs up to what was measured")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000,
+			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -1322,7 +1309,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
 			.networkStateEstimateProbingIntervalUs                  = 5 * 1000 * 1000,
 			.probeIfEstimateLowerThanNetworkStateEstimateRatio      = 0.7,
-			.estimateLowerThanNetworkStateEstimateProbingIntervalUs = 3 * 1000 * 1000,
+			.estimateLowerThanNetworkStateEstimateProbingIntervalUs = 3 * 1000 * 1000
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -1384,7 +1371,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
 			.networkStateEstimateProbingIntervalUs = 2 * 1000 * 1000,
-			.skipIfEstimateLargerThanFractionOfMax = 0.9,
+			.skipIfEstimateLargerThanFractionOfMax = 0.9
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -1450,8 +1437,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("an estimate already close to the maximum is not worth a burst")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.enablePeriodicAlrProbing              = true,
-			.skipIfEstimateLargerThanFractionOfMax = 0.9,
+			.enablePeriodicAlrProbing = true, .skipIfEstimateLargerThanFractionOfMax = 0.9
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -1484,8 +1470,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("and neither is one already close to what the application wants to send")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.enablePeriodicAlrProbing              = true,
-			.skipIfEstimateLargerThanFractionOfMax = 1.0,
+			.enablePeriodicAlrProbing = true, .skipIfEstimateLargerThanFractionOfMax = 1.0
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -1523,7 +1508,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
 			.networkStateEstimateProbingIntervalUs = 2 * 1000 * 1000,
-			.skipIfEstimateLargerThanFractionOfMax = 0.9,
+			.skipIfEstimateLargerThanFractionOfMax = 0.9
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -1554,7 +1539,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 			.networkStateEstimateProbingIntervalUs = 2 * 1000 * 1000,
 			.networkStateProbeDurationUs           = 100 * 1000,
 			.networkStateMinProbeDeltaUs           = 20 * 1000,
-			.skipIfEstimateLargerThanFractionOfMax = 0.9,
+			.skipIfEstimateLargerThanFractionOfMax = 0.9
 		};
 
 		RTC::BWE::ProbeController probeController(options);
@@ -1596,7 +1581,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 			.enablePeriodicAlrProbing              = true,
 			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000,
 			.networkStateProbeDurationUs           = 100 * 1000,
-			.networkStateMinProbeDeltaUs           = 20 * 1000,
+			.networkStateMinProbeDeltaUs           = 20 * 1000
 		};
 
 		RTC::BWE::ProbeController probeController(options);

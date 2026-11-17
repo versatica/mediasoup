@@ -20,11 +20,9 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 		  RTC::BWE::RembGenerator* /*rembGenerator*/, const RTC::RTCP::RembPacket* packet) override
 		{
 			this->rembs.push_back(
-			  TestRemb{
-			    .senderSsrc = packet->GetSenderSsrc(),
-			    .bitrate    = packet->GetBitrate(),
-			    .ssrcs      = packet->GetSsrcs(),
-			  });
+			  TestRemb{ .senderSsrc = packet->GetSenderSsrc(),
+				          .bitrate    = packet->GetBitrate(),
+				          .ssrcs      = packet->GetSsrcs() });
 		}
 
 	public:

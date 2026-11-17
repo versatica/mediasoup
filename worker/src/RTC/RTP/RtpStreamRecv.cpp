@@ -398,10 +398,8 @@ namespace RTC
 				// NOTE: A zeroed capture timestamp gives no capture instant to store.
 				if (packet->ReadAbsCaptureTime(absCaptureTimestamp, estimatedCaptureClockOffset) && absCaptureTimestamp != 0)
 				{
-					const Utils::Time::Ntp ntp{
-						.seconds   = static_cast<uint32_t>(absCaptureTimestamp >> 32),
-						.fractions = static_cast<uint32_t>(absCaptureTimestamp),
-					};
+					const Utils::Time::Ntp ntp{ .seconds   = static_cast<uint32_t>(absCaptureTimestamp >> 32),
+					                            .fractions = static_cast<uint32_t>(absCaptureTimestamp) };
 
 					// The capture timestamp belongs to the clock of the capture system, which is
 					// not the clock of the sender of this stream when the media comes from
@@ -416,10 +414,8 @@ namespace RTC
 					// that cannot be true, so there is nothing to store.
 					if (captureAtUs > 0)
 					{
-						this->lastAbsCaptureTime = AbsCaptureTime{
-							.ts    = packet->GetTimestamp(),
-							.ntpUs = captureAtUs,
-						};
+						this->lastAbsCaptureTime =
+						  AbsCaptureTime{ .ts = packet->GetTimestamp(), .ntpUs = captureAtUs };
 					}
 				}
 			}
@@ -748,15 +744,13 @@ namespace RTC
 			// gives nothing to store.
 			if (ntp.seconds != 0 || ntp.fractions != 0)
 			{
-				this->lastSenderReportTiming = SenderReportTiming{
-					.compactNtp   = Utils::Time::NtpToCompactNtp(ntp),
-					.receivedAtUs = receivedAtUs,
-				};
+				this->lastSenderReportTiming =
+				  SenderReportTiming{ .compactNtp   = Utils::Time::NtpToCompactNtp(ntp),
+					                    .receivedAtUs = receivedAtUs };
 
-				this->lastSenderReportMapping = RTP::RtpStream::SenderReportMapping{
-					.ntpUs = Utils::Time::NtpToTimeUs(ntp),
-					.ts    = senderReportPacket->GetRtpTimestamp(),
-				};
+				this->lastSenderReportMapping =
+				  RTP::RtpStream::SenderReportMapping{ .ntpUs = Utils::Time::NtpToTimeUs(ntp),
+					                                     .ts    = senderReportPacket->GetRtpTimestamp() };
 			}
 
 			// Update the score.

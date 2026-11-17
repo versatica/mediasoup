@@ -100,7 +100,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{  8,  8, false, false },
 			{  9,  9, false, false },
 			{ 10, 10, false, false },
-			{ 11, 11, false, false },
+			{ 11, 11, false, false }
 		};
 		// clang-format on
 
@@ -125,7 +125,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 81, 4, false, false },
 			{ 82, 5, false, false },
 			{ 83, 6, false, false },
-			{ 84, 7, false, false },
+			{ 84, 7, false, false }
 		};
 		// clang-format on
 
@@ -155,7 +155,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{  9,  8, false, false },
 			{ 11,  0, false,  true }, // drop.
 			{ 10,  9, false, false },
-			{ 12, 10, false, false },
+			{ 12, 10, false, false }
 		};
 		// clang-format on
 
@@ -177,7 +177,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 65534, 65534, false, false },
 			{ 65535, 65535, false, false },
 			{     0,     0, false, false },
-			{     1,     1, false, false },
+			{     1,     1, false, false }
 		};
 		// clang-format on
 
@@ -194,7 +194,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{    0,    0, false, false },
 			{    1,    1, false, false },
 			{ 1000, 1000, false, false },
-			{ 1001, 1001, false, false },
+			{ 1001, 1001, false, false }
 		};
 		// clang-format on
 
@@ -214,7 +214,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		{
 			{      4,     4, false, false },
 			{      3,     3, false, false },
-			{  65535, 65535, false, false },
+			{  65535, 65535, false, false }
 		};
 		// clang-format on
 
@@ -233,7 +233,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 100,  99, false, false },
 			{ 100,  99, false, false },
 			{ 103,   0, false,  true }, // drop.
-			{ 101, 100, false, false },
+			{ 101, 100, false, false }
 		};
 		// clang-format on
 
@@ -255,7 +255,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{   1,   1, false, false },
 			{ 100,   0, false,  true }, // drop.
 			{ 103,   0, false,  true }, // drop.
-			{ 101, 100, false, false },
+			{ 101, 100, false, false }
 		};
 		// clang-format on
 
@@ -277,7 +277,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 2, 0, false,  true }, // drop.
 			{ 3, 2, false, false },
 			{ 4, 3, false, false },
-			{ 1, 1, false, false },
+			{ 1, 1, false, false }
 		};
 		// clang-format on
 
@@ -340,7 +340,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{     4, 44, false, false },
 			{     5, 45, false, false },
 			{     6, 46, false, false },
-			{     7, 47, false, false },
+			{     7, 47, false, false }
 		};
 		// clang-format on
 
@@ -361,7 +361,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 81,  4, false, false },
 			{ 82,  5, false, false },
 			{ 83,  6, false, false },
-			{ 84,  7, false, false },
+			{ 84,  7, false, false }
 		};
 		// clang-format on
 
@@ -407,7 +407,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 136, 128, false, false },
 			{ 137, 129, false, false },
 			{ 138, 130, false, false },
-			{ 139, 131, false, false },
+			{ 139, 131, false, false }
 		};
 		// clang-format on
 
@@ -453,7 +453,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 136, 128, false, false },
 			{ 137, 129, false, false },
 			{ 138, 130, false, false },
-			{ 139, 131, false, false },
+			{ 139, 131, false, false }
 		};
 		// clang-format on
 
@@ -512,7 +512,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{     4, 44, false, false },
 			{     5, 45, false, false },
 			{     6, 46, false, false },
-			{     7, 47, false, false },
+			{     7, 47, false, false }
 		};
 		// clang-format on
 
@@ -547,7 +547,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 32777, 32769, false, false },
 			{ 32778, 32770, false, false },
 			{ 32779, 32771, false, false },
-			{ 32780, 32772, false, false },
+			{ 32780, 32772, false, false }
 		};
 		// clang-format on
 
@@ -570,7 +570,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{     0,  5, false, false },
 			{     1,  6, false, false },
 			{     2,  7, false, false },
-			{     3,  8, false, false },
+			{     3,  8, false, false }
 		};
 		// clang-format on
 
@@ -605,7 +605,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 16393, 16385, false, false },
 			{ 16394, 16386, false, false },
 			{ 16395, 16387, false, false },
-			{ 16396, 16388, false, false },
+			{ 16396, 16388, false, false }
 		};
 		// clang-format on
 
@@ -628,7 +628,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{     0,  5, false, false,     0 },
 			{     1,  6, false, false,     1 },
 			{     2,  7, false, false,     2 },
-			{     3,  8, false, false,     3 },
+			{     3,  8, false, false,     3 }
 		};
 		// clang-format on
 
@@ -642,7 +642,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 1, true, false, 0 },
+			{ 0, 1, true, false, 0 }
 		};
 		for (uint16_t j = 0; j < 3; ++j) {
 			for (uint16_t i = 1; i < std::numeric_limits<uint16_t>::max(); ++i) {
@@ -662,7 +662,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 1, true, false, 0 },
+			{ 0, 1, true, false, 0 }
 		};
 		for (uint16_t j = 0; j < 3; ++j) {
 			for (uint16_t i = 1; i < MaxNumberFor15Bits; ++i) {
@@ -688,7 +688,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 13,  4, false, false },
 			{ 14,  0, false, true  }, // drop.
 			{ 15,  5, false, false },
-			{ 12,  3, false, false },
+			{ 12,  3, false, false }
 		};
 		// clang-format on
 
@@ -712,7 +712,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 0, 7, false, false },
 			{ 1, 0, false, false },
 			{ 2, 1, false, false },
-			{ 3, 2, false, false },
+			{ 3, 2, false, false }
 		};
 		// clang-format on
 
@@ -752,7 +752,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{     2,     0, false, true  }, // Drop.
 			{ 56832, std::nullopt, false, false }, // Previously dropped.
 			{   530,     0, false, true  }, // Drop.
-			{     2, std::nullopt, false, false }, // Previously dropped.
+			{     2, std::nullopt, false, false } // Previously dropped.
 		};
 		// clang-format on
 
@@ -772,7 +772,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{   120,     0, false, true  }, // Drop.
 			{  3328, std::nullopt, false, false }, // Previously dropped.
 			{ 30848,     0, false, true  }, // Drop.
-			{   120,   120, false, false },
+			{   120,   120, false, false }
 		};
 		// clang-format on
 
@@ -788,7 +788,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		{
 			{ 36964, 36964, false, false },
 			{ 65396 ,    0, false, true  }, // Drop.
-			{ 25855, 25854, false, false },
+			{ 25855, 25854, false, false }
 		};
 		// clang-format on
 
@@ -816,7 +816,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 200,   0, false, true  }, // Drop.
 			{  40,  39, false, false }, // 296 unwrapped, one drop below it.
 			{  86,   0, false, true  }, // Drop. 200 belongs to the previous cycle now.
-			{ 198, 196, false, false },  // 454 unwrapped, two drops below it.
+			{ 198, 196, false, false } // 454 unwrapped, two drops below it.
 		};
 		// clang-format on
 
@@ -840,7 +840,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 51200,     0, false, true  }, // Drop.
 			{ 10240, 10239, false, false }, // 75776 unwrapped, one drop below it.
 			{ 22016,     0, false, true  }, // Drop. 51200 belongs to the previous cycle now.
-			{ 50688, 50686, false, false },  // 116224 unwrapped, two drops below it.
+			{ 50688, 50686, false, false } // 116224 unwrapped, two drops below it.
 		};
 		// clang-format on
 
@@ -865,7 +865,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{  8, 1008, false, false },
 			{  9, 1009, false, false },
 			{ 10, 1010, false, false },
-			{ 11, 1011, false, false },
+			{ 11, 1011, false, false }
 		};
 		// clang-format on
 
@@ -892,7 +892,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 81, 2004, false, false },
 			{ 82, 2005, false, false },
 			{ 83, 2006, false, false },
-			{ 84, 2007, false, false },
+			{ 84, 2007, false, false }
 		};
 		// clang-format on
 
@@ -924,7 +924,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{  9, 3008, false, false },
 			{ 11, 3000, false,  true }, // drop.
 			{ 10, 3009, false, false },
-			{ 12, 3010, false, false },
+			{ 12, 3010, false, false }
 		};
 		// clang-format on
 
@@ -948,7 +948,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 65534,  998, false, false },
 			{ 65535,  999, false, false },
 			{     0, 1000, false, false },
-			{     1, 1001, false, false },
+			{     1, 1001, false, false }
 		};
 		// clang-format on
 
@@ -966,7 +966,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{    0, 32000, false, false },
 			{    1, 32001, false, false },
 			{ 1000, 33000, false, false },
-			{ 1001, 33001, false, false },
+			{ 1001, 33001, false, false }
 		};
 		// clang-format on
 
@@ -981,7 +981,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{    0, 32000, false, false },
 			{    1, 32001, false, false },
 			{ 1000,   232, false, false },
-			{ 1001,   233, false, false },
+			{ 1001,   233, false, false }
 		};
 		// clang-format on
 
@@ -998,7 +998,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		{
 			{      4, 1004, false, false },
 			{      3, 1003, false, false },
-			{  65535,  999, false, false },
+			{  65535,  999, false, false }
 		};
 		// clang-format on
 
@@ -1018,7 +1018,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 100, 1099, false, false },
 			{ 100, 1099, false, false },
 			{ 103, 1000, false,  true }, // drop.
-			{ 101, 1100, false, false },
+			{ 101, 1100, false, false }
 		};
 		// clang-format on
 
@@ -1042,7 +1042,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{   1, 2001, false, false },
 			{ 100, 2000, false,  true }, // drop.
 			{ 103, 2000, false,  true }, // drop.
-			{ 101, 2100, false, false },
+			{ 101, 2100, false, false }
 		};
 		// clang-format on
 
@@ -1066,7 +1066,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 2, 2000, false,  true }, // drop.
 			{ 3, 2002, false, false },
 			{ 4, 2003, false, false },
-			{ 1, 2001, false, false },
+			{ 1, 2001, false, false }
 		};
 		// clang-format on
 
@@ -1131,7 +1131,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{     4, 10044, false, false },
 			{     5, 10045, false, false },
 			{     6, 10046, false, false },
-			{     7, 10047, false, false },
+			{     7, 10047, false, false }
 		};
 		// clang-format on
 
@@ -1153,7 +1153,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 81,  5, false, false },
 			{ 82,  6, false, false },
 			{ 83,  7, false, false },
-			{ 84,  8, false, false },
+			{ 84,  8, false, false }
 		};
 		// clang-format on
 
@@ -1201,7 +1201,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 136, 1128, false, false },
 			{ 137, 1129, false, false },
 			{ 138, 1130, false, false },
-			{ 139, 1131, false, false },
+			{ 139, 1131, false, false }
 		};
 		// clang-format on
 
@@ -1249,7 +1249,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 136,  72, false, false },
 			{ 137,  73, false, false },
 			{ 138,  74, false, false },
-			{ 139,  75, false, false },
+			{ 139,  75, false, false }
 		};
 		// clang-format on
 
@@ -1309,7 +1309,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{     4, 144, false, false },
 			{     5, 145, false, false },
 			{     6, 146, false, false },
-			{     7, 147, false, false },
+			{     7, 147, false, false }
 		};
 		// clang-format on
 
@@ -1345,7 +1345,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 32777, 32969, false, false },
 			{ 32778, 32970, false, false },
 			{ 32779, 32971, false, false },
-			{ 32780, 32972, false, false },
+			{ 32780, 32972, false, false }
 		};
 		// clang-format on
 
@@ -1369,7 +1369,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{     0, 205, false, false },
 			{     1, 206, false, false },
 			{     2, 207, false, false },
-			{     3, 208, false, false },
+			{     3, 208, false, false }
 		};
 		// clang-format on
 
@@ -1406,7 +1406,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 16393, 16485, false, false },
 			{ 16394, 16486, false, false },
 			{ 16395, 16487, false, false },
-			{ 16396, 16488, false, false },
+			{ 16396, 16488, false, false }
 		};
 		// clang-format on
 
@@ -1430,7 +1430,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{     0, 105, false, false,     0 },
 			{     1, 106, false, false,     1 },
 			{     2, 107, false, false,     2 },
-			{     3, 108, false, false,     3 },
+			{     3, 108, false, false,     3 }
 		};
 		// clang-format on
 
@@ -1445,7 +1445,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 101, true, false, 0 },
+			{ 0, 101, true, false, 0 }
 		};
 		// clang-format on
 
@@ -1469,7 +1469,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 101, true, false, 0 },
+			{ 0, 101, true, false, 0 }
 		};
 		// clang-format on
 
@@ -1501,7 +1501,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 13, 10004, false, false },
 			{ 14, 10000, false, true  }, // drop.
 			{ 15, 10005, false, false },
-			{ 12, 10003, false, false },
+			{ 12, 10003, false, false }
 		};
 		// clang-format on
 
@@ -1526,7 +1526,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 0, 1, false, false },
 			{ 1, 2, false, false },
 			{ 2, 3, false, false },
-			{ 3, 4, false, false },
+			{ 3, 4, false, false }
 		};
 		// clang-format on
 
@@ -1567,7 +1567,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{     2, 10000, false, true  }, // Drop.
 			{ 56832, std::nullopt, false, false }, // Previously dropped.
 			{   530, 10000, false, true  }, // Drop.
-			{     2, std::nullopt, false, false }, // Previously dropped.
+			{     2, std::nullopt, false, false } // Previously dropped.
 		};
 		// clang-format on
 
@@ -1588,7 +1588,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{   120,   100, false, true  }, // Drop.
 			{  3328, std::nullopt, false, false }, // Previously dropped.
 			{ 30848,   100, false, true  }, // Drop.
-			{   120,   220, false, false },
+			{   120,   220, false, false }
 		};
 		// clang-format on
 
@@ -1605,7 +1605,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		{
 			{ 36964, 37964, false, false },
 			{ 65396 , 1000, false, true  }, // Drop.
-			{ 25855, 26854, false, false },
+			{ 25855, 26854, false, false }
 		};
 		// clang-format on
 
@@ -1624,7 +1624,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 0, 0, false, false },
 			{ 2, 0, false, true  },
 			{ 1, 0, false, true  },
-			{ 3, 1, false, false  },
+			{ 3, 1, false, false  }
 		};
 		// clang-format on
 
@@ -1648,7 +1648,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 8,   0, false, true  },
 			{ 3,   0, false, true  },
 			{ 9,   0, false, true  },
-			{ 10,  6, false, false },
+			{ 10,  6, false, false }
 		};
 		// clang-format on
 
@@ -1671,7 +1671,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 7, 0, false, true },
 			{ 8, 0, false, true },
 			{ 0, 0, false, true },
-			{ 9, 5, false, false },
+			{ 9, 5, false, false }
 		};
 		// clang-format on
 
@@ -1748,7 +1748,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 63, 0, false, true },
 			{ 64, 0, false, true },
 			{ 43, 0, false, true },
-			{ 50, 32, false, false },
+			{ 50, 32, false, false }
 		};
 		// clang-format on
 

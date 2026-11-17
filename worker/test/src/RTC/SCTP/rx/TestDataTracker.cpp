@@ -40,8 +40,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		  .baseTimeoutMs       = 0,
 		  .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		  .maxBackoffTimeoutMs = std::nullopt,
-		  .maxRestarts         = 0,
-		}) };
+		  .maxRestarts         = 0 }) };
 
 	auto* delayedAckTimer = delayedAckTimerUniquePtr.get();
 

@@ -39,9 +39,8 @@
 
 namespace
 {
-	constexpr uint8_t DependencyDescriptorId{
-		static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
-	};
+	constexpr uint8_t DependencyDescriptorId{ static_cast<uint8_t>(
+		RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR) };
 
 	/**
 	 * Key frame, carrying the template dependency structure of an L3T3 stream:
@@ -72,7 +71,7 @@ namespace
 		0x24, 0x90, 0x6d, 0x54, 0x92, 0x31, 0x57, 0xe0, 0x01, 0x97, 0x4c, 0xa8,
 		0x64, 0x33, 0x0e, 0x22, 0x23, 0x96, 0xec, 0xa8, 0x65, 0x53, 0x04, 0x22,
 		0x43, 0x90, 0xec, 0xa8, 0x77, 0x53, 0x01, 0x3f, 0x00, 0xb3, 0x02, 0x7f,
-		0x01, 0x67, 0x04, 0xff, 0x02, 0xcf,
+		0x01, 0x67, 0x04, 0xff, 0x02, 0xcf
 	};
 	// clang-format on
 
@@ -101,7 +100,7 @@ namespace
 		{ 0xce, 0x00, 0x66 }, // frame 102, template 14, S2T2
 		{ 0xc1, 0x00, 0x67 }, // frame 103, template  1, S0T0
 		{ 0xc6, 0x00, 0x68 }, // frame 104, template  6, S1T0
-		{ 0x4b, 0x00, 0x69 }, // frame 105, template 11, S2T0
+		{ 0x4b, 0x00, 0x69 } // frame 105, template 11, S2T0
 	};
 	// clang-format on
 
@@ -169,11 +168,12 @@ namespace
 		0xb0, 0x4a, 0x09, 0x41, 0xb8, 0x20, 0xac, 0x12, 0x82, 0x50, 0x31, 0x57,
 		0xf9, 0x74, 0x00, 0x0c, 0xa8, 0x64, 0x33, 0x0e, 0x22, 0x22, 0x22, 0xec,
 		0xa8, 0x65, 0x53, 0x04, 0x22, 0x42, 0x30, 0xec, 0xa8, 0x77, 0x53, 0x01,
-		0x3f, 0x00, 0xb3, 0x02, 0x7f, 0x01, 0x67, 0x04, 0xff, 0x02, 0xcf,
+		0x3f, 0x00, 0xb3, 0x02, 0x7f, 0x01, 0x67, 0x04, 0xff, 0x02, 0xcf
 	};
 
 	// One full repetition of the layers pattern that follows the key frame, with
 	// the same shape as the K-SVC one above.
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const std::vector<std::vector<uint8_t>> FullSvcDeltaFrames =
 	{
 		{ 0xc3, 0x00, 0x04 }, // frame  4, template  3, S0T2
@@ -187,7 +187,7 @@ namespace
 		{ 0xce, 0x00, 0x0c }, // frame 12, template 14, S2T2
 		{ 0xc0, 0x00, 0x0d }, // frame 13, template  0, S0T0
 		{ 0xc5, 0x00, 0x0e }, // frame 14, template  5, S1T0
-		{ 0x4a, 0x00, 0x0f }, // frame 15, template 10, S2T0
+		{ 0x4a, 0x00, 0x0f } // frame 15, template 10, S2T0
 	};
 	// clang-format on
 
@@ -221,9 +221,7 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 		std::memcpy(value, data, len);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
-			 DependencyDescriptorId, reservedLen,
-			 value },
+			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, DependencyDescriptorId, reservedLen, value }
 		};
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
@@ -298,10 +296,7 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 
 	SECTION("process a K-SVC stream with the Dependency Descriptor payload descriptor")
 	{
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers  = 3,
-			.temporalLayers = 3,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 3, .temporalLayers = 3 };
 
 		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 		RTC::RTP::Codecs::EncodingContext context(
@@ -333,6 +328,7 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 
 		const auto processDeltaFrame = [&](size_t index) -> ProcessResult
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			return process(DeltaFrames[index].data(), DeltaFrames[index].size());
 		};
 
@@ -345,7 +341,10 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 		{
 			const std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
 			  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-			    DeltaFrames[index].data(), DeltaFrames[index].size(), dependencyDescriptorContext));
+			    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			    DeltaFrames[index].data(),
+			    DeltaFrames[index].size(),
+			    dependencyDescriptorContext));
 
 			REQUIRE(dependencyDescriptor);
 
@@ -360,7 +359,10 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 		{
 			const std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
 			  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-			    DeltaFrames[index].data(), DeltaFrames[index].size(), dependencyDescriptorContext));
+			    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			    DeltaFrames[index].data(),
+			    DeltaFrames[index].size(),
+			    dependencyDescriptorContext));
 
 			REQUIRE(dependencyDescriptor);
 
@@ -412,6 +414,7 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 						  "delta frame " << j << " belongs to decode target " << static_cast<int>(decodeTarget)
 						                 << ", told active by the " << which);
 
+						// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 						REQUIRE(results[j].forwarded);
 					}
 				}
@@ -421,6 +424,7 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 
 			for (size_t i{ 0 }; i < results.size(); ++i)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				requirePromiseKept(results[i], i + 1, "frame before it");
 			}
 		};
@@ -653,10 +657,7 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 
 	SECTION("process a full SVC stream with the Dependency Descriptor payload descriptor")
 	{
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers  = 3,
-			.temporalLayers = 3,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 3, .temporalLayers = 3 };
 
 		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 		RTC::RTP::Codecs::EncodingContext context(
@@ -674,6 +675,7 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 
 		const auto processDeltaFrame = [&](size_t index) -> ProcessResult
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			return process(FullSvcDeltaFrames[index].data(), FullSvcDeltaFrames[index].size());
 		};
 
@@ -859,11 +861,9 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 	// very same space.
 	SECTION("the Dependency Descriptor numbers frames with 16 bits")
 	{
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers              = 1,
-			.temporalLayers             = 3,
-			.preferDependencyDescriptor = true,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers              = 1,
+		                                                        .temporalLayers             = 3,
+		                                                        .preferDependencyDescriptor = true };
 
 		RTC::RTP::Codecs::EncodingContext context(
 		  params, RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength);
@@ -905,11 +905,9 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 	{
 		// A simulcast Consumer is given one of several streams, so its spatial layer
 		// is chosen by picking the stream and its target spatial layer is never set.
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers  = 3,
-			.temporalLayers = 3,
-			.simulcast      = true,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers  = 3,
+		                                                        .temporalLayers = 3,
+		                                                        .simulcast      = true };
 
 		RTC::RTP::Codecs::EncodingContext context(
 		  params, RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength);
@@ -939,7 +937,11 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 		  [&](RTC::RTP::Codecs::DependencyDescriptor::Context& streamContext, size_t index) -> ProcessResult
 		{
 			return processFrame(
-			  DeltaFrames[index].data(), DeltaFrames[index].size(), streamContext, context);
+			  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			  DeltaFrames[index].data(),
+			  DeltaFrames[index].size(),
+			  streamContext,
+			  context);
 		};
 
 		// A retransmission is encoded long after the packet was sent, so the packet

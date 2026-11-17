@@ -27,8 +27,7 @@ void FuzzerRtcRtpCodecsDependencyDescriptor::Fuzz(const uint8_t* data, size_t le
 			descriptor->Write(
 			  RTC::RTP::Codecs::DependencyDescriptor::RewriteParams{
 			    .activeDecodeTargetsBitmask =
-			      descriptor->GetDecodeTargetsBitmask(maxSpatialLayer, maxTemporalLayer),
-			  },
+			      descriptor->GetDecodeTargetsBitmask(maxSpatialLayer, maxTemporalLayer) },
 			  buffer);
 		}
 	}

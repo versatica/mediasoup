@@ -22,7 +22,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[serializable][sctp][parameter]")
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -97,7 +97,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[serializable][sctp][parameter]")
 			// Type:6 (IPV6-ADDRESS), Length: 8
 			0x00, 0x06, 0x00, 0x08,
 			// IPv4 Address: 0xAABBCCDD
-			0xAA, 0xBB, 0xCC, 0xDD,
+			0xAA, 0xBB, 0xCC, 0xDD
 		};
 		// clang-format on
 
@@ -110,7 +110,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[serializable][sctp][parameter]")
 			// Type:5 (IPV4-ADDRESS), Length: 7
 			0x00, 0x05, 0x00, 0x07,
 			// IPv4 Address: 0xAABBCC
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -124,7 +124,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[serializable][sctp][parameter]")
 			0x00, 0x05, 0x00, 0x09,
 			// IPv4 Address: 0xAABBCCDD
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xEE,
+			0xEE
 		};
 		// clang-format on
 
@@ -137,7 +137,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[serializable][sctp][parameter]")
 			// Type:5 (IPV4-ADDRESS), Length: 8
 			0x00, 0x05, 0x00, 0x08,
 			// IPv4 Address (wrong length)
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 

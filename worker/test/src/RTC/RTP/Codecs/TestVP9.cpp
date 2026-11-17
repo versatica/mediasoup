@@ -9,9 +9,8 @@
 
 namespace
 {
-	constexpr uint8_t DependencyDescriptorId{
-		static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
-	};
+	constexpr uint8_t DependencyDescriptorId{ static_cast<uint8_t>(
+		RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR) };
 } // namespace
 
 SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
@@ -45,7 +44,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		// clang-format off
 		uint8_t payload[] =
 		{
-			0xAD, 0x80, 0x00, 0x00, 0x00, 0x00,
+			0xAD, 0x80, 0x00, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -96,9 +95,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		std::memcpy(value, dependencyDescriptor, len);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
-			 DependencyDescriptorId, reservedLen,
-			 value },
+			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, DependencyDescriptorId, reservedLen, value }
 		};
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
@@ -113,10 +110,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 
 	SECTION("drop packets that belong to other temporal layers after rolling over pictureID")
 	{
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers  = 1,
-			.temporalLayers = 3,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 1, .temporalLayers = 3 };
 
 		RTC::RTP::Codecs::VP9::EncodingContext context(params);
 
@@ -147,10 +141,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 
 	SECTION("PayloadDescriptorHandler")
 	{
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers  = 1,
-			.temporalLayers = 3,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 1, .temporalLayers = 3 };
 		const uint16_t start = MaxPictureId - 2000;
 
 		RTC::RTP::Codecs::VP9::EncodingContext context(params);
@@ -184,10 +175,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 	// frame itself with 16 bits.
 	SECTION("frame ids wrap where the descriptor that numbered them says")
 	{
-		RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers  = 1,
-			.temporalLayers = 3,
-		};
+		RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 1, .temporalLayers = 3 };
 
 		// Records a temporal layer change right before the 15 bits wrap and
 		// another one eleven frames past it.
@@ -234,18 +222,18 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 
 		// Mandatory fields only, so nothing tells about the active decode targets.
 		const uint8_t deltaFrameDescriptor[] =
 		{
-			0x00, 0x00, 0xE8,
+			0x00, 0x00, 0xE8
 		};
 
 		const uint8_t payload[] =
 		{
-			0xAD, 0x80, 0x00, 0x00, 0x00, 0x00,
+			0xAD, 0x80, 0x00, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -264,11 +252,9 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		const auto makeContext =
 		  [](bool preferDependencyDescriptor) -> RTC::RTP::Codecs::EncodingContext::Params
 		{
-			return {
-				.spatialLayers              = 1,
-				.temporalLayers             = 2,
-				.preferDependencyDescriptor = preferDependencyDescriptor,
-			};
+			return { .spatialLayers              = 1,
+			         .temporalLayers             = 2,
+			         .preferDependencyDescriptor = preferDependencyDescriptor };
 		};
 
 		// A Consumer that was given the extension is told which decode target it
@@ -340,10 +326,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 
 	SECTION("drop packets that belong to other temporal layers with unordered pictureID")
 	{
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers  = 1,
-			.temporalLayers = 3,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 1, .temporalLayers = 3 };
 		const uint16_t start                                                     = MaxPictureId - 20;
 		const std::vector<std::tuple<uint16_t, uint16_t, int16_t, bool>> packets = {
 			// targetTemporalLayer=0
@@ -376,7 +359,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 			{ 1,          0, -1, true  },
 			{ 1,          1, -1, false },
 			{ start + 16, 0, -1, true  }, // old packet
-			{ start + 16, 1, -1, true  },
+			{ start + 16, 1, -1, true  }
 		};
 
 		RTC::RTP::Codecs::VP9::EncodingContext context(params);

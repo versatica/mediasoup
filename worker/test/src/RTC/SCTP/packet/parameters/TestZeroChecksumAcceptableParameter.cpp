@@ -21,7 +21,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 			0x00, 0x00, 0x00, 0x01,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -92,7 +92,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 			// Type:32769 (ZERO-CHECKSUM-ACCEPTABLE), Length: 8
 			0x80, 0x01, 0x00, 0x08,
 			// Alternate Error Detection Method (EDMID) : 0xFFFFFFFE
-			0xFF, 0xFF, 0xFF, 0xFE,
+			0xFF, 0xFF, 0xFF, 0xFE
 		};
 		// clang-format on
 

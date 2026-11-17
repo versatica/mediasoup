@@ -71,17 +71,15 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasOneByteExtensions();
 	packet->HasTwoBytesExtensions();
 
-	const RTC::RTP::HeaderExtensionIds headerExtensionIds{
-		.mid               = 5,
-		.rid               = 6,
-		.rrid              = 7,
-		.absSendTime       = 3,
-		.transportWideCc01 = 4,
-		.ssrcAudioLevel    = 1,
-		.videoOrientation  = 2,
-		.absCaptureTime    = 9,
-		.playoutDelay      = 8,
-	};
+	const RTC::RTP::HeaderExtensionIds headerExtensionIds{ .mid               = 5,
+	                                                       .rid               = 6,
+	                                                       .rrid              = 7,
+	                                                       .absSendTime       = 3,
+	                                                       .transportWideCc01 = 4,
+	                                                       .ssrcAudioLevel    = 1,
+	                                                       .videoOrientation  = 2,
+	                                                       .absCaptureTime    = 9,
+	                                                       .playoutDelay      = 8 };
 
 	packet->AssignExtensionIds(headerExtensionIds);
 
@@ -164,10 +162,8 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions));
 	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions));
 
-	uint8_t value3[] = {
-		0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
-		0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
-	};
+	uint8_t value3[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
+	                     0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
 
 	extensions.emplace_back(
 	  RTC::RtpHeaderExtensionUri::Type::MID, // type
@@ -246,7 +242,7 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	{
 		0x11, 0x22, 0x33, 0x44,
 		0x55, 0x66, 0x77, 0x88,
-		0x99, 0xAA,
+		0x99, 0xAA
 	};
 	// clang-format on
 
@@ -307,8 +303,8 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 				RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
 				static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
 				extenLen,
-				extenValue,
-			},
+				extenValue
+			}
 		};
 		// clang-format on
 

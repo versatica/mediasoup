@@ -114,11 +114,9 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		packet->SetTimestamp(RemoteBaseTs);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{
-			 RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
+			{ RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
 			 AbsCaptureTimeId, /*len*/ 8,
-			 rtpCommon::DataBuffer,
-			 },
+			 rtpCommon::DataBuffer }
 		};
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);

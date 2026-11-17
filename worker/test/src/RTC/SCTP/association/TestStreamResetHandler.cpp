@@ -51,13 +51,13 @@ namespace
 		        .listener         = std::addressof(this->backoffTimerListener),
 		        .label            = "mock-sctp-delayed-ack",
 		        .baseTimeoutMs    = this->sctpOptions.initialRtoMs,
-		        .backoffAlgorithm = BackoffTimerHandleInterface::BackoffAlgorithm::FIXED, })),
+		        .backoffAlgorithm = BackoffTimerHandleInterface::BackoffAlgorithm::FIXED })),
 		    t3RtxTimer(this->shared.CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener         = std::addressof(this->backoffTimerListener),
 		        .label            = "mock-sctp-t3-rtx",
 		        .baseTimeoutMs    = this->sctpOptions.initialRtoMs,
-		        .backoffAlgorithm = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL, })),
+		        .backoffAlgorithm = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL })),
 		    sendQueue(
 		      this->associationListener,
 		      this->sctpOptions.mtu,

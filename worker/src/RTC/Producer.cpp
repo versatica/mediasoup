@@ -1098,19 +1098,17 @@ namespace RTC
 		  mediaCodec.payloadType);
 
 		// Set stream params.
-		RTC::RTP::RtpStream::Params params{
-			.encodingIdx    = encodingIdx,
-			.ssrc           = ssrc,
-			.payloadType    = mediaCodec.payloadType,
-			.mimeType       = mediaCodec.mimeType,
-			.clockRate      = mediaCodec.clockRate,
-			.rid            = encoding.rid,
-			.cname          = this->rtpParameters.rtcp.cname,
-			.rtcpSenderSsrc = this->rtcpSsrc,
-			.spatialLayers  = encoding.spatialLayers,
-			.temporalLayers = encoding.temporalLayers,
-			.ksvc           = encoding.ksvc,
-		};
+		RTC::RTP::RtpStream::Params params{ .encodingIdx    = encodingIdx,
+		                                    .ssrc           = ssrc,
+		                                    .payloadType    = mediaCodec.payloadType,
+		                                    .mimeType       = mediaCodec.mimeType,
+		                                    .clockRate      = mediaCodec.clockRate,
+		                                    .rid            = encoding.rid,
+		                                    .cname          = this->rtpParameters.rtcp.cname,
+		                                    .rtcpSenderSsrc = this->rtcpSsrc,
+		                                    .spatialLayers  = encoding.spatialLayers,
+		                                    .temporalLayers = encoding.temporalLayers,
+		                                    .ksvc           = encoding.ksvc };
 
 		// Check in band FEC in codec parameters.
 		if (mediaCodec.parameters.HasInteger("useinbandfec") && mediaCodec.parameters.GetInteger("useinbandfec") == 1)

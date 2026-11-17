@@ -92,7 +92,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			// BT: 42, Type-specific: 0, Block length: 1
 			0x2A, 0x00, 0x00, 0x01,
 			// 4 bytes of value
-			0x01, 0x02, 0x03, 0x04,
+			0x01, 0x02, 0x03, 0x04
 		};
 		// clang-format on
 
@@ -155,7 +155,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			// V=2, P=0, Reserved=0, PT:207, Length: 1
 			0b10000000, 0xCF, 0x00, 0x01,
 			// SSRC: 0x12345678
-			0x12, 0x34, 0x56, 0x78,
+			0x12, 0x34, 0x56, 0x78
 		};
 		// clang-format on
 
@@ -196,7 +196,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			// Padding: 4 bytes
 			0x00, 0x00, 0x00, 0x04,
 			// Extra space in the buffer
-			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -204,7 +204,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		alignas(4) const uint8_t extendedReportBuffer[] =
 		{
 			// BT: 99, Type-specific: 0, Block length: 0
-			0x63, 0x00, 0x00, 0x00,
+			0x63, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -278,7 +278,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			// DLRR 2: 0x22002200
 			0x22, 0x00, 0x22, 0x00,
 			// Padding: 4 bytes
-			0x00, 0x00, 0x00, 0x04,
+			0x00, 0x00, 0x00, 0x04
 		};
 		// clang-format on
 
@@ -322,7 +322,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=0, Reserved=0, PT:207, Length: 0
-			0b10000000, 0xCF, 0x00, 0x00,
+			0b10000000, 0xCF, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -339,7 +339,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			// BT: 42, Type-specific: 0, Block length: 2
 			0x2A, 0x00, 0x00, 0x02,
 			// 4 bytes of value
-			0x01, 0x02, 0x03, 0x04,
+			0x01, 0x02, 0x03, 0x04
 		};
 		// clang-format on
 
@@ -357,7 +357,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			// BT: 42, Type-specific: 0, Block length: 0
 			0x2A, 0x00, 0x00, 0x00,
 			// 2 extra bytes, Padding: 2 bytes
-			0x11, 0x22, 0x00, 0x02,
+			0x11, 0x22, 0x00, 0x02
 		};
 		// clang-format on
 
@@ -374,7 +374,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			// BT: 42, Type-specific: 0, Block length: 1
 			0x2A, 0x00, 0x00, 0x01,
 			// Padding: 4 bytes
-			0x00, 0x00, 0x00, 0x04,
+			0x00, 0x00, 0x00, 0x04
 		};
 		// clang-format on
 
@@ -390,7 +390,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			0x12, 0x34, 0x56, 0x78,
 			// BT: 4 (RRT), Reserved: 0, Block length: 1
 			0x04, 0x00, 0x00, 0x01,
-			0x11, 0x22, 0x33, 0x44,
+			0x11, 0x22, 0x33, 0x44
 		};
 		// clang-format on
 
@@ -406,7 +406,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			0x12, 0x34, 0x56, 0x78,
 			// BT: 5 (DLRR), Reserved: 0, Block length: 1
 			0x05, 0x00, 0x00, 0x01,
-			0x11, 0x22, 0x33, 0x44,
+			0x11, 0x22, 0x33, 0x44
 		};
 		// clang-format on
 
@@ -419,7 +419,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			// V=2, P=0, RC=0, PT:201, Length: 1
 			0b10000000, 0xC9, 0x00, 0x01,
 			// SSRC: 0x12345678
-			0x12, 0x34, 0x56, 0x78,
+			0x12, 0x34, 0x56, 0x78
 		};
 		// clang-format on
 
@@ -435,7 +435,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			0x2A, 0xAB, 0x00, 0x02,
 			// 8 bytes of value
 			0x11, 0x22, 0x33, 0x44,
-			0x55, 0x66, 0x77, 0x88,
+			0x55, 0x66, 0x77, 0x88
 		};
 		// clang-format on
 
@@ -443,7 +443,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		alignas(4) const uint8_t extendedReportBuffer2[] =
 		{
 			// BT: 99, Type-specific: 0, Block length: 0
-			0x63, 0x00, 0x00, 0x00,
+			0x63, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -577,7 +577,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			// V=2, P=0, Reserved=0, PT:207, Length: 1
 			0x80, 0xCF, 0x00, 0x01,
 			// SSRC: 0x12345678
-			0x12, 0x34, 0x56, 0x78,
+			0x12, 0x34, 0x56, 0x78
 		};
 		// clang-format on
 
@@ -720,7 +720,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			// BT: 42, Type-specific: 0, Block length: 1
 			0x2A, 0x00, 0x00, 0x01,
 			// 4 bytes of value
-			0x01, 0x02, 0x03, 0x04,
+			0x01, 0x02, 0x03, 0x04
 		};
 		// clang-format on
 

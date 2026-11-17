@@ -232,7 +232,7 @@ static void ignoreSignals()
 		{ "HUP",  SIGHUP  },
 		{ "ALRM", SIGALRM },
 		{ "USR1", SIGUSR1 },
-		{ "USR2", SIGUSR2 },
+		{ "USR2", SIGUSR2 }
 	};
 	// clang-format on
 

@@ -57,7 +57,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 		const auto absSendTimeId = static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, absSendTimeId, /*len*/ 3, rtpCommon::DataBuffer },
+			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, absSendTimeId, /*len*/ 3, rtpCommon::DataBuffer }
 		};
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);

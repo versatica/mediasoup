@@ -198,10 +198,9 @@ namespace RTC
 			// gives nothing to store.
 			if (ntp.seconds != 0 || ntp.fractions != 0)
 			{
-				this->lastSenderReportTiming = SenderReportTiming{
-					.compactNtp   = Utils::Time::NtpToCompactNtp(ntp),
-					.receivedAtUs = receivedAtUs,
-				};
+				this->lastSenderReportTiming =
+				  SenderReportTiming{ .compactNtp   = Utils::Time::NtpToCompactNtp(ntp),
+					                    .receivedAtUs = receivedAtUs };
 			}
 		}
 

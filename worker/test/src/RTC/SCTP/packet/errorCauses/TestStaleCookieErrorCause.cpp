@@ -22,7 +22,7 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -85,7 +85,7 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
 			// Measure of Staleness: 987654321
-			0x3A, 0xDE, 0x68, 0xB1,
+			0x3A, 0xDE, 0x68, 0xB1
 		};
 		// clang-format on
 
@@ -98,7 +98,7 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 			// Code:3 (STALE-COOKIE), Length: 7
 			0x00, 0x03, 0x00, 0x07,
 			// Measure of Staleness: 987654321
-			0x3A, 0xDE, 0x68,
+			0x3A, 0xDE, 0x68
 		};
 		// clang-format on
 
@@ -112,7 +112,7 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 			0x00, 0x03, 0x00, 0x09,
 			// Measure of Staleness: 987654321
 			0x3A, 0xDE, 0x68, 0xB1,
-			0xEE,
+			0xEE
 		};
 		// clang-format on
 
@@ -125,7 +125,7 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 			// Code:3 (STALE-COOKIE), Length: 8
 			0x00, 0x03, 0x00, 0x08,
 			// Measure of Staleness (last byte missing)
-			0x3A, 0xDE, 0x68,
+			0x3A, 0xDE, 0x68
 		};
 		// clang-format on
 

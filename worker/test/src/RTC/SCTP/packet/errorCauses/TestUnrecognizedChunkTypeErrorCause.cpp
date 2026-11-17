@@ -23,7 +23,7 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 			0x90, 0xAB, 0x00, 0x00,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -116,7 +116,7 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
 			// Unrecognized Chunk: 0x12345678
-			0x12, 0x34, 0x56, 0x78,
+			0x12, 0x34, 0x56, 0x78
 		};
 		// clang-format on
 
@@ -129,7 +129,7 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 			// Code:6 (UNRECOGNIZED-CHUNK-TYPE), Length: 7
 			0x00, 0x06, 0x00, 0x07,
 			// Unrecognized Chunk: 0x123456 (missing padding byte)
-			0x12, 0x34, 0x56,
+			0x12, 0x34, 0x56
 		};
 		// clang-format on
 

@@ -45,7 +45,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 			// LRR 2: 0x00220022
 			0x00, 0x22, 0x00, 0x22,
 			// DLRR 2: 0x22002200
-			0x22, 0x00, 0x22, 0x00,
+			0x22, 0x00, 0x22, 0x00
 		};
 		// clang-format on
 
@@ -117,7 +117,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 			// LRR: 0x23344556
 			0x23, 0x34, 0x45, 0x56,
 			// DLRR: 0x33343536
-			0x33, 0x34, 0x35, 0x36,
+			0x33, 0x34, 0x35, 0x36
 		};
 		// clang-format on
 
@@ -148,7 +148,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 		alignas(4) uint8_t buffer[] =
 		{
 			// BT: 5 (DLRR), Reserved: 0, Block length: 0
-			0x05, 0x00, 0x00, 0x00,
+			0x05, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -195,7 +195,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 			0x04, 0x00, 0x00, 0x03,
 			0x12, 0x34, 0x56, 0x78,
 			0x23, 0x34, 0x45, 0x56,
-			0x33, 0x34, 0x35, 0x36,
+			0x33, 0x34, 0x35, 0x36
 		};
 		// clang-format on
 
@@ -208,7 +208,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 			// BT: 5 (DLRR), Reserved: 0, Block length: 3
 			0x05, 0x00, 0x00, 0x03,
 			0x12, 0x34, 0x56, 0x78,
-			0x23, 0x34, 0x45, 0x56,
+			0x23, 0x34, 0x45, 0x56
 		};
 		// clang-format on
 
@@ -227,7 +227,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 			// LRR: 0x23344556
 			0x23, 0x34, 0x45, 0x56,
 			// DLRR: 0x33343536
-			0x33, 0x34, 0x35, 0x36,
+			0x33, 0x34, 0x35, 0x36
 		};
 		// clang-format on
 
@@ -250,11 +250,9 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 		/* Modify it. */
 
 		extendedReport->AddSubBlock(
-		  {
-		    .ssrc                         = 0x12345678,
-		    .lastReceiverReport           = 0x23344556,
-		    .delaySinceLastReceiverReport = 0x33343536,
-		  });
+		  { .ssrc                         = 0x12345678,
+			  .lastReceiverReport           = 0x23344556,
+			  .delaySinceLastReceiverReport = 0x33343536 });
 
 		CHECK_RTCP_EXTENDED_REPORT(
 		  /*extendedReport*/ extendedReport.get(),
@@ -292,11 +290,9 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 		for (uint32_t idx{ 1 }; idx <= NumberOfSubBlocks; ++idx)
 		{
 			extendedReport->AddSubBlock(
-			  {
-			    .ssrc                         = 0x12345678 + idx,
-			    .lastReceiverReport           = 0x23344556 + idx,
-			    .delaySinceLastReceiverReport = 0x33343536 + idx,
-			  });
+			  { .ssrc                         = 0x12345678 + idx,
+				  .lastReceiverReport           = 0x23344556 + idx,
+				  .delaySinceLastReceiverReport = 0x33343536 + idx });
 		}
 
 		CHECK_RTCP_EXTENDED_REPORT(

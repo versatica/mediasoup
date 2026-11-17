@@ -28,7 +28,7 @@ SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 		// clang-format off
 		const uint8_t originalBuffer[] =
 		{
-			0xd0, 0x80, 0x11, 0x00,
+			0xd0, 0x80, 0x11, 0x00
 		};
 		// clang-format on
 
@@ -103,7 +103,7 @@ SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 		// clang-format off
 		const uint8_t originalBuffer[] =
 		{
-		  0x88, 0x3e, 0xe4, 0x00,
+		  0x88, 0x3e, 0xe4, 0x00
 		};
 		// clang-format on
 
@@ -178,7 +178,7 @@ SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 		// clang-format off
 		const uint8_t originalBuffer[] =
 		{
-			0xd0, 0xc0, 0x11, 0x03,
+			0xd0, 0xc0, 0x11, 0x03
 		};
 		// clang-format on
 
@@ -243,7 +243,7 @@ SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 		// clang-format off
 		const uint8_t buffer[] =
 		{
-			0xd0, 0x80,
+			0xd0, 0x80
 		};
 		// clang-format on
 
@@ -271,7 +271,7 @@ SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 		// clang-format off
 		const uint8_t buffer[] =
 		{
-			0x50, 0x01,
+			0x50, 0x01
 		};
 		// clang-format on
 
@@ -324,7 +324,7 @@ SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 		// clang-format off
 		const uint8_t buffer[] =
 		{
-			0x50, 0x00,
+			0x50, 0x00
 		};
 		// clang-format on
 
@@ -404,7 +404,7 @@ SCENARIO("process VP8 payload descriptor", "[rtp][codecs][vp8]")
 		// clang-format off
 		const uint8_t payload[] =
 		{
-			0x90, 0xe0, 0x80, 0x00, 0x00, 0x00,
+			0x90, 0xe0, 0x80, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -434,10 +434,7 @@ SCENARIO("process VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 	SECTION("do not drop TL0PICIDX from temporal layers higher than 0")
 	{
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers  = 0,
-			.temporalLayers = 2,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 0, .temporalLayers = 2 };
 
 		RTC::RTP::Codecs::VP8::EncodingContext context(params);
 
@@ -468,10 +465,7 @@ SCENARIO("process VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 	SECTION("drop packets that belong to other temporal layers after rolling over pictureID")
 	{
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers  = 0,
-			.temporalLayers = 2,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 0, .temporalLayers = 2 };
 
 		RTC::RTP::Codecs::VP8::EncodingContext context(params);
 
@@ -502,10 +496,7 @@ SCENARIO("process VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 	SECTION("old packets with higher temporal layer than current are dropped")
 	{
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers  = 0,
-			.temporalLayers = 2,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 0, .temporalLayers = 2 };
 
 		RTC::RTP::Codecs::VP8::EncodingContext context(params);
 
@@ -539,10 +530,7 @@ SCENARIO("process VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 	SECTION("packets with higher temporal layer than current are dropped")
 	{
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers  = 0,
-			.temporalLayers = 2,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 0, .temporalLayers = 2 };
 
 		RTC::RTP::Codecs::VP8::EncodingContext context(params);
 
@@ -599,7 +587,7 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 	const uint8_t payload[] =
 	{
 		0x80, 0xe0, 0x01, 0x01,
-		0xe8, 0x40, 0x7a, 0xd8,
+		0xe8, 0x40, 0x7a, 0xd8
 	};
 	// clang-format on
 
@@ -611,10 +599,7 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 		REQUIRE(payloadDescriptor);
 
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers  = 0,
-			.temporalLayers = 3,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 0, .temporalLayers = 3 };
 
 		RTC::RTP::Codecs::VP8::EncodingContext context(params);
 

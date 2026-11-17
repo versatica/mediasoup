@@ -180,10 +180,8 @@ namespace RTC
 				const auto* const ptr = itemsPointer + (idx * NackPacket::NackItemLength);
 
 				items.push_back(
-				  {
-				    .packetId          = Utils::Byte::Get2Bytes(ptr, 0),
-				    .lostPacketBitmask = Utils::Byte::Get2Bytes(ptr, 2),
-				  });
+				  { .packetId          = Utils::Byte::Get2Bytes(ptr, 0),
+					  .lostPacketBitmask = Utils::Byte::Get2Bytes(ptr, 2) });
 			}
 
 			return items;

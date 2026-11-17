@@ -63,8 +63,7 @@ namespace RTC
 		        .baseTimeoutMs       = sctpOptions.t1InitTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
-		        .maxRestarts         = sctpOptions.maxInitRetransmissions,
-		      })),
+		        .maxRestarts         = sctpOptions.maxInitRetransmissions })),
 		    t1CookieTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
@@ -72,8 +71,7 @@ namespace RTC
 		        .baseTimeoutMs       = sctpOptions.t1CookieTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
-		        .maxRestarts         = sctpOptions.maxInitRetransmissions,
-		      })),
+		        .maxRestarts         = sctpOptions.maxInitRetransmissions })),
 		    t2ShutdownTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
@@ -81,8 +79,7 @@ namespace RTC
 		        .baseTimeoutMs       = sctpOptions.t2ShutdownTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
-		        .maxRestarts         = sctpOptions.maxRetransmissions,
-		      })),
+		        .maxRestarts         = sctpOptions.maxRetransmissions })),
 		    maxPacketLength(Utils::Byte::PadDownTo4Bytes(this->sctpOptions.mtu)),
 		    isDataChannel(isDataChannel),
 		    mayConnectOnReceivedSctpData(mayConnectOnReceivedSctpData)
@@ -378,7 +375,7 @@ namespace RTC
 				.usesPartialReliability       = this->privateMetrics.usesPartialReliability,
 				.usesMessageInterleaving      = this->privateMetrics.usesMessageInterleaving,
 				.usesReConfig                 = this->privateMetrics.usesReConfig,
-				.usesZeroChecksum             = this->privateMetrics.usesZeroChecksum,
+				.usesZeroChecksum             = this->privateMetrics.usesZeroChecksum
 
 			};
 

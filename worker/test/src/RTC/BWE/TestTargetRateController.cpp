@@ -208,7 +208,7 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 		// A limit that no round trip time can reach disables the backoff, which is
 		// what the sender of a link known to be slow would want.
 		const RTC::BWE::TargetRateController::TargetRateControllerOptions options{
-			.maxRttUs = RTC::BWE::Types::TimeUsInfinite,
+			.maxRttUs = RTC::BWE::Types::TimeUsInfinite
 		};
 
 		RTC::BWE::TargetRateController targetRateController(options);

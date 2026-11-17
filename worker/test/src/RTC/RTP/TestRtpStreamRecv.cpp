@@ -162,7 +162,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		0x80, 0x01, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x04,
 		0x00, 0x00, 0x00, 0x05,
-		0x00, 0x00, 0x00, 0x00, // Extra space for RTX encoding.
+		0x00, 0x00, 0x00, 0x00 // Extra space for RTX encoding.
 	};
 	// clang-format on
 
@@ -173,15 +173,13 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		FAIL("not a RTP packet");
 	}
 
-	RTC::RTP::RtpStream::Params params{
-		.ssrc           = packet->GetSsrc(),
-		.clockRate      = 90000,
-		.rtxSsrc        = 1234,
-		.rtxPayloadType = 96,
-		.useNack        = true,
-		.usePli         = true,
-		.useFir         = false,
-	};
+	RTC::RTP::RtpStream::Params params{ .ssrc           = packet->GetSsrc(),
+	                                    .clockRate      = 90000,
+	                                    .rtxSsrc        = 1234,
+	                                    .rtxPayloadType = 96,
+	                                    .useNack        = true,
+	                                    .usePli         = true,
+	                                    .useFir         = false };
 
 	SECTION("NACK one packet")
 	{
@@ -344,11 +342,9 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		const auto receiveDelaySinceLastRr =
 		  [&](int64_t receivedAtUs, uint32_t lastRr, uint32_t dlrr) -> std::optional<float>
 		{
-			const RTC::RTCP::DlrrExtendedReport::SubBlock subBlock{
-				.ssrc                         = params.ssrc,
-				.lastReceiverReport           = lastRr,
-				.delaySinceLastReceiverReport = dlrr,
-			};
+			const RTC::RTCP::DlrrExtendedReport::SubBlock subBlock{ .ssrc               = params.ssrc,
+			                                                        .lastReceiverReport = lastRr,
+			                                                        .delaySinceLastReceiverReport = dlrr };
 
 			return rtpStream.ReceiveRtcpDlrrSubBlock(subBlock, receivedAtUs);
 		};

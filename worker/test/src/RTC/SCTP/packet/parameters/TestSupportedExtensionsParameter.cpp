@@ -22,7 +22,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[serializable][sctp][paramet
 			// chunk type 3: UNKNOWN (0x42), 1 byte of padding
 			0x82, 0x0C, 0x42, 0x00,
 			// Extra bytes that should be ignored
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 

@@ -8,15 +8,14 @@
 
 namespace
 {
-	constexpr uint8_t DependencyDescriptorId{
-		static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
-	};
+	constexpr uint8_t DependencyDescriptorId{ static_cast<uint8_t>(
+		RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR) };
 
 	// Single NAL unit packet holding an IDR.
 	// clang-format off
 	const uint8_t KeyFramePayload[] =
 	{
-		0x07, 0x80, 0x11, 0x00,
+		0x07, 0x80, 0x11, 0x00
 	};
 	// clang-format on
 } // namespace
@@ -41,10 +40,9 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 			std::memcpy(value, dependencyDescriptor, len);
 
 			const std::vector<RTC::RTP::Packet::Extension> extensions{
-				{
-				 RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
+				{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
 				 DependencyDescriptorId, reservedLen,
-				 value, },
+				 value }
 			};
 
 			REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
@@ -63,7 +61,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		// clang-format off
 		const uint8_t originalBuffer[] =
 		{
-			0x07, 0x80, 0x11, 0x00,
+			0x07, 0x80, 0x11, 0x00
 		};
 		// clang-format on
 
@@ -92,13 +90,13 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 
 		// Mandatory fields only, so nothing tells about the active decode targets.
 		const uint8_t deltaFrameDescriptor[] =
 		{
-			0x00, 0x00, 0xE8,
+			0x00, 0x00, 0xE8
 		};
 		// clang-format on
 
@@ -128,11 +126,9 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		REQUIRE(packet->GetTemporalLayer() == 0);
 
 		// A Consumer that only wants the lowest temporal layer.
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers              = 1,
-			.temporalLayers             = 2,
-			.preferDependencyDescriptor = true,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers              = 1,
+		                                                        .temporalLayers             = 2,
+		                                                        .preferDependencyDescriptor = true };
 
 		RTC::RTP::Codecs::H264::EncodingContext context(params);
 
@@ -167,19 +163,19 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 
 		// Mandatory fields only, of the lowest temporal layer.
 		const uint8_t lowerFrameDescriptor[] =
 		{
-			0x00, 0x00, 0xE8,
+			0x00, 0x00, 0xE8
 		};
 
 		// The same of the upper temporal layer.
 		const uint8_t upperFrameDescriptor[] =
 		{
-			0x02, 0x00, 0xE9,
+			0x02, 0x00, 0xE9
 		};
 		// clang-format on
 
@@ -211,11 +207,9 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 
 		// A Consumer that did not negotiate the extension and only wants the
 		// lowest temporal layer.
-		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers              = 1,
-			.temporalLayers             = 2,
-			.preferDependencyDescriptor = false,
-		};
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers              = 1,
+		                                                        .temporalLayers             = 2,
+		                                                        .preferDependencyDescriptor = false };
 
 		RTC::RTP::Codecs::H264::EncodingContext context(params);
 
@@ -254,12 +248,12 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 
 		const uint8_t deltaFrameDescriptor[] =
 		{
-			0x00, 0x00, 0xE8,
+			0x00, 0x00, 0xE8
 		};
 		// clang-format on
 
@@ -278,10 +272,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
 
 		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers              = 1,
-			.temporalLayers             = 2,
-			.simulcast                  = true,
-			.preferDependencyDescriptor = true,
+			.spatialLayers = 1, .temporalLayers = 2, .simulcast = true, .preferDependencyDescriptor = true
 		};
 
 		RTC::RTP::Codecs::H264::EncodingContext context(params);
@@ -322,17 +313,14 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 			0x80, 0x00, 0xE8, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C,
+			0xFC, 0x0B, 0x3C
 		};
 		// clang-format on
 
 		constexpr uint16_t KeyFrameNumber{ 232 };
 
 		const RTC::RTP::Codecs::EncodingContext::Params params{
-			.spatialLayers              = 1,
-			.temporalLayers             = 2,
-			.simulcast                  = true,
-			.preferDependencyDescriptor = true,
+			.spatialLayers = 1, .temporalLayers = 2, .simulcast = true, .preferDependencyDescriptor = true
 		};
 
 		RTC::RTP::Codecs::H264::EncodingContext context(params);

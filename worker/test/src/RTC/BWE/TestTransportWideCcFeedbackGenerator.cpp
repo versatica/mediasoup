@@ -47,14 +47,12 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 				  // which is shifted by a whole wrap period so that it's positive
 				  // regardless of the sign of the reference time on the wire.
 				  statuses.push_back(
-				    TestPacketStatus{
-				      .wideSeqNumber = sequenceNumber,
-				      .received      = deltaSinceBaseUs.has_value(),
-				      .timestampUs   = deltaSinceBaseUs.has_value()
-							                   ? baseTimeUs + deltaSinceBaseUs.value() -
-							                       RTC::RTCP::TransportWideCcPacket::TimeWrapPeriodUs
-							                   : 0,
-				    });
+				    TestPacketStatus{ .wideSeqNumber = sequenceNumber,
+						                  .received      = deltaSinceBaseUs.has_value(),
+						                  .timestampUs = deltaSinceBaseUs.has_value()
+						                                   ? baseTimeUs + deltaSinceBaseUs.value() -
+						                                       RTC::RTCP::TransportWideCcPacket::TimeWrapPeriodUs
+						                                   : 0 });
 			  });
 
 			this->senderSsrcs.push_back(packet->GetSenderSsrc());
@@ -101,11 +99,9 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		packet->SetSsrc(Ssrc);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{
-			 RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
+			{ RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
 			 TransportWideCc01Id, /*len*/ 2,
-			 rtpCommon::DataBuffer,
-			 },
+			 rtpCommon::DataBuffer }
 		};
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
@@ -210,21 +206,15 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 			{ .wideSeqNumber = 2, .arrivalTimeUs = 1050000 },
 			{ .wideSeqNumber = 3, .arrivalTimeUs = 1100000 },
 			{ .wideSeqNumber = 4, .arrivalTimeUs = 1150000 },
-			{ .wideSeqNumber = 5, .arrivalTimeUs = 1200000 },
+			{ .wideSeqNumber = 5, .arrivalTimeUs = 1200000 }
 		};
 
 		const TestResults expectedResults{
-			{
-			 { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
-			 { .wideSeqNumber = 2, .received = true, .timestampUs = 1050000 },
-			 },
-			{
-			 { .wideSeqNumber = 3, .received = true, .timestampUs = 1100000 },
-			 { .wideSeqNumber = 4, .received = true, .timestampUs = 1150000 },
-			 },
-			{
-			 { .wideSeqNumber = 5, .received = true, .timestampUs = 1200000 },
-			 },
+			{ { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
+			 { .wideSeqNumber = 2, .received = true, .timestampUs = 1050000 } },
+			{ { .wideSeqNumber = 3, .received = true, .timestampUs = 1100000 },
+			 { .wideSeqNumber = 4, .received = true, .timestampUs = 1150000 } },
+			{ { .wideSeqNumber = 5, .received = true, .timestampUs = 1200000 } }
 		};
 
 		validate(inputs, expectedResults);
@@ -236,20 +226,16 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 			{ .wideSeqNumber = 1, .arrivalTimeUs = 1000000 },
 			{ .wideSeqNumber = 3, .arrivalTimeUs = 1050000 },
 			{ .wideSeqNumber = 5, .arrivalTimeUs = 1100000 },
-			{ .wideSeqNumber = 6, .arrivalTimeUs = 1150000 },
+			{ .wideSeqNumber = 6, .arrivalTimeUs = 1150000 }
 		};
 
 		const TestResults expectedResults{
-			{
-			 { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
+			{ { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
 			 { .wideSeqNumber = 2, .received = false, .timestampUs = 0 },
-			 { .wideSeqNumber = 3, .received = true, .timestampUs = 1050000 },
-			 },
-			{
-			 { .wideSeqNumber = 4, .received = false, .timestampUs = 0 },
+			 { .wideSeqNumber = 3, .received = true, .timestampUs = 1050000 } },
+			{ { .wideSeqNumber = 4, .received = false, .timestampUs = 0 },
 			 { .wideSeqNumber = 5, .received = true, .timestampUs = 1100000 },
-			 { .wideSeqNumber = 6, .received = true, .timestampUs = 1150000 },
-			 },
+			 { .wideSeqNumber = 6, .received = true, .timestampUs = 1150000 } }
 		};
 
 		validate(inputs, expectedResults);
@@ -263,20 +249,14 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 			{ .wideSeqNumber = 2, .arrivalTimeUs = 1100000 },
 			{ .wideSeqNumber = 3, .arrivalTimeUs = 1150000 },
 			{ .wideSeqNumber = 3, .arrivalTimeUs = 1200000 },
-			{ .wideSeqNumber = 4, .arrivalTimeUs = 1250000 },
+			{ .wideSeqNumber = 4, .arrivalTimeUs = 1250000 }
 		};
 
 		const TestResults expectedResults{
-			{
-			 { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
-			 },
-			{
-			 { .wideSeqNumber = 2, .received = true, .timestampUs = 1100000 },
-			 { .wideSeqNumber = 3, .received = true, .timestampUs = 1150000 },
-			 },
-			{
-			 { .wideSeqNumber = 4, .received = true, .timestampUs = 1250000 },
-			 },
+			{ { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 } },
+			{ { .wideSeqNumber = 2, .received = true, .timestampUs = 1100000 },
+			 { .wideSeqNumber = 3, .received = true, .timestampUs = 1150000 } },
+			{ { .wideSeqNumber = 4, .received = true, .timestampUs = 1250000 } }
 		};
 
 		validate(inputs, expectedResults);
@@ -291,25 +271,19 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 			{ .wideSeqNumber = 5, .arrivalTimeUs = 1150000 },
 			// Out of order.
 			{ .wideSeqNumber = 3, .arrivalTimeUs = 1200000 },
-			{ .wideSeqNumber = 6, .arrivalTimeUs = 1250000 },
+			{ .wideSeqNumber = 6, .arrivalTimeUs = 1250000 }
 		};
 
 		const TestResults expectedResults{
-			{
-			 { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
-			 { .wideSeqNumber = 2, .received = true, .timestampUs = 1050000 },
-			 },
-			{
-			 { .wideSeqNumber = 3, .received = false, .timestampUs = 0 },
+			{ { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
+			 { .wideSeqNumber = 2, .received = true, .timestampUs = 1050000 } },
+			{ { .wideSeqNumber = 3, .received = false, .timestampUs = 0 },
+			 { .wideSeqNumber = 4, .received = true, .timestampUs = 1100000 },
+			 { .wideSeqNumber = 5, .received = true, .timestampUs = 1150000 } },
+			{ { .wideSeqNumber = 3, .received = true, .timestampUs = 1200000 },
 			 { .wideSeqNumber = 4, .received = true, .timestampUs = 1100000 },
 			 { .wideSeqNumber = 5, .received = true, .timestampUs = 1150000 },
-			 },
-			{
-			 { .wideSeqNumber = 3, .received = true, .timestampUs = 1200000 },
-			 { .wideSeqNumber = 4, .received = true, .timestampUs = 1100000 },
-			 { .wideSeqNumber = 5, .received = true, .timestampUs = 1150000 },
-			 { .wideSeqNumber = 6, .received = true, .timestampUs = 1250000 },
-			 },
+			 { .wideSeqNumber = 6, .received = true, .timestampUs = 1250000 } }
 		};
 
 		validate(inputs, expectedResults);
@@ -340,19 +314,13 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		const TestResults expectedResults{
-			{
-			 { .wideSeqNumber = 12, .received = true, .timestampUs = 1000000 },
-			 },
-			{
-			 { .wideSeqNumber = 13, .received = true, .timestampUs = 1500000 },
-			 },
-			{
-			 { .wideSeqNumber = 10, .received = true, .timestampUs = 1499000 },
+			{ { .wideSeqNumber = 12, .received = true, .timestampUs = 1000000 } },
+			{ { .wideSeqNumber = 13, .received = true, .timestampUs = 1500000 } },
+			{ { .wideSeqNumber = 10, .received = true, .timestampUs = 1499000 },
 			 { .wideSeqNumber = 11, .received = true, .timestampUs = 1499500 },
 			 // Forgotten above, so no longer known to have arrived.
 			  { .wideSeqNumber = 12, .received = false, .timestampUs = 0 },
-			 { .wideSeqNumber = 13, .received = true, .timestampUs = 1500000 },
-			 },
+			 { .wideSeqNumber = 13, .received = true, .timestampUs = 1500000 } }
 		};
 
 		checkFeedbacks(listener, expectedResults);
@@ -386,20 +354,14 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		const TestResults expectedResults{
-			{
-			 { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
-			 { .wideSeqNumber = 2, .received = true, .timestampUs = 1000000 },
-			 },
-			{
-			 { .wideSeqNumber = 3, .received = false, .timestampUs = 0 },
+			{ { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
+			 { .wideSeqNumber = 2, .received = true, .timestampUs = 1000000 } },
+			{ { .wideSeqNumber = 3, .received = false, .timestampUs = 0 },
 			 { .wideSeqNumber = 4, .received = false, .timestampUs = 0 },
-			 { .wideSeqNumber = 5, .received = true, .timestampUs = 1000000 },
-			 },
+			 { .wideSeqNumber = 5, .received = true, .timestampUs = 1000000 } },
 			// Only the one still known. Without moving the start up to it, 6 to 9
 			// would go out as lost having merely been forgotten.
-			{
-			 { .wideSeqNumber = 10, .received = true, .timestampUs = 1600000 },
-			 },
+			{ { .wideSeqNumber = 10, .received = true, .timestampUs = 1600000 } }
 		};
 
 		checkFeedbacks(listener, expectedResults);
@@ -429,20 +391,16 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		const TestResults expectedResults{
-			{
-			 { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
-			 { .wideSeqNumber = 2, .received = true, .timestampUs = 1000000 },
-			 },
-			{
-			 { .wideSeqNumber = 3, .received = false, .timestampUs = 0 },
+			{ { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
+			 { .wideSeqNumber = 2, .received = true, .timestampUs = 1000000 } },
+			{ { .wideSeqNumber = 3, .received = false, .timestampUs = 0 },
 			 { .wideSeqNumber = 4, .received = false, .timestampUs = 0 },
 			 { .wideSeqNumber = 5, .received = true, .timestampUs = 1000000 },
 			 { .wideSeqNumber = 6, .received = false, .timestampUs = 0 },
 			 { .wideSeqNumber = 7, .received = false, .timestampUs = 0 },
 			 { .wideSeqNumber = 8, .received = false, .timestampUs = 0 },
 			 { .wideSeqNumber = 9, .received = false, .timestampUs = 0 },
-			 { .wideSeqNumber = 10, .received = true, .timestampUs = 1600000 },
-			 },
+			 { .wideSeqNumber = 10, .received = true, .timestampUs = 1600000 } }
 		};
 
 		checkFeedbacks(listener, expectedResults);
@@ -502,12 +460,8 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		const TestResults expectedResults{
-			{
-			 { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
-			 },
-			{
-			 { .wideSeqNumber = 2, .received = true, .timestampUs = 10000000 },
-			 },
+			{ { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 } },
+			{ { .wideSeqNumber = 2, .received = true, .timestampUs = 10000000 } }
 		};
 
 		checkFeedbacks(listener, expectedResults);
@@ -528,8 +482,7 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		  std::addressof(listener),
 		  std::addressof(shared),
 		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{
-		    .maxRtcpPacketLen = MaxRtcpPacketLen,
-		  });
+		    .maxRtcpPacketLen = MaxRtcpPacketLen });
 
 		TestResults expectedResults(2);
 
@@ -590,8 +543,7 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		  std::addressof(listener),
 		  std::addressof(shared),
 		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{
-		    .rtcpSenderSsrc = 1234,
-		  });
+		    .rtcpSenderSsrc = 1234 });
 
 		feedPacket(transportWideCcFeedbackGenerator, 1, BaseTimeUs, 1000);
 

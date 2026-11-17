@@ -34,7 +34,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC, 0xDD,
+			0xAA, 0xBB, 0xCC, 0xDD
 		};
 		// clang-format on
 
@@ -260,7 +260,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 			// Unknown data: 0xABCD, 2 bytes of padding
 			0xAB, 0xCD, 0x00, 0x00,
 			// Extra bytes that should be ignored
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 

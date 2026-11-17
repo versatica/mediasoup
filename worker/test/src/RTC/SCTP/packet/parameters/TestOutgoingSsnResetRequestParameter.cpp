@@ -29,7 +29,7 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][para
 			// Stream 3: 0x5003, 2 bytes of padding
 			0x50, 0x03, 0x00, 0x00,
 			// Extra bytes that should be ignored
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 

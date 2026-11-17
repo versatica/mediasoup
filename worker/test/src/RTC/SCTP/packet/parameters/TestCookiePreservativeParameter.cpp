@@ -20,7 +20,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 			// Suggested Cookie Life-Span Increment: 4278194466
 			0xFF, 0x00, 0x11, 0x22,
 			// Extra bytes that should be ignored
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -86,7 +86,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 			// Type:9 (IPV6-ADDRESS), Length: 8
 			0x00, 0x06, 0x00, 0x08,
 			// Suggested Cookie Life-Span Increment: 4278194466
-			0xFF, 0x00, 0x11, 0x22,
+			0xFF, 0x00, 0x11, 0x22
 		};
 		// clang-format on
 
@@ -99,7 +99,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 			// Type:9 (COOKIE-PRESERVATIVE), Length: 7
 			0x00, 0x09, 0x00, 0x07,
 			// Suggested Cookie Life-Span Increment: 4278194466
-			0xFF, 0x00, 0x11, 0x22,
+			0xFF, 0x00, 0x11, 0x22
 		};
 		// clang-format on
 
@@ -113,7 +113,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 			0x00, 0x09, 0x00, 0x09,
 			// Suggested Cookie Life-Span Increment: 4278194466
 			0xFF, 0x00, 0x11, 0x22,
-			0x69,
+			0x69
 		};
 		// clang-format on
 
@@ -126,7 +126,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 			// Type:5 (IPV4-ADDRESS), Length: 8
 			0x00, 0x05, 0x00, 0x08,
 			// Suggested Cookie Life-Span Increment (wrong length)
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 

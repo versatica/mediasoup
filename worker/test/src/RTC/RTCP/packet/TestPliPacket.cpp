@@ -27,7 +27,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 			// SSRC of packet sender: 0x12345678
 			0x12, 0x34, 0x56, 0x78,
 			// SSRC of media source: 0x23456789
-			0x23, 0x45, 0x67, 0x89,
+			0x23, 0x45, 0x67, 0x89
 		};
 		// clang-format on
 
@@ -94,7 +94,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 			// Media SSRC: 2222
 			0x00, 0x00, 0x08, 0xAE,
 			// Padding: 4 bytes
-			0x00, 0x00, 0x00, 0x04,
+			0x00, 0x00, 0x00, 0x04
 		};
 		// clang-format on
 
@@ -124,7 +124,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 			// V=2, P=0, FMT=1, PT:206, Length: 1
 			0b10000001, 0xCE, 0x00, 0x01,
 			// SSRC of packet sender: 0x12345678
-			0x12, 0x34, 0x56, 0x78,
+			0x12, 0x34, 0x56, 0x78
 		};
 		// clang-format on
 
@@ -142,7 +142,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 			// SSRC of media source: 0x23456789
 			0x23, 0x45, 0x67, 0x89,
 			// 4 extra bytes
-			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -157,7 +157,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 			// SSRC of packet sender: 0x12345678
 			0x12, 0x34, 0x56, 0x78,
 			// SSRC of media source: 0x23456789
-			0x23, 0x45, 0x67, 0x89,
+			0x23, 0x45, 0x67, 0x89
 		};
 		// clang-format on
 
@@ -174,7 +174,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 			// SSRC of packet sender: 0x12345678
 			0x12, 0x34, 0x56, 0x78,
 			// SSRC of media source: 0x23456789
-			0x23, 0x45, 0x67, 0x89,
+			0x23, 0x45, 0x67, 0x89
 		};
 		// clang-format on
 

@@ -23,7 +23,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 			0x72, 0x31, 0x00, 0x00,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -134,7 +134,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
 			// Additional Information: 0x12345678
-			0x12, 0x34, 0x56, 0x78,
+			0x12, 0x34, 0x56, 0x78
 		};
 		// clang-format on
 
@@ -147,7 +147,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 			// Code:13 (PROTOCOL-VIOLATION), Length: 7
 			0x00, 0x0D, 0x00, 0x07,
 			// Additional Information: 0x123456 (missing padding byte)
-			0x12, 0x34, 0x56,
+			0x12, 0x34, 0x56
 		};
 		// clang-format on
 

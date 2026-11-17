@@ -33,7 +33,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		{
 			0b10000000, 0b01111011, 0b01010010, 0b00001110,
 			0b01011011, 0b01101011, 0b11001010, 0b10110101,
-			0, 0, 0, 2,
+			0, 0, 0, 2
 		};
 			// clang-format on
 
@@ -90,7 +90,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 				{ .isPresent = true, .sequenceNumber = 10001, .timestamp = 1000000000 },
 				{ .isPresent = true, .sequenceNumber = 10002, .timestamp = 1000000000 },
 				{ .isPresent = true, .sequenceNumber = 10003, .timestamp = 1000000200 },
-				{ .isPresent = true, .sequenceNumber = 10004, .timestamp = 1000000200 },
+				{ .isPresent = true, .sequenceNumber = 10004, .timestamp = 1000000200 }
 			}
 		);
 		// clang-format on
@@ -115,7 +115,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 				{ .isPresent = true, .sequenceNumber = 20001, .timestamp = 2000000000 },
 				{ .isPresent = true, .sequenceNumber = 20002, .timestamp = 2000000000 },
 				{ .isPresent = true, .sequenceNumber = 20003, .timestamp = 2000000200 },
-				{ .isPresent = true, .sequenceNumber = 20004, .timestamp = 2000000200 },
+				{ .isPresent = true, .sequenceNumber = 20004, .timestamp = 2000000200 }
 			}
 		);
 		// clang-format on
@@ -137,7 +137,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
-				{ .isPresent = true, .sequenceNumber = 40000, .timestamp = 3000003000 },
+				{ .isPresent = true, .sequenceNumber = 40000, .timestamp = 3000003000 }
 			}
 		);
 		// clang-format on
@@ -175,7 +175,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 				{ .isPresent = false, .sequenceNumber = 0, .timestamp = 0 },
 				{ .isPresent = true, .sequenceNumber = 40006, .timestamp = 4000000006 },
 				{ .isPresent = false, .sequenceNumber = 0, .timestamp = 0 },
-				{ .isPresent = true, .sequenceNumber = 40008, .timestamp = 4000000008 },
+				{ .isPresent = true, .sequenceNumber = 40008, .timestamp = 4000000008 }
 			}
 		);
 		// clang-format on
@@ -200,7 +200,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 			{
 				{ .isPresent = true, .sequenceNumber = 10001, .timestamp = 1000000001 },
 				{ .isPresent = true, .sequenceNumber = 10002, .timestamp = 1000000002 },
-				{ .isPresent = true, .sequenceNumber = 10003, .timestamp = 1000000003 },
+				{ .isPresent = true, .sequenceNumber = 10003, .timestamp = 1000000003 }
 			}
 		);
 		// clang-format on
@@ -226,7 +226,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 			{
 				{ .isPresent = true, .sequenceNumber = 10001, .timestamp = 1000000001 },
 				{ .isPresent = true, .sequenceNumber = 10002, .timestamp = 1000000002 },
-				{ .isPresent = true, .sequenceNumber = 10003, .timestamp = 1000000003 },
+				{ .isPresent = true, .sequenceNumber = 10003, .timestamp = 1000000003 }
 			}
 		);
 		// clang-format on
@@ -249,7 +249,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
-				{ .isPresent = true, .sequenceNumber = 18365, .timestamp = 1026593387 },
+				{ .isPresent = true, .sequenceNumber = 18365, .timestamp = 1026593387 }
 			}
 		);
 		// clang-format on
@@ -271,7 +271,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
-				{ .isPresent = true, .sequenceNumber = 33330, .timestamp = 1000000003 },
+				{ .isPresent = true, .sequenceNumber = 33330, .timestamp = 1000000003 }
 			}
 		);
 		// clang-format on
@@ -297,7 +297,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
-				{ .isPresent = true, .sequenceNumber = 10004, .timestamp = 1000000003 - maxDiffTs - 100 },
+				{ .isPresent = true, .sequenceNumber = 10004, .timestamp = 1000000003 - maxDiffTs - 100 }
 			}
 		);
 		// clang-format on

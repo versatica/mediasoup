@@ -36,7 +36,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 			// Verification Tag: 4294967285
 			0xFF, 0xFF, 0xFF, 0xF5,
 			// Checksum: 5
-			0x00, 0x00, 0x00, 0x05,
+			0x00, 0x00, 0x00, 0x05
 		};
 		// clang-format on
 
@@ -144,7 +144,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 6
 			0x00, 0x01, 0x00, 0x06,
 			// Heartbeat Information (2 bytes): 0x1122, 2 bytes of padding
-			0x11, 0x22, 0x00, 0x00,
+			0x11, 0x22, 0x00, 0x00
 		};
 		// clang-format on
 

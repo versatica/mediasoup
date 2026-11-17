@@ -16,7 +16,7 @@ namespace RTC
 		const ankerl::unordered_dense::map<ExtendedReport::BlockType, std::string> ExtendedReport::BlockType2String =
 		{
 			{ ExtendedReport::BlockType::RRT,  "RRT"  },
-			{ ExtendedReport::BlockType::DLRR, "DLRR" },
+			{ ExtendedReport::BlockType::DLRR, "DLRR" }
 		};
 		// clang-format on
 

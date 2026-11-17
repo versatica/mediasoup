@@ -23,7 +23,7 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 			0xDD, 0xCC, 0xEE, 0x00,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -190,7 +190,7 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 			.messageInterleaving = true,
 			.reConfig            = true,
 			.zeroChecksumAlternateErrorDetectionMethod =
-			  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE,
+			  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
 		};
 
 		// Build the StateCookie in place within the StateCookieParameter.

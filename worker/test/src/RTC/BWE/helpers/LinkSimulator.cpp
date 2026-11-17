@@ -84,13 +84,11 @@ namespace bweHelpers
 		for (size_t idx{ 0 }; idx < numPackets; ++idx)
 		{
 			packets.push_back(
-			  Packet{
-			    .ssrc          = this->ssrc,
-			    .rtpTimestamp  = rtpTimestamp,
-			    .sendTimeUs    = sendTimeUs,
-			    .arrivalTimeUs = 0,
-			    .size          = payloadSize,
-			  });
+			  Packet{ .ssrc          = this->ssrc,
+				        .rtpTimestamp  = rtpTimestamp,
+				        .sendTimeUs    = sendTimeUs,
+				        .arrivalTimeUs = 0,
+				        .size          = payloadSize });
 		}
 
 		this->nextRtpTimeUs = timeNowUs + ((1000000 + (this->fps / 2)) / this->fps);

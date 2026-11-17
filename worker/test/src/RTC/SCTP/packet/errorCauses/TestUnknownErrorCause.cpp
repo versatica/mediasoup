@@ -22,7 +22,7 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 			0x89, 0xAB, 0xCD, 0x00,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xEE,
+			0xEE
 		};
 		// clang-format on
 
@@ -123,7 +123,7 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 			// Unknown value: 0x0123456789ABCD
 			0x01, 0x23, 0x45, 0x67,
 			// 1 byte of padding
-			0x89, 0xAB, 0xCD, 0x00,
+			0x89, 0xAB, 0xCD, 0x00
 		};
 		// clang-format on
 
@@ -138,7 +138,7 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 			// Unknown value: 0x0123456789ABCD
 			0x01, 0x23, 0x45, 0x67,
 			// 1 byte of padding (missing)
-			0x89, 0xAB, 0xCD,
+			0x89, 0xAB, 0xCD
 		};
 		// clang-format on
 

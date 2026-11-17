@@ -288,9 +288,8 @@ namespace RTC
 				  (mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::OPUS ||
 					 mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::MULTIOPUS))
 				{
-					const RTC::RTP::Codecs::EncodingContext::Params params{
-						.preferDependencyDescriptor = PrefersDependencyDescriptor(),
-					};
+					const RTC::RTP::Codecs::EncodingContext::Params params{ .preferDependencyDescriptor =
+					                                                          PrefersDependencyDescriptor() };
 
 					encodingContext.reset(
 					  RTC::RTP::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
@@ -370,7 +369,7 @@ namespace RTC
 					.spatialLayers              = encoding.spatialLayers,
 					.temporalLayers             = encoding.temporalLayers,
 					.simulcast                  = true,
-					.preferDependencyDescriptor = PrefersDependencyDescriptor(),
+					.preferDependencyDescriptor = PrefersDependencyDescriptor()
 				};
 
 				std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext(
@@ -450,7 +449,7 @@ namespace RTC
 					.spatialLayers              = encoding.spatialLayers,
 					.temporalLayers             = encoding.temporalLayers,
 					.ksvc                       = encoding.ksvc,
-					.preferDependencyDescriptor = PrefersDependencyDescriptor(),
+					.preferDependencyDescriptor = PrefersDependencyDescriptor()
 				};
 
 				std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext(
@@ -1687,16 +1686,14 @@ namespace RTC
 			  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
 
 			// Set stream params.
-			RTC::RTP::RtpStream::Params params{
-				.encodingIdx    = idx,
-				.ssrc           = encoding.ssrc,
-				.payloadType    = mediaCodec->payloadType,
-				.mimeType       = mediaCodec->mimeType,
-				.clockRate      = mediaCodec->clockRate,
-				.cname          = this->rtpParameters.rtcp.cname,
-				.spatialLayers  = encoding.spatialLayers,
-				.temporalLayers = encoding.temporalLayers,
-			};
+			RTC::RTP::RtpStream::Params params{ .encodingIdx    = idx,
+			                                    .ssrc           = encoding.ssrc,
+			                                    .payloadType    = mediaCodec->payloadType,
+			                                    .mimeType       = mediaCodec->mimeType,
+			                                    .clockRate      = mediaCodec->clockRate,
+			                                    .cname          = this->rtpParameters.rtcp.cname,
+			                                    .spatialLayers  = encoding.spatialLayers,
+			                                    .temporalLayers = encoding.temporalLayers };
 
 			// Check in band FEC in codec parameters.
 			if (mediaCodec->parameters.HasInteger("useinbandfec") && mediaCodec->parameters.GetInteger("useinbandfec") == 1)

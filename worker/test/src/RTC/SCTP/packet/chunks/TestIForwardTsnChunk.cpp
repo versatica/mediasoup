@@ -35,7 +35,7 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 			0x33, 0x00, 0x00, 0x33,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -162,7 +162,7 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 			// Stream 2: 8194, U: 0
 			0x20, 0x02, 0x00, 0x00,
 			// Message Identifier (missing in length field)
-			0x22, 0x00, 0x00, 0x22,
+			0x22, 0x00, 0x00, 0x22
 		};
 		// clang-format on
 

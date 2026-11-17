@@ -32,7 +32,7 @@ namespace RTC
 				{ DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT, "-" },
 				{ DependencyDescriptor::DecodeTargetIndication::DISCARDABLE, "D" },
 				{ DependencyDescriptor::DecodeTargetIndication::SWITCH,      "S" },
-				{ DependencyDescriptor::DecodeTargetIndication::REQUIRED,    "R" },
+				{ DependencyDescriptor::DecodeTargetIndication::REQUIRED,    "R" }
 			};
 			// clang-format on
 

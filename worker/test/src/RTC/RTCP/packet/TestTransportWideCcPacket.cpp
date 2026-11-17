@@ -143,7 +143,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			// Receive deltas: 16, 0, 0, 0, 0, 0, 0, 28, 4, 0
 			0x10, 0x00,
 			0x00, 0x00, 0x00, 0x00,
-			0x00, 0x1C, 0x04, 0x00,
+			0x00, 0x1C, 0x04, 0x00
 		};
 		// clang-format on
 
@@ -190,7 +190,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			0x5F, 0xC2, 0xF1, 0x03,
 			0xBF, 0x8E, 0x10, 0x00,
 			0x00, 0x00, 0x00, 0x00,
-			0x00, 0x1C, 0x04, 0x00,
+			0x00, 0x1C, 0x04, 0x00
 		};
 		// clang-format on
 
@@ -237,7 +237,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			// Receive delta: 228
 			0xE4,
 			// Padding: 1 byte
-			0x01,
+			0x01
 		};
 		// clang-format on
 
@@ -289,7 +289,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			// Receive delta: 0
 			0x00,
 			// Zero padding (P bit not set)
-			0x00,
+			0x00
 		};
 		// clang-format on
 
@@ -336,7 +336,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			0x00,
 			// Padding: 5 bytes
 			0x00,
-			0x00, 0x00, 0x00, 0x05,
+			0x00, 0x00, 0x00, 0x05
 		};
 		// clang-format on
 
@@ -380,7 +380,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			// One Bit Status Vector Chunk: 1100001111001(0)
 			0xB0, 0xF2,
 			// Padding: 2 bytes
-			0x00, 0x02,
+			0x00, 0x02
 		};
 		// clang-format on
 
@@ -432,7 +432,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			// Base sequence number: 39, Packet status count: 0
 			0x00, 0x27, 0x00, 0x00,
 			// Reference time: -2, Feedback packet count: 1
-			0xFF, 0xFF, 0xFE, 0x01,
+			0xFF, 0xFF, 0xFE, 0x01
 		};
 		// clang-format on
 
@@ -470,7 +470,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			0xFA, 0x17, 0xFA, 0x17,
 			0x09, 0xFA, 0xFF, 0x67,
 			0x00, 0x27, 0x00, 0x00,
-			0xFF, 0xFF, 0xFE, 0x01,
+			0xFF, 0xFF, 0xFE, 0x01
 		};
 		// clang-format on
 
@@ -492,7 +492,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			// SSRC of media source: 2222
 			0x00, 0x00, 0x08, 0xAE,
 			// Base sequence number: 1, Packet status count: 0
-			0x00, 0x01, 0x00, 0x00,
+			0x00, 0x01, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -515,7 +515,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			// One Bit Status Vector Chunk: 14 x received
 			0xBF, 0xFF,
 			// Run Length Chunk: symbol 0, run length 0
-			0x00, 0x00,
+			0x00, 0x00
 		};
 		// clang-format on
 
@@ -539,7 +539,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			0xF0, 0x00,
 			// 3 bytes for the receive delta
 			0x01, 0x02,
-			0x03, 0x00, 0x00, 0x00,
+			0x03, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -558,7 +558,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			// Base sequence number: 1, Packet status count: 0
 			0x00, 0x01, 0x00, 0x00,
 			// Reference time: 0, Feedback packet count: 0
-			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -577,7 +577,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			// Base sequence number: 1, Packet status count: 0
 			0x00, 0x01, 0x00, 0x00,
 			// Reference time: 0, Feedback packet count: 0
-			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -628,7 +628,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			0x04, 0x04,
 			0x04,
 			// Padding: 3 bytes
-			0x00, 0x00, 0x03,
+			0x00, 0x00, 0x03
 		};
 		// clang-format on
 
@@ -764,7 +764,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			// One Bit Status Vector Chunk: 1100001111001(0)
 			0xB0, 0xF2,
 			// Padding: 2 bytes
-			0x00, 0x02,
+			0x00, 0x02
 		};
 		// clang-format on
 
@@ -1103,9 +1103,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 
 	SECTION("large base time")
 	{
-		static constexpr int64_t TimestampUs{
-			int64_t{ 0x7FFFFFFF } * RTC::RTCP::TransportWideCcPacket::DeltaTickUs,
-		};
+		static constexpr int64_t TimestampUs{ int64_t{ 0x7FFFFFFF } *
+		                                      RTC::RTCP::TransportWideCcPacket::DeltaTickUs };
 
 		testFeedback({ 0 }, { TimestampUs }, /*includeDeltas*/ true, std::nullopt);
 	}
@@ -1184,9 +1183,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		REQUIRE(!packet->AddReceivedRtpPacket(0xFFFF, 3000));
 
 		// Too large delta.
-		static constexpr int64_t MaxPositiveTimeDeltaUs{
-			std::numeric_limits<int16_t>::max() * RTC::RTCP::TransportWideCcPacket::DeltaTickUs,
-		};
+		static constexpr int64_t MaxPositiveTimeDeltaUs{ std::numeric_limits<int16_t>::max() *
+		                                                 RTC::RTCP::TransportWideCcPacket::DeltaTickUs };
 
 		packet.reset(
 		  RTC::RTCP::TransportWideCcPacket::Factory(
@@ -1199,9 +1197,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		REQUIRE(packet->AddReceivedRtpPacket(1, MaxPositiveTimeDeltaUs));
 
 		// Too large negative delta.
-		static constexpr int64_t MaxNegativeTimeDeltaUs{
-			std::numeric_limits<int16_t>::min() * RTC::RTCP::TransportWideCcPacket::DeltaTickUs,
-		};
+		static constexpr int64_t MaxNegativeTimeDeltaUs{ std::numeric_limits<int16_t>::min() *
+		                                                 RTC::RTCP::TransportWideCcPacket::DeltaTickUs };
 
 		// Use a larger base time to avoid the base time plus the negative delta
 		// to be negative.
@@ -1257,9 +1254,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 
 	SECTION("supports maximum number of negative deltas")
 	{
-		static constexpr int64_t MinDeltaUs{
-			RTC::RTCP::TransportWideCcPacket::DeltaTickUs * std::numeric_limits<int16_t>::min(),
-		};
+		static constexpr int64_t MinDeltaUs{ RTC::RTCP::TransportWideCcPacket::DeltaTickUs *
+		                                     std::numeric_limits<int16_t>::min() };
 
 		// Buffer with space for the maximum packet length.
 		std::vector<uint8_t> buffer((1 << 16) * 4);
@@ -1326,7 +1322,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			// Receive delta: 0
 			0x00,
 			// Padding: 1 byte
-			0x01,
+			0x01
 		};
 		// clang-format on
 
@@ -1357,9 +1353,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	SECTION("correctly splits vector chunks")
 	{
 		static constexpr int OneBitVectorCapacity{ 14 };
-		static constexpr int64_t LargeTimeDeltaUs{
-			RTC::RTCP::TransportWideCcPacket::DeltaTickUs * (1 << 8),
-		};
+		static constexpr int64_t LargeTimeDeltaUs{ RTC::RTCP::TransportWideCcPacket::DeltaTickUs *
+		                                           (1 << 8) };
 
 		// A number of small deltas followed by a large delta must result in a
 		// correct split into multiple chunks.
@@ -1664,7 +1659,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			{ .sequenceNumber = 1013, .timestampUs = 1000000013000 },
 			// Greater sequence number but older timestamp.
 			{ .sequenceNumber = 1014, .timestampUs = 1000000013000 - 128000 },
-			{ .sequenceNumber = 1015, .timestampUs = 1000000015000 },
+			{ .sequenceNumber = 1015, .timestampUs = 1000000015000 }
 		};
 		// clang-format on
 
@@ -1689,7 +1684,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		{
 			{ .sequenceNumber = 999, .timestampUs = 1000000000000 }, // Pre base.
 			{ .sequenceNumber = 1000, .timestampUs = 1000000000000 }, // Base.
-			{ .sequenceNumber = 1050, .timestampUs = 1000000216000 },
+			{ .sequenceNumber = 1050, .timestampUs = 1000000216000 }
 		};
 		// clang-format on
 
@@ -1718,7 +1713,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			{ .sequenceNumber = 1002, .timestampUs = 1000000200000 },
 			{ .sequenceNumber = 1015, .timestampUs = 1000000300000 },
 			{ .sequenceNumber = 1016, .timestampUs = 1000000400000 },
-			{ .sequenceNumber = 1017, .timestampUs = 1000000500000 },
+			{ .sequenceNumber = 1017, .timestampUs = 1000000500000 }
 		};
 		// clang-format on
 
@@ -1743,7 +1738,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		{
 			{ .sequenceNumber = 999, .timestampUs = 1000000000000 }, // Pre base.
 			{ .sequenceNumber = 1000, .timestampUs = 1000000100000 }, // Base.
-			{ .sequenceNumber = 1001, .timestampUs = 1000000700000 },
+			{ .sequenceNumber = 1001, .timestampUs = 1000000700000 }
 		};
 		// clang-format on
 
@@ -1774,7 +1769,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			{ .sequenceNumber = 1004, .timestampUs = 1000000004000 },
 			{ .sequenceNumber = 1005, .timestampUs = 1000000005000 },
 			{ .sequenceNumber = 1006, .timestampUs = 1000000005000 },
-			{ .sequenceNumber = 1007, .timestampUs = 1000000007000 },
+			{ .sequenceNumber = 1007, .timestampUs = 1000000007000 }
 		};
 		// clang-format on
 
@@ -1803,7 +1798,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			{ .sequenceNumber = 1011, .timestampUs = 1000000010000 },
 			{ .sequenceNumber = 1012, .timestampUs = 1000000010000 },
 			{ .sequenceNumber = 1013, .timestampUs = 1000000014000 },
-			{ .sequenceNumber = 1014, .timestampUs = 1000000014000 },
+			{ .sequenceNumber = 1014, .timestampUs = 1000000014000 }
 		};
 		// clang-format on
 
@@ -1831,7 +1826,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			0x39, 0xE9, 0x42, 0x38,
 			0x00, 0x01, 0x00, 0x02,
 			0xBD, 0x57, 0xAA, 0x00,
-			0x20, 0x02, 0x8C, 0x44,
+			0x20, 0x02, 0x8C, 0x44
 		};
 		// clang-format on
 
@@ -1861,7 +1856,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			0x39, 0xE9, 0x42, 0x38,
 			0x00, 0x01, 0x00, 0x02,
 			0xBD, 0x57, 0xAA, 0x00,
-			0x20, 0x02, 0x8C, 0x44,
+			0x20, 0x02, 0x8C, 0x44
 		};
 		// clang-format on
 
@@ -1909,7 +1904,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 228 },
 				.buffer            = { 0xAF, 0xCD, 0x00, 0x05, 0xFA, 0x17, 0xFA, 0x17,
 				                       0x00, 0x00, 0x04, 0xD2, 0x00, 0x0D, 0x00, 0x01,
-				                       0x00, 0x8A, 0xB0, 0x00, 0x20, 0x01, 0xE4, 0x01, },
+				                       0x00, 0x8A, 0xB0, 0x00, 0x20, 0x01, 0xE4, 0x01 }
 			},
 			{
 				.baseTimeUs        = 1076014080000,
@@ -1918,7 +1913,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 232, 8, 12, 220 },
 				.buffer            = { 0xAF, 0xCD, 0x00, 0x06, 0xFA, 0x17, 0xFA, 0x17, 0x1C, 0xB7,
 				                       0xDA, 0xF3, 0x00, 0x0E, 0x00, 0x04, 0x00, 0x8A, 0xB0, 0x01,
-				                       0x20, 0x04, 0xE8, 0x08, 0x0C, 0xDC, 0x00, 0x02, },
+				                       0x20, 0x04, 0xE8, 0x08, 0x0C, 0xDC, 0x00, 0x02 }
 			},
 			{
 				.baseTimeUs        = 1076014144000,
@@ -1927,19 +1922,19 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 240, 24, 20, 36, 88 },
 				.buffer            = { 0xAF, 0xCD, 0x00, 0x06, 0xFA, 0x17, 0xFA, 0x17, 0x1C, 0xB7,
 				                       0xDA, 0xF3, 0x00, 0x12, 0x00, 0x05, 0x00, 0x8A, 0xB1, 0x02,
-				                       0x20, 0x05, 0xF0, 0x18, 0x14, 0x24, 0x58, 0x01, },
+				                       0x20, 0x05, 0xF0, 0x18, 0x14, 0x24, 0x58, 0x01 }
 			},
 			{
 				.baseTimeUs        = 1113285696000,
 				.baseSequence      = 2924,
 				.packetStatusCount = 22,
 				.deltas            = { 12, 20, 20, 0, 40, 0, 0, 16, 0, 4, 0,
-				                       8,  0,  8,  0, 8,  0, 8, 0,  4, 0, 16, },
+				                       8,  0,  8,  0, 8,  0, 8, 0,  4, 0, 16 },
 				.buffer            = { 0x8F, 0xCD, 0x00, 0x0A, 0xFA, 0x17, 0xFA, 0x17, 0x06,
 				                       0xF5, 0x11, 0x4C, 0x0B, 0x6C, 0x00, 0x16, 0x09, 0x6D,
 				                       0x91, 0xEE, 0x20, 0x16, 0x0C, 0x14, 0x14, 0x00, 0x28,
 				                       0x00, 0x00, 0x10, 0x00, 0x04, 0x00, 0x08, 0x00, 0x08,
-				                       0x00, 0x08, 0x00, 0x08, 0x00, 0x04, 0x00, 0x10, },
+				                       0x00, 0x08, 0x00, 0x08, 0x00, 0x04, 0x00, 0x10 }
 			},
 			{
 				.baseTimeUs        = 794159744000,
@@ -1948,7 +1943,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 140, 68 },
 				.buffer            = { 0x8F, 0xCD, 0x00, 0x05, 0xFA, 0x17, 0xFA, 0x17,
 				                       0x39, 0xE9, 0x42, 0x38, 0x00, 0x01, 0x00, 0x02,
-				                       0xBD, 0x57, 0xAA, 0x00, 0x20, 0x02, 0x8C, 0x44, },
+				                       0xBD, 0x57, 0xAA, 0x00, 0x20, 0x02, 0x8C, 0x44 }
 			},
 			{
 				.baseTimeUs        = 1126157504000,
@@ -1957,7 +1952,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 248, 72, 20, 24, 76 },
 				.buffer            = { 0xAF, 0xCD, 0x00, 0x06, 0xFA, 0x17, 0xFA, 0x17, 0x26, 0x9E,
 				                       0x8E, 0x50, 0x03, 0xA2, 0x00, 0x05, 0x0C, 0x7F, 0x33, 0x9F,
-				                       0x20, 0x05, 0xF8, 0x48, 0x14, 0x18, 0x4C, 0x01, },
+				                       0x20, 0x05, 0xF8, 0x48, 0x14, 0x18, 0x4C, 0x01 }
 			},
 			{
 				.baseTimeUs        = 1126157568000,
@@ -1966,7 +1961,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 56, 20, 24, 24, 28, 56, 20 },
 				.buffer            = { 0xAF, 0xCD, 0x00, 0x07, 0xFA, 0x17, 0xFA, 0x17, 0x33, 0xB0, 0x4A,
 				                       0xE8, 0x03, 0x99, 0x00, 0x07, 0x0C, 0x7F, 0x34, 0x9F, 0x20, 0x07,
-				                       0x38, 0x14, 0x18, 0x18, 0x1C, 0x38, 0x14, 0x00, 0x00, 0x03, },
+				                       0x38, 0x14, 0x18, 0x18, 0x1C, 0x38, 0x14, 0x00, 0x00, 0x03 }
 			},
 			{
 				.baseTimeUs        = 1126157568000,
@@ -1975,7 +1970,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 228, 0, 24, 20, 20, 96, 0 },
 				.buffer            = { 0xAF, 0xCD, 0x00, 0x07, 0xFA, 0x17, 0xFA, 0x17, 0x26, 0x9E, 0x8E,
 				                       0x50, 0x03, 0xA7, 0x00, 0x07, 0x0C, 0x7F, 0x34, 0xA0, 0x20, 0x07,
-				                       0xE4, 0x00, 0x18, 0x14, 0x14, 0x60, 0x00, 0x00, 0x00, 0x03, },
+				                       0xE4, 0x00, 0x18, 0x14, 0x14, 0x60, 0x00, 0x00, 0x00, 0x03 }
 			},
 			{
 				.baseTimeUs        = 1126157568000,
@@ -1984,7 +1979,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 252, 44, 84, 24, 0 },
 				.buffer            = { 0xAF, 0xCD, 0x00, 0x06, 0xFA, 0x17, 0xFA, 0x17, 0x33, 0xB0,
 				                       0x4A, 0xE8, 0x03, 0xA0, 0x00, 0x05, 0x0C, 0x7F, 0x34, 0xA0,
-				                       0x20, 0x05, 0xFC, 0x2C, 0x54, 0x18, 0x00, 0x01, },
+				                       0x20, 0x05, 0xFC, 0x2C, 0x54, 0x18, 0x00, 0x01 }
 			},
 			{
 				.baseTimeUs        = 1126157632000,
@@ -1993,7 +1988,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 156, 52, 36, 20, 16, 52 },
 				.buffer            = { 0x8F, 0xCD, 0x00, 0x06, 0xFA, 0x17, 0xFA, 0x17, 0x26, 0x9E,
 				                       0x8E, 0x50, 0x03, 0xAE, 0x00, 0x06, 0x0C, 0x7F, 0x35, 0xA1,
-				                       0x20, 0x06, 0x9C, 0x34, 0x24, 0x14, 0x10, 0x34, },
+				                       0x20, 0x06, 0x9C, 0x34, 0x24, 0x14, 0x10, 0x34 }
 			},
 			{
 				.baseTimeUs        = 1126319296000,
@@ -2002,7 +1997,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 100, 8, 8, 12, 4, 4, 12 },
 				.buffer            = { 0xAF, 0xCD, 0x00, 0x07, 0xFA, 0x17, 0xFA, 0x17, 0x00, 0x00, 0x04,
 				                       0xD2, 0x00, 0x0A, 0x00, 0x07, 0x0C, 0x89, 0x13, 0x00, 0x20, 0x07,
-				                       0x64, 0x08, 0x08, 0x0C, 0x04, 0x04, 0x0C, 0x00, 0x00, 0x03, },
+				                       0x64, 0x08, 0x08, 0x0C, 0x04, 0x04, 0x0C, 0x00, 0x00, 0x03 }
 			},
 			{
 				.baseTimeUs        = 1126319360000,
@@ -2011,7 +2006,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 176, 72 },
 				.buffer            = { 0x8F, 0xCD, 0x00, 0x05, 0xFA, 0x17, 0xFA, 0x17,
 				                       0x08, 0xEB, 0x06, 0xD7, 0x00, 0x11, 0x00, 0x02,
-				                       0x0C, 0x89, 0x14, 0x01, 0x20, 0x02, 0xB0, 0x48, },
+				                       0x0C, 0x89, 0x14, 0x01, 0x20, 0x02, 0xB0, 0x48 }
 			},
 			{
 				.baseTimeUs        = 1126319360000,
@@ -2020,7 +2015,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 248 },
 				.buffer            = { 0xAF, 0xCD, 0x00, 0x05, 0xFA, 0x17, 0xFA, 0x17,
 				                       0x20, 0x92, 0x5E, 0xB7, 0x00, 0x11, 0x00, 0x01,
-				                       0x0C, 0x89, 0x14, 0x00, 0x20, 0x01, 0xF8, 0x01, },
+				                       0x0C, 0x89, 0x14, 0x00, 0x20, 0x01, 0xF8, 0x01 }
 			},
 			{
 				.baseTimeUs        = 1126319488000,
@@ -2029,8 +2024,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 				.deltas            = { 16, 0, 16, 0 },
 				.buffer            = { 0xAF, 0xCD, 0x00, 0x06, 0xFA, 0x17, 0xFA, 0x17, 0x08, 0xEB,
 				                       0x06, 0xD7, 0x00, 0x13, 0x00, 0x04, 0x0C, 0x89, 0x16, 0x02,
-				                       0x20, 0x04, 0x10, 0x00, 0x10, 0x00, 0x00, 0x02, },
-			},
+				                       0x20, 0x04, 0x10, 0x00, 0x10, 0x00, 0x00, 0x02 }
+			}
 		};
 		// clang-format on
 

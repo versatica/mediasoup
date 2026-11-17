@@ -21,13 +21,11 @@ namespace RTC
 			// NOTE: `sharedPacket` and `encoder` are left empty here. Insert()
 			// returns the item so that the Consumer fills them right after, once
 			// the packet has been restored to its original state.
-			return new Item{
-				.ssrc           = packet->GetSsrc(),
-				.sequenceNumber = packet->GetSequenceNumber(),
-				.timestamp      = packet->GetTimestamp(),
-				.marker         = packet->HasMarker(),
-				.storedAtMs     = nowMs,
-			};
+			return new Item{ .ssrc           = packet->GetSsrc(),
+			                 .sequenceNumber = packet->GetSequenceNumber(),
+			                 .timestamp      = packet->GetTimestamp(),
+			                 .marker         = packet->HasMarker(),
+			                 .storedAtMs     = nowMs };
 		}
 
 		/* Instance methods. */

@@ -373,10 +373,9 @@ namespace RTC
 			//
 			// NOTE: It is the very instant announced in the report above, so that the
 			// mapping means the same thing here and in a receive stream.
-			this->lastSenderReportMapping = RTP::RtpStream::SenderReportMapping{
-				.ntpUs = nowUs + this->shared->GetNtpOffsetUs(),
-				.ts    = rtpTs,
-			};
+			this->lastSenderReportMapping =
+			  RTP::RtpStream::SenderReportMapping{ .ntpUs = nowUs + this->shared->GetNtpOffsetUs(),
+				                                     .ts    = rtpTs };
 
 			return true;
 		}

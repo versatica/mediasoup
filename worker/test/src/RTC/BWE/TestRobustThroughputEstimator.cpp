@@ -185,7 +185,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 	{
 		// A 500 ms window amplifies the effect of the spike.
 		constexpr RTC::BWE::RobustThroughputEstimator::RobustThroughputEstimatorOptions ShortWindowOptions{
-			.minWindowDurationUs = 500 * 1000,
+			.minWindowDurationUs = 500 * 1000
 		};
 
 		FeedbackGenerator feedbackGenerator;
@@ -313,7 +313,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 	{
 		// A 500 ms window amplifies the effect of the reordering.
 		constexpr RTC::BWE::RobustThroughputEstimator::RobustThroughputEstimatorOptions ShortWindowOptions{
-			.minWindowDurationUs = 500 * 1000,
+			.minWindowDurationUs = 500 * 1000
 		};
 
 		FeedbackGenerator feedbackGenerator;
