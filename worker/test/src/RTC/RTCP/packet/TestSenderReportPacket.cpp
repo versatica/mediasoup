@@ -141,7 +141,7 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{ RTC::RTCP::SenderReportPacket::Parse(
+		const std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{ RTC::RTCP::SenderReportPacket::Parse(
 			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
@@ -168,7 +168,7 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 	{
 		// No space for the sender info.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=0, RC=0, PT:200, Length: 1
 			0b10000000, 0xC8, 0x00, 0x01,
@@ -181,7 +181,7 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 
 		// RC field announces 1 report block but there is none.
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// V=2, P=0, RC=1, PT:200, Length: 6
 			0b10000001, 0xC8, 0x00, 0x06,
@@ -346,8 +346,9 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 			.delaySinceLastSenderReport = 0,
 		};
 
-		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{ RTC::RTCP::SenderReportPacket::Factory(
-			rtcpCommon::FactoryBuffer, 51) };
+		const std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{
+			RTC::RTCP::SenderReportPacket::Factory(rtcpCommon::FactoryBuffer, 51)
+		};
 
 		REQUIRE(packet->GetLength() == 28);
 

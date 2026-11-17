@@ -110,7 +110,7 @@ SCENARIO("RTCP Unknown Transport Layer Feedback Packet (205)", "[serializable][r
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::UnknownTransportLayerFeedbackPacket> packet{
+		const std::unique_ptr<RTC::RTCP::UnknownTransportLayerFeedbackPacket> packet{
 			RTC::RTCP::UnknownTransportLayerFeedbackPacket::Parse(buffer, sizeof(buffer))
 		};
 
@@ -146,7 +146,7 @@ SCENARIO("RTCP Unknown Transport Layer Feedback Packet (205)", "[serializable][r
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::UnknownTransportLayerFeedbackPacket> packet{
+		const std::unique_ptr<RTC::RTCP::UnknownTransportLayerFeedbackPacket> packet{
 			RTC::RTCP::UnknownTransportLayerFeedbackPacket::Parse(buffer, sizeof(buffer))
 		};
 
@@ -171,7 +171,7 @@ SCENARIO("RTCP Unknown Transport Layer Feedback Packet (205)", "[serializable][r
 	{
 		// No space for the SSRC of media source.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=0, FMT=3, PT:205, Length: 1
 			0b10000011, 0xCD, 0x00, 0x01,

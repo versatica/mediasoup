@@ -121,7 +121,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::DlrrExtendedReport> extendedReport{
+		const std::unique_ptr<RTC::RTCP::DlrrExtendedReport> extendedReport{
 			RTC::RTCP::DlrrExtendedReport::Parse(buffer, sizeof(buffer))
 		};
 
@@ -152,7 +152,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::DlrrExtendedReport> extendedReport{
+		const std::unique_ptr<RTC::RTCP::DlrrExtendedReport> extendedReport{
 			RTC::RTCP::DlrrExtendedReport::Parse(buffer, sizeof(buffer))
 		};
 
@@ -189,7 +189,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 
 		// Wrong block type (RRT).
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// BT: 4 (RRT), Reserved: 0, Block length: 3
 			0x04, 0x00, 0x00, 0x03,
@@ -203,7 +203,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 
 		// Block length field announces more bytes than the buffer has.
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// BT: 5 (DLRR), Reserved: 0, Block length: 3
 			0x05, 0x00, 0x00, 0x03,
@@ -218,7 +218,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 	SECTION("DlrrExtendedReport::Factory() succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t expectedBuffer[] =
+		alignas(4) const uint8_t expectedBuffer[] =
 		{
 			// BT: 5 (DLRR), Reserved: 0, Block length: 3
 			0x05, 0x00, 0x00, 0x03,
@@ -231,8 +231,10 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::DlrrExtendedReport> extendedReport{ RTC::RTCP::DlrrExtendedReport::Factory(
-			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
+		const std::unique_ptr<RTC::RTCP::DlrrExtendedReport> extendedReport{
+			RTC::RTCP::DlrrExtendedReport::Factory(
+			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
+		};
 
 		CHECK_RTCP_EXTENDED_REPORT(
 		  /*extendedReport*/ extendedReport.get(),
@@ -282,8 +284,10 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 	{
 		constexpr size_t NumberOfSubBlocks{ 50 };
 
-		std::unique_ptr<RTC::RTCP::DlrrExtendedReport> extendedReport{ RTC::RTCP::DlrrExtendedReport::Factory(
-			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
+		const std::unique_ptr<RTC::RTCP::DlrrExtendedReport> extendedReport{
+			RTC::RTCP::DlrrExtendedReport::Factory(
+			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
+		};
 
 		for (uint32_t idx{ 1 }; idx <= NumberOfSubBlocks; ++idx)
 		{

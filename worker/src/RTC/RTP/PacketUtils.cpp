@@ -22,7 +22,7 @@ namespace RTC
 		// Callback given to every cloned RTP packet to deallocate the buffer we
 		// allocated for it.
 		// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
-		static thread_local Serializable::BufferReleasedListener PacketBufferReleasedListener =
+		static thread_local const Serializable::BufferReleasedListener PacketBufferReleasedListener =
 		  // NOLINTNEXTLINE(misc-unused-parameters, readability-non-const-parameter)
 		  [](const Serializable* packet, uint8_t* buffer) -> void
 		{

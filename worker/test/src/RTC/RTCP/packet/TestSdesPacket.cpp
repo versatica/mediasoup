@@ -174,7 +174,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::SdesPacket> packet{ RTC::RTCP::SdesPacket::Parse(
+		const std::unique_ptr<RTC::RTCP::SdesPacket> packet{ RTC::RTCP::SdesPacket::Parse(
 			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
@@ -221,7 +221,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 	{
 		// SC field announces 2 chunks but there is only 1.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=0, SC=2, PT:202, Length: 2
 			0b10000010, 0xCA, 0x00, 0x02,
@@ -236,7 +236,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 
 		// Item length exceeds the packet length.
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// V=2, P=0, SC=1, PT:202, Length: 2
 			0b10000001, 0xCA, 0x00, 0x02,
@@ -251,7 +251,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 
 		// Missing null octet terminating the items.
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// V=2, P=0, SC=1, PT:202, Length: 2
 			0b10000001, 0xCA, 0x00, 0x02,
@@ -266,7 +266,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 
 		// Non null octet in the padding.
 		// clang-format off
-		alignas(4) uint8_t buffer4[] =
+		alignas(4) const uint8_t buffer4[] =
 		{
 			// V=2, P=0, SC=1, PT:202, Length: 3
 			0b10000001, 0xCA, 0x00, 0x03,
@@ -285,7 +285,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		// Length field should be 2 (12 bytes) since the packet must end right
 		// after the last chunk, but it announces 4 extra bytes.
 		// clang-format off
-		alignas(4) uint8_t buffer5[] =
+		alignas(4) const uint8_t buffer5[] =
 		{
 			// V=2, P=0, SC=1, PT:202, Length: 3
 			0b10000001, 0xCA, 0x00, 0x03,
@@ -407,7 +407,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 
 	SECTION("SdesPacket::AddChunk() and SdesPacket::AddItem() throw")
 	{
-		std::unique_ptr<RTC::RTCP::SdesPacket> packet{ RTC::RTCP::SdesPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::SdesPacket> packet{ RTC::RTCP::SdesPacket::Factory(
 			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
 
 		for (uint32_t ssrc{ 1 }; ssrc <= RTC::RTCP::SdesPacket::MaxChunks; ++ssrc)
@@ -457,7 +457,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 
 	SECTION("SdesPacket::AddItem() throws if there is no space in the buffer")
 	{
-		std::unique_ptr<RTC::RTCP::SdesPacket> packet{ RTC::RTCP::SdesPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::SdesPacket> packet{ RTC::RTCP::SdesPacket::Factory(
 			rtcpCommon::FactoryBuffer, 12) };
 
 		packet->AddChunk(1111);
@@ -492,7 +492,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		};
 
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=0, SC=2, PT:202, Length: 9
 			0b10000010, 0xCA, 0x00, 0x09,
@@ -535,7 +535,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 
 		/* Build the same packet. */
 
-		std::unique_ptr<RTC::RTCP::SdesPacket> packet{ RTC::RTCP::SdesPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::SdesPacket> packet{ RTC::RTCP::SdesPacket::Factory(
 			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
 
 		packet->AddChunk(0x11223344);

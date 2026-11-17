@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/ICE/StunPacket.hpp"
 #include "Utils.hpp"
 #include "test/include/RTC/ICE/iceCommon.hpp"
@@ -7,6 +8,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 #include <string>
+#include <string_view>
 
 SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 {
@@ -66,7 +68,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 			buffer, sizeof(buffer)) };
 
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
-		                  /*buffert*/ buffer,
+		                  /*buffer*/ buffer,
 		                  /*bufferLength*/ sizeof(buffer),
 		                  /*length*/ sizeof(buffer),
 		                  /*klass*/ RTC::ICE::StunPacket::Class::REQUEST,
@@ -212,7 +214,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 			buffer, sizeof(buffer)) };
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
-		                  /*buffert*/ buffer,
+		                  /*buffer*/ buffer,
 		                  /*bufferLength*/ sizeof(buffer),
 		                  /*length*/ sizeof(buffer),
 		                  /*klass*/ RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE,
@@ -249,7 +251,9 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		  reinterpret_cast<sockaddr*>(std::addressof(obtainedXorMappedAddressStorage)), family, ip, port);
 
 		REQUIRE(family == AF_INET6);
+
 		std::string expectedIp = "2001:db8:85a3:0:0:8a2e:370:7334";
+
 		REQUIRE(ip == Utils::IP::NormalizeIp(expectedIp));
 		REQUIRE(port == 1234);
 
@@ -334,32 +338,32 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		alignas(4) uint8_t buffer[] =
 		{
 			0x01, 0x11, 0x00, 0x58,
-	  	0x21, 0x12, 0xA4, 0x42,
-	  	0x01, 0x02, 0x03, 0x04,
-	  	0x05, 0x06, 0x07, 0x08,
-	  	0x09, 0x0A, 0x0B, 0x0C,
-	  	0x00, 0x06, 0x00, 0x0F,
-	  	0xC5, 0x93, 0xC3, 0xA6,
-	  	0xE2, 0x82, 0xAC, 0xC3,
-	  	0xA5, 0xE2, 0x88, 0xAB,
-	  	0xE2, 0x88, 0x82, 0x00,
-	  	0x80, 0x29, 0x00, 0x08,
-	  	0x00, 0x00, 0x00, 0x00,
-	  	0x00, 0xBC, 0x61, 0x4E,
-	  	0x80, 0x22, 0x00, 0x0E,
-	  	0x6D, 0x65, 0x64, 0x69,
-	  	0x61, 0x73, 0x6F, 0x75,
-	  	0x70, 0x20, 0x74, 0x65,
-	  	0x73, 0x74, 0x00, 0x00,
-	  	0x00, 0x09, 0x00, 0x1F,
-	  	0x00, 0x00, 0x04, 0x38,
-	  	0x53, 0x6F, 0x6D, 0x65,
-	  	0x74, 0x68, 0x69, 0x6E,
-	  	0x67, 0x20, 0x66, 0x61,
-	  	0x69, 0x6C, 0x65, 0x64,
-	  	0x20, 0xCE, 0xA9, 0xE2,
-	  	0x88, 0x91, 0xC2, 0xA9,
-	  	0x20, 0x3A, 0x29, 0x00,
+			0x21, 0x12, 0xA4, 0x42,
+			0x01, 0x02, 0x03, 0x04,
+			0x05, 0x06, 0x07, 0x08,
+			0x09, 0x0A, 0x0B, 0x0C,
+			0x00, 0x06, 0x00, 0x0F,
+			0xC5, 0x93, 0xC3, 0xA6,
+			0xE2, 0x82, 0xAC, 0xC3,
+			0xA5, 0xE2, 0x88, 0xAB,
+			0xE2, 0x88, 0x82, 0x00,
+			0x80, 0x29, 0x00, 0x08,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0xBC, 0x61, 0x4E,
+			0x80, 0x22, 0x00, 0x0E,
+			0x6D, 0x65, 0x64, 0x69,
+			0x61, 0x73, 0x6F, 0x75,
+			0x70, 0x20, 0x74, 0x65,
+			0x73, 0x74, 0x00, 0x00,
+			0x00, 0x09, 0x00, 0x1F,
+			0x00, 0x00, 0x04, 0x38,
+			0x53, 0x6F, 0x6D, 0x65,
+			0x74, 0x68, 0x69, 0x6E,
+			0x67, 0x20, 0x66, 0x61,
+			0x69, 0x6C, 0x65, 0x64,
+			0x20, 0xCE, 0xA9, 0xE2,
+			0x88, 0x91, 0xC2, 0xA9,
+			0x20, 0x3A, 0x29, 0x00,
 		};
 		// clang-format on
 
@@ -367,7 +371,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 			buffer, sizeof(buffer)) };
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
-		                  /*buffert*/ buffer,
+		                  /*buffer*/ buffer,
 		                  /*bufferLength*/ sizeof(buffer),
 		                  /*length*/ sizeof(buffer),
 		                  /*klass*/ RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
@@ -460,7 +464,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 	SECTION("StunPacket::Factory() creating a request succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t transactionId[RTC::ICE::StunPacket::TransactionIdLength] =
+		alignas(4) const uint8_t transactionId[RTC::ICE::StunPacket::TransactionIdLength] =
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
 			0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC,
@@ -503,17 +507,22 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// Byte length: 27 (1 byte of padding needed).
 		const std::string username          = "œæ€å∫∂:¢∞¬÷12";
 		const std::string usernameFragment1 = "œæ€å∫∂";
+
 		// Byte length: 4.
 		const uint32_t priority = 999888777;
+
 		// Byte length: 8.
 		const uint64_t iceControlling = 15697499370457501716U;
+
 		// Byte length of USE_CANDIDATE: 0.
 		// NOTE: `AddNomination()` adds the "NOMINATION" attribute with both the old
 		// and the new value, so it will insert 2 attributes instead of one.
 		// Byte length: 4 x 2.
 		const uint32_t nomination = 12345678;
+
 		// Byte length: 18 (2 byte of padding needed).
 		const std::string software = "mediasoup x.y.z :)";
+
 		// Byte length: 4 + 23 (1 byte of padding needed).
 		const uint16_t errorCode            = 666;
 		const std::string errorReasonPhrase = "UPPS UNKNOWN ERROR 😊";
@@ -730,10 +739,10 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		// Byte length: 8.
 		auto* const xorMappedAddressIn =
-		  reinterpret_cast<struct sockaddr_in*>(std::addressof(xorMappedAddressStorage));
+		  reinterpret_cast<sockaddr_in*>(std::addressof(xorMappedAddressStorage));
 
-		auto* xorMappedAddress =
-		  reinterpret_cast<struct sockaddr*>(std::addressof(xorMappedAddressStorage));
+		const auto* const xorMappedAddress =
+		  reinterpret_cast<sockaddr*>(std::addressof(xorMappedAddressStorage));
 
 		uv_ip4_addr("22.33.0.125", 5678, xorMappedAddressIn);
 
@@ -780,7 +789,9 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		  reinterpret_cast<sockaddr*>(std::addressof(obtainedXorMappedAddressStorage)), family, ip, port);
 
 		REQUIRE(family == AF_INET);
+
 		std::string expectedIp = "22.33.0.125";
+
 		REQUIRE(ip == Utils::IP::NormalizeIp(expectedIp));
 		REQUIRE(port == 5678);
 
@@ -797,8 +808,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		// Byte length: 20.
 		auto* const xorMappedAddressIn6 =
-		  reinterpret_cast<struct sockaddr_in6*>(std::addressof(xorMappedAddressStorage));
-		xorMappedAddress = reinterpret_cast<struct sockaddr*>(std::addressof(xorMappedAddressStorage));
+		  reinterpret_cast<sockaddr_in6*>(std::addressof(xorMappedAddressStorage));
 
 		uv_ip6_addr("2001:db8::1234", 20002, xorMappedAddressIn6);
 
@@ -839,7 +849,9 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		  reinterpret_cast<sockaddr*>(std::addressof(obtainedXorMappedAddressStorage)), family, ip, port);
 
 		REQUIRE(family == AF_INET6);
+
 		expectedIp = "2001:db8::1234";
+
 		REQUIRE(ip == Utils::IP::NormalizeIp(expectedIp));
 		REQUIRE(port == 20002);
 

@@ -12,7 +12,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 	SECTION("RembPacket::IsRemb() succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=1, FMT=15, PT:206, Length: 5
 			0b10101111, 0xCE, 0x00, 0x05,
@@ -33,7 +33,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 
 		// Buffer longer than the packet.
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// V=2, P=0, FMT=15, PT:206, Length: 4
 			0b10001111, 0xCE, 0x00, 0x04,
@@ -55,7 +55,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 		// No space for Num SSRC, BR Exp and BR Mantissa, but the rest of the
 		// packet is not validated.
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// V=2, P=0, FMT=15, PT:206, Length: 3
 			0b10001111, 0xCE, 0x00, 0x03,
@@ -75,7 +75,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 	{
 		// Unique identifier is not 'R' 'E' 'M' 'B'.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=0, FMT=15, PT:206, Length: 4
 			0b10001111, 0xCE, 0x00, 0x04,
@@ -94,7 +94,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 
 		// Wrong message type (FMT 1, PLI).
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// V=2, P=0, FMT=1, PT:206, Length: 4
 			0b10000001, 0xCE, 0x00, 0x04,
@@ -113,7 +113,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 
 		// Wrong packet type (PT 205, RTPFB).
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// V=2, P=0, FMT=15, PT:205, Length: 4
 			0b10001111, 0xCD, 0x00, 0x04,
@@ -133,7 +133,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 		// AFB packet without Feedback Control Information followed by bytes that
 		// look like a Unique identifier.
 		// clang-format off
-		alignas(4) uint8_t buffer4[] =
+		alignas(4) const uint8_t buffer4[] =
 		{
 			// V=2, P=0, FMT=15, PT:206, Length: 2
 			0b10001111, 0xCE, 0x00, 0x02,
@@ -150,7 +150,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 
 		// Not a RTCP packet.
 		// clang-format off
-		alignas(4) uint8_t buffer5[] =
+		alignas(4) const uint8_t buffer5[] =
 		{
 			0b10001111, 0xCE, 0x00,
 		};
@@ -274,7 +274,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::RembPacket> packet{ RTC::RTCP::RembPacket::Parse(
+		const std::unique_ptr<RTC::RTCP::RembPacket> packet{ RTC::RTCP::RembPacket::Parse(
 			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
@@ -314,7 +314,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 	{
 		// No space for Num SSRC, BR Exp and BR Mantissa.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=0, FMT=15, PT:206, Length: 3
 			0b10001111, 0xCE, 0x00, 0x03,
@@ -331,7 +331,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 
 		// Unique identifier is not 'R' 'E' 'M' 'B'.
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// V=2, P=0, FMT=15, PT:206, Length: 4
 			0b10001111, 0xCE, 0x00, 0x04,
@@ -350,7 +350,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 
 		// Bitrate does not fit in 64 bits.
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// V=2, P=0, FMT=15, PT:206, Length: 4
 			0b10001111, 0xCE, 0x00, 0x04,
@@ -369,7 +369,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 
 		// Bitrate (200 * 2^56) does not fit in a signed 64 bits integer.
 		// clang-format off
-		alignas(4) uint8_t buffer4[] =
+		alignas(4) const uint8_t buffer4[] =
 		{
 			// V=2, P=0, FMT=15, PT:206, Length: 4
 			0b10001111, 0xCE, 0x00, 0x04,
@@ -388,7 +388,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 
 		// Num SSRC field announces 2 SSRCs but there is only 1.
 		// clang-format off
-		alignas(4) uint8_t buffer5[] =
+		alignas(4) const uint8_t buffer5[] =
 		{
 			// V=2, P=0, FMT=15, PT:206, Length: 5
 			0b10001111, 0xCE, 0x00, 0x05,
@@ -409,7 +409,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 
 		// Wrong message type (FMT 1, PLI).
 		// clang-format off
-		alignas(4) uint8_t buffer6[] =
+		alignas(4) const uint8_t buffer6[] =
 		{
 			// V=2, P=0, FMT=1, PT:206, Length: 4
 			0b10000001, 0xCE, 0x00, 0x04,
@@ -430,7 +430,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 	SECTION("RembPacket::Factory() succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t expected[] =
+		alignas(4) const uint8_t expected[] =
 		{
 			// V=2, P=0, FMT=15, PT:206, Length: 7
 			0b10001111, 0xCE, 0x00, 0x07,
@@ -523,7 +523,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 	{
 		const auto checkBitrate = [](int64_t bitrate) -> void
 		{
-			std::unique_ptr<RTC::RTCP::RembPacket> packet{ RTC::RTCP::RembPacket::Factory(
+			const std::unique_ptr<RTC::RTCP::RembPacket> packet{ RTC::RTCP::RembPacket::Factory(
 				rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
 
 			packet->SetBitrate(bitrate);
@@ -546,7 +546,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 
 	SECTION("RembPacket::AddSsrc() and RembPacket::SetBitrate() throw")
 	{
-		std::unique_ptr<RTC::RTCP::RembPacket> packet{ RTC::RTCP::RembPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::RembPacket> packet{ RTC::RTCP::RembPacket::Factory(
 			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
 
 		for (uint32_t ssrc{ 1 }; ssrc <= RTC::RTCP::RembPacket::MaxSsrcs; ++ssrc)
@@ -569,7 +569,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 
 	SECTION("RembPacket::AddSsrc() throws if there is no space in the buffer")
 	{
-		std::unique_ptr<RTC::RTCP::RembPacket> packet{ RTC::RTCP::RembPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::RembPacket> packet{ RTC::RTCP::RembPacket::Factory(
 			rtcpCommon::FactoryBuffer, 23) };
 
 		REQUIRE(packet->GetLength() == 20);

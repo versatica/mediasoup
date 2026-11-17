@@ -103,7 +103,7 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::UnknownPacket> packet{ RTC::RTCP::UnknownPacket::Parse(
+		const std::unique_ptr<RTC::RTCP::UnknownPacket> packet{ RTC::RTCP::UnknownPacket::Parse(
 			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
@@ -135,7 +135,7 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::UnknownPacket> packet{ RTC::RTCP::UnknownPacket::Parse(
+		const std::unique_ptr<RTC::RTCP::UnknownPacket> packet{ RTC::RTCP::UnknownPacket::Parse(
 			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
@@ -164,7 +164,7 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::UnknownPacket> packet{ RTC::RTCP::UnknownPacket::Parse(
+		const std::unique_ptr<RTC::RTCP::UnknownPacket> packet{ RTC::RTCP::UnknownPacket::Parse(
 			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(

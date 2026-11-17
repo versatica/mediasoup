@@ -137,7 +137,7 @@ namespace RTC
 		 *   Serializable is destroyed or serialized. Otherwise the Serializable
 		 *   will invoke a listener that was already destroyed.
 		 */
-		virtual void SetBufferReleasedListener(BufferReleasedListener* listener) final;
+		virtual void SetBufferReleasedListener(const BufferReleasedListener* listener) final;
 
 		/**
 		 * The application must call this method on a Serializable when it's been
@@ -297,7 +297,7 @@ namespace RTC
 		size_t length{ 0 };
 		// Event listener invoked when the current buffer is released (no longer
 		// used by this Serializable).
-		BufferReleasedListener* bufferReleasedListener{ nullptr };
+		const BufferReleasedListener* bufferReleasedListener{ nullptr };
 		// Event listener invoked when the Serializable is consolidated or
 		// discarded. It's removed by the const `Consolidate()` and `Discard()`
 		// methods before invoking it.

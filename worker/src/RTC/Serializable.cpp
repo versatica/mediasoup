@@ -61,7 +61,7 @@ namespace RTC
 		this->bufferLength = bufferLength;
 	}
 
-	void Serializable::SetBufferReleasedListener(Serializable::BufferReleasedListener* listener)
+	void Serializable::SetBufferReleasedListener(const Serializable::BufferReleasedListener* listener)
 	{
 		MS_TRACE();
 

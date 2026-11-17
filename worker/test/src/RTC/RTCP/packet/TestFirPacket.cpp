@@ -130,7 +130,8 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::FirPacket> packet{ RTC::RTCP::FirPacket::Parse(buffer, sizeof(buffer)) };
+		const std::unique_ptr<RTC::RTCP::FirPacket> packet{ RTC::RTCP::FirPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -173,7 +174,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 	{
 		// No items.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=0, FMT=4, PT:206, Length: 2
 			0b10000100, 0xCE, 0x00, 0x02,
@@ -188,7 +189,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 
 		// One item and a half.
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// V=2, P=0, FMT=4, PT:206, Length: 5
 			0b10000100, 0xCE, 0x00, 0x05,
@@ -209,7 +210,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 
 		// Wrong message type (FMT 1, PLI).
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// V=2, P=0, FMT=1, PT:206, Length: 4
 			0b10000001, 0xCE, 0x00, 0x04,
@@ -230,7 +231,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 	SECTION("FirPacket::Factory() succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t expected[] =
+		alignas(4) const uint8_t expected[] =
 		{
 			// V=2, P=0, FMT=4, PT:206, Length: 4
 			0b10000100, 0xCE, 0x00, 0x04,
@@ -310,7 +311,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 
 	SECTION("FirPacket::AddItem() throws if there is no space in the buffer")
 	{
-		std::unique_ptr<RTC::RTCP::FirPacket> packet{ RTC::RTCP::FirPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::FirPacket> packet{ RTC::RTCP::FirPacket::Factory(
 			rtcpCommon::FactoryBuffer, 19) };
 
 		REQUIRE(packet->GetLength() == 12);
