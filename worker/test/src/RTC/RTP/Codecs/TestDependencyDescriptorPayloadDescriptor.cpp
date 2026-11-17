@@ -343,6 +343,7 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 			  RTC::RTP::Codecs::DependencyDescriptor::Parse(
 			    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			    DeltaFrames[index].data(),
+			    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			    DeltaFrames[index].size(),
 			    dependencyDescriptorContext));
 
@@ -361,6 +362,7 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 			  RTC::RTP::Codecs::DependencyDescriptor::Parse(
 			    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			    DeltaFrames[index].data(),
+			    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			    DeltaFrames[index].size(),
 			    dependencyDescriptorContext));
 
@@ -939,6 +941,7 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 			return processFrame(
 			  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			  DeltaFrames[index].data(),
+			  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			  DeltaFrames[index].size(),
 			  streamContext,
 			  context);
