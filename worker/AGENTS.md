@@ -83,6 +83,8 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
   ```
 
 - Code is split into paragraphs with blank lines, one per step: a declaration is not glued to the first thing done with it, an action is not glued to the assert/`REQUIRE` that checks it, and a check is not glued to the next action. Whatever belongs to the same step stays together, for example several consecutive calls on the same object, the assignments that fill its fields, or several consecutive `REQUIRE`s.
+- A declaration, `const` or not, is separated by a blank line from whatever is done with it afterwards, including the assignments that fill its fields: `Params params;`, blank line, then `params.ssrc = ...;`.
+- A statement that leaves the block (`return`, `break`, `continue`, `throw`, and any macro that throws or leaves it, such as `MS_THROW_ERROR()`, `MS_THROW_TYPE_ERROR()`, `MS_THROW_NOT_FOUND_ERROR()` and their `_STD` variants) always has a blank line before it, unless it is the first statement of its block.
 - A declaration that carries its own comment is a paragraph: it is separated by a blank line from the next commented declaration.
 - Everything that can be `const` is `const`, including `const auto` locals and `const T&` parameters.
 - A pointer parameter whose pointee the function does not modify is `const T*`. The pointer itself is never made `const` in a parameter (`T* const`): that `const` is not part of the signature and tells the caller nothing.

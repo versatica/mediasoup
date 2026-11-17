@@ -14,9 +14,9 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 	public:
 		struct VerificationItem
 		{
-			const bool isPresent;
-			const uint16_t sequenceNumber;
-			const uint32_t timestamp;
+			bool isPresent;
+			uint16_t sequenceNumber;
+			uint32_t timestamp;
 		};
 
 	public:
@@ -37,12 +37,13 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		};
 			// clang-format on
 
-			std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(rtpBuffer, sizeof(rtpBuffer)) };
+			const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(
+				rtpBuffer, sizeof(rtpBuffer)) };
 
 			packet->SetSequenceNumber(seq);
 			packet->SetTimestamp(timestamp);
 
-			auto* item = RTC::RTP::RetransmissionBuffer::Insert(packet.get(), nowMs);
+			auto* const item = RTC::RTP::RetransmissionBuffer::Insert(packet.get(), nowMs);
 
 			if (item)
 			{
@@ -50,14 +51,14 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 			}
 		}
 
-		void AssertBuffer(std::vector<VerificationItem> verificationBuffer)
+		void AssertBuffer(const std::vector<VerificationItem>& verificationBuffer)
 		{
 			REQUIRE(verificationBuffer.size() == this->buffer.size());
 
 			for (size_t idx{ 0 }; idx < verificationBuffer.size(); ++idx)
 			{
-				auto& verificationItem = verificationBuffer.at(idx);
-				auto* item             = this->buffer.at(idx);
+				const auto& verificationItem = verificationBuffer.at(idx);
+				const auto* item             = this->buffer.at(idx);
 
 				REQUIRE(verificationItem.isPresent == !!item);
 
@@ -210,10 +211,9 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		const uint16_t maxItems{ 4 };
 		const int64_t maxRetransmissionDelayMs{ 2000 };
 		const uint32_t clockRate{ 90000 };
+		const auto maxDiffTs = static_cast<uint32_t>(maxRetransmissionDelayMs * clockRate / 1000);
 
 		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
-
-		auto maxDiffTs = static_cast<uint32_t>(maxRetransmissionDelayMs * clockRate / 1000);
 
 		myRetransmissionBuffer.Insert(10001, 1000000001);
 		myRetransmissionBuffer.Insert(10002, 1000000002);

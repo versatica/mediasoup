@@ -230,7 +230,7 @@ void TcpConnectionHandle::Write(
 	const size_t totalLen = len1 + len2;
 	const std::array<uv_buf_t, 2> buffers{
 		uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data1)), len1),
-		uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data2)), len2),
+		uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data2)), len2)
 	};
 
 	int written = uv_try_write(reinterpret_cast<uv_stream_t*>(this->uvHandle), buffers.data(), 2);

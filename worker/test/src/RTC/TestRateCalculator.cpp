@@ -355,7 +355,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 			{ .offset=999,  .size=2, .rate=56           },
 			{ .offset=1001, .size=1, .rate=24           }, // merged inside 999
 			{ .offset=1001, .size=1, .rate=32           }, // merged inside 999
-			{ .offset=2000, .size=1, .rate=8            }  // it will erase the item
+			{ .offset=2000, .size=1, .rate=8            } // it will erase the item
 			                // with timestamp=999, removing also the next two samples.
 			                // Only the last sample is left, and it comes close enough
 			                // to the previous one to keep being measured over the
@@ -388,7 +388,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 			{ .offset=2200, .size=1, .rate=(1*8) + ((6-2)*8)    },
 			{ .offset=2400, .size=1, .rate=(1*8) + ((7-3)*8)    },
 			{ .offset=2600, .size=1, .rate=(1*8) + ((8-4)*8)    },
-			{ .offset=2800, .size=1, .rate=(1*8) + ((9-5)*8)    },
+			{ .offset=2800, .size=1, .rate=(1*8) + ((9-5)*8)    }
 		};
 		// clang-format on
 
@@ -411,7 +411,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 			// 2 * 8000 / 667.
 			{ .offset=666, .size=1, .rate=24           },
 			// The period is the whole window now: 4 * 8000 / 1000.
-			{ .offset=999, .size=1, .rate=32           },
+			{ .offset=999, .size=1, .rate=32           }
   	};
 		// clang-format on
 

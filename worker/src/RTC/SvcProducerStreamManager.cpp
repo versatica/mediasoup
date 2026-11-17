@@ -209,8 +209,7 @@ namespace RTC
 				    : this->producerRtpStream->GetCumulativeBitrate(nowMs, spatialLayer, temporalLayer);
 
 				const RTC::BWE::BitrateAllocator::Candidate::BitrateOption option{
-					.bitrate = bitrate,
-					.layers  = { spatialLayer, temporalLayer },
+					.bitrate = bitrate, .layers = { spatialLayer, temporalLayer }
 				};
 
 				// Lowering the frame rate is only on offer within the lowest usable

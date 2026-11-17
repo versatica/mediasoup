@@ -9,6 +9,7 @@
 #include "RTC/RTCP/packet/ReceiverReportPacket.hpp"
 #include "RTC/RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
+#include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "Utils.hpp"
@@ -409,7 +410,6 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			const int64_t sendNackDelayMs;
 			const bool useRtpInactivityCheck;
 			// Others.
 			// Packets expected at last interval.
@@ -434,7 +434,8 @@ namespace RTC
 			int32_t transit{ 0 };
 			uint8_t firSeqNumber{ 0 };
 			int32_t reportedPacketsLost{ 0 };
-			std::unique_ptr<RTC::NackGenerator> nackGenerator;
+			// Only created if NACK is enabled.
+			const std::unique_ptr<RTC::NackGenerator> nackGenerator;
 			const std::unique_ptr<TimerHandleInterface> inactivityCheckPeriodicTimer;
 			bool inactive{ false };
 			// Whether the packet being received made the stream restart.

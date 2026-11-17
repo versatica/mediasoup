@@ -6,7 +6,8 @@
 
 SCENARIO("RTP PacketUtils", "[rtp][packetutils]")
 {
-	const auto compareRtpPackets = [](const RTC::RTP::Packet* packet1, const RTC::RTP::Packet* packet2)
+	const auto compareRtpPackets =
+	  [](const RTC::RTP::Packet* packet1, const RTC::RTP::Packet* packet2) -> void
 	{
 		REQUIRE(packet1->GetSsrc() == packet2->GetSsrc());
 		REQUIRE(packet1->GetSequenceNumber() == packet2->GetSequenceNumber());
@@ -14,13 +15,15 @@ SCENARIO("RTP PacketUtils", "[rtp][packetutils]")
 		REQUIRE(packet1->GetLength() == packet2->GetLength());
 	};
 
-	auto* packetA = RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, 2000);
+	const std::unique_ptr<RTC::RTP::Packet> packetA{ RTC::RTP::Packet::Factory(
+		rtpCommon::FactoryBuffer, 2000) };
 
 	packetA->SetSequenceNumber(1111);
 	packetA->SetTimestamp(111111);
 	packetA->SetSsrc(11111111);
 
-	auto* packetB = RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer + 2000, 2000);
+	const std::unique_ptr<RTC::RTP::Packet> packetB{ RTC::RTP::Packet::Factory(
+		rtpCommon::FactoryBuffer + 2000, 2000) };
 
 	packetB->SetSequenceNumber(2222);
 	packetB->SetTimestamp(222222);
@@ -33,33 +36,31 @@ SCENARIO("RTP PacketUtils", "[rtp][packetutils]")
 		REQUIRE(!sharedPacket);
 		REQUIRE(sharedPacket.get() == nullptr);
 
-		sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packetA);
+		sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packetA.get());
 
 		REQUIRE(sharedPacket);
-		compareRtpPackets(sharedPacket.get(), packetA);
+		compareRtpPackets(sharedPacket.get(), packetA.get());
 
 		sharedPacket.reset();
 
 		REQUIRE(!sharedPacket);
 		REQUIRE(sharedPacket.get() == nullptr);
-
-		delete packetA;
-		delete packetB;
 	}
 
 	SECTION("clone packet and copy constructor")
 	{
 		// Create sharedPacket1 holding a clone of packetA.
-		std::shared_ptr<RTC::RTP::Packet> sharedPacket1 = RTC::RTP::PacketUtils::ClonePacket(packetA);
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket1 =
+		  RTC::RTP::PacketUtils::ClonePacket(packetA.get());
 
 		REQUIRE(sharedPacket1);
-		compareRtpPackets(sharedPacket1.get(), packetA);
+		compareRtpPackets(sharedPacket1.get(), packetA.get());
 
 		// Create sharedPacket2 using copy constructor.
-		std::shared_ptr<RTC::RTP::Packet> sharedPacket2(sharedPacket1);
+		const std::shared_ptr<RTC::RTP::Packet> sharedPacket2(sharedPacket1);
 
 		REQUIRE(sharedPacket2);
-		compareRtpPackets(sharedPacket2.get(), packetA);
+		compareRtpPackets(sharedPacket2.get(), packetA.get());
 		REQUIRE(sharedPacket1.get() == sharedPacket2.get());
 
 		RTC::RTP::PacketUtils::AssertSamePacket(sharedPacket1, sharedPacket1.get());
@@ -71,17 +72,15 @@ SCENARIO("RTP PacketUtils", "[rtp][packetutils]")
 
 		REQUIRE(!sharedPacket1);
 		REQUIRE(sharedPacket1.get() == nullptr);
-
-		delete packetA;
-		delete packetB;
 	}
 
 	SECTION("copy assignment operator")
 	{
-		std::shared_ptr<RTC::RTP::Packet> sharedPacket1 = RTC::RTP::PacketUtils::ClonePacket(packetA);
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket1 =
+		  RTC::RTP::PacketUtils::ClonePacket(packetA.get());
 
 		REQUIRE(sharedPacket1);
-		compareRtpPackets(sharedPacket1.get(), packetA);
+		compareRtpPackets(sharedPacket1.get(), packetA.get());
 
 		std::shared_ptr<RTC::RTP::Packet> sharedPacket2;
 
@@ -89,7 +88,7 @@ SCENARIO("RTP PacketUtils", "[rtp][packetutils]")
 		sharedPacket2 = sharedPacket1;
 
 		REQUIRE(sharedPacket2);
-		compareRtpPackets(sharedPacket2.get(), packetA);
+		compareRtpPackets(sharedPacket2.get(), packetA.get());
 		REQUIRE(sharedPacket1.get() == sharedPacket2.get());
 
 		RTC::RTP::PacketUtils::AssertSamePacket(sharedPacket1, sharedPacket1.get());
@@ -101,24 +100,19 @@ SCENARIO("RTP PacketUtils", "[rtp][packetutils]")
 
 		REQUIRE(!sharedPacket1);
 		REQUIRE(sharedPacket1.get() == nullptr);
-
-		delete packetA;
-		delete packetB;
 	}
 
 	SECTION("assign nullptr")
 	{
-		std::shared_ptr<RTC::RTP::Packet> sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packetA);
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket =
+		  RTC::RTP::PacketUtils::ClonePacket(packetA.get());
 
 		REQUIRE(sharedPacket);
-		compareRtpPackets(sharedPacket.get(), packetA);
+		compareRtpPackets(sharedPacket.get(), packetA.get());
 
 		sharedPacket = nullptr;
 
 		REQUIRE(!sharedPacket);
 		REQUIRE(sharedPacket.get() == nullptr);
-
-		delete packetA;
-		delete packetB;
 	}
 }

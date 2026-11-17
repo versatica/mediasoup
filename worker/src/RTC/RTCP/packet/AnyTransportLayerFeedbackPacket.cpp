@@ -14,7 +14,7 @@ namespace RTC
 		const ankerl::unordered_dense::map<AnyTransportLayerFeedbackPacket::MessageType, std::string> AnyTransportLayerFeedbackPacket::MessageType2String =
 		{
 			{ AnyTransportLayerFeedbackPacket::MessageType::NACK, "NACK" },
-			{ AnyTransportLayerFeedbackPacket::MessageType::TCC,  "TCC"  },
+			{ AnyTransportLayerFeedbackPacket::MessageType::TCC,  "TCC"  }
 		};
 		// clang-format on
 

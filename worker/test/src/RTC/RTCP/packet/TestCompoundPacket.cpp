@@ -63,7 +63,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Parse(
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Parse(
 			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_COMPOUND_PACKET(
@@ -146,7 +146,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		// announces 2 SSRCs that don't fit in its length, so the whole compound
 		// packet is rejected.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// Unknown Packet
 			// V=2, P=0, Count=5, PT:222, Length: 2
@@ -166,7 +166,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		// A valid BYE packet followed by 2 bytes that don't form a packet.
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// Bye Packet
 			// V=2, P=0, SC=1, PT:203, Length: 1
@@ -183,7 +183,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		// A BYE packet whose Length field announces more bytes than the remaining
 		// ones.
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// Bye Packet
 			// V=2, P=0, SC=1, PT:203, Length: 2
@@ -197,7 +197,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		// The first byte is not RTCP (V=0).
 		// clang-format off
-		alignas(4) uint8_t buffer4[] =
+		alignas(4) const uint8_t buffer4[] =
 		{
 			// V=0, P=0, SC=1, PT:203, Length: 1
 			0b00000001, 0xCB, 0x00, 0x01,
@@ -210,7 +210,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		// Less bytes than the RTCP Common Header.
 		// clang-format off
-		alignas(4) uint8_t buffer5[] =
+		alignas(4) const uint8_t buffer5[] =
 		{
 			0b10000001, 0xCB, 0x00
 		};
@@ -220,7 +220,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		// The packet type is not in the RTCP range (192-223).
 		// clang-format off
-		alignas(4) uint8_t buffer6[] =
+		alignas(4) const uint8_t buffer6[] =
 		{
 			// V=2, P=0, Count=1, PT:0, Length: 1
 			0b10000001, 0x00, 0x00, 0x01,
@@ -233,7 +233,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		// The Padding bit is set and the last byte announces more padding bytes
 		// (87) than the packet has after the Common Header (4).
 		// clang-format off
-		alignas(4) uint8_t buffer7[] =
+		alignas(4) const uint8_t buffer7[] =
 		{
 			// Bye Packet
 			// V=2, P=1, SC=1, PT:203, Length: 1
@@ -247,7 +247,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		// The Padding bit is set but the last byte announces 0 padding bytes.
 		// clang-format off
-		alignas(4) uint8_t buffer8[] =
+		alignas(4) const uint8_t buffer8[] =
 		{
 			// Bye Packet
 			// V=2, P=1, SC=1, PT:203, Length: 2
@@ -264,7 +264,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		// The Padding bit is set and the padding bytes (8) would eat the SSRC
 		// that the SC field announces.
 		// clang-format off
-		alignas(4) uint8_t buffer9[] =
+		alignas(4) const uint8_t buffer9[] =
 		{
 			// Bye Packet
 			// V=2, P=1, SC=1, PT:203, Length: 2
@@ -302,7 +302,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Parse(
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Parse(
 			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_COMPOUND_PACKET(
@@ -953,7 +953,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 	SECTION("CompoundPacket::Parse() with a malformed Transport-wide CC packet fails")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// NACK Packet
 			// V=2, P=0, FMT=1, PT:205, Length: 3
@@ -1014,8 +1014,9 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(receivedRtpPackets[2].deltaTicks == 4);
 		};
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Factory(
-			rtcpCommon::FactoryBuffer, 1000) };
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
+			RTC::RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		};
 
 		// Transport-wide CC packet, length: 28 bytes (3 of them padding).
 		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet1{ RTC::RTCP::TransportWideCcPacket::Factory(
@@ -1090,8 +1091,9 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(rrtExtendedReport->GetNtp().fractions == 4444);
 		};
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Factory(
-			rtcpCommon::FactoryBuffer, 1000) };
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
+			RTC::RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		};
 
 		// BYE packet, length: 12 bytes.
 		std::unique_ptr<RTC::RTCP::ByePacket> packet1{ RTC::RTCP::ByePacket::Factory(
@@ -1151,12 +1153,13 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 	SECTION("CompoundPacket::AddPacket() throws and leaves the CompoundPacket as it was")
 	{
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Factory(
-			rtcpCommon::FactoryBuffer, 16) };
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
+			RTC::RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer, 16)
+		};
 
 		// XR packet with a RRT block, length: 20 bytes, which exceeds the compound
 		// packet buffer length.
-		std::unique_ptr<RTC::RTCP::XrPacket> packet1{ RTC::RTCP::XrPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::XrPacket> packet1{ RTC::RTCP::XrPacket::Factory(
 			rtcpCommon::FactoryBuffer + 1000, 1000) };
 
 		packet1->BuildExtendedReportInPlace<RTC::RTCP::RrtExtendedReport>()->Consolidate();
@@ -1172,7 +1175,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		// XR packet, length: 8 bytes, which fits in the compound packet buffer but
 		// has an Extended Report block being built in place within it (so it needs
 		// consolidation).
-		std::unique_ptr<RTC::RTCP::XrPacket> packet2{ RTC::RTCP::XrPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::XrPacket> packet2{ RTC::RTCP::XrPacket::Factory(
 			rtcpCommon::FactoryBuffer + 2000, 1000) };
 
 		auto* const rrtExtendedReport =
@@ -1189,8 +1192,9 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 	SECTION(
 	  "CompoundPacket::BuildPacketInPlace() and AddPacket() throw if the CompoundPacket needs consolidation")
 	{
-		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Factory(
-			rtcpCommon::FactoryBuffer, 1000) };
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
+			RTC::RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		};
 
 		REQUIRE(compoundPacket->NeedsConsolidation() == false);
 

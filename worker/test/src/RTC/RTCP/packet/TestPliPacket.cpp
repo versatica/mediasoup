@@ -98,7 +98,8 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::PliPacket> packet{ RTC::RTCP::PliPacket::Parse(buffer, sizeof(buffer)) };
+		const std::unique_ptr<RTC::RTCP::PliPacket> packet{ RTC::RTCP::PliPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -118,7 +119,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 	{
 		// No space for the SSRC of media source.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=0, FMT=1, PT:206, Length: 1
 			0b10000001, 0xCE, 0x00, 0x01,
@@ -132,7 +133,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 		// Length field must be 2 since PLI has no Feedback Control Information
 		// (FCI).
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// V=2, P=0, FMT=1, PT:206, Length: 3
 			0b10000001, 0xCE, 0x00, 0x03,
@@ -149,7 +150,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 
 		// Wrong message type (FMT 4, FIR).
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// V=2, P=0, FMT=4, PT:206, Length: 2
 			0b10000100, 0xCE, 0x00, 0x02,
@@ -166,7 +167,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 	SECTION("PliPacket::Factory() succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t expected[] =
+		alignas(4) const uint8_t expected[] =
 		{
 			// V=2, P=0, FMT=1, PT:206, Length: 2
 			0b10000001, 0xCE, 0x00, 0x02,
@@ -181,7 +182,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 		// header.
 		std::memset(rtcpCommon::FactoryBuffer, 0xFF, sizeof(rtcpCommon::FactoryBuffer));
 
-		std::unique_ptr<RTC::RTCP::PliPacket> packet{ RTC::RTCP::PliPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::PliPacket> packet{ RTC::RTCP::PliPacket::Factory(
 			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
 
 		CHECK_RTCP_PACKET(
@@ -204,7 +205,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 		packet->SetMediaSsrc(0x23456789);
 
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    packet->GetBuffer(), packet->GetLength(), expected, sizeof(expected)) == true);
 	}
 

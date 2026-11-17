@@ -85,7 +85,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 	{
 		// Block length field is not 2.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// BT: 4 (RRT), Reserved: 0, Block length: 3
 			0x04, 0x00, 0x00, 0x03,
@@ -99,7 +99,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 
 		// Block length field is not 2.
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// BT: 4 (RRT), Reserved: 0, Block length: 1
 			0x04, 0x00, 0x00, 0x01,
@@ -111,7 +111,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 
 		// Wrong block type (DLRR).
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// BT: 5 (DLRR), Reserved: 0, Block length: 2
 			0x05, 0x00, 0x00, 0x02,
@@ -124,7 +124,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 
 		// Block length field announces more bytes than the buffer has.
 		// clang-format off
-		alignas(4) uint8_t buffer4[] =
+		alignas(4) const uint8_t buffer4[] =
 		{
 			// BT: 4 (RRT), Reserved: 0, Block length: 2
 			0x04, 0x00, 0x00, 0x02,
@@ -138,7 +138,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 	SECTION("RrtExtendedReport::Factory() succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t expectedBuffer[] =
+		alignas(4) const uint8_t expectedBuffer[] =
 		{
 			// BT: 4 (RRT), Reserved: 0, Block length: 2
 			0x04, 0x00, 0x00, 0x02,
@@ -149,8 +149,10 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::RrtExtendedReport> extendedReport{ RTC::RTCP::RrtExtendedReport::Factory(
-			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
+		const std::unique_ptr<RTC::RTCP::RrtExtendedReport> extendedReport{
+			RTC::RTCP::RrtExtendedReport::Factory(
+			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
+		};
 
 		CHECK_RTCP_EXTENDED_REPORT(
 		  /*extendedReport*/ extendedReport.get(),
@@ -170,7 +172,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 		REQUIRE(extendedReport->GetNtp().seconds == 0x12345678);
 		REQUIRE(extendedReport->GetNtp().fractions == 0x23456789);
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    extendedReport->GetBuffer(),
 		    extendedReport->GetLength(),
 		    expectedBuffer,

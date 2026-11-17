@@ -30,7 +30,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 			// User Data (3 bytes): 0xABCDED, 1 byte of padding
 			0xAB, 0xCD, 0xEF, 0x00,
 			// Extra bytes that should be ignored
-			0xAA, 0xBB, 0xCC, 0xDD,
+			0xAA, 0xBB, 0xCC, 0xDD
 		};
 		// clang-format on
 

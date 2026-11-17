@@ -116,7 +116,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC, 0xDD,
+			0xAA, 0xBB, 0xCC, 0xDD
 		};
 		// clang-format on
 
@@ -235,7 +235,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 			// Sender's Next TSN: 1111111111
 			0x42, 0x3A, 0x35, 0xC7,
 			// Receiver's Next TSN: 1111111111
-			0x84, 0x74, 0x6B, 0x8E,
+			0x84, 0x74, 0x6B, 0x8E
 		};
 		// clang-format on
 
@@ -252,7 +252,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 			// Result: SUCCESS_PERFORMED
 			0x00, 0x00, 0x00, 0x01,
 			// Sender's Next TSN: 1111111111
-			0x42, 0x3A, 0x35, 0xC7,
+			0x42, 0x3A, 0x35, 0xC7
 			// Receiver's Next TSN (missing)
 		};
 		// clang-format on

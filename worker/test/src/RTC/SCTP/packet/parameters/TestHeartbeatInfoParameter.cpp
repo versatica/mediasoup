@@ -25,7 +25,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[serializable][sctp][parameter]")
 			0xAA, 0xBB, 0xCC, 0xDD,
 			0xAA, 0xBB, 0xCC, 0xDD,
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA,
+			0xAA
 		};
 		// clang-format on
 
@@ -123,7 +123,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[serializable][sctp][parameter]")
 			// Heartbeat Information (7 bytes): 0x11223344556677
 			0x11, 0x22, 0x33, 0x44,
 			// 1 byte of padding
-			0x55, 0x66, 0x77, 0x00,
+			0x55, 0x66, 0x77, 0x00
 		};
 		// clang-format on
 
@@ -138,7 +138,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[serializable][sctp][parameter]")
 			// Heartbeat Information (7 bytes): 0x11223344556677
 			0x11, 0x22, 0x33, 0x44,
 			// 1 byte of padding
-			0x55, 0x66, 0x77, 0x00,
+			0x55, 0x66, 0x77, 0x00
 		};
 		// clang-format on
 

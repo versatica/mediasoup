@@ -161,8 +161,9 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::ReceiverReportPacket> packet{ RTC::RTCP::ReceiverReportPacket::Parse(
-			buffer, sizeof(buffer)) };
+		const std::unique_ptr<RTC::RTCP::ReceiverReportPacket> packet{
+			RTC::RTCP::ReceiverReportPacket::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -212,7 +213,7 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 	{
 		// No space for the SSRC of packet sender.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=0, RC=0, PT:201, Length: 0
 			0b10000000, 0xC9, 0x00, 0x00
@@ -223,7 +224,7 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 
 		// RC field announces 1 report block but there is none.
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// V=2, P=0, RC=1, PT:201, Length: 1
 			0b10000001, 0xC9, 0x00, 0x01,
@@ -236,7 +237,7 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 
 		// RC field announces 2 report blocks but there is only 1.
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// V=2, P=0, RC=2, PT:201, Length: 7
 			0b10000010, 0xC9, 0x00, 0x07,
@@ -370,8 +371,10 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 
 	SECTION("ReceiverReportPacket::AddReportBlock() clamps the total lost")
 	{
-		std::unique_ptr<RTC::RTCP::ReceiverReportPacket> packet{ RTC::RTCP::ReceiverReportPacket::Factory(
-			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
+		const std::unique_ptr<RTC::RTCP::ReceiverReportPacket> packet{
+			RTC::RTCP::ReceiverReportPacket::Factory(
+			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
+		};
 
 		packet->AddReportBlock(
 		  { .ssrc                       = 1111,
@@ -425,8 +428,10 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 		                                                           .lastSenderReport           = 0,
 		                                                           .delaySinceLastSenderReport = 0 };
 
-		std::unique_ptr<RTC::RTCP::ReceiverReportPacket> packet{ RTC::RTCP::ReceiverReportPacket::Factory(
-			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
+		const std::unique_ptr<RTC::RTCP::ReceiverReportPacket> packet{
+			RTC::RTCP::ReceiverReportPacket::Factory(
+			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
+		};
 
 		for (size_t idx{ 0 }; idx < RTC::RTCP::AnyReportPacket::MaxReportBlocks; ++idx)
 		{
@@ -453,8 +458,9 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 		                                                           .lastSenderReport           = 0,
 		                                                           .delaySinceLastSenderReport = 0 };
 
-		std::unique_ptr<RTC::RTCP::ReceiverReportPacket> packet{ RTC::RTCP::ReceiverReportPacket::Factory(
-			rtcpCommon::FactoryBuffer, 31) };
+		const std::unique_ptr<RTC::RTCP::ReceiverReportPacket> packet{
+			RTC::RTCP::ReceiverReportPacket::Factory(rtcpCommon::FactoryBuffer, 31)
+		};
 
 		REQUIRE(packet->GetLength() == 8);
 

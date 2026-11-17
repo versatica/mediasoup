@@ -146,7 +146,7 @@ namespace RTC
 
 			RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod
 			  zeroChecksumAlternateErrorDetectionMethod{
-				  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE,
+				  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
 			  };
 
 			switch (options->sctpZeroChecksum())
@@ -180,7 +180,7 @@ namespace RTC
 				.defaultStreamBufferedAmountLowThreshold =
 				  options->sctpDefaultStreamBufferedAmountLowThreshold(),
 				.zeroChecksumAlternateErrorDetectionMethod = zeroChecksumAlternateErrorDetectionMethod,
-				.requireAuthenticatedCookie                = requireSctpStateCookieAuthentication,
+				.requireAuthenticatedCookie                = requireSctpStateCookieAuthentication
 			};
 
 			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(
@@ -1555,7 +1555,7 @@ namespace RTC
 			    ? std::nullopt
 			    : std::optional<int64_t>(sctpStreamParameters.maxPacketLifeTime.value()),
 			.maxRetransmissions =
-			  sctpStreamParameters.ordered ? std::nullopt : sctpStreamParameters.maxRetransmits,
+			  sctpStreamParameters.ordered ? std::nullopt : sctpStreamParameters.maxRetransmits
 			// NOTE: We don't set `lifecyleId` in production.
 		};
 
@@ -2131,7 +2131,7 @@ namespace RTC
 
 							this->receivedReceiverReferenceTimes[ssrc] = ReceivedReceiverReferenceTime{
 								.compactNtp   = Utils::Time::NtpToCompactNtp(rrtExtendedReport->GetNtp()),
-								.receivedAtUs = receivedAtUs,
+								.receivedAtUs = receivedAtUs
 							};
 
 							break;
@@ -2421,11 +2421,10 @@ namespace RTC
 						  "DLRR sub-block does not fit in the RTCP compound packet");
 
 						dlrrExtendedReport->AddSubBlock(
-						  RTC::RTCP::DlrrExtendedReport::SubBlock{
-						    .ssrc                         = ssrc,
-						    .lastReceiverReport           = receivedReceiverReferenceTime.compactNtp,
-						    .delaySinceLastReceiverReport = dlrr,
-						  });
+						  RTC::RTCP::DlrrExtendedReport::SubBlock{ .ssrc = ssrc,
+							                                         .lastReceiverReport =
+							                                           receivedReceiverReferenceTime.compactNtp,
+							                                         .delaySinceLastReceiverReport = dlrr });
 
 						answeredSsrcs.push_back(ssrc);
 					}
@@ -2630,8 +2629,7 @@ namespace RTC
 			    RTC::BWE::SenderTransportCongestionController::SenderTransportCongestionControllerOptions{
 			      .startBitrate = this->initialAvailableOutgoingBitrate,
 			      .minBitrate   = this->minOutgoingBitrate,
-			      .maxBitrate   = this->maxOutgoingBitrate,
-			    });
+			      .maxBitrate   = this->maxOutgoingBitrate });
 
 			created = true;
 
@@ -2689,8 +2687,7 @@ namespace RTC
 		    this,
 		    this->shared,
 		    RTC::BWE::ReceiverTransportCongestionController::ReceiverTransportCongestionControllerOptions{
-		      .rtcpSenderSsrc = this->rtcpSsrc,
-		    });
+		      .rtcpSenderSsrc = this->rtcpSsrc });
 
 		// The cap travels to the remote peer in a REMB, so it could not be applied
 		// before this.
@@ -3052,11 +3049,9 @@ namespace RTC
 			// which is how a retransmission without RTX is told apart.
 			const auto sequenceNumber = this->senderTransportCongestionController->OnRtpPacketToBeSent(
 			  packet,
-			  {
-			    .isAudio          = consumer->GetKind() == RTC::Media::Kind::AUDIO,
-			    .isRetransmission = true,
-			    .originalSsrc     = packet->GetMediaSsrc(),
-			  });
+			  { .isAudio          = consumer->GetKind() == RTC::Media::Kind::AUDIO,
+				  .isRetransmission = true,
+				  .originalSsrc     = packet->GetMediaSsrc() });
 
 			const size_t size = packet->GetLength();
 

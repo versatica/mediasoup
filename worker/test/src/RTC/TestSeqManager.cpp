@@ -155,7 +155,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{  9,  8, false, false },
 			{ 11,  0, false,  true }, // drop.
 			{ 10,  9, false, false },
-			{ 12, 10, false, false },
+			{ 12, 10, false, false }
 		};
 		// clang-format on
 
@@ -214,7 +214,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		{
 			{      4,     4, false, false },
 			{      3,     3, false, false },
-			{  65535, 65535, false, false },
+			{  65535, 65535, false, false }
 		};
 		// clang-format on
 
@@ -642,7 +642,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 1, true, false, 0 },
+			{ 0, 1, true, false, 0 }
 		};
 		for (uint16_t j = 0; j < 3; ++j) {
 			for (uint16_t i = 1; i < std::numeric_limits<uint16_t>::max(); ++i) {
@@ -662,7 +662,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 1, true, false, 0, },
+			{ 0, 1, true, false, 0 }
 		};
 		for (uint16_t j = 0; j < 3; ++j) {
 			for (uint16_t i = 1; i < MaxNumberFor15Bits; ++i) {
@@ -752,7 +752,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{     2,     0, false, true  }, // Drop.
 			{ 56832, std::nullopt, false, false }, // Previously dropped.
 			{   530,     0, false, true  }, // Drop.
-			{     2, std::nullopt, false, false }, // Previously dropped.
+			{     2, std::nullopt, false, false } // Previously dropped.
 		};
 		// clang-format on
 
@@ -772,7 +772,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{   120,     0, false, true  }, // Drop.
 			{  3328, std::nullopt, false, false }, // Previously dropped.
 			{ 30848,     0, false, true  }, // Drop.
-			{   120,   120, false, false },
+			{   120,   120, false, false }
 		};
 		// clang-format on
 
@@ -788,7 +788,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		{
 			{ 36964, 36964, false, false },
 			{ 65396 ,    0, false, true  }, // Drop.
-			{ 25855, 25854, false, false },
+			{ 25855, 25854, false, false }
 		};
 		// clang-format on
 
@@ -816,7 +816,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 200,   0, false, true  }, // Drop.
 			{  40,  39, false, false }, // 296 unwrapped, one drop below it.
 			{  86,   0, false, true  }, // Drop. 200 belongs to the previous cycle now.
-			{ 198, 196, false, false }  // 454 unwrapped, two drops below it.
+			{ 198, 196, false, false } // 454 unwrapped, two drops below it.
 		};
 		// clang-format on
 
@@ -840,7 +840,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 51200,     0, false, true  }, // Drop.
 			{ 10240, 10239, false, false }, // 75776 unwrapped, one drop below it.
 			{ 22016,     0, false, true  }, // Drop. 51200 belongs to the previous cycle now.
-			{ 50688, 50686, false, false }  // 116224 unwrapped, two drops below it.
+			{ 50688, 50686, false, false } // 116224 unwrapped, two drops below it.
 		};
 		// clang-format on
 
@@ -924,7 +924,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{  9, 3008, false, false },
 			{ 11, 3000, false,  true }, // drop.
 			{ 10, 3009, false, false },
-			{ 12, 3010, false, false },
+			{ 12, 3010, false, false }
 		};
 		// clang-format on
 
@@ -998,7 +998,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		{
 			{      4, 1004, false, false },
 			{      3, 1003, false, false },
-			{  65535,  999, false, false },
+			{  65535,  999, false, false }
 		};
 		// clang-format on
 
@@ -1469,7 +1469,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 101, true, false, 0, }
+			{ 0, 101, true, false, 0 }
 		};
 		// clang-format on
 
@@ -1567,7 +1567,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{     2, 10000, false, true  }, // Drop.
 			{ 56832, std::nullopt, false, false }, // Previously dropped.
 			{   530, 10000, false, true  }, // Drop.
-			{     2, std::nullopt, false, false }, // Previously dropped.
+			{     2, std::nullopt, false, false } // Previously dropped.
 		};
 		// clang-format on
 
@@ -1588,7 +1588,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{   120,   100, false, true  }, // Drop.
 			{  3328, std::nullopt, false, false }, // Previously dropped.
 			{ 30848,   100, false, true  }, // Drop.
-			{   120,   220, false, false },
+			{   120,   220, false, false }
 		};
 		// clang-format on
 
@@ -1605,7 +1605,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		{
 			{ 36964, 37964, false, false },
 			{ 65396 , 1000, false, true  }, // Drop.
-			{ 25855, 26854, false, false },
+			{ 25855, 26854, false, false }
 		};
 		// clang-format on
 
@@ -1624,7 +1624,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 0, 0, false, false },
 			{ 2, 0, false, true  },
 			{ 1, 0, false, true  },
-			{ 3, 1, false, false  },
+			{ 3, 1, false, false  }
 		};
 		// clang-format on
 
@@ -1671,7 +1671,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 7, 0, false, true },
 			{ 8, 0, false, true },
 			{ 0, 0, false, true },
-			{ 9, 5, false, false },
+			{ 9, 5, false, false }
 		};
 		// clang-format on
 
@@ -1748,7 +1748,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 63, 0, false, true },
 			{ 64, 0, false, true },
 			{ 43, 0, false, true },
-			{ 50, 32, false, false },
+			{ 50, 32, false, false }
 		};
 		// clang-format on
 

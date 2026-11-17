@@ -26,7 +26,7 @@ namespace RTC
 			{ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,          "COOKIE-RECEIVED-WHILE-SHUTTING-DOWN"          },
 			{ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES, "RESTART-OF-AN-ASSOCIATION-WITH-NEW-ADDRESSES" },
 			{ ErrorCause::ErrorCauseCode::USER_INITIATED_ABORT,                         "USER-INITIATED-ABORT"                         },
-			{ ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,                           "PROTOCOL-VIOLATION"                           },
+			{ ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,                           "PROTOCOL-VIOLATION"                           }
 		};
 		// clang-format on
 

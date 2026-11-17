@@ -23,7 +23,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 			0x90, 0xAB, 0xCD, 0x00,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC,
+			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
@@ -117,7 +117,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
 			//  NewAddressTlvs: 0x12345678
-			0x12, 0x34, 0x56, 0x78,
+			0x12, 0x34, 0x56, 0x78
 		};
 		// clang-format on
 
@@ -131,7 +131,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 			// Code:11 (RESTART-OF-AN-ASSOCIATION-WITH-NEW-ADDRESSES), Length: 7
 			0x00, 0x0B, 0x00, 0x07,
 			//  NewAddressTlvs: 0x123456 (missing padding byte)
-			0x12, 0x34, 0x56,
+			0x12, 0x34, 0x56
 		};
 		// clang-format on
 

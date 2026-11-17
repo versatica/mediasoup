@@ -12,7 +12,7 @@ namespace RTC
 	{
 		/* Instance methods. */
 
-		RtxStream::RtxStream(SharedInterface* shared, RTP::RtxStream::Params& params)
+		RtxStream::RtxStream(SharedInterface* shared, const RTP::RtxStream::Params& params)
 		  : shared(shared), params(params)
 		{
 			MS_TRACE();
@@ -33,7 +33,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Add params.
-			auto params = this->params.FillBuffer(builder);
+			const auto params = this->params.FillBuffer(builder);
 
 			return FBS::RtxStream::CreateRtxDump(builder, params);
 		}
@@ -145,7 +145,7 @@ namespace RTC
 				// A fixed point number with 8 bits of fraction, so a whole interval lost
 				// gives 256, one more than the field can hold.
 				this->fractionLost =
-				  static_cast<uint8_t>(std::min<int64_t>((lostInterval << 8) / expectedInterval, 255));
+				  static_cast<uint8_t>(std::min<int64_t>((lostInterval * 256) / expectedInterval, 255));
 			}
 
 			this->reportedPacketsLost += (this->packetsLost - prevPacketsLost);
@@ -167,7 +167,7 @@ namespace RTC
 				const int64_t delayUs = nowUs - senderReportTiming.receivedAtUs;
 
 				// Express delay in units of 1/65536 seconds.
-				auto dlsr = static_cast<uint32_t>((delayUs / 1000000) << 16);
+				auto dlsr = static_cast<uint32_t>(delayUs / 1000000) << 16U;
 
 				dlsr |= static_cast<uint32_t>(((delayUs % 1000000) * 65536) / 1000000);
 
@@ -198,10 +198,9 @@ namespace RTC
 			// gives nothing to store.
 			if (ntp.seconds != 0 || ntp.fractions != 0)
 			{
-				this->lastSenderReportTiming = SenderReportTiming{
-					.compactNtp   = Utils::Time::NtpToCompactNtp(ntp),
-					.receivedAtUs = receivedAtUs,
-				};
+				this->lastSenderReportTiming =
+				  SenderReportTiming{ .compactNtp   = Utils::Time::NtpToCompactNtp(ntp),
+					                    .receivedAtUs = receivedAtUs };
 			}
 		}
 
@@ -215,7 +214,7 @@ namespace RTC
 			// If the new packet sequence number is greater than the max seen but not
 			// "so much bigger", accept it.
 			// NOTE: udelta also handles the case of a new cycle, this is:
-			//    maxSeq:65536, seq:0 => udelta:1
+			//    maxSeq:65535, seq:0 => udelta:1
 			if (udelta < RTP::RtpStream::MaxDropout)
 			{
 				// In order, with permissible gap.
@@ -228,7 +227,7 @@ namespace RTC
 				this->maxSeq = seq;
 			}
 			// Too old packet received (older than the allowed misorder).
-			// Or to new packet (more than acceptable dropout).
+			// Or too new packet (more than acceptable dropout).
 			else if (udelta <= RTP::RtpStream::RtpSeqMod - RTP::RtpStream::MaxMisorder)
 			{
 				// The sequence number made a very large jump. If two sequential packets
@@ -259,7 +258,7 @@ namespace RTC
 					  packet->GetSsrc(),
 					  packet->GetSequenceNumber());
 
-					this->badSeq = (seq + 1) & (RTP::RtpStream::RtpSeqMod - 1);
+					this->badSeq = (seq + 1U) & (RTP::RtpStream::RtpSeqMod - 1);
 
 					// Packet discarded due to late or early arriving.
 					this->packetsDiscarded++;

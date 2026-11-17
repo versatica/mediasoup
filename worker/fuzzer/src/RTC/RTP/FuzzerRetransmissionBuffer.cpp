@@ -20,7 +20,7 @@ void FuzzerRtcRtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 	{
 		0b10000000, 0b01111011, 0b01010010, 0b00001110,
 		0b01011011, 0b01101011, 0b11001010, 0b10110101,
-		0, 0, 0, 2,
+		0, 0, 0, 2
 	};
 	// clang-format on
 

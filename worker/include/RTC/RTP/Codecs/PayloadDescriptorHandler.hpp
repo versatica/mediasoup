@@ -142,7 +142,7 @@ namespace RTC
 				 *   one when the Consumer negotiated it, since its handler takes
 				 *   over and numbers every frame itself.
 				 */
-				EncodingContext(Codecs::EncodingContext::Params& params, uint8_t frameIdLength)
+				EncodingContext(const Codecs::EncodingContext::Params& params, uint8_t frameIdLength)
 				  : params(params),
 				    frameIdLength(
 				      params.preferDependencyDescriptor ? DependencyDescriptor::FrameIdLength

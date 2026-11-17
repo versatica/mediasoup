@@ -122,7 +122,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::NackPacket> packet{ RTC::RTCP::NackPacket::Parse(
+		const std::unique_ptr<RTC::RTCP::NackPacket> packet{ RTC::RTCP::NackPacket::Parse(
 			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
@@ -167,7 +167,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 	{
 		// No space for the SSRC of media source.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=0, FMT=1, PT:205, Length: 1
 			0b10000001, 0xCD, 0x00, 0x01,
@@ -180,7 +180,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 
 		// No items.
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// V=2, P=0, FMT=1, PT:205, Length: 2
 			0b10000001, 0xCD, 0x00, 0x02,
@@ -195,7 +195,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 
 		// Wrong message type (FMT 3, TMMBR).
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// V=2, P=0, FMT=3, PT:205, Length: 3
 			0b10000011, 0xCD, 0x00, 0x03,
@@ -212,7 +212,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 
 		// The FCI (excluding padding) is not multiple of 4 bytes.
 		// clang-format off
-		alignas(4) uint8_t buffer4[] =
+		alignas(4) const uint8_t buffer4[] =
 		{
 			// V=2, P=1, FMT=1, PT:205, Length: 4
 			0b10100001, 0xCD, 0x00, 0x04,
@@ -331,7 +331,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 
 	SECTION("NackPacket::AddItem() throws if there is no space in the buffer")
 	{
-		std::unique_ptr<RTC::RTCP::NackPacket> packet{ RTC::RTCP::NackPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::NackPacket> packet{ RTC::RTCP::NackPacket::Factory(
 			rtcpCommon::FactoryBuffer, 15) };
 
 		REQUIRE(packet->GetLength() == 12);

@@ -159,7 +159,8 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(buffer, sizeof(buffer)) };
+		const std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -200,14 +201,15 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		// clang-format on
 
 		// clang-format off
-		alignas(4) uint8_t extendedReportBuffer[] =
+		alignas(4) const uint8_t extendedReportBuffer[] =
 		{
 			// BT: 99, Type-specific: 0, Block length: 0
 			0x63, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(buffer, sizeof(buffer)) };
+		const std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -280,7 +282,8 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(buffer, sizeof(buffer)) };
+		const std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -316,7 +319,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 	{
 		// No space for the SSRC.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=0, Reserved=0, PT:207, Length: 0
 			0b10000000, 0xCF, 0x00, 0x00
@@ -327,7 +330,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 
 		// Extended Report block length field exceeds the packet length.
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// V=2, P=0, Reserved=0, PT:207, Length: 3
 			0b10000000, 0xCF, 0x00, 0x03,
@@ -345,7 +348,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		// Bytes left after the last Extended Report block that don't form a
 		// block (2 bytes followed by 2 bytes of padding).
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// V=2, P=1, Reserved=0, PT:207, Length: 3
 			0b10100000, 0xCF, 0x00, 0x03,
@@ -362,7 +365,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 
 		// Extended Report block overlapping the padding.
 		// clang-format off
-		alignas(4) uint8_t buffer4[] =
+		alignas(4) const uint8_t buffer4[] =
 		{
 			// V=2, P=1, Reserved=0, PT:207, Length: 3
 			0b10100000, 0xCF, 0x00, 0x03,
@@ -379,7 +382,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 
 		// Malformed RRT block (block length is not 2).
 		// clang-format off
-		alignas(4) uint8_t buffer5[] =
+		alignas(4) const uint8_t buffer5[] =
 		{
 			// V=2, P=0, Reserved=0, PT:207, Length: 3
 			0b10000000, 0xCF, 0x00, 0x03,
@@ -395,7 +398,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 
 		// Malformed DLRR block (sub-blocks length is not multiple of 12).
 		// clang-format off
-		alignas(4) uint8_t buffer6[] =
+		alignas(4) const uint8_t buffer6[] =
 		{
 			// V=2, P=0, Reserved=0, PT:207, Length: 3
 			0b10000000, 0xCF, 0x00, 0x03,
@@ -411,7 +414,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 
 		// Wrong packet type (RR).
 		// clang-format off
-		alignas(4) uint8_t buffer7[] =
+		alignas(4) const uint8_t buffer7[] =
 		{
 			// V=2, P=0, RC=0, PT:201, Length: 1
 			0b10000000, 0xC9, 0x00, 0x01,
@@ -426,7 +429,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 	SECTION("XrPacket::Factory() succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t extendedReportBuffer1[] =
+		alignas(4) const uint8_t extendedReportBuffer1[] =
 		{
 			// BT: 42, Type-specific: 0xAB, Block length: 2
 			0x2A, 0xAB, 0x00, 0x02,
@@ -437,7 +440,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		// clang-format on
 
 		// clang-format off
-		alignas(4) uint8_t extendedReportBuffer2[] =
+		alignas(4) const uint8_t extendedReportBuffer2[] =
 		{
 			// BT: 99, Type-specific: 0, Block length: 0
 			0x63, 0x00, 0x00, 0x00
@@ -569,7 +572,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 	SECTION("XrPacket::Factory() without Extended Report blocks succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t expectedBuffer[] =
+		alignas(4) const uint8_t expectedBuffer[] =
 		{
 			// V=2, P=0, Reserved=0, PT:207, Length: 1
 			0x80, 0xCF, 0x00, 0x01,
@@ -578,7 +581,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Factory(
 			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
 
 		packet->SetSsrc(0x12345678);
@@ -594,7 +597,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		  /*paddingLength*/ 0);
 
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    packet->GetBuffer(), packet->GetLength(), expectedBuffer, sizeof(expectedBuffer)) == true);
 	}
 
@@ -712,7 +715,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 	SECTION("XrPacket::AddExtendedReport() throws if there is no space in the buffer")
 	{
 		// clang-format off
-		alignas(4) uint8_t extendedReportBuffer[] =
+		alignas(4) const uint8_t extendedReportBuffer[] =
 		{
 			// BT: 42, Type-specific: 0, Block length: 1
 			0x2A, 0x00, 0x00, 0x01,
@@ -721,7 +724,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Factory(
+		const std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Factory(
 			rtcpCommon::FactoryBuffer, 12) };
 
 		const std::unique_ptr<RTC::RTCP::UnknownExtendedReport> extendedReport{

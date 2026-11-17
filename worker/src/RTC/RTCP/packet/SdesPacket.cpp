@@ -24,7 +24,7 @@ namespace RTC
 			{ SdesPacket::ItemType::LOC,   "LOC"   },
 			{ SdesPacket::ItemType::TOOL,  "TOOL"  },
 			{ SdesPacket::ItemType::NOTE,  "NOTE"  },
-			{ SdesPacket::ItemType::PRIV,  "PRIV"  },
+			{ SdesPacket::ItemType::PRIV,  "PRIV"  }
 		};
 		// clang-format on
 

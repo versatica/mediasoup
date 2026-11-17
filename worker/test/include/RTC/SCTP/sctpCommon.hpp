@@ -38,7 +38,7 @@ namespace sctpCommon
 	void ResetBuffers();
 } // namespace sctpCommon
 
-// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define CHECK_SCTP_PACKET(                                                                               \
   /*const RTC::SCTP::Packet**/ packet,                                                                   \
   /*const uint8_t**/ buffer,                                                                             \
@@ -55,8 +55,10 @@ namespace sctpCommon
 		REQUIRE(RTC::SCTP::Packet::IsSctp(buffer, length) == true);                                          \
 		REQUIRE(packet);                                                                                     \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                             \
+                                                                                                         \
 		const std::vector<uint8_t> originalBuffer(                                                           \
 		  packet->GetBuffer(), packet->GetBuffer() + packet->GetBufferLength());                             \
+                                                                                                         \
 		REQUIRE(packet->GetBuffer() == buffer);                                                              \
 		REQUIRE(packet->GetBufferLength() != 0);                                                             \
 		REQUIRE(packet->GetBufferLength() == bufferLength);                                                  \
@@ -72,17 +74,18 @@ namespace sctpCommon
 		REQUIRE(packet->GetChunksCount() == chunksCount);                                                    \
 		REQUIRE(packet->HasChunks() == (chunksCount > 0));                                                   \
 		REQUIRE(packet->GetChunkAt(chunksCount) == nullptr);                                                 \
+                                                                                                         \
 		REQUIRE_THROWS_AS(                                                                                   \
 		  const_cast<RTC::SCTP::Packet*>(packet)->Serialize(sctpCommon::ThrowBuffer, length - 1),            \
 		  MediaSoupError);                                                                                   \
 		REQUIRE_THROWS_AS(packet->Clone(sctpCommon::ThrowBuffer, length - 1), MediaSoupError);               \
 		REQUIRE(                                                                                             \
-		  helpers::areBuffersEqual(                                                                          \
+		  helpers::AreBuffersEqual(                                                                          \
 		    packet->GetBuffer(), packet->GetBufferLength(), originalBuffer.data(), originalBuffer.size()) == \
 		  true);                                                                                             \
 	} while (false)
 
-// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define CHECK_SCTP_CHUNK(                                                                              \
   /*const RTC::SCTP::Chunk**/ chunk,                                                                   \
   /*uint8_t**/ buffer,                                                                                 \
@@ -100,12 +103,15 @@ namespace sctpCommon
 	{                                                                                                    \
 		REQUIRE(chunk);                                                                                    \
 		REQUIRE(chunk->GetBuffer() != nullptr);                                                            \
+                                                                                                       \
 		const std::vector<uint8_t> originalBuffer(                                                         \
 		  chunk->GetBuffer(), chunk->GetBuffer() + chunk->GetBufferLength());                              \
+                                                                                                       \
 		if (buffer)                                                                                        \
 		{                                                                                                  \
 			REQUIRE(chunk->GetBuffer() == buffer);                                                           \
 		}                                                                                                  \
+                                                                                                       \
 		REQUIRE(chunk->GetBufferLength() != 0);                                                            \
 		REQUIRE(chunk->GetBufferLength() == bufferLength);                                                 \
 		REQUIRE(chunk->GetLength() != 0);                                                                  \
@@ -120,6 +126,7 @@ namespace sctpCommon
 		REQUIRE(chunk->GetActionForUnknownChunkType() == actionForUnknownChunkType);                       \
 		REQUIRE(chunk->GetFlags() == flags);                                                               \
 		REQUIRE(chunk->CanHaveParameters() == canHaveParameters);                                          \
+                                                                                                       \
 		if (!canHaveParameters)                                                                            \
 		{                                                                                                  \
 			REQUIRE_THROWS_AS(                                                                               \
@@ -127,10 +134,12 @@ namespace sctpCommon
 			    ->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>(),                                \
 			  MediaSoupError);                                                                               \
 		}                                                                                                  \
+                                                                                                       \
 		REQUIRE(chunk->GetParametersCount() == parametersCount);                                           \
 		REQUIRE(chunk->HasParameters() == (parametersCount > 0));                                          \
 		REQUIRE(chunk->GetParameterAt(parametersCount) == nullptr);                                        \
 		REQUIRE(chunk->CanHaveErrorCauses() == canHaveErrorCauses);                                        \
+                                                                                                       \
 		if (!canHaveErrorCauses)                                                                           \
 		{                                                                                                  \
 			REQUIRE_THROWS_AS(                                                                               \
@@ -138,21 +147,23 @@ namespace sctpCommon
 			    ->BuildErrorCauseInPlace<RTC::SCTP::InvalidStreamIdentifierErrorCause>(),                    \
 			  MediaSoupError);                                                                               \
 		}                                                                                                  \
+                                                                                                       \
 		REQUIRE(chunk->GetErrorCausesCount() == errorCausesCount);                                         \
 		REQUIRE(chunk->HasErrorCauses() == (errorCausesCount > 0));                                        \
 		REQUIRE(chunk->GetErrorCauseAt(errorCausesCount) == nullptr);                                      \
+                                                                                                       \
 		REQUIRE_THROWS_AS(                                                                                 \
 		  const_cast<RTC::SCTP::Chunk*>(reinterpret_cast<const RTC::SCTP::Chunk*>(chunk))                  \
 		    ->Serialize(sctpCommon::ThrowBuffer, length - 1),                                              \
 		  MediaSoupError);                                                                                 \
 		REQUIRE_THROWS_AS(chunk->Clone(sctpCommon::ThrowBuffer, length - 1), MediaSoupError);              \
 		REQUIRE(                                                                                           \
-		  helpers::areBuffersEqual(                                                                        \
+		  helpers::AreBuffersEqual(                                                                        \
 		    chunk->GetBuffer(), chunk->GetBufferLength(), originalBuffer.data(), originalBuffer.size()) == \
 		  true);                                                                                           \
 	} while (false)
 
-// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define CHECK_SCTP_PARAMETER(                                                                      \
   /*const RTC::SCTP::Parameter**/ parameter,                                                       \
   /*const uint8_t**/ buffer,                                                                       \
@@ -165,12 +176,15 @@ namespace sctpCommon
 	{                                                                                                \
 		REQUIRE(parameter);                                                                            \
 		REQUIRE(parameter->GetBuffer() != nullptr);                                                    \
+                                                                                                   \
 		const std::vector<uint8_t> originalBuffer(                                                     \
 		  parameter->GetBuffer(), parameter->GetBuffer() + parameter->GetBufferLength());              \
+                                                                                                   \
 		if (buffer)                                                                                    \
 		{                                                                                              \
 			REQUIRE(parameter->GetBuffer() == buffer);                                                   \
 		}                                                                                              \
+                                                                                                   \
 		REQUIRE(parameter->GetBufferLength() != 0);                                                    \
 		REQUIRE(parameter->GetBufferLength() == bufferLength);                                         \
 		REQUIRE(parameter->GetLength() != 0);                                                          \
@@ -184,20 +198,21 @@ namespace sctpCommon
 		REQUIRE(parameter->GetType() == parameterType);                                                \
 		REQUIRE(parameter->HasUnknownType() == unknownType);                                           \
 		REQUIRE(parameter->GetActionForUnknownParameterType() == actionForUnknownParameterType);       \
+                                                                                                   \
 		REQUIRE_THROWS_AS(                                                                             \
 		  const_cast<RTC::SCTP::Parameter*>(reinterpret_cast<const RTC::SCTP::Parameter*>(parameter))  \
 		    ->Serialize(sctpCommon::ThrowBuffer, length - 1),                                          \
 		  MediaSoupError);                                                                             \
 		REQUIRE_THROWS_AS(parameter->Clone(sctpCommon::ThrowBuffer, length - 1), MediaSoupError);      \
 		REQUIRE(                                                                                       \
-		  helpers::areBuffersEqual(                                                                    \
+		  helpers::AreBuffersEqual(                                                                    \
 		    parameter->GetBuffer(),                                                                    \
 		    parameter->GetBufferLength(),                                                              \
 		    originalBuffer.data(),                                                                     \
 		    originalBuffer.size()) == true);                                                           \
 	} while (false)
 
-// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define CHECK_SCTP_ERROR_CAUSE(                                                                      \
   /*const RTC::SCTP::ErrorCause**/ errorCause,                                                       \
   /*const uint8_t**/ buffer,                                                                         \
@@ -209,12 +224,15 @@ namespace sctpCommon
 	{                                                                                                  \
 		REQUIRE(errorCause);                                                                             \
 		REQUIRE(errorCause->GetBuffer() != nullptr);                                                     \
+                                                                                                     \
 		const std::vector<uint8_t> originalBuffer(                                                       \
 		  errorCause->GetBuffer(), errorCause->GetBuffer() + errorCause->GetBufferLength());             \
+                                                                                                     \
 		if (buffer)                                                                                      \
 		{                                                                                                \
 			REQUIRE(errorCause->GetBuffer() == buffer);                                                    \
 		}                                                                                                \
+                                                                                                     \
 		REQUIRE(errorCause->GetBufferLength() != 0);                                                     \
 		REQUIRE(errorCause->GetBufferLength() == bufferLength);                                          \
 		REQUIRE(errorCause->GetLength() != 0);                                                           \
@@ -227,13 +245,14 @@ namespace sctpCommon
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(errorCause->GetLength()) == true);                         \
 		REQUIRE(errorCause->GetCode() == causeCode);                                                     \
 		REQUIRE(errorCause->HasUnknownCode() == unknownCode);                                            \
+                                                                                                     \
 		REQUIRE_THROWS_AS(                                                                               \
 		  const_cast<RTC::SCTP::ErrorCause*>(reinterpret_cast<const RTC::SCTP::ErrorCause*>(errorCause)) \
 		    ->Serialize(sctpCommon::ThrowBuffer, length - 1),                                            \
 		  MediaSoupError);                                                                               \
 		REQUIRE_THROWS_AS(errorCause->Clone(sctpCommon::ThrowBuffer, length - 1), MediaSoupError);       \
 		REQUIRE(                                                                                         \
-		  helpers::areBuffersEqual(                                                                      \
+		  helpers::AreBuffersEqual(                                                                      \
 		    errorCause->GetBuffer(),                                                                     \
 		    errorCause->GetBufferLength(),                                                               \
 		    originalBuffer.data(),                                                                       \

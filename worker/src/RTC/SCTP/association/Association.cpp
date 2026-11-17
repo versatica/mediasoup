@@ -63,8 +63,7 @@ namespace RTC
 		        .baseTimeoutMs       = sctpOptions.t1InitTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
-		        .maxRestarts         = sctpOptions.maxInitRetransmissions,
-		      })),
+		        .maxRestarts         = sctpOptions.maxInitRetransmissions })),
 		    t1CookieTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
@@ -376,7 +375,7 @@ namespace RTC
 				.usesPartialReliability       = this->privateMetrics.usesPartialReliability,
 				.usesMessageInterleaving      = this->privateMetrics.usesMessageInterleaving,
 				.usesReConfig                 = this->privateMetrics.usesReConfig,
-				.usesZeroChecksum             = this->privateMetrics.usesZeroChecksum,
+				.usesZeroChecksum             = this->privateMetrics.usesZeroChecksum
 
 			};
 

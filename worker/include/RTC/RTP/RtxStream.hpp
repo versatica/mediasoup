@@ -50,7 +50,7 @@ namespace RTC
 			};
 
 		public:
-			RtxStream(SharedInterface* shared, RTP::RtxStream::Params& params);
+			RtxStream(SharedInterface* shared, const RTP::RtxStream::Params& params);
 
 			virtual ~RtxStream();
 

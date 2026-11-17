@@ -221,7 +221,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 			// Number of Gap Ack Blocks: 1, Number of Duplicate TSNs: 0
 			0x00, 0x01, 0x00, 0x00,
 			// Gap Ack Block 1: Start: 1000, End: 1999
-			0x03, 0xE8, 0x07, 0xCF,
+			0x03, 0xE8, 0x07, 0xCF
 		};
 		// clang-format on
 

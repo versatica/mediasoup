@@ -152,8 +152,9 @@ namespace
 		BackoffTimerListener backoffTimerListener;
 		RetransmissionQueueListener retransmissionQueueListener;
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
-		RTC::SCTP::AssociationListenerDeferrer associationListenerDeferrer{ std::addressof(
-			this->associationListener) };
+		RTC::SCTP::AssociationListenerDeferrer associationListenerDeferrer{
+			std::addressof(this->associationListener),
+		};
 		mocks::MockShared shared;
 		mocks::RTC::SCTP::MockTransmissionControlBlockContext tcbContext;
 		const std::unique_ptr<BackoffTimerHandleInterface> delayedAckTimer;

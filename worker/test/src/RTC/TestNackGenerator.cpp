@@ -175,7 +175,7 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 			{ 2379, false, 0, 0, false, 0 },
 			{ 2380, false, 0, 0, false, 0 },
 			{ 2254, false, 0, 0, false, 0 },
-			{ 2250, false, 0, 0, false, 0 },
+			{ 2250, false, 0, 0, false, 0 }
 		};
 		// clang-format on
 

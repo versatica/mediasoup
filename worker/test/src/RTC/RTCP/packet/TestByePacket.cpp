@@ -175,7 +175,8 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::ByePacket> packet{ RTC::RTCP::ByePacket::Parse(buffer, sizeof(buffer)) };
+		const std::unique_ptr<RTC::RTCP::ByePacket> packet{ RTC::RTCP::ByePacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -225,7 +226,8 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::ByePacket> packet{ RTC::RTCP::ByePacket::Parse(buffer, sizeof(buffer)) };
+		const std::unique_ptr<RTC::RTCP::ByePacket> packet{ RTC::RTCP::ByePacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(
 		  /*packet*/ packet.get(),
@@ -263,7 +265,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 	{
 		// Length field should be 5 (24 bytes).
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			// V=2, P=0, SC=3, PT:203, Length: 6
 			0b10000011, 0xCB, 0x00, 0x06,
@@ -282,12 +284,12 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 
 		REQUIRE(!RTC::RTCP::ByePacket::Parse(buffer1, sizeof(buffer1)));
 
-		// SC should be 3 instead of 4 (first byte should be 0b10000011). So the parser ends
-		// reading a wrong value of the Reason length field and fails.
+		// SC should be 3 instead of 4 (first byte should be 0b10000011). So the
+		// parser ends reading a wrong value of the Reason length field and fails.
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
-			// V=2, P=0, SC=3, PT:203, Length: 5
+			// V=2, P=0, SC=4, PT:203, Length: 5
 			0b10000100, 0xCB, 0x00, 0x05,
 			// SSRC 1: 1111111
 			0x00, 0x10, 0xF4, 0x47,
@@ -306,7 +308,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 
 		// Parse() called with less buffer length than needed.
 		// clang-format off
-		alignas(4) uint8_t buffer3[] =
+		alignas(4) const uint8_t buffer3[] =
 		{
 			// V=2, P=0, SC=3, PT:203, Length: 5
 			0b10000011, 0xCB, 0x00, 0x05,
@@ -328,7 +330,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 		// Length field should be 2 (12 bytes) since the packet must end right
 		// after the padded Reason, but it announces 4 extra bytes.
 		// clang-format off
-		alignas(4) uint8_t buffer4[] =
+		alignas(4) const uint8_t buffer4[] =
 		{
 			// V=2, P=0, SC=1, PT:203, Length: 3
 			0b10000001, 0xCB, 0x00, 0x03,

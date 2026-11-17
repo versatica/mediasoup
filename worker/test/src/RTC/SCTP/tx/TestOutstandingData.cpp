@@ -1347,7 +1347,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		// Inject a malformed SACK where the GapAckBlock exceeds the number of
 		// outstanding items, potentially triggering an OOB read/write.
 		std::vector<RTC::SCTP::SackChunk::GapAckBlock> malformedBlocks = {
-			{ 1, 40000 },
+			{ 1, 40000 }
 		};
 
 		buffer.HandleSack(unwrapper.Unwrap(10), malformedBlocks, /*isInFastRecovery*/ false);

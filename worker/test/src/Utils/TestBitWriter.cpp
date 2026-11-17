@@ -63,6 +63,7 @@ SCENARIO("BitWriter", "[utils][bitwriter]")
 	{
 		// 1010 0101 0011 1100
 		const uint8_t src[] = { 0xA5, 0x3C };
+
 		uint8_t buffer[2]{};
 
 		Utils::BitWriter bitWriter(buffer, sizeof(buffer));
@@ -84,6 +85,7 @@ SCENARIO("BitWriter", "[utils][bitwriter]")
 	{
 		// 1010 0101
 		const uint8_t src[] = { 0xA5 };
+
 		uint8_t buffer[1]{};
 
 		Utils::BitWriter bitWriter(buffer, sizeof(buffer));
@@ -103,6 +105,7 @@ SCENARIO("BitWriter", "[utils][bitwriter]")
 	SECTION("an empty range writes nothing")
 	{
 		const uint8_t src[] = { 0xA5 };
+
 		uint8_t buffer[1]{};
 
 		Utils::BitWriter bitWriter(buffer, sizeof(buffer));
@@ -116,6 +119,7 @@ SCENARIO("BitWriter", "[utils][bitwriter]")
 	SECTION("what is written is read back the same")
 	{
 		const uint8_t src[] = { 0x80, 0x00, 0xE8 };
+
 		uint8_t buffer[3]{};
 
 		Utils::BitWriter bitWriter(buffer, sizeof(buffer));

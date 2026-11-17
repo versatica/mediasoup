@@ -17,7 +17,7 @@ namespace Channel
 		{ FBS::Notification::Event::WORKER_CLOSE,        "worker.close"       },
 		{ FBS::Notification::Event::TRANSPORT_SEND_RTCP, "transport.sendRtcp" },
 		{ FBS::Notification::Event::PRODUCER_SEND,       "producer.send"      },
-		{ FBS::Notification::Event::DATAPRODUCER_SEND,   "dataProducer.send"  },
+		{ FBS::Notification::Event::DATAPRODUCER_SEND,   "dataProducer.send"  }
 	};
 	// clang-format on
 

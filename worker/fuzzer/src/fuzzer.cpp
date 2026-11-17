@@ -131,13 +131,7 @@ namespace
 			std::cout << "[fuzzer] all fuzzers enabled" << std::endl;
 
 			enabledFuzzers = {
-				.stun   = true,
-				.dtls   = true,
-				.sctp   = true,
-				.rtp    = true,
-				.rtcp   = true,
-				.codecs = true,
-				.utils  = true,
+				.stun = true, .dtls = true, .sctp = true, .rtp = true, .rtcp = true, .codecs = true, .utils = true
 			};
 		}
 

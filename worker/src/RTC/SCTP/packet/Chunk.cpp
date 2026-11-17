@@ -62,7 +62,7 @@ namespace RTC
 			{ Chunk::ChunkType::FORWARD_TSN,       "FORWARD-TSN"       },
 			{ Chunk::ChunkType::RE_CONFIG,         "RE-CONFIG"         },
 			{ Chunk::ChunkType::I_DATA,            "I-DATA"            },
-			{ Chunk::ChunkType::I_FORWARD_TSN,     "I-FORWARD-TSN"     },
+			{ Chunk::ChunkType::I_FORWARD_TSN,     "I-FORWARD-TSN"     }
 		};
 		// clang-format on
 

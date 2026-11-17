@@ -13,7 +13,8 @@ SCENARIO("SCTP UnwrappedSequenceNumber", "[sctp]")
 		TestSequence s0 = unwrapper.Unwrap(0);
 		TestSequence s1 = unwrapper.Unwrap(1);
 		TestSequence s2 = unwrapper.Unwrap(2);
-		TestSequence s3 = unwrapper.Unwrap(3);
+
+		const TestSequence s3 = unwrapper.Unwrap(3);
 
 		REQUIRE(s0 < s1);
 		REQUIRE(s0 < s2);
@@ -34,12 +35,15 @@ SCENARIO("SCTP UnwrappedSequenceNumber", "[sctp]")
 		REQUIRE(s3 > s2);
 
 		s0.Increment();
+
 		REQUIRE(s0 == s1);
 
 		s1.Increment();
+
 		REQUIRE(s1 == s2);
 
 		s2.Increment();
+
 		REQUIRE(s2 == s3);
 
 		REQUIRE(TestSequence::AddTo(s0, 2) == s3);
@@ -52,7 +56,8 @@ SCENARIO("SCTP UnwrappedSequenceNumber", "[sctp]")
 		TestSequence s0 = unwrapper.Unwrap(0x7FFE);
 		TestSequence s1 = unwrapper.Unwrap(0x7FFF);
 		TestSequence s2 = unwrapper.Unwrap(0x8000);
-		TestSequence s3 = unwrapper.Unwrap(0x8001);
+
+		const TestSequence s3 = unwrapper.Unwrap(0x8001);
 
 		REQUIRE(s0 < s1);
 		REQUIRE(s0 < s2);
@@ -73,12 +78,15 @@ SCENARIO("SCTP UnwrappedSequenceNumber", "[sctp]")
 		REQUIRE(s3 > s2);
 
 		s0.Increment();
+
 		REQUIRE(s0 == s1);
 
 		s1.Increment();
+
 		REQUIRE(s1 == s2);
 
 		s2.Increment();
+
 		REQUIRE(s2 == s3);
 
 		REQUIRE(TestSequence::AddTo(s0, 2) == s3);
@@ -91,7 +99,8 @@ SCENARIO("SCTP UnwrappedSequenceNumber", "[sctp]")
 		TestSequence s0 = unwrapper.Unwrap(0xFFFE);
 		TestSequence s1 = unwrapper.Unwrap(0xFFFF);
 		TestSequence s2 = unwrapper.Unwrap(0x0000);
-		TestSequence s3 = unwrapper.Unwrap(0x0001);
+
+		const TestSequence s3 = unwrapper.Unwrap(0x0001);
 
 		REQUIRE(s0 < s1);
 		REQUIRE(s0 < s2);
@@ -112,12 +121,15 @@ SCENARIO("SCTP UnwrappedSequenceNumber", "[sctp]")
 		REQUIRE(s3 > s2);
 
 		s0.Increment();
+
 		REQUIRE(s0 == s1);
 
 		s1.Increment();
+
 		REQUIRE(s1 == s2);
 
 		s2.Increment();
+
 		REQUIRE(s2 == s3);
 
 		REQUIRE(TestSequence::AddTo(s0, 2) == s3);
@@ -128,7 +140,8 @@ SCENARIO("SCTP UnwrappedSequenceNumber", "[sctp]")
 		TestSequence::Unwrapper unwrapper;
 
 		const TestSequence s0 = unwrapper.Unwrap(0);
-		TestSequence prev     = s0;
+
+		TestSequence prev = s0;
 
 		for (uint32_t i{ 1 }; i < 65536 * 3; ++i)
 		{
@@ -146,8 +159,7 @@ SCENARIO("SCTP UnwrappedSequenceNumber", "[sctp]")
 	{
 		TestSequence::Unwrapper unwrapper;
 
-		TestSequence s0   = unwrapper.Unwrap(0);
-		TestSequence prev = s0;
+		TestSequence s0 = unwrapper.Unwrap(0);
 
 		for (uint32_t i{ 1 }; i < 65536 * 2; ++i)
 		{
@@ -155,9 +167,8 @@ SCENARIO("SCTP UnwrappedSequenceNumber", "[sctp]")
 			const TestSequence si = unwrapper.Unwrap(wrapped);
 
 			s0.Increment();
-			REQUIRE(s0 == si);
 
-			prev = si;
+			REQUIRE(s0 == si);
 		}
 	}
 

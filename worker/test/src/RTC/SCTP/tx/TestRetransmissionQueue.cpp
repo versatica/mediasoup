@@ -458,8 +458,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    10,
 		    Arwnd,
 		    {
-		      { 2, 2 },
-		})
+		      { 2, 2 }
+    })
 		    .get());
 
 		REQUIRE(
@@ -489,8 +489,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    10,
 		    Arwnd,
 		    {
-		      { 2, 3 },
-		})
+		      { 2, 3 }
+    })
 		    .get());
 
 		// Send 14.
@@ -512,8 +512,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    10,
 		    Arwnd,
 		    {
-		      { 2, 4 },
-		})
+		      { 2, 4 }
+    })
 		    .get());
 
 		REQUIRE(
@@ -1092,8 +1092,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    9,
 		    Arwnd,
 		    {
-		      { 4, 4 },
-		})
+		      { 4, 4 }
+    })
 		    .get());
 
 		REQUIRE(
@@ -1298,8 +1298,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    9,
 		    Arwnd,
 		    {
-		      { 11, 16 },
-		})
+		      { 11, 16 }
+    })
 		    .get());
 
 		REQUIRE(
@@ -1332,8 +1332,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    9,
 		    Arwnd,
 		    {
-		      { 3, 4 },
-		})
+		      { 3, 4 }
+    })
 		    .get());
 
 		REQUIRE(
@@ -1377,8 +1377,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    9,
 		    Arwnd,
 		    {
-		      { 1, 5 },
-		})
+		      { 1, 5 }
+    })
 		    .get());
 
 		REQUIRE(
@@ -1755,8 +1755,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    9,
 		    Arwnd,
 		    {
-		      { 2, 2 },
-		})
+		      { 2, 2 }
+    })
 		    .get());
 
 		REQUIRE(
@@ -1778,8 +1778,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    9,
 		    Arwnd,
 		    {
-		      { 2, 3 },
-		})
+		      { 2, 3 }
+    })
 		    .get());
 
 		REQUIRE(
@@ -1806,8 +1806,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    9,
 		    Arwnd,
 		    {
-		      { 2, 4 },
-		})
+		      { 2, 4 }
+    })
 		    .get());
 
 		REQUIRE(

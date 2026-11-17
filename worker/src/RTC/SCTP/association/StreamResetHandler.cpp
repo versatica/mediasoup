@@ -33,8 +33,7 @@ namespace RTC
 		        .baseTimeoutMs       = 0,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = std::nullopt,
-		        .maxRestarts         = std::nullopt,
-		      })),
+		        .maxRestarts         = std::nullopt })),
 		    nextOutgoingReqSeqNbr(tcbContext->GetLocalInitialTsn()),
 		    lastProcessedReqSeqNbr(
 		      this->incomingReConfigRequestSnUnwrapper.Unwrap(tcbContext->GetRemoteInitialTsn() - 1)),
@@ -457,7 +456,7 @@ namespace RTC
 					this->deferredIncomingRequest = DeferredIncomingRequest{
 						.senderLastAssignedTsn =
 						  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn(),
-						.streamIds = receivedOutgoingSsnResetRequestParameter->GetStreamIds(),
+						.streamIds = receivedOutgoingSsnResetRequestParameter->GetStreamIds()
 					};
 				}
 

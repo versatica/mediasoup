@@ -4,6 +4,7 @@
 #include "RTC/RTP/RtpStream.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include <cmath> // std::round()
 
 namespace RTC
 {
@@ -189,7 +190,7 @@ namespace RTC
 			// If the new packet sequence number is greater than the max seen but not
 			// "so much bigger", accept it.
 			// NOTE: udelta also handles the case of a new cycle, this is:
-			//    maxSeq:65536, seq:0 => udelta:1
+			//    maxSeq:65535, seq:0 => udelta:1
 			if (udelta < MaxDropout)
 			{
 				// In order, with permissible gap.
@@ -256,7 +257,7 @@ namespace RTC
 					  packet->GetSsrc(),
 					  packet->GetSequenceNumber());
 
-					this->badSeq = (seq + 1) & (RtpSeqMod - 1);
+					this->badSeq = (seq + 1U) & (RtpSeqMod - 1);
 
 					// Packet discarded due to late or early arriving.
 					this->packetsDiscarded++;
@@ -313,7 +314,7 @@ namespace RTC
 
 			const auto previousScore = this->score;
 
-			// Compute new effective score taking into accout entries in the histogram.
+			// Compute new effective score taking into account entries in the histogram.
 			this->scores.push_back(score);
 
 			/*
@@ -332,11 +333,11 @@ namespace RTC
 			size_t samples{ 0 };
 			size_t totalScore{ 0 };
 
-			for (const auto score : this->scores)
+			for (const auto historyScore : this->scores)
 			{
 				weight++;
 				samples += weight;
-				totalScore += weight * score;
+				totalScore += weight * historyScore;
 			}
 
 			// clang-tidy "thinks" that this can lead to division by zero but we are

@@ -15,13 +15,13 @@ namespace RTC
 	const ankerl::unordered_dense::map<std::string, RtpCodecMimeType::Type> RtpCodecMimeType::String2Type =
 	{
 		{ "audio", RtpCodecMimeType::Type::AUDIO },
-		{ "video", RtpCodecMimeType::Type::VIDEO },
+		{ "video", RtpCodecMimeType::Type::VIDEO }
 	};
 	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const ankerl::unordered_dense::map<RtpCodecMimeType::Type, std::string> RtpCodecMimeType::Type2String =
 	{
 		{ RtpCodecMimeType::Type::AUDIO, "audio" },
-		{ RtpCodecMimeType::Type::VIDEO, "video" },
+		{ RtpCodecMimeType::Type::VIDEO, "video" }
 	};
 	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const ankerl::unordered_dense::map<std::string, RtpCodecMimeType::Subtype> RtpCodecMimeType::String2Subtype =
@@ -48,7 +48,7 @@ namespace RTC
 		{ "ulpfec",          RtpCodecMimeType::Subtype::ULPFEC          },
 		{ "flexfec",         RtpCodecMimeType::Subtype::FLEXFEC         },
 		{ "x-ulpfecuc",      RtpCodecMimeType::Subtype::X_ULPFECUC      },
-		{ "red",             RtpCodecMimeType::Subtype::RED             },
+		{ "red",             RtpCodecMimeType::Subtype::RED             }
 	};
 	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 	const ankerl::unordered_dense::map<RtpCodecMimeType::Subtype, std::string> RtpCodecMimeType::Subtype2String =
@@ -75,7 +75,7 @@ namespace RTC
 		{ RtpCodecMimeType::Subtype::ULPFEC,          "ulpfec"          },
 		{ RtpCodecMimeType::Subtype::FLEXFEC,         "flexfec"         },
 		{ RtpCodecMimeType::Subtype::X_ULPFECUC,      "x-ulpfecuc"      },
-		{ RtpCodecMimeType::Subtype::RED,             "red"             },
+		{ RtpCodecMimeType::Subtype::RED,             "red"             }
 	};
 	// clang-format on
 

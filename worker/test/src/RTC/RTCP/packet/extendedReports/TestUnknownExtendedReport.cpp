@@ -92,7 +92,7 @@ SCENARIO("RTCP XR Unknown Extended Report", "[serializable][rtcp][extendedreport
 		};
 		// clang-format on
 
-		std::unique_ptr<RTC::RTCP::UnknownExtendedReport> extendedReport{
+		const std::unique_ptr<RTC::RTCP::UnknownExtendedReport> extendedReport{
 			RTC::RTCP::UnknownExtendedReport::Parse(buffer, sizeof(buffer))
 		};
 
@@ -114,7 +114,7 @@ SCENARIO("RTCP XR Unknown Extended Report", "[serializable][rtcp][extendedreport
 	{
 		// Less bytes than the Extended Report block header.
 		// clang-format off
-		alignas(4) uint8_t buffer1[] =
+		alignas(4) const uint8_t buffer1[] =
 		{
 			0x2A, 0x00, 0x00
 		};
@@ -124,7 +124,7 @@ SCENARIO("RTCP XR Unknown Extended Report", "[serializable][rtcp][extendedreport
 
 		// Block length field announces more bytes than the buffer has.
 		// clang-format off
-		alignas(4) uint8_t buffer2[] =
+		alignas(4) const uint8_t buffer2[] =
 		{
 			// BT: 42, Type-specific: 0, Block length: 2
 			0x2A, 0x00, 0x00, 0x02,

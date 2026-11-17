@@ -16,6 +16,7 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 
 	constexpr std::string_view ConsentCheckTimerLabel{ "ice-server-consent-check" };
 	constexpr uint8_t ConsentTimeoutSec{ 30 };
+
 	// One more than the maximum number of tuples the IceServer stores.
 	constexpr size_t TooManyTuples{ 9 };
 
@@ -221,8 +222,9 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 
 	SECTION("constructor and destructor notify the listener")
 	{
-		auto remoteAddress = makeRemoteAddress(10001);
-		auto tuple         = makeTuple(remoteAddress);
+		const auto remoteAddress = makeRemoteAddress(10001);
+
+		auto tuple = makeTuple(remoteAddress);
 
 		auto iceServer = std::make_unique<RTC::ICE::IceServer>(
 		  std::addressof(listener), std::addressof(shared), usernameFragment, password, ConsentTimeoutSec);
@@ -248,8 +250,9 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 
 	SECTION("Binding request without USE-CANDIDATE moves to 'connected'")
 	{
-		auto remoteAddress = makeRemoteAddress(10001);
-		auto tuple         = makeTuple(remoteAddress);
+		const auto remoteAddress = makeRemoteAddress(10001);
+
+		auto tuple = makeTuple(remoteAddress);
 
 		RTC::ICE::IceServer iceServer(
 		  std::addressof(listener), std::addressof(shared), usernameFragment, password, ConsentTimeoutSec);
@@ -281,8 +284,9 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 
 	SECTION("Binding request with USE-CANDIDATE moves to 'completed'")
 	{
-		auto remoteAddress = makeRemoteAddress(10001);
-		auto tuple         = makeTuple(remoteAddress);
+		const auto remoteAddress = makeRemoteAddress(10001);
+
+		auto tuple = makeTuple(remoteAddress);
 
 		RTC::ICE::IceServer iceServer(
 		  std::addressof(listener), std::addressof(shared), usernameFragment, password, ConsentTimeoutSec);
@@ -304,8 +308,9 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 
 	SECTION("invalid Binding request is replied with an error and changes nothing")
 	{
-		auto remoteAddress = makeRemoteAddress(10001);
-		auto tuple         = makeTuple(remoteAddress);
+		const auto remoteAddress = makeRemoteAddress(10001);
+
+		auto tuple = makeTuple(remoteAddress);
 
 		RTC::ICE::IceServer iceServer(
 		  std::addressof(listener), std::addressof(shared), usernameFragment, password, ConsentTimeoutSec);
@@ -376,10 +381,11 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 
 	SECTION("renomination in 'completed' state only accepts a higher nomination")
 	{
-		auto remoteAddress1 = makeRemoteAddress(10001);
-		auto remoteAddress2 = makeRemoteAddress(10002);
-		auto tuple1         = makeTuple(remoteAddress1);
-		auto tuple2         = makeTuple(remoteAddress2);
+		const auto remoteAddress1 = makeRemoteAddress(10001);
+		const auto remoteAddress2 = makeRemoteAddress(10002);
+
+		auto tuple1 = makeTuple(remoteAddress1);
+		auto tuple2 = makeTuple(remoteAddress2);
 
 		RTC::ICE::IceServer iceServer(
 		  std::addressof(listener), std::addressof(shared), usernameFragment, password, ConsentTimeoutSec);
@@ -426,10 +432,11 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 
 	SECTION("nomination not higher than the current one does not move from 'connected' to 'completed'")
 	{
-		auto remoteAddress1 = makeRemoteAddress(10001);
-		auto remoteAddress2 = makeRemoteAddress(10002);
-		auto tuple1         = makeTuple(remoteAddress1);
-		auto tuple2         = makeTuple(remoteAddress2);
+		const auto remoteAddress1 = makeRemoteAddress(10001);
+		const auto remoteAddress2 = makeRemoteAddress(10002);
+
+		auto tuple1 = makeTuple(remoteAddress1);
+		auto tuple2 = makeTuple(remoteAddress2);
 
 		RTC::ICE::IceServer iceServer(
 		  std::addressof(listener), std::addressof(shared), usernameFragment, password, ConsentTimeoutSec);
@@ -463,10 +470,11 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 
 	SECTION("removing the selected tuple selects another one or moves to 'disconnected'")
 	{
-		auto remoteAddress1 = makeRemoteAddress(10001);
-		auto remoteAddress2 = makeRemoteAddress(10002);
-		auto tuple1         = makeTuple(remoteAddress1);
-		auto tuple2         = makeTuple(remoteAddress2);
+		const auto remoteAddress1 = makeRemoteAddress(10001);
+		const auto remoteAddress2 = makeRemoteAddress(10002);
+
+		auto tuple1 = makeTuple(remoteAddress1);
+		auto tuple2 = makeTuple(remoteAddress2);
 
 		RTC::ICE::IceServer iceServer(
 		  std::addressof(listener), std::addressof(shared), usernameFragment, password, ConsentTimeoutSec);
@@ -555,8 +563,9 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 
 	SECTION("consent expires if no Binding request is received on time")
 	{
-		auto remoteAddress = makeRemoteAddress(10001);
-		auto tuple         = makeTuple(remoteAddress);
+		const auto remoteAddress = makeRemoteAddress(10001);
+
+		auto tuple = makeTuple(remoteAddress);
 
 		RTC::ICE::IceServer iceServer(
 		  std::addressof(listener), std::addressof(shared), usernameFragment, password, ConsentTimeoutSec);
@@ -618,8 +627,9 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 
 	SECTION("consent timeout is disabled with 0 and clamped otherwise")
 	{
-		auto remoteAddress = makeRemoteAddress(10001);
-		auto tuple         = makeTuple(remoteAddress);
+		const auto remoteAddress = makeRemoteAddress(10001);
+
+		auto tuple = makeTuple(remoteAddress);
 
 		// Each case is given its own IceServer, which destroys its timer when the
 		// case ends.
@@ -663,9 +673,9 @@ SCENARIO("ICE IceServer", "[ice][iceserver]")
 	{
 		const std::string newUsernameFragment{ "newserverufrag" };
 		const std::string newPassword{ "newserverpassword" };
+		const auto remoteAddress = makeRemoteAddress(10001);
 
-		auto remoteAddress = makeRemoteAddress(10001);
-		auto tuple         = makeTuple(remoteAddress);
+		auto tuple = makeTuple(remoteAddress);
 
 		RTC::ICE::IceServer iceServer(
 		  std::addressof(listener), std::addressof(shared), usernameFragment, password, ConsentTimeoutSec);

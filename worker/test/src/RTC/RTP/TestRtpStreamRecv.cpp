@@ -21,7 +21,7 @@
 // 17: 16 bit mask + the initial sequence number.
 static constexpr size_t MaxRequestedPackets{ 17 };
 static constexpr uint32_t SendNackDelay{ 0 }; // In ms.
-static const bool UseRtpInactivityCheck{ false };
+static constexpr bool UseRtpInactivityCheck{ false };
 
 SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 {
@@ -91,7 +91,8 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 							for (const RTC::RTCP::NackPacket::Item& item : nackPacket->GetItems())
 							{
 								const uint16_t firstSeq = item.packetId;
-								uint16_t bitmask        = item.lostPacketBitmask;
+
+								uint16_t bitmask = item.lostPacketBitmask;
 
 								this->nackedSeqNumbers.push_back(firstSeq);
 
@@ -165,22 +166,20 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 	};
 	// clang-format on
 
-	std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, 12, 12 + 4) };
+	const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, 12, 12 + 4) };
 
 	if (!packet)
 	{
 		FAIL("not a RTP packet");
 	}
 
-	RTC::RTP::RtpStream::Params params;
-
-	params.ssrc           = packet->GetSsrc();
-	params.rtxSsrc        = 1234;
-	params.rtxPayloadType = 96;
-	params.clockRate      = 90000;
-	params.useNack        = true;
-	params.usePli         = true;
-	params.useFir         = false;
+	RTC::RTP::RtpStream::Params params{ .ssrc           = packet->GetSsrc(),
+	                                    .clockRate      = 90000,
+	                                    .rtxSsrc        = 1234,
+	                                    .rtxPayloadType = 96,
+	                                    .useNack        = true,
+	                                    .usePli         = true,
+	                                    .useFir         = false };
 
 	SECTION("NACK one packet")
 	{
@@ -199,6 +198,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 
 		REQUIRE(listener.nackedSeqNumbers.size() == 1);
 		REQUIRE(listener.nackedSeqNumbers[0] == 2);
+
 		listener.nackedSeqNumbers.clear();
 
 		packet->SetSequenceNumber(2);
@@ -300,8 +300,8 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 
 		// Sequence number 6 arrives via RTX before the original RTP packet.
 
-		auto originalSsrc        = packet->GetSsrc();
-		auto originalPayloadType = packet->GetPayloadType();
+		const auto originalSsrc        = packet->GetSsrc();
+		const auto originalPayloadType = packet->GetPayloadType();
 
 		packet->SetSequenceNumber(6);
 		packet->RtxEncode(params.rtxPayloadType, params.rtxSsrc, 1000 /*seq=*/);
@@ -329,6 +329,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(listener.nackedSeqNumbers.size() == 2);
 		REQUIRE(listener.nackedSeqNumbers[0] == 0xffff);
 		REQUIRE(listener.nackedSeqNumbers[1] == 0);
+
 		listener.nackedSeqNumbers.clear();
 	}
 
@@ -341,11 +342,9 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		const auto receiveDelaySinceLastRr =
 		  [&](int64_t receivedAtUs, uint32_t lastRr, uint32_t dlrr) -> std::optional<float>
 		{
-			const RTC::RTCP::DlrrExtendedReport::SubBlock subBlock{
-				.ssrc                         = params.ssrc,
-				.lastReceiverReport           = lastRr,
-				.delaySinceLastReceiverReport = dlrr,
-			};
+			const RTC::RTCP::DlrrExtendedReport::SubBlock subBlock{ .ssrc               = params.ssrc,
+			                                                        .lastReceiverReport = lastRr,
+			                                                        .delaySinceLastReceiverReport = dlrr };
 
 			return rtpStream.ReceiveRtcpDlrrSubBlock(subBlock, receivedAtUs);
 		};
@@ -359,30 +358,30 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 
 		// The Receiver Reference Time is sent 1 second before the wrap, the remote
 		// endpoint holds it for half a second, and its answer arrives right at the wrap.
-		REQUIRE(receiveDelaySinceLastRr(WrapUs, 0xFFFF0000, 0x8000) == 500.0f);
+		REQUIRE(receiveDelaySinceLastRr(WrapUs, 0xFFFF0000, 0x8000) == 500.0F);
 
-		REQUIRE(rtpStream.GetRttMs() == 500.0f);
+		REQUIRE(rtpStream.GetRttMs() == 500.0F);
 
 		// No Receiver Reference Time was received by the remote endpoint yet, so
 		// nothing is measured and the last RTT is kept.
 		REQUIRE(receiveDelaySinceLastRr(WrapUs, 0, 0) == std::nullopt);
 
-		REQUIRE(rtpStream.GetRttMs() == 500.0f);
+		REQUIRE(rtpStream.GetRttMs() == 500.0F);
 
 		// The remote endpoint answers the Receiver Reference Time right away.
-		REQUIRE(receiveDelaySinceLastRr((10 * 1000000) + 500000, 0x000A0000, 0) == 500.0f);
+		REQUIRE(receiveDelaySinceLastRr((10 * 1000000) + 500000, 0x000A0000, 0) == 500.0F);
 
-		REQUIRE(rtpStream.GetRttMs() == 500.0f);
+		REQUIRE(rtpStream.GetRttMs() == 500.0F);
 
 		// A negative RTT yields 1 millisecond.
-		REQUIRE(receiveDelaySinceLastRr(20 * 1000000, 0x00140000, 0x8000) == 1.0f);
+		REQUIRE(receiveDelaySinceLastRr(20 * 1000000, 0x00140000, 0x8000) == 1.0F);
 
-		REQUIRE(rtpStream.GetRttMs() == 1.0f);
+		REQUIRE(rtpStream.GetRttMs() == 1.0F);
 
 		// So does a RTT too small to be true.
-		REQUIRE(receiveDelaySinceLastRr(20 * 1000000, 0x0013FFFF, 0) == 1.0f);
+		REQUIRE(receiveDelaySinceLastRr(20 * 1000000, 0x0013FFFF, 0) == 1.0F);
 
-		REQUIRE(rtpStream.GetRttMs() == 1.0f);
+		REQUIRE(rtpStream.GetRttMs() == 1.0F);
 	}
 
 	SECTION("require key frame")

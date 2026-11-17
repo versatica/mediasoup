@@ -140,7 +140,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		REQUIRE(sentHeartbeatInfoParameter);
 		REQUIRE(sentHeartbeatInfoParameter->HasInfo());
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    sentHeartbeatInfoParameter->GetBuffer(),
 		    sentHeartbeatInfoParameter->GetLength(),
 		    receivedHeartbeatInfoParameter->GetBuffer(),

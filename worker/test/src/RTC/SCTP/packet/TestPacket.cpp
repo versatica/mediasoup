@@ -144,7 +144,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 6
 			0x00, 0x01, 0x00, 0x06,
 			// Heartbeat Information (2 bytes): 0x1122, 2 bytes of padding
-			0x11, 0x22, 0x00, 0x00,
+			0x11, 0x22, 0x00, 0x00
 		};
 		// clang-format on
 

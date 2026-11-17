@@ -20,7 +20,7 @@ namespace RTC
 			{ ReconfigurationResponseParameter::Result::ERROR_WRONG_SSN,                   "ERROR_WRONG_SSN"                   },
 			{ ReconfigurationResponseParameter::Result::ERROR_REQUEST_ALREADY_IN_PROGRESS, "ERROR_REQUEST_ALREADY_IN_PROGRESS" },
 			{ ReconfigurationResponseParameter::Result::ERROR_BAD_SEQUENCE_NUMBER,         "ERROR_BAD_SEQUENCE_NUMBER"         },
-			{ ReconfigurationResponseParameter::Result::IN_PROGRESS,                       "IN_PROGRESS"                       },
+			{ ReconfigurationResponseParameter::Result::IN_PROGRESS,                       "IN_PROGRESS"                       }
 		};
 		// clang-format on
 

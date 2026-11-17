@@ -15,7 +15,7 @@ namespace RTC
 		{
 			{ AnyPayloadSpecificFeedbackPacket::MessageType::PLI, "PLI" },
 			{ AnyPayloadSpecificFeedbackPacket::MessageType::FIR, "FIR" },
-			{ AnyPayloadSpecificFeedbackPacket::MessageType::AFB, "AFB" },
+			{ AnyPayloadSpecificFeedbackPacket::MessageType::AFB, "AFB" }
 		};
 		// clang-format on
 

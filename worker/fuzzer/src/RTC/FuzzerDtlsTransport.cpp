@@ -44,7 +44,7 @@ void FuzzerRtcDtlsTransport::Fuzz(const uint8_t* data, size_t len)
 		const RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint{
 			.algorithm = static_cast<RTC::DtlsTransport::FingerprintAlgorithm>(
 			  Utils::Crypto::GetRandomUInt<uint16_t>(1, 5)),
-			.value = Utils::Crypto::GetRandomString(Utils::Crypto::GetRandomUInt<uint16_t>(3, 20)),
+			.value = Utils::Crypto::GetRandomString(Utils::Crypto::GetRandomUInt<uint16_t>(3, 20))
 		};
 
 		dtlsTransport->Run(localRole);

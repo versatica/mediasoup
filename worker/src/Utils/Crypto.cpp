@@ -180,10 +180,9 @@ namespace Utils
 
 		char buffer[64];
 
-		static constexpr char Chars[] = {
-			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
-			'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-		};
+		static constexpr char Chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
+		                                  'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+		                                  'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
 		len = std::min<size_t>(len, 64);
 
@@ -230,10 +229,9 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		const OSSL_PARAM sha1[] = {
-			OSSL_PARAM_construct_utf8_string("digest", const_cast<char*>("sha1"), 0),
-			OSSL_PARAM_construct_end(),
-		};
+		const OSSL_PARAM sha1[] = { OSSL_PARAM_construct_utf8_string(
+			                            "digest", const_cast<char*>("sha1"), 0),
+		                            OSSL_PARAM_construct_end() };
 
 		int ret;
 

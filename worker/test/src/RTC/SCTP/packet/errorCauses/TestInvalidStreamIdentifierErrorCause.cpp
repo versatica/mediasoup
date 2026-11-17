@@ -94,7 +94,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
 			// Stream Identifier: 12345
-			0x30, 0x39, 0x00, 0x00,
+			0x30, 0x39, 0x00, 0x00
 		};
 		// clang-format on
 

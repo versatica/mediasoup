@@ -85,7 +85,7 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
 			// TSN: 987654321
-			0x3A, 0xDE, 0x68, 0xB1,
+			0x3A, 0xDE, 0x68, 0xB1
 		};
 		// clang-format on
 
@@ -98,7 +98,7 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 			// Code:9 (NO-USER-DATA), Length: 7
 			0x00, 0x09, 0x00, 0x07,
 			// TSN: 987654321
-			0x3A, 0xDE, 0x68,
+			0x3A, 0xDE, 0x68
 		};
 		// clang-format on
 

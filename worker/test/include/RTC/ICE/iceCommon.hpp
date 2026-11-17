@@ -35,7 +35,7 @@ namespace iceCommon
 	void ResetBuffers();
 } // namespace iceCommon
 
-// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define CHECK_STUN_PACKET(                                                                               \
   /*const RTC::ICE::StunPacket**/ packet,                                                                \
   /*const uint8_t**/ buffer,                                                                             \
@@ -67,8 +67,10 @@ namespace iceCommon
 		REQUIRE(RTC::ICE::StunPacket::IsStun(buffer, length) == true);                                       \
 		REQUIRE(packet);                                                                                     \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                             \
+                                                                                                         \
 		const std::vector<uint8_t> originalBuffer(                                                           \
 		  packet->GetBuffer(), packet->GetBuffer() + packet->GetBufferLength());                             \
+                                                                                                         \
 		REQUIRE(packet->GetBuffer() == buffer);                                                              \
 		REQUIRE(packet->GetBufferLength() != 0);                                                             \
 		REQUIRE(packet->GetBufferLength() == bufferLength);                                                  \
@@ -103,7 +105,9 @@ namespace iceCommon
 		  packet->HasAttribute(RTC::ICE::StunPacket::AttributeType::XOR_MAPPED_ADDRESS) ==                   \
 		  hasXorMappedAddress);                                                                              \
 		REQUIRE(packet->HasAttribute(RTC::ICE::StunPacket::AttributeType::ERROR_CODE) == hasErrorCode);      \
+                                                                                                         \
 		std::string_view obtainedErrorReasonPhrase;                                                          \
+                                                                                                         \
 		REQUIRE(packet->GetErrorCode(obtainedErrorReasonPhrase) == errorCode);                               \
 		REQUIRE(obtainedErrorReasonPhrase == errorReasonPhrase);                                             \
 		REQUIRE(                                                                                             \
@@ -111,12 +115,14 @@ namespace iceCommon
 		  hasMessageIntegrity);                                                                              \
 		REQUIRE(                                                                                             \
 		  packet->HasAttribute(RTC::ICE::StunPacket::AttributeType::FINGERPRINT) == hasFingerprint);         \
+                                                                                                         \
 		if (hasMessageIntegrity || hasFingerprint)                                                           \
 		{                                                                                                    \
 			REQUIRE(packet->IsProtected());                                                                    \
 			REQUIRE_THROWS_AS(packet->Protect(), MediaSoupError);                                              \
 			REQUIRE_THROWS_AS(packet->AddUsername("foo"), MediaSoupError);                                     \
 		}                                                                                                    \
+                                                                                                         \
 		REQUIRE(                                                                                             \
 		  std::ranges::any_of(                                                                               \
 		    packet->GetTransactionId(),                                                                      \
@@ -131,6 +137,7 @@ namespace iceCommon
 		  RTC::ICE::StunPacket::AuthenticationResult::OK);                                                   \
 		REQUIRE(                                                                                             \
 		  packet->CheckAuthentication("kasjdhaksjhd") != RTC::ICE::StunPacket::AuthenticationResult::OK);    \
+                                                                                                         \
 		if (                                                                                                 \
 		  packet->HasAttribute(RTC::ICE::StunPacket::AttributeType::MESSAGE_INTEGRITY) ||                    \
 		  packet->HasAttribute(RTC::ICE::StunPacket::AttributeType::FINGERPRINT))                            \
@@ -138,13 +145,14 @@ namespace iceCommon
 			REQUIRE_THROWS_AS(packet->Protect("isoiulkajdlkja"), MediaSoupError);                              \
 			REQUIRE_THROWS_AS(packet->Protect(), MediaSoupError);                                              \
 		}                                                                                                    \
+                                                                                                         \
 		REQUIRE_THROWS_AS(                                                                                   \
 		  const_cast<RTC::ICE::StunPacket*>(packet)->Serialize(iceCommon::ThrowBuffer, length - 1),          \
 		  MediaSoupError);                                                                                   \
 		REQUIRE_THROWS_AS(packet->Clone(iceCommon::ThrowBuffer, length - 1), MediaSoupError);                \
 		REQUIRE(packet->Validate(/*storeAttributes*/ false));                                                \
 		REQUIRE(                                                                                             \
-		  helpers::areBuffersEqual(                                                                          \
+		  helpers::AreBuffersEqual(                                                                          \
 		    packet->GetBuffer(), packet->GetBufferLength(), originalBuffer.data(), originalBuffer.size()) == \
 		  true);                                                                                             \
 	} while (false)

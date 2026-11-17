@@ -148,7 +148,7 @@ namespace RTC
 
 			void SetRtx(uint8_t payloadType, uint32_t ssrc) override;
 
-			ReceivePacketResult ReceivePacket(RTP::Packet* packet);
+			ReceivePacketResult ReceivePacket(const RTP::Packet* packet);
 
 			void ReceiveRtcpNackPacket(const RTC::RTCP::NackPacket* nackPacket);
 
@@ -270,7 +270,8 @@ namespace RTC
 			// Payload bytes of everything sent, leaving out RTP headers and padding,
 			// which is what the octet count of a Sender Report tells.
 			uint64_t sentPayloadBytes{ 0 };
-			std::unique_ptr<RTP::RetransmissionBuffer> retransmissionBuffer;
+			// Only created if NACK is enabled.
+			const std::unique_ptr<RTP::RetransmissionBuffer> retransmissionBuffer;
 			// Sequence numbers requested by received NACKs and not retransmitted yet,
 			// in the order they were requested.
 			std::deque<uint16_t> pendingRetransmissionsQueue;

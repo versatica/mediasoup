@@ -63,7 +63,7 @@ namespace RTC
 				.expiresAtUs        = sendMessageOptions.lifetimeMs.has_value()
 				                        ? nowUs + (sendMessageOptions.lifetimeMs.value() * 1000) + 1
 				                        : Types::ExpiresAtUsInfinite,
-				.lifecycleId        = sendMessageOptions.lifecycleId,
+				.lifecycleId        = sendMessageOptions.lifecycleId
 			};
 
 			const uint16_t streamId = message.GetStreamId();

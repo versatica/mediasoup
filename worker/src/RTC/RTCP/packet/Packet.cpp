@@ -22,7 +22,7 @@ namespace RTC
 			{ Packet::PacketType::BYE,   "BYE"   },
 			{ Packet::PacketType::RTPFB, "RTPFB" },
 			{ Packet::PacketType::PSFB,  "PSFB"  },
-			{ Packet::PacketType::XR,    "XR"    },
+			{ Packet::PacketType::XR,    "XR"    }
 		};
 		// clang-format on
 

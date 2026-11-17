@@ -6,7 +6,7 @@
 - Worker: Don’t take a template dependency structure older than the one in use ([PR #2047](https://github.com/versatica/mediasoup/pull/2047)).
 - New RTCP stack ([task #2049](https://github.com/versatica/mediasoup/issues/2049)).
 - Worker: Rewrite the Dependency Descriptor frame numbers across stream switches ([PR #2048](https://github.com/versatica/mediasoup/pull/2048)).
-- Modernize C++ code ([PR #2060](https://github.com/versatica/mediasoup/pull/2060)):
+- Modernize C++ code ([PR #2060](https://github.com/versatica/mediasoup/pull/2060), [PR #2063](https://github.com/versatica/mediasoup/pull/2063)):
   - Use `unique_ptr` instead of holding raw pointers.
   - `WebRtcTransport` and `WebRtcServer`: Use `announcedAddress` (it was missing).
   - Fix crash in `Producer.cpp`: An RTP packet with SSRC 0 matched encodings without `ssrc` (0 means "no SSRC") and hit an `MS_ASSERT` in `CreateRtpStream()`.

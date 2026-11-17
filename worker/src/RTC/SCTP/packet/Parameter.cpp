@@ -29,7 +29,7 @@ namespace RTC
 			{ Parameter::ParameterType::RECONFIGURATION_RESPONSE,     "RECONFIGURATION-RESPONSE"     },
 			{ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST, "ADD-OUTGOING-STREAMS-REQUEST" },
 			{ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST, "ADD-INCOMING-STREAMS-REQUEST" },
-			{ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,     "ZERO-CHECKSUM-ACCEPTABLE"     },
+			{ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,     "ZERO-CHECKSUM-ACCEPTABLE"     }
 		};
 		// clang-format on
 

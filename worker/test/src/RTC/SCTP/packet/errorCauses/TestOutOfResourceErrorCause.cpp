@@ -85,7 +85,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[serializable][sctp][errorcause]")
 		{
 			// Code:4 (OUT-OF-RESOURCE), Length: 5
 			0x00, 0x04, 0x00, 0x07,
-			0x3A,
+			0x3A
 		};
 		// clang-format on
 
@@ -96,7 +96,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[serializable][sctp][errorcause]")
 		alignas(4) uint8_t buffer3[] =
 		{
 			// Code:4 (OUT-OF-RESOURCE), length (broken)
-			0x00, 0x04, 0x00,
+			0x00, 0x04, 0x00
 		};
 		// clang-format on
 
