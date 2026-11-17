@@ -18,7 +18,7 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[serializable][sctp][chunk]"
 			// Type:11 (COOKIE-ACK), Flags:0x00000001, T: 1, Length: 4
 			0x0B, 0b00000101, 0x00, 0x04,
 			// Extra bytes that should be ignored
-			0xAA
+			0xAA,
 		};
 		// clang-format on
 

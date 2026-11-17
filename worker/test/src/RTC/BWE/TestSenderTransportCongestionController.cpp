@@ -105,10 +105,12 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		packet->SetSsrc(Ssrc);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{ RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
-			 TransportWideCc01Id,			                                              /*len*/ 2,
-			 rtpCommon::DataBuffer                                                                                    },
-			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME,        AbsSendTimeId, /*len*/ 3, rtpCommon::DataBuffer }
+			{
+			 RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
+			 TransportWideCc01Id, /*len*/ 2,
+			 rtpCommon::DataBuffer,
+			 },
+			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, AbsSendTimeId, /*len*/ 3, rtpCommon::DataBuffer },
 		};
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
@@ -206,8 +208,8 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 			  wideSeqNumber,
 			  arrivalUs,
 			  {
-			    { wideSeqNumber, arrivalUs }
-      });
+			    { wideSeqNumber, arrivalUs },
+			});
 
 			delayBuildupUs += delayPerPacketUs;
 
@@ -517,8 +519,8 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		  RemoteTimeUs,
 		  {
 		    { 1000, RemoteTimeUs         },
-        { 1001, RemoteTimeUs + 10000 }
-    });
+		    { 1001, RemoteTimeUs + 10000 },
+		});
 
 		senderTransportCongestionController.ReceiveTransportWideCcFeedback(feedback.get(), nowUs);
 

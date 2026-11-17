@@ -46,7 +46,7 @@ namespace RTC
 				  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext);
 
 				explicit DependencyDescriptorPayloadDescriptor(
-				  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor);
+				  std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor);
 
 				/* Pure virtual methods inherited from Codecs::PayloadDescriptor. */
 				~DependencyDescriptorPayloadDescriptor() override = default;

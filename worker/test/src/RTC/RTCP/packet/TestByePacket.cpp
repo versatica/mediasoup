@@ -26,7 +26,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 			// Reason length: 6, Reason: "foo"
 			0x06, 0x66, 0x6F, 0x6F,
 			// Reason: "bar", 1 byte of padding
-			0x62, 0x61, 0x72, 0x00
+			0x62, 0x61, 0x72, 0x00,
 		};
 		// clang-format on
 
@@ -171,7 +171,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 			0x03, 0x61, 0x62, 0x63,
 			// Padding: 8 bytes
 			0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x08
+			0x00, 0x00, 0x00, 0x08,
 		};
 		// clang-format on
 
@@ -221,7 +221,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 			0x00, 0x00, 0x04, 0x57,
 			// Padding: 8 bytes
 			0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x08
+			0x00, 0x00, 0x00, 0x08,
 		};
 		// clang-format on
 
@@ -276,7 +276,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 			// Reason length: 6, Reason: "foo"
 			0x06, 0x66, 0x6F, 0x6F,
 			// Reason: "bar", 1 byte of padding
-			0x62, 0x61, 0x72, 0x00
+			0x62, 0x61, 0x72, 0x00,
 		};
 		// clang-format on
 
@@ -298,7 +298,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 			// Reason length: 6, Reason: "foo"
 			0x06, 0x66, 0x6F, 0x6F,
 			// Reason: "bar", 1 byte of padding
-			0x62, 0x61, 0x72, 0x00
+			0x62, 0x61, 0x72, 0x00,
 		};
 		// clang-format on
 
@@ -319,7 +319,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 			// Reason length: 6, Reason: "foo"
 			0x06, 0x66, 0x6F, 0x6F,
 			// Reason: "bar", 1 byte of padding
-			0x62, 0x61, 0x72, 0x00
+			0x62, 0x61, 0x72, 0x00,
 		};
 		// clang-format on
 
@@ -337,7 +337,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 			// Reason length: 1, Reason: "a", 2 bytes of padding
 			0x01, 0x61, 0x00, 0x00,
 			// 4 extra bytes
-			0x11, 0x22, 0x33, 0x44
+			0x11, 0x22, 0x33, 0x44,
 		};
 		// clang-format on
 

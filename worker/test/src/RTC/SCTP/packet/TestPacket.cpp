@@ -36,7 +36,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 			// Verification Tag: 4294967285
 			0xFF, 0xFF, 0xFF, 0xF5,
 			// Checksum: 5
-			0x00, 0x00, 0x00, 0x05
+			0x00, 0x00, 0x00, 0x05,
 		};
 		// clang-format on
 

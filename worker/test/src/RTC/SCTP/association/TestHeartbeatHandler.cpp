@@ -31,7 +31,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		        .heartbeatIntervalMs         = heartbeatIntervalMs,
 		        .heartbeatIntervalIncludeRtt = false,
 		        .zeroChecksumAlternateErrorDetectionMethod =
-		          RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE }),
+		          RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE, }),
 		    tcbContext(this->associationListener, this->sctpOptions),
 		    shared(/*getTimeUs*/
 				       [this]() -> int64_t
@@ -140,7 +140,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		REQUIRE(sentHeartbeatInfoParameter);
 		REQUIRE(sentHeartbeatInfoParameter->HasInfo());
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    sentHeartbeatInfoParameter->GetBuffer(),
 		    sentHeartbeatInfoParameter->GetLength(),
 		    receivedHeartbeatInfoParameter->GetBuffer(),

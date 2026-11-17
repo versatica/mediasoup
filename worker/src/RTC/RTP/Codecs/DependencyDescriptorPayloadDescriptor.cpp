@@ -28,13 +28,13 @@ namespace RTC
 					return nullptr;
 				}
 
-				return new DependencyDescriptorPayloadDescriptor(dependencyDescriptor);
+				return new DependencyDescriptorPayloadDescriptor(std::move(dependencyDescriptor));
 			}
 
 			/* Instance methods. */
 
 			DependencyDescriptorPayloadDescriptor::DependencyDescriptorPayloadDescriptor(
-			  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor)
+			  std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor)
 			  : endOfFrame(dependencyDescriptor->endOfFrame),
 			    frameNumber(dependencyDescriptor->frameNumber),
 			    spatialLayer(dependencyDescriptor->spatialLayer),
@@ -359,7 +359,7 @@ namespace RTC
 				const Codecs::DependencyDescriptor::RewriteParams rewriteParams{
 					.frameNumber = forwardedFrameNumber,
 					.activeDecodeTargetsBitmask =
-					  this->payloadDescriptor->GetDecodeTargetsBitmask(maxSpatialLayer, maxTemporalLayer)
+					  this->payloadDescriptor->GetDecodeTargetsBitmask(maxSpatialLayer, maxTemporalLayer),
 				};
 
 				this->payloadDescriptor->Rewrite(rewriteParams, packet);

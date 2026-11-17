@@ -30,7 +30,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 			// NTP timestamp, most significant word: 0x12345678
 			0x12, 0x34, 0x56, 0x78,
 			// NTP timestamp, least significant word: 0x23456789
-			0x23, 0x45, 0x67, 0x89
+			0x23, 0x45, 0x67, 0x89,
 		};
 		// clang-format on
 
@@ -91,7 +91,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 			0x04, 0x00, 0x00, 0x03,
 			0x12, 0x34, 0x56, 0x78,
 			0x23, 0x45, 0x67, 0x89,
-			0x00, 0x00, 0x00, 0x00
+			0x00, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -103,7 +103,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 		{
 			// BT: 4 (RRT), Reserved: 0, Block length: 1
 			0x04, 0x00, 0x00, 0x01,
-			0x12, 0x34, 0x56, 0x78
+			0x12, 0x34, 0x56, 0x78,
 		};
 		// clang-format on
 
@@ -116,7 +116,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 			// BT: 5 (DLRR), Reserved: 0, Block length: 2
 			0x05, 0x00, 0x00, 0x02,
 			0x12, 0x34, 0x56, 0x78,
-			0x23, 0x45, 0x67, 0x89
+			0x23, 0x45, 0x67, 0x89,
 		};
 		// clang-format on
 
@@ -128,7 +128,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 		{
 			// BT: 4 (RRT), Reserved: 0, Block length: 2
 			0x04, 0x00, 0x00, 0x02,
-			0x12, 0x34, 0x56, 0x78
+			0x12, 0x34, 0x56, 0x78,
 		};
 		// clang-format on
 
@@ -145,7 +145,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 			// NTP timestamp, most significant word: 0x12345678
 			0x12, 0x34, 0x56, 0x78,
 			// NTP timestamp, least significant word: 0x23456789
-			0x23, 0x45, 0x67, 0x89
+			0x23, 0x45, 0x67, 0x89,
 		};
 		// clang-format on
 
@@ -170,7 +170,7 @@ SCENARIO("RTCP XR Receiver Reference Time Extended Report (4)", "[serializable][
 		REQUIRE(extendedReport->GetNtp().seconds == 0x12345678);
 		REQUIRE(extendedReport->GetNtp().fractions == 0x23456789);
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    extendedReport->GetBuffer(),
 		    extendedReport->GetLength(),
 		    expectedBuffer,

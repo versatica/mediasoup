@@ -38,8 +38,9 @@ SCENARIO("BWE BitrateAllocator", "[bwe][bitrateallocator]")
 			{
 				bitrateOptions.options.push_back(
 				  {
-				    .bitrate = this->bitrates.at(idx), .layers = { 0, static_cast<int16_t>(idx) }
-        });
+				    .bitrate = this->bitrates.at(idx),
+				    .layers  = { 0, static_cast<int16_t>(idx) },
+				});
 			}
 
 			bitrateOptions.currentOption = this->currentOption;

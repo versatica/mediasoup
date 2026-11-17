@@ -58,7 +58,8 @@ namespace RTC
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
-		        .maxRestarts         = std::nullopt })),
+		        .maxRestarts         = std::nullopt,
+		      })),
 		    delayedAckTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
@@ -66,7 +67,8 @@ namespace RTC
 		        .baseTimeoutMs       = sctpOptions.delayedAckMaxTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = std::nullopt,
-		        .maxRestarts         = 0 })),
+		        .maxRestarts         = 0,
+		      })),
 		    rto(sctpOptions),
 		    txErrorCounter(sctpOptions),
 		    dataTracker(this->delayedAckTimer.get(), remoteInitialTsn),

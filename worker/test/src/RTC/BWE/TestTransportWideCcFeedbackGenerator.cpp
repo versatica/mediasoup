@@ -47,12 +47,14 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 				  // which is shifted by a whole wrap period so that it's positive
 				  // regardless of the sign of the reference time on the wire.
 				  statuses.push_back(
-				    TestPacketStatus{ .wideSeqNumber = sequenceNumber,
-						                  .received      = deltaSinceBaseUs.has_value(),
-						                  .timestampUs = deltaSinceBaseUs.has_value()
-						                                   ? baseTimeUs + deltaSinceBaseUs.value() -
-						                                       RTC::RTCP::TransportWideCcPacket::TimeWrapPeriodUs
-						                                   : 0 });
+				    TestPacketStatus{
+				      .wideSeqNumber = sequenceNumber,
+				      .received      = deltaSinceBaseUs.has_value(),
+				      .timestampUs   = deltaSinceBaseUs.has_value()
+							                   ? baseTimeUs + deltaSinceBaseUs.value() -
+							                       RTC::RTCP::TransportWideCcPacket::TimeWrapPeriodUs
+							                   : 0,
+				    });
 			  });
 
 			this->senderSsrcs.push_back(packet->GetSenderSsrc());
@@ -99,9 +101,11 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		packet->SetSsrc(Ssrc);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{ RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
+			{
+			 RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
 			 TransportWideCc01Id, /*len*/ 2,
-			 rtpCommon::DataBuffer }
+			 rtpCommon::DataBuffer,
+			 },
 		};
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
@@ -524,7 +528,8 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		  std::addressof(listener),
 		  std::addressof(shared),
 		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{
-		    .maxRtcpPacketLen = MaxRtcpPacketLen });
+		    .maxRtcpPacketLen = MaxRtcpPacketLen,
+		  });
 
 		TestResults expectedResults(2);
 
@@ -585,7 +590,8 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		  std::addressof(listener),
 		  std::addressof(shared),
 		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{
-		    .rtcpSenderSsrc = 1234 });
+		    .rtcpSenderSsrc = 1234,
+		  });
 
 		feedPacket(transportWideCcFeedbackGenerator, 1, BaseTimeUs, 1000);
 

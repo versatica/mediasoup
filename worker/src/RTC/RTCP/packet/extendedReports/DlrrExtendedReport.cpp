@@ -154,9 +154,11 @@ namespace RTC
 				const auto* const ptr = subBlocksPointer + (idx * DlrrExtendedReport::SubBlockLength);
 
 				subBlocks.push_back(
-				  { .ssrc                         = Utils::Byte::Get4Bytes(ptr, 0),
-					  .lastReceiverReport           = Utils::Byte::Get4Bytes(ptr, 4),
-					  .delaySinceLastReceiverReport = Utils::Byte::Get4Bytes(ptr, 8) });
+				  {
+				    .ssrc                         = Utils::Byte::Get4Bytes(ptr, 0),
+				    .lastReceiverReport           = Utils::Byte::Get4Bytes(ptr, 4),
+				    .delaySinceLastReceiverReport = Utils::Byte::Get4Bytes(ptr, 8),
+				  });
 			}
 
 			return subBlocks;

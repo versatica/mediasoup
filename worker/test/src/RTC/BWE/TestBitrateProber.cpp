@@ -25,12 +25,14 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 	                                 int64_t targetBitrate,
 	                                 int64_t minProbeDeltaUs) -> RTC::BWE::Types::ProbeClusterConfig
 	{
-		return RTC::BWE::Types::ProbeClusterConfig{ .id               = id,
-		                                            .atUs             = atUs,
-		                                            .targetBitrate    = targetBitrate,
-		                                            .targetDurationUs = 15 * 1000,
-		                                            .minProbeDeltaUs  = minProbeDeltaUs,
-		                                            .targetProbeCount = 5 };
+		return RTC::BWE::Types::ProbeClusterConfig{
+			.id               = id,
+			.atUs             = atUs,
+			.targetBitrate    = targetBitrate,
+			.targetDurationUs = 15 * 1000,
+			.minProbeDeltaUs  = minProbeDeltaUs,
+			.targetProbeCount = 5,
+		};
 	};
 
 	SECTION("a burst goes out at the bitrate it was asked for, and then the next one")

@@ -17,7 +17,7 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 			0b10000101, 0xDE, 0x00, 0x02,
 			// 8 bytes of value
 			0x11, 0x22, 0x33, 0x44,
-			0x55, 0x66, 0x77, 0x88
+			0x55, 0x66, 0x77, 0x88,
 		};
 		// clang-format on
 
@@ -99,7 +99,7 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 			0x11, 0x22, 0x33, 0x44,
 			0x55,
 			// Padding: 3 bytes
-			0x00, 0x00, 0x03
+			0x00, 0x00, 0x03,
 		};
 		// clang-format on
 
@@ -131,7 +131,7 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 			// V=2, P=1, Count=5, PT:222, Length: 1
 			0b10100101, 0xDE, 0x00, 0x01,
 			// Padding: 4 bytes
-			0x00, 0x00, 0x00, 0x04
+			0x00, 0x00, 0x00, 0x04,
 		};
 		// clang-format on
 
@@ -160,7 +160,7 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 		alignas(4) uint8_t buffer[] =
 		{
 			// V=2, P=0, Count=0, PT:222, Length: 0
-			0b10000000, 0xDE, 0x00, 0x00
+			0b10000000, 0xDE, 0x00, 0x00,
 		};
 		// clang-format on
 

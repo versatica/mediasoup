@@ -6,7 +6,7 @@
 - Worker: Don’t take a template dependency structure older than the one in use ([PR #2047](https://github.com/versatica/mediasoup/pull/2047)).
 - New RTCP stack ([task #2049](https://github.com/versatica/mediasoup/issues/2049)).
 - Worker: Rewrite the Dependency Descriptor frame numbers across stream switches ([PR #2048](https://github.com/versatica/mediasoup/pull/2048)).
-- Modernize C++ code ([PR #2060](https://github.com/versatica/mediasoup/pull/2060)):
+- Modernize C++ code ([PR #2060](https://github.com/versatica/mediasoup/pull/2060), [PR #2063](https://github.com/versatica/mediasoup/pull/2063)):
   - Use `unique_ptr` instead of holding raw pointers.
   - `WebRtcTransport` and `WebRtcServer`: Use `announcedAddress` (it was missing).
   - Fix crash in `Producer.cpp`: An RTP packet with SSRC 0 matched encodings without `ssrc` (0 means "no SSRC") and hit an `MS_ASSERT` in `CreateRtpStream()`.
@@ -23,7 +23,6 @@
   - Fix `ICE::StunPacket::IsStun()`: Packets whose first byte is 3 were not considered STUN (RFC 7983).
   - Fix `ICE::IceServer`: In 'completed' state, a Binding request with USE-CANDIDATE and a nomination not higher than the current one changed the selected tuple (ICE renomination).
   - Fix `ICE::IceServer`: A Binding request with ICE-CONTROLLED and a tie-breaker of 0 was not rejected with a 487 (role conflict).
-- Modernize C++ code (part 2) ([PR #2061](https://github.com/versatica/mediasoup/pull/2061)).
 
 ### 0.33.2
 

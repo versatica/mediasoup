@@ -100,11 +100,12 @@ namespace RTC
 
 				  Types::PacketResult packetResult;
 
-				  packetResult.sentPacket = entry.sentPacket;
-				  packetResult.rtpPacketInfo =
-				    Types::PacketResult::RtpPacketInfo{ .ssrc              = entry.ssrc,
-						                                    .rtpSequenceNumber = entry.seq,
-						                                    .isRetransmission  = entry.isRetransmission };
+				  packetResult.sentPacket    = entry.sentPacket;
+				  packetResult.rtpPacketInfo = Types::PacketResult::RtpPacketInfo{
+					  .ssrc              = entry.ssrc,
+					  .rtpSequenceNumber = entry.seq,
+					  .isRetransmission  = entry.isRetransmission,
+				  };
 				  packetResult.ambiguousReceiveTime = entry.ambiguousReceiveTime;
 				  packetResult.sentWithEct1         = entry.sentWithEct1;
 

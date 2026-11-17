@@ -66,8 +66,10 @@ namespace RTC
 
 			// What the sample says about each of the two values.
 			const double h[2]  = { sizeDeltaDouble, 1.0 };
-			const double eh[2] = { (this->e[0][0] * h[0]) + (this->e[0][1] * h[1]),
-			                       (this->e[1][0] * h[0]) + (this->e[1][1] * h[1]) };
+			const double eh[2] = {
+				(this->e[0][0] * h[0]) + (this->e[0][1] * h[1]),
+				(this->e[1][0] * h[0]) + (this->e[1][1] * h[1]),
+			};
 			// How far the sample falls from what the model predicted.
 			const double residual = deltaDiffMs - (this->slopeMsPerByte * h[0]) - this->offsetMs;
 
@@ -94,7 +96,7 @@ namespace RTC
 
 			const double iKh[2][2] = {
 				{ 1.0 - (k[0] * h[0]), -k[0] * h[1]        },
-        { -k[1] * h[0],        1.0 - (k[1] * h[1]) }
+				{ -k[1] * h[0],        1.0 - (k[1] * h[1]) },
 			};
 			const double e00 = this->e[0][0];
 			const double e01 = this->e[0][1];

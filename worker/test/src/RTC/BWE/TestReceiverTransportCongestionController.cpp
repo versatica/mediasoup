@@ -75,9 +75,11 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		packet->SetSsrc(Ssrc);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{ RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
+			{
+			 RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
 			 TransportWideCc01Id, /*len*/ 2,
-			 rtpCommon::DataBuffer }
+			 rtpCommon::DataBuffer,
+			 },
 		};
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
@@ -107,7 +109,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		packet->SetSsrc(ssrc);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, AbsSendTimeId, /*len*/ 3, rtpCommon::DataBuffer }
+			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, AbsSendTimeId, /*len*/ 3, rtpCommon::DataBuffer },
 		};
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);

@@ -394,10 +394,11 @@ SCENARIO("Transport", "[rtcp][transport]")
 						  RTC::RTCP::DlrrExtendedReport::SubBlockLength);
 
 						dlrrExtendedReport->AddSubBlock(
-						  RTC::RTCP::DlrrExtendedReport::SubBlock{ .ssrc = ssrc,
-							                                         .lastReceiverReport =
-							                                           receivedReceiverReferenceTime.compactNtp,
-							                                         .delaySinceLastReceiverReport = dlrr });
+						  RTC::RTCP::DlrrExtendedReport::SubBlock{
+						    .ssrc                         = ssrc,
+						    .lastReceiverReport           = receivedReceiverReferenceTime.compactNtp,
+						    .delaySinceLastReceiverReport = dlrr,
+						  });
 
 						answeredSsrcs.push_back(ssrc);
 					}

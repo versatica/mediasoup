@@ -58,7 +58,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 			0x71, 0x00, 0x18, 0x2D,
 			0xA7, 0x68, 0x34, 0xF8,
 			0x80, 0x28, 0x00, 0x04,
-			0x6A, 0x37, 0x3F, 0x8C
+			0x6A, 0x37, 0x3F, 0x8C,
 		};
 		// clang-format on
 
@@ -204,7 +204,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 			0x01, 0x13, 0xA9, 0xFA,
 			0x84, 0xA1, 0x03, 0x04,
 			0x05, 0x06, 0x8D, 0x26,
-			0x0A, 0x7A, 0x78, 0x38
+			0x0A, 0x7A, 0x78, 0x38,
 		};
 		// clang-format on
 
@@ -359,7 +359,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 	  	0x69, 0x6C, 0x65, 0x64,
 	  	0x20, 0xCE, 0xA9, 0xE2,
 	  	0x88, 0x91, 0xC2, 0xA9,
-	  	0x20, 0x3A, 0x29, 0x00
+	  	0x20, 0x3A, 0x29, 0x00,
 		};
 		// clang-format on
 
@@ -463,7 +463,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		alignas(4) uint8_t transactionId[RTC::ICE::StunPacket::TransactionIdLength] =
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
-			0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC
+			0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC,
 		};
 		// clang-format on
 
@@ -568,7 +568,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    request->GetTransactionId(),
 		    RTC::ICE::StunPacket::TransactionIdLength,
 		    transactionId,
@@ -605,7 +605,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    request->GetTransactionId(),
 		    RTC::ICE::StunPacket::TransactionIdLength,
 		    transactionId,
@@ -644,7 +644,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    request->GetTransactionId(),
 		    RTC::ICE::StunPacket::TransactionIdLength,
 		    transactionId,
@@ -1117,7 +1117,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    successResponse->GetTransactionId(),
 		    RTC::ICE::StunPacket::TransactionIdLength,
 		    request->GetTransactionId(),
@@ -1202,7 +1202,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    errorResponse->GetTransactionId(),
 		    RTC::ICE::StunPacket::TransactionIdLength,
 		    request->GetTransactionId(),

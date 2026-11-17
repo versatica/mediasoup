@@ -27,7 +27,7 @@ SCENARIO("RTCP XR Unknown Extended Report", "[serializable][rtcp][extendedreport
 			0x2A, 0xAB, 0x00, 0x02,
 			// 8 bytes of value
 			0x11, 0x22, 0x33, 0x44,
-			0x55, 0x66, 0x77, 0x88
+			0x55, 0x66, 0x77, 0x88,
 		};
 		// clang-format on
 
@@ -88,7 +88,7 @@ SCENARIO("RTCP XR Unknown Extended Report", "[serializable][rtcp][extendedreport
 		alignas(4) uint8_t buffer[] =
 		{
 			// BT: 99, Type-specific: 0, Block length: 0
-			0x63, 0x00, 0x00, 0x00
+			0x63, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -116,7 +116,7 @@ SCENARIO("RTCP XR Unknown Extended Report", "[serializable][rtcp][extendedreport
 		// clang-format off
 		alignas(4) uint8_t buffer1[] =
 		{
-			0x2A, 0x00, 0x00
+			0x2A, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -129,7 +129,7 @@ SCENARIO("RTCP XR Unknown Extended Report", "[serializable][rtcp][extendedreport
 			// BT: 42, Type-specific: 0, Block length: 2
 			0x2A, 0x00, 0x00, 0x02,
 			// 4 bytes of value
-			0x11, 0x22, 0x33, 0x44
+			0x11, 0x22, 0x33, 0x44,
 		};
 		// clang-format on
 

@@ -62,7 +62,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			// SSRC: 5678
 			0x00, 0x00, 0x16, 0x2E,
 			// 4 null octets (no items)
-			0x00, 0x00, 0x00, 0x00
+			0x00, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -170,7 +170,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			0x00, 0x00, 0x00, 0x04,
 			// Extra space in the buffer
 			0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00
+			0x00, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -228,7 +228,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			// SSRC: 1111
 			0x00, 0x00, 0x04, 0x57,
 			// 4 null octets (no items)
-			0x00, 0x00, 0x00, 0x00
+			0x00, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -243,7 +243,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			// SSRC: 1111
 			0x00, 0x00, 0x04, 0x57,
 			// Item type: 1 (CNAME), Length: 20, Value: "ab"
-			0x01, 0x14, 0x61, 0x62
+			0x01, 0x14, 0x61, 0x62,
 		};
 		// clang-format on
 
@@ -258,7 +258,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			// SSRC: 1111
 			0x00, 0x00, 0x04, 0x57,
 			// Item type: 1 (CNAME), Length: 2, Value: "ab"
-			0x01, 0x02, 0x61, 0x62
+			0x01, 0x02, 0x61, 0x62,
 		};
 		// clang-format on
 
@@ -276,7 +276,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			0x01, 0x03, 0x61, 0x62,
 			// End of value "c", null octet and 2 octets of padding (the last one
 			// non null)
-			0x63, 0x00, 0x00, 0x01
+			0x63, 0x00, 0x00, 0x01,
 		};
 		// clang-format on
 
@@ -294,7 +294,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			// 4 null octets (no items)
 			0x00, 0x00, 0x00, 0x00,
 			// 4 extra bytes
-			0x00, 0x00, 0x00, 0x00
+			0x00, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -512,7 +512,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			// Item type: 1 (CNAME), Length: 2, Value: "ab"
 			0x01, 0x02, 0x61, 0x62,
 			// Null octet and 3 octets of padding
-			0x00, 0x00, 0x00, 0x00
+			0x00, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -559,7 +559,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		checkItems(packet.get());
 
 		REQUIRE(
-		  helpers::areBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, sizeof(buffer)) ==
+		  helpers::AreBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, sizeof(buffer)) ==
 		  true);
 	}
 

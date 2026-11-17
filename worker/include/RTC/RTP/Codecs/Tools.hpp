@@ -190,7 +190,7 @@ namespace RTC
 				}
 
 				static EncodingContext* GetEncodingContext(
-				  const RTC::RtpCodecMimeType& mimeType, Codecs::EncodingContext::Params& params)
+				  const RTC::RtpCodecMimeType& mimeType, const Codecs::EncodingContext::Params& params)
 				{
 					switch (mimeType.type)
 					{

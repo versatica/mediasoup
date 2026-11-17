@@ -224,8 +224,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const Types::RateControlInput input{ .bandwidthUsage = this->activeDelayDetector->GetState(),
-			                                     .estimatedThroughput = ackedBitrate };
+			const Types::RateControlInput input{
+				.bandwidthUsage      = this->activeDelayDetector->GetState(),
+				.estimatedThroughput = ackedBitrate,
+			};
 
 			targetBitrate = this->rateControl.Update(input, nowUs);
 

@@ -103,10 +103,12 @@ namespace RTC
 					// negative one.
 					MS_ASSERT(arrivalDeltaUs >= 0, "arrival delta is negative");
 
-					deltas = Deltas{ .timestampDelta = timestampDelta,
-					                 .arrivalDeltaUs = arrivalDeltaUs,
-					                 .sizeDelta      = static_cast<int64_t>(this->currentGroup.size) -
-						                                 static_cast<int64_t>(this->prevGroup.size) };
+					deltas = Deltas{
+						.timestampDelta = timestampDelta,
+						.arrivalDeltaUs = arrivalDeltaUs,
+						.sizeDelta      = static_cast<int64_t>(this->currentGroup.size) -
+						                  static_cast<int64_t>(this->prevGroup.size),
+					};
 				}
 
 				this->prevGroup = this->currentGroup;

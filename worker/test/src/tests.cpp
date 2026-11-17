@@ -6,7 +6,7 @@
 #include "Utils.hpp"
 #include <catch2/catch_session.hpp>
 #include <cstdlib> // std::getenv()
-#include <sstream> // std::istringstream()
+#include <sstream> // std::istringstream
 #include <string>
 #include <vector>
 
@@ -27,7 +27,8 @@ int main(int argc, char* argv[])
 	// Get logTags from ENV variable.
 	if (logTagsPtr)
 	{
-		auto logTagsStr = std::string(logTagsPtr);
+		const auto logTagsStr = std::string(logTagsPtr);
+
 		std::istringstream iss(logTagsStr);
 		std::string logTag;
 

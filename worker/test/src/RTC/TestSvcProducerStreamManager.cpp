@@ -99,16 +99,14 @@ namespace
 		}
 
 	private:
-		static RTC::RTP::Codecs::EncodingContext::Params& BuildParams(
+		static RTC::RTP::Codecs::EncodingContext::Params BuildParams(
 		  uint8_t spatialLayers, uint8_t temporalLayers, bool ksvc)
 		{
-			// Use a thread-local so each call gets its own params instance.
-			// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-			static thread_local RTC::RTP::Codecs::EncodingContext::Params params;
-			params.spatialLayers  = spatialLayers;
-			params.temporalLayers = temporalLayers;
-			params.ksvc           = ksvc;
-			return params;
+			return {
+				.spatialLayers  = spatialLayers,
+				.temporalLayers = temporalLayers,
+				.ksvc           = ksvc,
+			};
 		}
 	};
 
@@ -1212,15 +1210,15 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		  rtpStream.get(),
 		  {
 		    { 0, 0 },
-        { 0, 1 },
-        { 0, 2 },
-        { 1, 0 },
-        { 1, 1 },
-        { 1, 2 },
-        { 2, 0 },
-        { 2, 1 },
-        { 2, 2 }
-    });
+		    { 0, 1 },
+		    { 0, 2 },
+		    { 1, 0 },
+		    { 1, 1 },
+		    { 1, 2 },
+		    { 2, 0 },
+		    { 2, 1 },
+		    { 2, 2 },
+		});
 
 		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
 
@@ -1231,7 +1229,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
       { 0, 1 },
       { 0, 2 },
       { 1, 2 },
-      { 2, 2 }
+      { 2, 2 },
 		};
 
 		REQUIRE(bitrateOptions.options.size() == expectedLayers.size() + 1);
@@ -1260,14 +1258,14 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		  rtpStream.get(),
 		  {
 		    { 0, 0 },
-        { 0, 1 },
-        { 0, 2 },
-        { 1, 0 },
-        { 1, 1 },
-        { 2, 0 },
-        { 2, 1 },
-        { 2, 2 }
-    });
+		    { 0, 1 },
+		    { 0, 2 },
+		    { 1, 0 },
+		    { 1, 1 },
+		    { 2, 0 },
+		    { 2, 1 },
+		    { 2, 2 },
+		});
 
 		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
 
@@ -1276,7 +1274,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
       { 0, 1 },
       { 0, 2 },
       { 1, 1 },
-      { 2, 2 }
+      { 2, 2 },
 		};
 
 		REQUIRE(bitrateOptions.options.size() == expectedLayers.size() + 1);

@@ -51,13 +51,13 @@ namespace
 		        .listener         = std::addressof(this->backoffTimerListener),
 		        .label            = "mock-sctp-delayed-ack",
 		        .baseTimeoutMs    = this->sctpOptions.initialRtoMs,
-		        .backoffAlgorithm = BackoffTimerHandleInterface::BackoffAlgorithm::FIXED })),
+		        .backoffAlgorithm = BackoffTimerHandleInterface::BackoffAlgorithm::FIXED, })),
 		    t3RtxTimer(this->shared.CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener         = std::addressof(this->backoffTimerListener),
 		        .label            = "mock-sctp-t3-rtx",
 		        .baseTimeoutMs    = this->sctpOptions.initialRtoMs,
-		        .backoffAlgorithm = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL })),
+		        .backoffAlgorithm = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL, })),
 		    sendQueue(
 		      this->associationListener,
 		      this->sctpOptions.mtu,
@@ -152,8 +152,9 @@ namespace
 		BackoffTimerListener backoffTimerListener;
 		RetransmissionQueueListener retransmissionQueueListener;
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
-		RTC::SCTP::AssociationListenerDeferrer associationListenerDeferrer{ std::addressof(
-			this->associationListener) };
+		RTC::SCTP::AssociationListenerDeferrer associationListenerDeferrer{
+			std::addressof(this->associationListener),
+		};
 		mocks::MockShared shared;
 		mocks::RTC::SCTP::MockTransmissionControlBlockContext tcbContext;
 		const std::unique_ptr<BackoffTimerHandleInterface> delayedAckTimer;

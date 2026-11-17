@@ -14,7 +14,8 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 	// Options that make the controller usable after a single observation, so
 	// that a case doesn't have to feed a whole window to prove anything.
 	const RTC::BWE::LossBasedController::LossBasedControllerOptions shortObservationOptions{
-		.observationWindowSize = 2, .minNumObservations = 1
+		.observationWindowSize = 2,
+		.minNumObservations    = 1,
 	};
 
 	// Sequence number handed out to the packets of every case, which must not
@@ -299,8 +300,9 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 	{
 		constexpr int64_t DelayBasedEstimate{ 500000 };
 
-		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{ .observationWindowSize =
-		                                                                           5 };
+		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
+			.observationWindowSize = 5,
+		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
 
@@ -350,7 +352,7 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 			.lossThresholdOfHighBitratePreference         = 0.20,
 			.observationWindowSize                        = 2,
 			.minNumObservations                           = 1,
-			.notIncreaseIfInherentLossLessThanAverageLoss = false
+			.notIncreaseIfInherentLossLessThanAverageLoss = false,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -396,7 +398,8 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		constexpr int64_t DelayedIncreaseWindowUs{ 300 * 1000 };
 
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
-			.observationWindowSize = 15, .minNumObservations = 1
+			.observationWindowSize = 15,
+			.minNumObservations    = 1,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -435,7 +438,8 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		constexpr int64_t DelayedIncreaseWindowUs{ 300 * 1000 };
 
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
-			.observationWindowSize = 15, .minNumObservations = 1
+			.observationWindowSize = 15,
+			.minNumObservations    = 1,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -470,7 +474,9 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		// With the threshold below the loss that is about to be observed, the bias
 		// towards higher bitrates is gone and the lower candidate wins.
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
-			.lossThresholdOfHighBitratePreference = 0.05, .observationWindowSize = 2, .minNumObservations = 1
+			.lossThresholdOfHighBitratePreference = 0.05,
+			.observationWindowSize                = 2,
+			.minNumObservations                   = 1,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -493,7 +499,9 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		// A single candidate above the current estimate, so that the only thing
 		// that can hold the estimate back is the guard being tested.
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
-			.candidateFactors = { 1.2 }, .observationWindowSize = 2, .minNumObservations = 1
+			.candidateFactors      = { 1.2 },
+			.observationWindowSize = 2,
+			.minNumObservations    = 1,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -640,7 +648,7 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 			.observationWindowSize       = 2,
 			.minNumObservations          = 1,
 			.lowerBoundByAckedRateFactor = 1.0,
-			.holdDurationFactor          = 10.0
+			.holdDurationFactor          = 10.0,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -705,7 +713,7 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 			.lossThresholdOfHighBitratePreference = 0.99,
 			.observationWindowSize                = 2,
 			.minNumObservations                   = 1,
-			.immediateUpperBoundBitrateBalance    = 10000000
+			.immediateUpperBoundBitrateBalance    = 10000000,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -753,7 +761,8 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 	SECTION("the delay based estimate caps this one while the network is fine")
 	{
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
-			.observationWindowSize = 15, .minNumObservations = 1
+			.observationWindowSize = 15,
+			.minNumObservations    = 1,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -781,7 +790,8 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		constexpr int64_t AcknowledgedBitrate{ 300000 };
 
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
-			.observationWindowSize = 15, .minNumObservations = 1
+			.observationWindowSize = 15,
+			.minNumObservations    = 1,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -810,7 +820,7 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 			.candidateFactors                  = { 1.0 },
 			.observationWindowSize             = 2,
 			.minNumObservations                = 1,
-			.immediateUpperBoundBitrateBalance = 10000
+			.immediateUpperBoundBitrateBalance = 10000,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -839,7 +849,7 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 			.candidateFactors            = { 1.0 },
 			.observationWindowSize       = 2,
 			.minNumObservations          = 1,
-			.lowerBoundByAckedRateFactor = 10.0
+			.lowerBoundByAckedRateFactor = 10.0,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -871,8 +881,9 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 	{
 		constexpr int64_t DelayBasedEstimate{ 500000 };
 
-		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{ .observationWindowSize =
-		                                                                           5 };
+		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
+			.observationWindowSize = 5,
+		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
 
@@ -903,7 +914,9 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		// estimate where the link already is, so what follows is a slow rampup and
 		// not the jump that a deeper backoff would allow.
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
-			.appendUpperBoundCandidateInAlr = true, .observationWindowSize = 2, .minNumObservations = 1
+			.appendUpperBoundCandidateInAlr = true,
+			.observationWindowSize          = 2,
+			.minNumObservations             = 1,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -936,13 +949,15 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		// With the acknowledged bitrate not bounding the estimate from below, the
 		// only way it can reach the estimate is by being a candidate of its own.
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions withItOptions{
-			.observationWindowSize = 2, .minNumObservations = 1, .lowerBoundByAckedRateFactor = 0.0
+			.observationWindowSize       = 2,
+			.minNumObservations          = 1,
+			.lowerBoundByAckedRateFactor = 0.0,
 		};
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions withoutItOptions{
 			.appendAcknowledgedRateCandidate = false,
 			.observationWindowSize           = 2,
 			.minNumObservations              = 1,
-			.lowerBoundByAckedRateFactor     = 0.0
+			.lowerBoundByAckedRateFactor     = 0.0,
 		};
 
 		RTC::BWE::LossBasedController withIt(withItOptions);
@@ -969,13 +984,15 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 	SECTION("what the link delivers is a candidate while not filling it when told so")
 	{
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions withoutItOptions{
-			.observationWindowSize = 2, .minNumObservations = 1, .lowerBoundByAckedRateFactor = 0.0
+			.observationWindowSize       = 2,
+			.minNumObservations          = 1,
+			.lowerBoundByAckedRateFactor = 0.0,
 		};
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions withItOptions{
 			.observationWindowSize       = 2,
 			.minNumObservations          = 1,
 			.lowerBoundByAckedRateFactor = 0.0,
-			.notUseAckedRateInAlr        = false
+			.notUseAckedRateInAlr        = false,
 		};
 
 		RTC::BWE::LossBasedController withoutIt(withoutItOptions);
@@ -1001,7 +1018,9 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		constexpr int64_t DelayBasedEstimate{ 1000000 };
 
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions withoutItOptions{
-			.appendDelayBasedEstimateCandidate = false, .observationWindowSize = 2, .minNumObservations = 1
+			.appendDelayBasedEstimateCandidate = false,
+			.observationWindowSize             = 2,
+			.minNumObservations                = 1,
 		};
 
 		RTC::BWE::LossBasedController withIt(shortObservationOptions);
@@ -1025,7 +1044,9 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 	SECTION("measuring loss by packets ignores how much each lost packet carried")
 	{
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions byPacketsOptions{
-			.observationWindowSize = 2, .minNumObservations = 1, .useByteLossRate = false
+			.observationWindowSize = 2,
+			.minNumObservations    = 1,
+			.useByteLossRate       = false,
 		};
 
 		RTC::BWE::LossBasedController byBytes(shortObservationOptions);
@@ -1058,7 +1079,9 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		constexpr int64_t DelayBasedEstimate{ 500000 };
 
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions keepingItOptions{
-			.observationWindowSize = 2, .minNumObservations = 1, .boundBestCandidate = false
+			.observationWindowSize = 2,
+			.minNumObservations    = 1,
+			.boundBestCandidate    = false,
 		};
 
 		RTC::BWE::LossBasedController dropping(shortObservationOptions);
@@ -1102,7 +1125,7 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 			.appendDelayBasedEstimateCandidate = false,
 			.observationWindowSize             = 2,
 			.minNumObservations                = 1,
-			.lowerBoundByAckedRateFactor       = 0.0
+			.lowerBoundByAckedRateFactor       = 0.0,
 		};
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions acceleratedOptions{
 			.candidateFactors                  = { 1.5 },
@@ -1111,7 +1134,7 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 			.appendDelayBasedEstimateCandidate = false,
 			.observationWindowSize             = 2,
 			.minNumObservations                = 1,
-			.lowerBoundByAckedRateFactor       = 0.0
+			.lowerBoundByAckedRateFactor       = 0.0,
 		};
 
 		RTC::BWE::LossBasedController plain(plainOptions);
@@ -1151,7 +1174,7 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 			.candidateFactors                             = { 1.2 },
 			.observationWindowSize                        = 2,
 			.minNumObservations                           = 1,
-			.notIncreaseIfInherentLossLessThanAverageLoss = false
+			.notIncreaseIfInherentLossLessThanAverageLoss = false,
 		};
 
 		RTC::BWE::LossBasedController lossBasedController(options);
@@ -1172,7 +1195,9 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 	SECTION("this controller can be kept from taking over during the start phase")
 	{
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions notInStartPhaseOptions{
-			.observationWindowSize = 2, .minNumObservations = 1, .useInStartPhase = false
+			.observationWindowSize = 2,
+			.minNumObservations    = 1,
+			.useInStartPhase       = false,
 		};
 
 		RTC::BWE::LossBasedController inStartPhase(shortObservationOptions);

@@ -26,8 +26,9 @@ namespace RTC
 		// wraps the way they do.
 		static constexpr uint32_t AbsSendTimeFraction{ 18 };
 		static constexpr uint32_t AbsSendTimeInterArrivalUpshift{ 8 };
-		static constexpr uint32_t InterArrivalShift{ AbsSendTimeFraction +
-		                                             AbsSendTimeInterArrivalUpshift };
+		static constexpr uint32_t InterArrivalShift{
+			AbsSendTimeFraction + AbsSendTimeInterArrivalUpshift,
+		};
 		// Microseconds a single tick of those shifted timestamps is worth.
 		static constexpr double TimestampToUs{ 1000000.0 / static_cast<double>(1 << InterArrivalShift) };
 		// Fewest probes a run must hold to be taken as a burst.
@@ -150,7 +151,10 @@ namespace RTC
 			{
 				this->probes.push_back(
 				  Probe{
-				    .sendTimeUs = sendTimeUs, .receiveTimeUs = arrivalTimeUs, .payloadSize = payloadSize });
+				    .sendTimeUs    = sendTimeUs,
+				    .receiveTimeUs = arrivalTimeUs,
+				    .payloadSize   = payloadSize,
+				  });
 
 				// Make sure that a burst which updated the estimation right away has an
 				// effect, by telling the listener about it.
@@ -215,7 +219,7 @@ namespace RTC
 				// being in overuse with an estimation far above what is coming in.
 				const Types::RateControlInput input{
 					.bandwidthUsage      = this->overuseDetector.GetState(),
-					.estimatedThroughput = this->incomingRateCalculator.GetRate(arrivalTimeUs / 1000)
+					.estimatedThroughput = this->incomingRateCalculator.GetRate(arrivalTimeUs / 1000),
 				};
 
 				targetBitrate  = this->remoteRateControl.Update(input, nowUs);
@@ -295,11 +299,13 @@ namespace RTC
 			}
 
 			clusters.push_back(
-			  Cluster{ .sendMeanUs       = clusterAggregate.sendMeanUs / clusterAggregate.count,
-				         .receiveMeanUs    = clusterAggregate.receiveMeanUs / clusterAggregate.count,
-				         .meanSize         = clusterAggregate.meanSize / clusterAggregate.count,
-				         .count            = clusterAggregate.count,
-				         .numAboveMinDelta = clusterAggregate.numAboveMinDelta });
+			  Cluster{
+			    .sendMeanUs       = clusterAggregate.sendMeanUs / clusterAggregate.count,
+			    .receiveMeanUs    = clusterAggregate.receiveMeanUs / clusterAggregate.count,
+			    .meanSize         = clusterAggregate.meanSize / clusterAggregate.count,
+			    .count            = clusterAggregate.count,
+			    .numAboveMinDelta = clusterAggregate.numAboveMinDelta,
+			  });
 		}
 
 		std::list<RemoteBitrateEstimatorAbsSendTime::Cluster> RemoteBitrateEstimatorAbsSendTime::ComputeClusters() const

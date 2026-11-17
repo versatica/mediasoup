@@ -77,7 +77,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		  .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		  .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
-		  .maxRestarts         = std::nullopt }) };
+		  .maxRestarts         = std::nullopt,
+		}) };
 
 	auto* t3RtxTimer = t3RtxTimerUniquePtr.get();
 
@@ -277,8 +278,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    Arwnd,
 		    {
 		      { 2, 3 },
-          { 5, 5 }
-    })
+		      { 5, 5 },
+		})
 		    .get());
 
 		REQUIRE(
@@ -336,8 +337,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    Arwnd,
 		    {
 		      { 2, 3 },
-          { 5, 6 }
-    })
+		      { 5, 6 },
+		})
 		    .get());
 
 		REQUIRE(
@@ -370,8 +371,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    Arwnd,
 		    {
 		      { 2, 3 },
-          { 5, 7 }
-    })
+		      { 5, 7 },
+		})
 		    .get());
 
 		// Send TSN 20.
@@ -392,8 +393,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    Arwnd,
 		    {
 		      { 2, 3 },
-          { 5, 8 }
-    })
+		      { 5, 8 },
+		})
 		    .get());
 
 		REQUIRE(
@@ -1882,8 +1883,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    9,
 			    Arwnd,
 			    {
-			      { 2, static_cast<uint16_t>(tsn - 9) }
-      })
+			      { 2, static_cast<uint16_t>(tsn - 9) },
+			})
 			    .get());
 		}
 
@@ -1912,8 +1913,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    9,
 			    Arwnd,
 			    {
-			      { 2, static_cast<uint16_t>(tsn - 9) }
-      })
+			      { 2, static_cast<uint16_t>(tsn - 9) },
+			})
 			    .get());
 		}
 
@@ -1944,8 +1945,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    9,
 			    Arwnd,
 			    {
-			      { 2, static_cast<uint16_t>(tsn - 9) }
-      })
+			      { 2, static_cast<uint16_t>(tsn - 9) },
+			})
 			    .get());
 		}
 
@@ -1979,8 +1980,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    9,
 		    Arwnd,
 		    {
-		      { 2, 10 }
-    })
+		      { 2, 10 },
+		})
 		    .get());
 
 		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 1000).empty());
@@ -2104,8 +2105,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    9,
 		    /*aRwnd*/ 0,
 		    {
-		      { 3, 3 }
-    })
+		      { 3, 3 },
+		})
 		    .get());
 
 		// Force TSN 10 to be retransmitted.
@@ -2124,8 +2125,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    9,
 		    /*aRwnd=*/0,
 		    {
-		      { 3, 3 }
-    })
+		      { 3, 3 },
+		})
 		    .get());
 
 		// There is in-flight data, so new data should not be allowed to be send since
@@ -2139,8 +2140,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    10,
 		    /*aRwnd=*/0,
 		    {
-		      { 2, 2 }
-    })
+		      { 2, 2 },
+		})
 		    .get());
 
 		// TSN 11 can be sent since there is no in-flight data.
@@ -2189,8 +2190,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    9,
 			    Arwnd,
 			    {
-			      { 2, static_cast<uint16_t>(tsn - 9) }
-      })
+			      { 2, static_cast<uint16_t>(tsn - 9) },
+			})
 			    .get());
 		}
 
@@ -2213,8 +2214,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    Arwnd,
 			    {
 			      { 2, 4                              },
-            { 6, static_cast<uint16_t>(tsn - 9) }
-      })
+			      { 6, static_cast<uint16_t>(tsn - 9) },
+			})
 			    .get());
 		}
 

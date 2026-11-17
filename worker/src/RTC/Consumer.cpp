@@ -288,7 +288,7 @@ namespace RTC
 				  (mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::OPUS ||
 					 mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::MULTIOPUS))
 				{
-					RTC::RTP::Codecs::EncodingContext::Params params{
+					const RTC::RTP::Codecs::EncodingContext::Params params{
 						.preferDependencyDescriptor = PrefersDependencyDescriptor(),
 					};
 
@@ -366,7 +366,7 @@ namespace RTC
 					  "%s codec not supported for simulcast", mediaCodec->mimeType.ToString().c_str());
 				}
 
-				RTC::RTP::Codecs::EncodingContext::Params params{
+				const RTC::RTP::Codecs::EncodingContext::Params params{
 					.spatialLayers              = encoding.spatialLayers,
 					.temporalLayers             = encoding.temporalLayers,
 					.simulcast                  = true,
@@ -446,7 +446,7 @@ namespace RTC
 					  "%s codec not supported for svc", mediaCodec->mimeType.ToString().c_str());
 				}
 
-				RTC::RTP::Codecs::EncodingContext::Params params{
+				const RTC::RTP::Codecs::EncodingContext::Params params{
 					.spatialLayers              = encoding.spatialLayers,
 					.temporalLayers             = encoding.temporalLayers,
 					.ksvc                       = encoding.ksvc,

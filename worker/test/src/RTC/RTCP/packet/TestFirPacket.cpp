@@ -45,7 +45,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 			// SSRC: 0x23456789
 			0x23, 0x45, 0x67, 0x89,
 			// Seq nr: 13, Reserved
-			0x0D, 0x00, 0x00, 0x00
+			0x0D, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -126,7 +126,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 			// Padding: 4 bytes
 			0x00, 0x00, 0x00, 0x04,
 			// Extra space in the buffer
-			0x00, 0x00, 0x00, 0x00
+			0x00, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -180,7 +180,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 			// SSRC of packet sender: 0x12345678
 			0x12, 0x34, 0x56, 0x78,
 			// SSRC of media source: 0
-			0x00, 0x00, 0x00, 0x00
+			0x00, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -201,7 +201,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 			// Seq nr: 13, Reserved
 			0x0D, 0x00, 0x00, 0x00,
 			// Half item
-			0x68, 0x61, 0x6C, 0x66
+			0x68, 0x61, 0x6C, 0x66,
 		};
 		// clang-format on
 
@@ -220,7 +220,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 			// SSRC: 0x23456789
 			0x23, 0x45, 0x67, 0x89,
 			// Seq nr: 13, Reserved
-			0x0D, 0x00, 0x00, 0x00
+			0x0D, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -241,7 +241,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 			// SSRC: 0x23456789
 			0x23, 0x45, 0x67, 0x89,
 			// Seq nr: 13, Reserved
-			0x0D, 0x00, 0x00, 0x00
+			0x0D, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -284,7 +284,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		  /*paddingLength*/ 0);
 
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    packet->GetBuffer(), packet->GetLength(), expected, sizeof(expected)) == true);
 
 		/* Serialize it. */
@@ -294,7 +294,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		std::memset(rtcpCommon::FactoryBuffer, 0xFF, sizeof(rtcpCommon::FactoryBuffer));
 
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    packet->GetBuffer(), packet->GetLength(), expected, sizeof(expected)) == true);
 
 		/* Clone it. */
@@ -304,7 +304,7 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		std::memset(rtcpCommon::SerializeBuffer, 0xFF, sizeof(rtcpCommon::SerializeBuffer));
 
 		REQUIRE(
-		  helpers::areBuffersEqual(
+		  helpers::AreBuffersEqual(
 		    packet->GetBuffer(), packet->GetLength(), expected, sizeof(expected)) == true);
 	}
 

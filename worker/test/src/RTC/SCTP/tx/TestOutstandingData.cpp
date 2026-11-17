@@ -188,8 +188,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		    { 2, 2 }
-    },
+		    { 2, 2 },
+		},
 		  false);
 
 		REQUIRE(
@@ -223,7 +223,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false), NowUs);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab1 = {
-			{ 2, 2 }
+			{ 2, 2 },
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
@@ -282,8 +282,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		    { 2, 4 }
-    },
+		    { 2, 4 },
+		},
 		  false);
 
 		REQUIRE(
@@ -365,8 +365,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		    { 2, 4 }
-    },
+		    { 2, 4 },
+		},
 		  false);
 
 		discardFromSendQueueTester.Test(
@@ -445,8 +445,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		    { 2, 4 }
-    },
+		    { 2, 4 },
+		},
 		  false);
 
 		discardFromSendQueueTester.Test(
@@ -638,8 +638,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  unwrapper.Unwrap(12),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 3 },
-        { 5, 5 }
-    },
+		    { 5, 5 },
+		},
 		  false);
 
 		REQUIRE(
@@ -715,8 +715,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		    { 2, 4 }
-    },
+		    { 2, 4 },
+		},
 		  false);
 
 		REQUIRE(ackInfo.hasPacketLoss == true);
@@ -750,8 +750,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo2 = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		    { 2, 7 }
-    },
+		    { 2, 7 },
+		},
 		  false);
 
 		REQUIRE(ackInfo2.hasPacketLoss == false);
@@ -802,8 +802,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo3 = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		    { 2, 14 }
-    },
+		    { 2, 14 },
+		},
 		  false);
 
 		REQUIRE(ackInfo3.hasPacketLoss == true);
@@ -979,8 +979,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo1 = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		    { 2, 2 }
-    },
+		    { 2, 2 },
+		},
 		  false);
 
 		REQUIRE(ackInfo1.hasPacketLoss == false);
@@ -989,8 +989,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo2 = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		    { 2, 3 }
-    },
+		    { 2, 3 },
+		},
 		  false);
 
 		REQUIRE(ackInfo2.hasPacketLoss == false);
@@ -1001,8 +1001,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo3 = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		    { 2, 4 }
-    },
+		    { 2, 4 },
+		},
 		  false);
 
 		discardFromSendQueueTester.Test(
@@ -1055,8 +1055,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo1 = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		    { 2, 4 }
-    },
+		    { 2, 4 },
+		},
 		  false);
 
 		REQUIRE(ackInfo1.hasPacketLoss == false);
@@ -1296,7 +1296,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 2 }, // TSN 12
 		    { 4, 4 }, // TSN 14
-		    { 6, 6 }  // TSN 16
+		    { 6, 6 }, // TSN 16
 		},
 		  /*isInFastRecovery*/ false);
 
@@ -1309,7 +1309,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 1, 1 }, // TSN 12
 		    { 3, 3 }, // TSN 14
-		    { 5, 5 }  // TSN 16
+		    { 5, 5 }, // TSN 16
 		},
 		  /*isInFastRecovery*/ true);
 
@@ -1321,7 +1321,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  unwrapper.Unwrap(12),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 2 }, // TSN 14
-		    { 4, 4 }  // TSN 16
+		    { 4, 4 }, // TSN 16
 		},
 		  /*isInFastRecovery*/ true);
 
@@ -1370,7 +1370,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 2 }, // TSN 12
 		    { 4, 4 }, // TSN 14
-		    { 6, 6 }  // TSN 16
+		    { 6, 6 }, // TSN 16
 		},
 		  /*isInFastRecovery*/ false);
 
@@ -1382,7 +1382,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  unwrapper.Unwrap(11),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 1,    1     }, // TSN 12
-		    { 1000, 60000 }  // TSN 1011..60011
+		    { 1000, 60000 }, // TSN 1011..60011
 		},
 		  /*isInFastRecovery*/ true);
 

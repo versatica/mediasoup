@@ -26,7 +26,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 			// Receiver's Next TSN: 1111111111
 			0x84, 0x74, 0x6B, 0x8E,
 			// Extra bytes that should be ignored
-			0xAA, 0xBB, 0xCC
+			0xAA, 0xBB, 0xCC,
 		};
 		// clang-format on
 
@@ -195,7 +195,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 			// Re-configuration Request Sequence Number: 287454020
 			0x11, 0x22, 0x33, 0x44,
 			// Result: 7 (unknown)
-			0x00, 0x00, 0x00, 0x07
+			0x00, 0x00, 0x00, 0x07,
 		};
 		// clang-format on
 

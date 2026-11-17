@@ -21,8 +21,9 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 	constexpr std::array<uint8_t, 6> SixBytePayload  = { 1, 2, 3, 4, 5, 6 };
 	constexpr std::array<uint8_t, 8> MediumPayload1  = { 1, 2, 3, 4, 5, 6, 7, 8 };
 	constexpr std::array<uint8_t, 8> MediumPayload2  = { 9, 10, 11, 12, 13, 14, 15, 16 };
-	constexpr std::array<uint8_t, 16> LongPayload    = { 1, 2,  3,  4,  5,  6,  7,  8,
-	                                                     9, 10, 11, 12, 13, 14, 15, 16 };
+	constexpr std::array<uint8_t, 16> LongPayload    = {
+		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+	};
 
 	const auto flushMessages = [](RTC::SCTP::ReassemblyQueue& reassemblyQueue)
 	{
@@ -317,8 +318,8 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		reassemblyQueue.HandleForwardTsn(
 		  13,
 		  std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		    { /*streamId*/ 1, /*ssn*/ 0 }
-    });
+		    { /*streamId*/ 1, /*ssn*/ 0 },
+		});
 
 		REQUIRE(reassemblyQueue.GetQueuedBytes() == 4);
 
@@ -364,8 +365,8 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		reassemblyQueue.HandleForwardTsn(
 		  13,
 		  std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		    { /*streamId*/ 1, /*ssn*/ 0 }
-    });
+		    { /*streamId*/ 1, /*ssn*/ 0 },
+		});
 
 		REQUIRE(reassemblyQueue.GetQueuedBytes() == 4);
 
@@ -538,8 +539,8 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		reassemblyQueue.HandleForwardTsn(
 		  13,
 		  std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		    { /*unordered*/ false, /*streamId*/ 1, /*mid*/ 0 }
-    });
+		    { /*unordered*/ false, /*streamId*/ 1, /*mid*/ 0 },
+		});
 
 		REQUIRE(reassemblyQueue.GetQueuedBytes() == 4);
 
@@ -567,8 +568,8 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		reassemblyQueue.HandleForwardTsn(
 		  13,
 		  std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		    { /*unordered*/ false, /*streamId*/ 1, /*mid*/ 0 }
-    });
+		    { /*unordered*/ false, /*streamId*/ 1, /*mid*/ 0 },
+		});
 
 		REQUIRE(reassemblyQueue.GetQueuedBytes() > 0);
 

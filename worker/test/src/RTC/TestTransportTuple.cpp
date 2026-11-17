@@ -36,7 +36,9 @@ SCENARIO("TransportTuple", "[transporttuple]")
 	    const std::string& ip, uint16_t minPort, uint16_t maxPort) -> std::unique_ptr<RTC::UdpSocket>
 	{
 		const auto flags = RTC::Transport::SocketFlags{ .ipv6Only = false, .udpReusePort = false };
+
 		RTC::PortManager::PortRangeKey portRangeKey;
+
 		return std::make_unique<RTC::UdpSocket>(
 		  std::addressof(listener),
 		  std::addressof(shared),

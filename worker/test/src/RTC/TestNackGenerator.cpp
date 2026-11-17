@@ -150,7 +150,7 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 	{
 		0x80, 0x7b, 0x52, 0x0e,
 		0x5b, 0x6b, 0xca, 0xb5,
-		0x00, 0x00, 0x00, 0x02
+		0x00, 0x00, 0x00, 0x02,
 	};
 	// clang-format on
 
@@ -188,7 +188,7 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 2381, false,    0, 0, false, 0 },
-			{ 2383, false, 2382, 1, false, 1 }
+			{ 2383, false, 2382, 1, false, 1 },
 		};
 		// clang-format on
 
@@ -202,7 +202,7 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 		{
 			{ 65534, false, 0, 0, false, 0 },
 			{ 65535, false, 0, 0, false, 0 },
-			{     0, false, 0, 0, false, 0 }
+			{     0, false, 0, 0, false, 0 },
 		};
 		// clang-format on
 
@@ -216,7 +216,7 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 		{
 			{ 65534, false, 0, 0, false, 0 },
 			{ 65535, false, 0, 0, false, 0 },
-			{     1, false, 0, 1, false, 1 }
+			{     1, false, 0, 1, false, 1 },
 		};
 		// clang-format on
 
@@ -233,7 +233,7 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 			{     1, false, 0, 1, false,  1 },
 			{    11, false, 2, 9, false, 10 },
 			{    12,  true, 0, 0, false, 10 },
-			{    13,  true, 0, 0, false,  0 }
+			{    13,  true, 0, 0, false,  0 },
 		};
 		// clang-format on
 
@@ -249,7 +249,7 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 			{ 3, false, 2, 1, false, 1 },
 			{ 5, false, 4, 1, false, 2 },
 			{ 7, false, 6, 1, false, 3 },
-			{ 9, false, 8, 1, false, 4 }
+			{ 9, false, 8, 1, false, 4 },
 		};
 		// clang-format on
 
@@ -264,7 +264,7 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 			{ 1, false, 0, 0, false, 0 },
 			{ 3, false, 2, 1, false, 1 },
 			{ 7, false, 4, 3, false, 4 },
-			{ 9, false, 8, 1, false, 5 }
+			{ 9, false, 8, 1, false, 5 },
 		};
 		// clang-format on
 
@@ -280,7 +280,7 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 			{ 300, false, 2, 298, false, 298 },
 			{   3, false, 0,   0, false, 297 },
 			{   4, false, 0,   0, false, 296 },
-			{   5, false, 0,   0, false, 295 }
+			{   5, false, 0,   0, false, 295 },
 		};
 		// clang-format on
 
@@ -293,7 +293,7 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{    1, false, 0, 0, false, 0 },
-			{ 3000, false, 0, 0,  true, 0 }
+			{ 3000, false, 0, 0,  true, 0 },
 		};
 		// clang-format on
 

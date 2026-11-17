@@ -213,8 +213,10 @@ namespace RTC
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
 				  listener->OnAssociationStreamsResetFailed(streamReset.streamIds, streamReset.errorMessage);
 			},
-			  StreamReset{ .streamIds    = { outboundStreamIds.begin(), outboundStreamIds.end() },
-				             .errorMessage = std::string(errorMessage) });
+			  StreamReset{
+			    .streamIds    = { outboundStreamIds.begin(), outboundStreamIds.end() },
+			    .errorMessage = std::string(errorMessage),
+			  });
 		}
 
 		void AssociationListenerDeferrer::OnAssociationInboundStreamsReset(

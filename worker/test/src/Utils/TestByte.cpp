@@ -15,7 +15,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		0b10000000, 0b01000000, 0b00100000, 0b00010000,
 		0b01111111, 0b11111111, 0b11111111, 0b00000000,
 		0b11111111, 0b11111111, 0b11111111, 0b00000000,
-		0b10000000, 0b00000000, 0b00000000, 0b00000000
+		0b10000000, 0b00000000, 0b00000000, 0b00000000,
 	};
 	// clang-format on
 
@@ -28,6 +28,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 	SECTION("Set3Bytes()")
 	{
 		Utils::Byte::Set3Bytes(buffer, 4, 5666777);
+
 		REQUIRE(Utils::Byte::Get3Bytes(buffer, 4) == 5666777);
 	}
 
@@ -50,12 +51,15 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 	SECTION("Set3BytesSigned()")
 	{
 		Utils::Byte::Set3BytesSigned(buffer, 0, 8388607);
+
 		REQUIRE(Utils::Byte::Get3BytesSigned(buffer, 0) == 8388607);
 
 		Utils::Byte::Set3BytesSigned(buffer, 0, -1);
+
 		REQUIRE(Utils::Byte::Get3BytesSigned(buffer, 0) == -1);
 
 		Utils::Byte::Set3BytesSigned(buffer, 0, -8388608);
+
 		REQUIRE(Utils::Byte::Get3BytesSigned(buffer, 0) == -8388608);
 	}
 

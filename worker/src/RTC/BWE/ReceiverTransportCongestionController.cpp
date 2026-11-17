@@ -18,7 +18,9 @@ namespace RTC
 		      this,
 		      shared,
 		      TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{
-		        .maxRtcpPacketLen = options.maxRtcpPacketLen, .rtcpSenderSsrc = options.rtcpSenderSsrc }),
+		        .maxRtcpPacketLen = options.maxRtcpPacketLen,
+		        .rtcpSenderSsrc   = options.rtcpSenderSsrc,
+		      }),
 		    remoteBitrateEstimator(this),
 		    rembGenerator(
 		      this, RembGenerator::RembGeneratorOptions{ .rtcpSenderSsrc = options.rtcpSenderSsrc })

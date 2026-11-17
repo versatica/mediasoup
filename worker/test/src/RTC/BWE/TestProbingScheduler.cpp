@@ -59,12 +59,14 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 	                                 int64_t targetBitrate,
 	                                 int64_t minProbeDeltaUs) -> RTC::BWE::Types::ProbeClusterConfig
 	{
-		return RTC::BWE::Types::ProbeClusterConfig{ .id               = id,
-		                                            .atUs             = atUs,
-		                                            .targetBitrate    = targetBitrate,
-		                                            .targetDurationUs = 15 * 1000,
-		                                            .minProbeDeltaUs  = minProbeDeltaUs,
-		                                            .targetProbeCount = 5 };
+		return RTC::BWE::Types::ProbeClusterConfig{
+			.id               = id,
+			.atUs             = atUs,
+			.targetBitrate    = targetBitrate,
+			.targetDurationUs = 15 * 1000,
+			.minProbeDeltaUs  = minProbeDeltaUs,
+			.targetProbeCount = 5,
+		};
 	};
 
 	// Move the clock to when the next shot is due and let it out. Answers whether
@@ -213,8 +215,10 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		// Both at once, which is what the controller does when it asks for the two
 		// bursts the connection opens with.
 		probingScheduler.CreateProbeClusters(
-		  { makeClusterConfig(0, nowUs, TestBitrate, 2 * 1000),
-			  makeClusterConfig(1, nowUs, TestBitrate, 2 * 1000) });
+		  {
+		    makeClusterConfig(0, nowUs, TestBitrate, 2 * 1000),
+		    makeClusterConfig(1, nowUs, TestBitrate, 2 * 1000),
+		  });
 
 		while (emitNextShot())
 		{
@@ -241,8 +245,10 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		RTC::BWE::ProbingScheduler probingScheduler(std::addressof(listener), std::addressof(shared));
 
 		probingScheduler.CreateProbeClusters(
-		  { makeClusterConfig(0, nowUs, TestBitrate, 2 * 1000),
-			  makeClusterConfig(1, nowUs, TestBitrate, 2 * 1000) });
+		  {
+		    makeClusterConfig(0, nowUs, TestBitrate, 2 * 1000),
+		    makeClusterConfig(1, nowUs, TestBitrate, 2 * 1000),
+		  });
 
 		// Let the first shot out so that the first burst is under way.
 		REQUIRE(emitNextShot());

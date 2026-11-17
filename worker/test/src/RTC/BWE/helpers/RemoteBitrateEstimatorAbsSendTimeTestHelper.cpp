@@ -81,7 +81,7 @@ namespace bweHelpers
 		packet->SetTimestamp(rtpTimestamp);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, AbsSendTimeId, /*len*/ 3, rtpCommon::DataBuffer }
+			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, AbsSendTimeId, /*len*/ 3, rtpCommon::DataBuffer },
 		};
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);

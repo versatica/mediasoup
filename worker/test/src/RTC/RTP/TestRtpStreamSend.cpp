@@ -35,8 +35,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	rtpCommon::ResetBuffers();
 
 	constexpr std::string_view RetransmissionTimerLabel{ "rtp-stream-send-retransmissions" };
+
 	// Id the AV1 section below gives to the Dependency Descriptor extension.
 	constexpr uint8_t DependencyDescriptorId{ 12 };
+
 	// Length of the slice of `rtpCommon::FactoryBuffer` each RTP packet is built
 	// on, so that the packets alive at once in a section do not overlap.
 	constexpr size_t RtpPacketBufferLength{ 1500 };
@@ -57,7 +59,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			// The packet is restored once it has been retransmitted, so whatever it
 			// carries must be taken now rather than from the pointer above.
 			uint8_t extenLen;
-			const auto* extenValue = packet->GetExtensionValue(DependencyDescriptorId, extenLen);
+
+			const auto* const extenValue = packet->GetExtensionValue(DependencyDescriptorId, extenLen);
 
 			if (extenValue)
 			{
@@ -103,12 +106,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	    std::vector<std::pair<RTC::RTP::RtpStreamSend*, uint32_t>> streams,
 	    RTC::RTP::Packet* packet) -> void
 	{
-		std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket;
 
-		for (const auto& kv : streams)
+		for (const auto& [stream, ssrc] : streams)
 		{
-			auto* const stream  = kv.first;
-			const auto ssrc     = kv.second;
 			const auto origSsrc = packet->GetSsrc();
 
 			packet->SetSsrc(ssrc);
@@ -132,7 +133,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		}
 	};
 
-	const auto checkRtxPacket = [](RTC::RTP::Packet* rtxPacket, RTC::RTP::Packet* origPacket) -> void
+	const auto checkRtxPacket =
+	  [](const RTC::RTP::Packet* rtxPacket, const RTC::RTP::Packet* origPacket) -> void
 	{
 		REQUIRE(rtxPacket);
 		REQUIRE(rtxPacket->GetSequenceNumber() == origPacket->GetSequenceNumber());
@@ -153,6 +155,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	    uint8_t room = 8) -> void
 	{
 		uint8_t extenLen;
+
 		const auto* const extenValue = packet->GetExtensionValue(DependencyDescriptorId, extenLen);
 
 		REQUIRE(extenValue);
@@ -166,9 +169,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			std::memcpy(value, extenValue, extenLen);
 
 			const std::vector<RTC::RTP::Packet::Extension> extensions{
-				{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
+				{
+				 RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
 				 DependencyDescriptorId, static_cast<uint8_t>(extenLen + room),
-				 value }
+				 value, },
 			};
 
 			REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
@@ -181,7 +185,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(dependencyDescriptor);
 
 		auto* const payloadDescriptor =
-		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(dependencyDescriptor);
+		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(std::move(dependencyDescriptor));
 		auto* const payloadDescriptorHandler =
 		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler(payloadDescriptor);
 
@@ -249,16 +253,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		packet5->SetMarker(true);
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.useNack       = true;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -266,38 +270,38 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Receive all the packets (some of them not in order and/or duplicated).
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet1.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet3.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet2.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet3.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet4.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet5.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet5.get());
 
 		// Create a NACK item that request for all the packets.
@@ -325,11 +329,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Nothing is left so the timer is not running anymore.
 		REQUIRE(expireRetransmissionTimer(shared) == false);
 
-		auto* const rtxPacket1 = testRtpStreamListener.retransmittedPackets[0];
-		auto* const rtxPacket2 = testRtpStreamListener.retransmittedPackets[1];
-		auto* const rtxPacket3 = testRtpStreamListener.retransmittedPackets[2];
-		auto* const rtxPacket4 = testRtpStreamListener.retransmittedPackets[3];
-		auto* const rtxPacket5 = testRtpStreamListener.retransmittedPackets[4];
+		const auto* const rtxPacket1 = testRtpStreamListener.retransmittedPackets[0];
+		const auto* const rtxPacket2 = testRtpStreamListener.retransmittedPackets[1];
+		const auto* const rtxPacket3 = testRtpStreamListener.retransmittedPackets[2];
+		const auto* const rtxPacket4 = testRtpStreamListener.retransmittedPackets[3];
+		const auto* const rtxPacket5 = testRtpStreamListener.retransmittedPackets[4];
 
 		testRtpStreamListener.retransmittedPackets.clear();
 
@@ -358,16 +362,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet5(createRtpPacket(4, 21010, 1533796931));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = false,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.useNack       = false;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -375,38 +379,38 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Receive all the packets (some of them not in order and/or duplicated).
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet1.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet3.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet2.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet3.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet4.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet5.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet5.get());
 
 		// Create a NACK item that request for all the packets.
@@ -447,16 +451,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet5(createRtpPacket(4, 21010, 1533796931));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = false,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.useNack       = false;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::AUDIO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -464,38 +468,38 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Receive all the packets (some of them not in order and/or duplicated).
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet1.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet3.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet2.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet3.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet4.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet5.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet5.get());
 
 		// Create a NACK item that request for all the packets.
@@ -524,42 +528,44 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet2(createRtpPacket(1, 21007, 1533790901));
 
 		// Create two RtpStreamSend instances.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener1;
 		TestRtpStreamListener testRtpStreamListener2;
+		RTC::RTP::RtpStream::Params params1{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params1;
-
-		params1.ssrc          = 1111;
-		params1.clockRate     = 90000;
-		params1.useNack       = true;
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
-		std::string mid;
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream1(new RTC::RTP::RtpStreamSend(
-		  std::addressof(testRtpStreamListener1), std::addressof(shared), params1, mid));
+		const auto stream1 = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener1), std::addressof(shared), params1, mid);
 
-		RTC::RTP::RtpStream::Params params2;
+		RTC::RTP::RtpStream::Params params2{
+			.ssrc      = 2222,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		params2.ssrc          = 2222;
-		params2.clockRate     = 90000;
-		params2.useNack       = true;
 		params2.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream2(new RTC::RTP::RtpStreamSend(
-		  std::addressof(testRtpStreamListener2), std::addressof(shared2), params2, mid));
+		const auto stream2 = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener2), std::addressof(shared2), params2, mid);
 
 		// Receive all the packets in both streams.
 		sendRtpPacket(
 		  {
 		    { stream1.get(), params1.ssrc },
-        { stream2.get(), params2.ssrc }
-    },
+		    { stream2.get(), params2.ssrc },
+		},
 		  packet1.get());
 		sendRtpPacket(
 		  {
 		    { stream1.get(), params1.ssrc },
-        { stream2.get(), params2.ssrc }
-    },
+		    { stream2.get(), params2.ssrc },
+		},
 		  packet2.get());
 
 		// Create a NACK item that request for all the packets.
@@ -578,8 +584,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(testRtpStreamListener1.retransmittedPackets.size() == 2);
 		REQUIRE(expireRetransmissionTimer(shared) == false);
 
-		auto* rtxPacket1 = testRtpStreamListener1.retransmittedPackets[0];
-		auto* rtxPacket2 = testRtpStreamListener1.retransmittedPackets[1];
+		const auto* rtxPacket1 = testRtpStreamListener1.retransmittedPackets[0];
+		const auto* rtxPacket2 = testRtpStreamListener1.retransmittedPackets[1];
 
 		testRtpStreamListener1.retransmittedPackets.clear();
 
@@ -608,17 +614,17 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const uint8_t payload1[] =
 		{
 			0x80, 0xe0, 0x80, 0x01,
-			0xe8, 0x40, 0x7a, 0xd8
+			0xe8, 0x40, 0x7a, 0xd8,
 		};
 		const uint8_t payload2[] =
 		{
 			0x80, 0xe0, 0x80, 0x02,
-			0xe9, 0x40, 0x7a, 0xd8
+			0xe9, 0x40, 0x7a, 0xd8,
 		};
 		const uint8_t payload3[] =
 		{
 			0x80, 0xe0, 0x80, 0x03,
-			0xea, 0x40, 0x7a, 0xd8
+			0xea, 0x40, 0x7a, 0xd8,
 		};
 		// clang-format on
 
@@ -638,35 +644,37 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		packet3->SetPayload(payload3, sizeof(payload3));
 
 		// Create two RtpStreamSend instances.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener1;
 		TestRtpStreamListener testRtpStreamListener2;
+		RTC::RTP::RtpStream::Params params1{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params1;
-
-		params1.ssrc          = 1111;
-		params1.clockRate     = 90000;
-		params1.useNack       = true;
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
-		std::string mid;
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream1(new RTC::RTP::RtpStreamSend(
-		  std::addressof(testRtpStreamListener1), std::addressof(shared), params1, mid));
+		const auto stream1 = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener1), std::addressof(shared), params1, mid);
 
-		RTC::RTP::RtpStream::Params params2;
+		RTC::RTP::RtpStream::Params params2{
+			.ssrc      = 2222,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		params2.ssrc          = 2222;
-		params2.clockRate     = 90000;
-		params2.useNack       = true;
 		params2.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream2(new RTC::RTP::RtpStreamSend(
-		  std::addressof(testRtpStreamListener2), std::addressof(shared2), params2, mid));
+		const auto stream2 = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener2), std::addressof(shared2), params2, mid);
 
 		// Create two VP8 encoding contexts.
-		RTC::RTP::Codecs::EncodingContext::Params params;
-
-		params.spatialLayers  = 0;
-		params.temporalLayers = 3;
+		const RTC::RTP::Codecs::EncodingContext::Params params{
+			.spatialLayers  = 0,
+			.temporalLayers = 3,
+		};
 
 		RTC::RTP::Codecs::VP8::EncodingContext context1(params);
 
@@ -716,10 +724,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Process the second packet for context2.
 		forwarded = payloadDescriptorHandler2->Process(std::addressof(context2), packet2.get(), marker);
 
-		// It must not forwared because the target temporal layer is 0.
+		// It must not be forwarded because the target temporal layer is 0.
 		REQUIRE(!forwarded);
 
-		// Parse the third packet
+		// Parse the third packet.
 		auto* const payloadDescriptor3 =
 		  RTC::RTP::Codecs::VP8::Parse(packet3->GetPayload(), packet3->GetPayloadLength());
 
@@ -728,7 +736,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		auto* const payloadDescriptorHandler3 =
 		  new RTC::RTP::Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor3);
 
-		packet2->SetPayloadDescriptorHandler(payloadDescriptorHandler3);
+		packet3->SetPayloadDescriptorHandler(payloadDescriptorHandler3);
 
 		// Process the third packet for context1.
 		forwarded = payloadDescriptorHandler3->Process(std::addressof(context1), packet3.get(), marker);
@@ -738,8 +746,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Receive the third packet in the first stream.
 		sendRtpPacket(
 		  {
-		    { stream1.get(), params1.ssrc }
-    },
+		    { stream1.get(), params1.ssrc },
+		},
 		  packet3.get());
 
 		// Update current/target temporal layers for context2.
@@ -753,8 +761,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Receive the third packet in the second stream.
 		sendRtpPacket(
 		  {
-		    { stream2.get(), params2.ssrc }
-    },
+		    { stream2.get(), params2.ssrc },
+		},
 		  packet3.get());
 
 		// Create a NACK item that requests the third packet.
@@ -772,12 +780,13 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		REQUIRE(testRtpStreamListener1.retransmittedPackets.size() == 1);
 
-		auto* packet = testRtpStreamListener1.retransmittedPackets[0];
+		const auto* packet = testRtpStreamListener1.retransmittedPackets[0];
 
 		// Parse payload and check pictureId.
-		auto* const payloadDescriptor4 =
-		  RTC::RTP::Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength());
+		const std::unique_ptr<RTC::RTP::Codecs::VP8::PayloadDescriptor> payloadDescriptor4(
+		  RTC::RTP::Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength()));
 
+		REQUIRE(payloadDescriptor4);
 		REQUIRE(payloadDescriptor4->pictureId == 3);
 
 		// Process the NACK packet on stream2.
@@ -788,14 +797,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		packet = testRtpStreamListener2.retransmittedPackets[0];
 
 		// Parse payload and check pictureId.
-		auto* const payloadDescriptor5 =
-		  RTC::RTP::Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength());
+		const std::unique_ptr<RTC::RTP::Codecs::VP8::PayloadDescriptor> payloadDescriptor5(
+		  RTC::RTP::Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength()));
 
 		REQUIRE(payloadDescriptor5);
 		REQUIRE(payloadDescriptor5->pictureId == 2);
-
-		delete payloadDescriptor4;
-		delete payloadDescriptor5;
 	}
 
 	SECTION("retransmitted packets are correctly encoded [AV1]")
@@ -853,7 +859,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			0x80, 0x00, 0x01, 0x80,
 			0x01, 0x1E, 0xA8, 0x51,
 			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C
+			0xFC, 0x0B, 0x3C,
 		};
 
 		/*
@@ -869,7 +875,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		 */
 		uint8_t dependencyDescriptorValue2[] =
 		{
-			0xC2, 0x00, 0x02
+			0xC2, 0x00, 0x02,
 		};
 
 		/*
@@ -885,7 +891,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		 */
 		uint8_t dependencyDescriptorValue3[] =
 		{
-			0x40, 0x00, 0x03
+			0x40, 0x00, 0x03,
 		};
 		// clang-format on
 
@@ -899,9 +905,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  [&headerExtensionIds](RTC::RTP::Packet* packet, uint8_t* value, size_t len) -> void
 		{
 			const std::vector<RTC::RTP::Packet::Extension> extensions{
-				{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
+				{
+				 RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
 				 DependencyDescriptorId, static_cast<uint8_t>(len),
-				 value }
+				 value, },
 			};
 
 			REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
@@ -930,35 +937,37 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet3.get(), dependencyDescriptorValue3, sizeof(dependencyDescriptorValue3));
 
 		// Create two RtpStreamSend instances.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener1;
 		TestRtpStreamListener testRtpStreamListener2;
+		RTC::RTP::RtpStream::Params params1{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params1;
-
-		params1.ssrc          = 1111;
-		params1.clockRate     = 90000;
-		params1.useNack       = true;
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
-		std::string mid;
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream1(new RTC::RTP::RtpStreamSend(
-		  std::addressof(testRtpStreamListener1), std::addressof(shared), params1, mid));
+		const auto stream1 = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener1), std::addressof(shared), params1, mid);
 
-		RTC::RTP::RtpStream::Params params2;
+		RTC::RTP::RtpStream::Params params2{
+			.ssrc      = 2222,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		params2.ssrc          = 2222;
-		params2.clockRate     = 90000;
-		params2.useNack       = true;
 		params2.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream2(new RTC::RTP::RtpStreamSend(
-		  std::addressof(testRtpStreamListener2), std::addressof(shared2), params2, mid));
+		const auto stream2 = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener2), std::addressof(shared2), params2, mid);
 
 		// Create two AV1 encoding contexts.
-		RTC::RTP::Codecs::EncodingContext::Params params;
-
-		params.spatialLayers  = 1;
-		params.temporalLayers = 2;
+		const RTC::RTP::Codecs::EncodingContext::Params params{
+			.spatialLayers  = 1,
+			.temporalLayers = 2,
+		};
 
 		RTC::RTP::Codecs::AV1::EncodingContext context1(params);
 
@@ -976,8 +985,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
-		// Parse the first packet for the shake of having the template dependency structure.
+		// Parse the first packet for the sake of having the template dependency
+		// structure.
 		parseAV1RtpPacket(packet1.get(), dependencyDescriptorContext);
+
 		// Parse the second packet.
 		parseAV1RtpPacket(packet2.get(), dependencyDescriptorContext);
 
@@ -1000,7 +1011,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(context2.GetCurrentSpatialLayer() == 0);
 		REQUIRE(context2.GetCurrentTemporalLayer() == 0);
 
-		// Parse the third packet
+		// Parse the third packet.
 		parseAV1RtpPacket(packet3.get(), dependencyDescriptorContext);
 
 		// Process the third packet with context1 and verify current spatial layers.
@@ -1011,8 +1022,9 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(context1.GetCurrentTemporalLayer() == 0);
 
 		packet3->SetSsrc(params1.ssrc);
+
 		// Whenever packet3 is Nacked on stream1, it must always be set a
-		// 00000001 (S0_T1) active decode target bitmas.
+		// 00000001 (S0_T1) active decode target bitmask.
 		const auto result = stream1->ReceivePacket(packet3.get());
 
 		REQUIRE(result.accepted);
@@ -1065,7 +1077,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		packet3->SetSsrc(params2.ssrc);
 
 		// Whenever packet3 is Nacked on stream2, it must always be set a
-		// 00000011 (S0_T1) active decode target bitmas.
+		// 00000011 (S0_T1) active decode target bitmask.
 		const auto result2 = stream2->ReceivePacket(packet3.get());
 
 		if (result2.retransmissionBufferItem)
@@ -1092,7 +1104,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Parse the DD it was retransmitted with and check the bitmask.
 		auto sent = testRtpStreamListener1.retransmittedDependencyDescriptors[0];
 
-		auto dependencyDescriptor4 = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		const auto dependencyDescriptor4 = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
 		    sent.data(), sent.size(), dependencyDescriptorContext));
 
@@ -1107,7 +1119,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Parse the DD it was retransmitted with and check the bitmask.
 		sent = testRtpStreamListener2.retransmittedDependencyDescriptors[0];
 
-		auto dependencyDescriptor5 = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		const auto dependencyDescriptor5 = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
 		    sent.data(), sent.size(), dependencyDescriptorContext));
 
@@ -1138,16 +1150,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet2(createRtpPacket(1, 21007, secondTs - 1));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params1{
+			.ssrc      = 1111,
+			.clockRate = clockRate,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params1;
-
-		params1.ssrc          = 1111;
-		params1.clockRate     = clockRate;
-		params1.useNack       = true;
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params1, mid);
@@ -1155,13 +1167,13 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Receive all the packets.
 		sendRtpPacket(
 		  {
-		    { stream.get(), params1.ssrc }
-    },
+		    { stream.get(), params1.ssrc },
+		},
 		  packet1.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params1.ssrc }
-    },
+		    { stream.get(), params1.ssrc },
+		},
 		  packet2.get());
 
 		// Create a NACK item that request for all the packets.
@@ -1180,8 +1192,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 2);
 		REQUIRE(expireRetransmissionTimer(shared) == false);
 
-		auto* const rtxPacket1 = testRtpStreamListener.retransmittedPackets[0];
-		auto* const rtxPacket2 = testRtpStreamListener.retransmittedPackets[1];
+		const auto* const rtxPacket1 = testRtpStreamListener.retransmittedPackets[0];
+		const auto* const rtxPacket2 = testRtpStreamListener.retransmittedPackets[1];
 
 		testRtpStreamListener.retransmittedPackets.clear();
 
@@ -1195,8 +1207,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const uint32_t firstTs   = 1533790901;
 		const uint32_t diffTs =
 		  RTC::RTP::RtpStreamSend::MaxRetransmissionDelayForVideoMs * clockRate / 1000;
+
 		// Make second packet arrive more than MaxRetransmissionDelayForVideoMs later.
 		const uint32_t secondTs = firstTs + diffTs + 100;
+
 		// Send a third packet so it will clean old packets from the buffer.
 		const uint32_t thirdTs = firstTs + (2 * diffTs);
 
@@ -1205,16 +1219,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet3(createRtpPacket(2, 21008, thirdTs));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params1{
+			.ssrc      = 1111,
+			.clockRate = clockRate,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params1;
-
-		params1.ssrc          = 1111;
-		params1.clockRate     = clockRate;
-		params1.useNack       = true;
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params1, mid);
@@ -1222,18 +1236,18 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Receive all the packets.
 		sendRtpPacket(
 		  {
-		    { stream.get(), params1.ssrc }
-    },
+		    { stream.get(), params1.ssrc },
+		},
 		  packet1.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params1.ssrc }
-    },
+		    { stream.get(), params1.ssrc },
+		},
 		  packet2.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params1.ssrc }
-    },
+		    { stream.get(), params1.ssrc },
+		},
 		  packet3.get());
 
 		// Create a NACK item that requests for all packets.
@@ -1254,7 +1268,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 1);
 		REQUIRE(expireRetransmissionTimer(shared) == false);
 
-		auto* const rtxPacket2 = testRtpStreamListener.retransmittedPackets[0];
+		const auto* const rtxPacket2 = testRtpStreamListener.retransmittedPackets[0];
 
 		testRtpStreamListener.retransmittedPackets.clear();
 
@@ -1263,7 +1277,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("packets get removed from the retransmission buffer if seq number of the stream is reset")
 	{
-		// This scenario reproduce the "too bad sequence number" and "bad sequence
+		// This scenario reproduces the "too bad sequence number" and "bad sequence
 		// number" scenarios in RtpStream::UpdateSeq().
 		const auto packet1(createRtpPacket(0, 50001, 1000001));
 		const auto packet2(createRtpPacket(1, 50002, 1000002));
@@ -1272,44 +1286,44 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// older than current max seq) and will be dropped.
 		const auto packet3(createRtpPacket(2, 40003, 1000003));
 
-		// Forth packet has seq=badSeq+1 so will be accepted and will trigger a
+		// Fourth packet has seq=badSeq+1 so will be accepted and will trigger a
 		// stream reset.
 		const auto packet4(createRtpPacket(3, 40004, 1000004));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params1{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params1;
-
-		params1.ssrc          = 1111;
-		params1.clockRate     = 90000;
-		params1.useNack       = true;
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params1, mid);
 
 		sendRtpPacket(
 		  {
-		    { stream.get(), params1.ssrc }
-    },
+		    { stream.get(), params1.ssrc },
+		},
 		  packet1.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params1.ssrc }
-    },
+		    { stream.get(), params1.ssrc },
+		},
 		  packet2.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params1.ssrc }
-    },
+		    { stream.get(), params1.ssrc },
+		},
 		  packet3.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params1.ssrc }
-    },
+		    { stream.get(), params1.ssrc },
+		},
 		  packet4.get());
 
 		// Create a NACK item that requests for packets 1 and 2.
@@ -1331,24 +1345,24 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet2(createRtpPacket(1, 21007, 1533790901));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.useNack       = true;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet1.get());
 
 		// The second packet is stored 1 ms later.
@@ -1356,8 +1370,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet2.get());
 
 		// Move the clock so the first packet has been stored for longer than
@@ -1383,39 +1397,41 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	SECTION("pending retransmissions not retransmitted don't count towards the limit per iteration")
 	{
 		const auto packet1(createRtpPacket(0, 21006, 1533790901));
+
 		// No packet with seq 21007 is ever stored.
 		const auto packet3(createRtpPacket(2, 21008, 1533790901));
+
 		const auto packet4(createRtpPacket(3, 21009, 1533790901));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.useNack       = true;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet1.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet3.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet4.get());
 
 		// Create a NACK item that requests for seqs 21006 to 21009.
@@ -1449,39 +1465,39 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet4(createRtpPacket(3, 21009, 1533790901));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.useNack       = true;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet1.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet2.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet3.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet4.get());
 
 		// Create a NACK item that requests for all the packets.
@@ -1530,34 +1546,34 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet3(createRtpPacket(2, 21008, 1533790901));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.useNack       = true;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet1.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet2.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet3.get());
 
 		// Create a NACK item that requests for all the packets.
@@ -1594,34 +1610,34 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet5(createRtpPacket(4, 40005, 1000005));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.useNack       = true;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet1.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet2.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet3.get());
 
 		// Create a NACK item that requests for the first three packets.
@@ -1638,13 +1654,13 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// Reset the seq number of the stream while the third one is pending.
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet4.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet5.get());
 
 		// The timer is not running anymore and the pending packet is never
@@ -1662,44 +1678,44 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet5(createRtpPacket(4, 21010, 1533790901));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.useNack       = true;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet1.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet2.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet3.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet4.get());
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet5.get());
 
 		// Create a NACK with a first item that requests for packets 3, 4 and 5 and
@@ -1735,24 +1751,24 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet1(createRtpPacket(0, 21006, 1533790901));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.useNack       = true;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
 		sendRtpPacket(
 		  {
-		    { stream.get(), params.ssrc }
-    },
+		    { stream.get(), params.ssrc },
+		},
 		  packet1.get());
 
 		// Create a NACK item that requests for the packet.
@@ -1788,16 +1804,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet(createRtpPacket(0, 50001, 1000001));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = packet->GetSsrc(),
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = packet->GetSsrc();
-		params.clockRate     = 90000;
-		params.useNack       = true;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -1819,16 +1835,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet(createRtpPacket(0, 1000, 1000000000));
 
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = packet->GetSsrc(),
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = packet->GetSsrc();
-		params.clockRate     = 90000;
-		params.useNack       = true;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -1869,19 +1885,20 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("Sender Report RTP timestamp is based on the capture instant when known")
 	{
-		// Instant reported by the mocked clock, and hence the one at which packets are seen.
+		// Instant reported by the mocked clock, and hence the one at which packets
+		// are seen.
 		constexpr int64_t PacketAtUs{ 1000 * 1000 };
 		constexpr uint32_t PacketTs{ 1533790901 };
 
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		// Without capture instant, the instant at which the packet was seen is used.
 		{
@@ -1892,8 +1909,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 			sendRtpPacket(
 			  {
-			    { std::addressof(stream), params.ssrc }
-      },
+			    { std::addressof(stream), params.ssrc },
+			},
 			  packet.get());
 
 			const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket(
@@ -1920,8 +1937,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 			sendRtpPacket(
 			  {
-			    { std::addressof(stream), params.ssrc }
-      },
+			    { std::addressof(stream), params.ssrc },
+			},
 			  packet.get());
 
 			const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket(
@@ -1937,8 +1954,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			REQUIRE(report->GetRtpTimestamp() == PacketTs + ((1500 * params.clockRate) / 1000));
 		}
 
-		// A capture instant ahead of now, which the estimation may yield, does not make the
-		// difference wrap around.
+		// A capture instant ahead of now, which the estimation may yield, does not
+		// make the difference wrap around.
 		{
 			RTC::RTP::RtpStreamSend stream(
 			  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -1949,8 +1966,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 			sendRtpPacket(
 			  {
-			    { std::addressof(stream), params.ssrc }
-      },
+			    { std::addressof(stream), params.ssrc },
+			},
 			  packet.get());
 
 			const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket(
@@ -1969,19 +1986,20 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("no Sender Report is generated once the stream has stopped sending")
 	{
-		// Instant reported by the mocked clock, and hence the one at which packets are seen.
+		// Instant reported by the mocked clock, and hence the one at which packets
+		// are seen.
 		constexpr int64_t PacketAtUs{ 1000 * 1000 };
 		constexpr uint32_t PacketTs{ 1533790901 };
 
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -1993,8 +2011,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		sendRtpPacket(
 		  {
-		    { std::addressof(stream), params.ssrc }
-    },
+		    { std::addressof(stream), params.ssrc },
+		},
 		  packet.get());
 
 		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket(
@@ -2019,19 +2037,20 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("no Sender Report is added to a compound packet without room for it")
 	{
-		// Instant reported by the mocked clock, and hence the one at which packets are seen.
+		// Instant reported by the mocked clock, and hence the one at which packets
+		// are seen.
 		constexpr int64_t PacketAtUs{ 1000 * 1000 };
 		constexpr uint32_t PacketTs{ 1533790901 };
 
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -2040,8 +2059,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		sendRtpPacket(
 		  {
-		    { std::addressof(stream), params.ssrc }
-    },
+		    { std::addressof(stream), params.ssrc },
+		},
 		  packet.get());
 
 		// One byte short of a Sender Report.
@@ -2058,19 +2077,20 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("Sender Report octet count only counts payload bytes")
 	{
-		// Instant reported by the mocked clock, and hence the one at which packets are seen.
+		// Instant reported by the mocked clock, and hence the one at which packets
+		// are seen.
 		constexpr int64_t PacketAtUs{ 1000 * 1000 };
 		constexpr uint32_t PacketTs{ 1533790901 };
 
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -2090,18 +2110,18 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		sendRtpPacket(
 		  {
-		    { std::addressof(stream), params.ssrc }
-    },
+		    { std::addressof(stream), params.ssrc },
+		},
 		  payloadAndPaddingPacket.get());
 		sendRtpPacket(
 		  {
-		    { std::addressof(stream), params.ssrc }
-    },
+		    { std::addressof(stream), params.ssrc },
+		},
 		  payloadOnlyPacket.get());
 		sendRtpPacket(
 		  {
-		    { std::addressof(stream), params.ssrc }
-    },
+		    { std::addressof(stream), params.ssrc },
+		},
 		  paddingOnlyPacket.get());
 
 		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket(
@@ -2120,15 +2140,15 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("RTT is computed from Receiver Reports")
 	{
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -2137,7 +2157,9 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  [&](int64_t receivedAtUs, uint32_t lastSr, uint32_t dlsr) -> std::optional<float>
 		{
 			const RTC::RTCP::AnyReportPacket::ReportBlock reportBlock{
-				.ssrc = params.ssrc, .lastSenderReport = lastSr, .delaySinceLastSenderReport = dlsr
+				.ssrc                       = params.ssrc,
+				.lastSenderReport           = lastSr,
+				.delaySinceLastSenderReport = dlsr,
 			};
 
 			const auto result = stream.ReceiveRtcpReportBlock(reportBlock, receivedAtUs);
@@ -2154,43 +2176,43 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		// The Sender Report is sent 1 second before the wrap, the remote endpoint holds
 		// it for half a second, and the Receiver Report arrives right at the wrap.
-		REQUIRE(receiveReceiverReport(WrapUs, 0xFFFF0000, 0x8000) == 500.0f);
+		REQUIRE(receiveReceiverReport(WrapUs, 0xFFFF0000, 0x8000) == 500.0F);
 
-		REQUIRE(stream.GetRttMs() == 500.0f);
+		REQUIRE(stream.GetRttMs() == 500.0F);
 
 		// No Sender Report was received by the remote endpoint yet, so nothing is
 		// measured and the last RTT is kept.
 		REQUIRE(receiveReceiverReport(WrapUs, 0, 0) == std::nullopt);
 
-		REQUIRE(stream.GetRttMs() == 500.0f);
+		REQUIRE(stream.GetRttMs() == 500.0F);
 
 		// The remote endpoint answers the Sender Report right away.
-		REQUIRE(receiveReceiverReport((10 * 1000000) + 500000, 0x000A0000, 0) == 500.0f);
+		REQUIRE(receiveReceiverReport((10 * 1000000) + 500000, 0x000A0000, 0) == 500.0F);
 
-		REQUIRE(stream.GetRttMs() == 500.0f);
+		REQUIRE(stream.GetRttMs() == 500.0F);
 
 		// A negative RTT yields 1 millisecond.
-		REQUIRE(receiveReceiverReport(20 * 1000000, 0x00140000, 0x8000) == 1.0f);
+		REQUIRE(receiveReceiverReport(20 * 1000000, 0x00140000, 0x8000) == 1.0F);
 
-		REQUIRE(stream.GetRttMs() == 1.0f);
+		REQUIRE(stream.GetRttMs() == 1.0F);
 
 		// So does a RTT too small to be true.
-		REQUIRE(receiveReceiverReport(20 * 1000000, 0x0013FFFF, 0) == 1.0f);
+		REQUIRE(receiveReceiverReport(20 * 1000000, 0x0013FFFF, 0) == 1.0F);
 
-		REQUIRE(stream.GetRttMs() == 1.0f);
+		REQUIRE(stream.GetRttMs() == 1.0F);
 	}
 
 	SECTION("the loss of the uplink of the Producer is not counted as loss of this link")
 	{
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -2212,8 +2234,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 				sendRtpPacket(
 				  {
-				    { std::addressof(stream), params.ssrc }
-        },
+				    { std::addressof(stream), params.ssrc },
+				},
 				  packet.get());
 			}
 		};
@@ -2221,9 +2243,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto receiveReceiverReport =
 		  [&](uint32_t lastSeq, int32_t totalLost) -> std::optional<RTC::RTP::RtpStreamSend::Loss>
 		{
-			const RTC::RTCP::AnyReportPacket::ReportBlock reportBlock{ .ssrc               = params.ssrc,
-			                                                           .totalLost          = totalLost,
-			                                                           .extendedHighestSeq = lastSeq };
+			const RTC::RTCP::AnyReportPacket::ReportBlock reportBlock{
+				.ssrc               = params.ssrc,
+				.totalLost          = totalLost,
+				.extendedHighestSeq = lastSeq,
+			};
 
 			const auto result = stream.ReceiveRtcpReportBlock(reportBlock, nowUs);
 
@@ -2389,16 +2413,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("repaired packets are discounted from the reported loss only when RTX is used")
 	{
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.useNack       = true;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		// Forward a run of packets.
 		const auto sendPackets =
@@ -2410,8 +2434,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 				sendRtpPacket(
 				  {
-				    { std::addressof(stream), params.ssrc }
-        },
+				    { std::addressof(stream), params.ssrc },
+				},
 				  packet.get());
 			}
 		};
@@ -2419,9 +2443,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto receiveReceiverReport =
 		  [&](RTC::RTP::RtpStreamSend& stream, uint32_t lastSeq, int32_t totalLost) -> void
 		{
-			const RTC::RTCP::AnyReportPacket::ReportBlock reportBlock{ .ssrc               = params.ssrc,
-			                                                           .totalLost          = totalLost,
-			                                                           .extendedHighestSeq = lastSeq };
+			const RTC::RTCP::AnyReportPacket::ReportBlock reportBlock{
+				.ssrc               = params.ssrc,
+				.totalLost          = totalLost,
+				.extendedHighestSeq = lastSeq,
+			};
 
 			stream.ReceiveRtcpReportBlock(reportBlock, nowUs);
 		};
@@ -2496,15 +2522,15 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("key frame requests are counted by type")
 	{
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-
-		std::string mid;
 
 		RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -2521,16 +2547,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 	SECTION("SDES chunk carries the CNAME and takes the length it announces")
 	{
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.cname     = "test-cname",
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
-		params.cname         = "test-cname";
-
-		std::string mid;
 
 		const RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
@@ -2581,20 +2607,21 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	SECTION("performance")
 	{
 		// Create a RtpStreamSend instance.
+		const std::string mid;
+
 		TestRtpStreamListener testRtpStreamListener;
+		RTC::RTP::RtpStream::Params params{
+			.ssrc      = 1111,
+			.clockRate = 90000,
+			.useNack   = true,
+		};
 
-		RTC::RTP::RtpStream::Params params;
-
-		params.ssrc          = 1111;
-		params.clockRate     = 90000;
-		params.useNack       = true;
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
-		std::string mid;
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream1(new RTC::RTP::RtpStreamSend(
-		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid));
+		const auto stream1 = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
-		size_t iterations = 10000000;
+		const size_t iterations = 10000000;
 
 		auto start = std::chrono::system_clock::now();
 
@@ -2612,11 +2639,13 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		}
 
 		std::chrono::duration<double> dur = std::chrono::system_clock::now() - start;
+
 		std::cout << "nullptr && initialized shared_ptr: \t" << dur.count() << " seconds" << std::endl;
 
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::AUDIO;
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream2(new RTC::RTP::RtpStreamSend(
-		  std::addressof(testRtpStreamListener), std::addressof(shared2), params, mid));
+
+		const auto stream2 = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener), std::addressof(shared2), params, mid);
 
 		start = std::chrono::system_clock::now();
 

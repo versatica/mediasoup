@@ -159,8 +159,10 @@ SCENARIO("BWE TrendlineEstimator", "[bwe][trendlineestimator]")
 		// Sorting only decides which sample is dropped when the window is full and
 		// what the ends of the window are for the slope cap, since fitting a line
 		// doesn't depend on the order of the points.
-		const RTC::BWE::TrendlineEstimator::TrendlineEstimatorOptions options{ .enableSort = true,
-		                                                                       .enableCap  = true };
+		const RTC::BWE::TrendlineEstimator::TrendlineEstimatorOptions options{
+			.enableSort = true,
+			.enableCap  = true,
+		};
 
 		RTC::BWE::TrendlineEstimator trendlineEstimator(options);
 

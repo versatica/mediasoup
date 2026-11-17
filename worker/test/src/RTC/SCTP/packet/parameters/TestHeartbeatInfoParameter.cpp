@@ -153,7 +153,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[serializable][sctp][parameter]")
 			// Heartbeat Information (7 bytes): 0x11223344556677
 			0x11, 0x22, 0x33, 0x44,
 			// 1 byte of padding (missing)
-			0x55, 0x66, 0x77
+			0x55, 0x66, 0x77,
 		};
 		// clang-format on
 

@@ -18,7 +18,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[serializable][sctp][errorcause]")
 			0x00, 0x04, 0x00, 0x04,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
-			0xAA, 0xBB, 0xCC
+			0xAA, 0xBB, 0xCC,
 		};
 		// clang-format on
 
@@ -73,7 +73,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[serializable][sctp][errorcause]")
 		alignas(4) uint8_t buffer1[] =
 		{
 			// Code:999 (UNKNOWN), Length: 4
-			0x03, 0xE7, 0x00, 0x04
+			0x03, 0xE7, 0x00, 0x04,
 		};
 		// clang-format on
 

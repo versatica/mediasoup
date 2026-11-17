@@ -21,7 +21,7 @@ SCENARIO("Unknown Parameter", "[serializable][sctp][parameter]")
 			// 1 byte of padding
 			0x89, 0xAB, 0xCD, 0x00,
 			// Extra bytes that should be ignored
-			0xAA, 0xBB, 0xCC
+			0xAA, 0xBB, 0xCC,
 		};
 		// clang-format on
 
@@ -138,7 +138,7 @@ SCENARIO("Unknown Parameter", "[serializable][sctp][parameter]")
 			// Unknown value: 0x0123456789ABCD
 			0x01, 0x23, 0x45, 0x67,
 			// 1 byte of padding (missing)
-			0x89, 0xAB, 0xCD
+			0x89, 0xAB, 0xCD,
 		};
 		// clang-format on
 

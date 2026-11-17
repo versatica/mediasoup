@@ -305,9 +305,11 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		absCaptureTimePacket->SetTimestamp(rtpTs);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{ RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
+			{
+			 RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
 			 AbsCaptureTimeId, /*len*/ 8,
-			 rtpCommon::DataBuffer }
+			 rtpCommon::DataBuffer,
+			 },
 		};
 
 		REQUIRE(
@@ -2473,7 +2475,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
       { 0, 1 },
       { 0, 2 },
       { 1, 2 },
-      { 2, 2 }
+      { 2, 2 },
 		};
 
 		REQUIRE(bitrateOptions.options.size() == expectedLayers.size() + 1);
@@ -2514,7 +2516,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
       { 0, 1 },
       { 0, 2 },
       { 1, 1 },
-      { 2, 2 }
+      { 2, 2 },
 		};
 
 		REQUIRE(bitrateOptions.options.size() == expectedLayers.size() + 1);

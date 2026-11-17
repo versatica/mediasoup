@@ -59,7 +59,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			// Name: "abcd"
 			0x61, 0x62, 0x63, 0x64,
 			// 4 bytes of application-dependent data
-			0xAA, 0xBB, 0xCC, 0xDD
+			0xAA, 0xBB, 0xCC, 0xDD,
 		};
 		// clang-format on
 
@@ -158,7 +158,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			// V=2, P=0, SC=2, PT:203, Length: 1
 			0b10000010, 0xCB, 0x00, 0x01,
 			// SSRC 1: 1111
-			0x00, 0x00, 0x04, 0x57
+			0x00, 0x00, 0x04, 0x57,
 		};
 		// clang-format on
 
@@ -174,7 +174,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			// SSRC 1: 1111
 			0x00, 0x00, 0x04, 0x57,
 			// 2 extra bytes
-			0x11, 0x22
+			0x11, 0x22,
 		};
 		// clang-format on
 
@@ -189,7 +189,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			// V=2, P=0, SC=1, PT:203, Length: 2
 			0b10000001, 0xCB, 0x00, 0x02,
 			// SSRC 1: 1111
-			0x00, 0x00, 0x04, 0x57
+			0x00, 0x00, 0x04, 0x57,
 		};
 		// clang-format on
 
@@ -202,7 +202,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			// V=0, P=0, SC=1, PT:203, Length: 1
 			0b00000001, 0xCB, 0x00, 0x01,
 			// SSRC 1: 1111
-			0x00, 0x00, 0x04, 0x57
+			0x00, 0x00, 0x04, 0x57,
 		};
 		// clang-format on
 
@@ -212,7 +212,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		// clang-format off
 		alignas(4) uint8_t buffer5[] =
 		{
-			0b10000001, 0xCB, 0x00
+			0b10000001, 0xCB, 0x00,
 		};
 		// clang-format on
 
@@ -224,7 +224,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		{
 			// V=2, P=0, Count=1, PT:0, Length: 1
 			0b10000001, 0x00, 0x00, 0x01,
-			0x00, 0x00, 0x04, 0x57
+			0x00, 0x00, 0x04, 0x57,
 		};
 		// clang-format on
 
@@ -239,7 +239,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			// V=2, P=1, SC=1, PT:203, Length: 1
 			0b10100001, 0xCB, 0x00, 0x01,
 			// SSRC 1: 1111
-			0x00, 0x00, 0x04, 0x57
+			0x00, 0x00, 0x04, 0x57,
 		};
 		// clang-format on
 
@@ -255,7 +255,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			// SSRC 1: 1111
 			0x00, 0x00, 0x04, 0x57,
 			// Padding: 4 bytes, the last one being 0
-			0x00, 0x00, 0x00, 0x00
+			0x00, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -272,7 +272,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			// SSRC 1: 1111
 			0x00, 0x00, 0x04, 0x57,
 			// Padding: 4 bytes, the last one announcing 8
-			0x00, 0x00, 0x00, 0x08
+			0x00, 0x00, 0x00, 0x08,
 		};
 		// clang-format on
 
@@ -298,7 +298,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			0x11, 0x22, 0x33, 0x44,
 			0x55,
 			// Padding: 3 bytes
-			0x00, 0x00, 0x03
+			0x00, 0x00, 0x03,
 		};
 		// clang-format on
 
@@ -545,13 +545,15 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		packet4->SetSsrc(4444);
 		packet4->AddReportBlock(
-		  { .ssrc                       = 5555,
-			  .fractionLost               = 10,
-			  .totalLost                  = -3,
-			  .extendedHighestSeq         = 100,
-			  .jitter                     = 20,
-			  .lastSenderReport           = 30,
-			  .delaySinceLastSenderReport = 40 });
+		  {
+		    .ssrc                       = 5555,
+		    .fractionLost               = 10,
+		    .totalLost                  = -3,
+		    .extendedHighestSeq         = 100,
+		    .jitter                     = 20,
+		    .lastSenderReport           = 30,
+		    .delaySinceLastSenderReport = 40,
+		  });
 		packet4->Consolidate();
 
 		/* Build another packet and consolidate it. */
@@ -698,7 +700,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			// SSRC of media source: 0
 			0x00, 0x00, 0x00, 0x00,
 			// 4 bytes of value
-			0x00, 0x00, 0x00, 0x01
+			0x00, 0x00, 0x00, 0x01,
 		};
 		// clang-format on
 
@@ -792,7 +794,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			// LRR: 4444
 			0x00, 0x00, 0x11, 0x5C,
 			// DLRR: 5555
-			0x00, 0x00, 0x15, 0xB3
+			0x00, 0x00, 0x15, 0xB3,
 		};
 		// clang-format on
 
@@ -902,7 +904,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			// Receive delta: 228
 			0xE4,
 			// Padding: 1 byte
-			0x01
+			0x01,
 		};
 		// clang-format on
 
@@ -979,7 +981,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			// One Bit Status Vector Chunk: 14 x received
 			0xBF, 0xFF,
 			// Run Length Chunk: symbol 0, run length 0
-			0x00, 0x00
+			0x00, 0x00,
 		};
 		// clang-format on
 

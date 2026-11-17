@@ -47,10 +47,14 @@ typedef SSIZE_T ssize_t;
 #define NO_DEFAULT()
 #endif
 
-using ChannelReadCtx    = void*;
+using ChannelReadCtx = void*;
+
 using ChannelReadFreeFn = void (*)(uint8_t*, uint32_t, size_t);
-// Returns `ChannelReadFreeFn` on successful read that must be used to free
-// `message`.
+
+/**
+ * Returns `ChannelReadFreeFn` on successful read that must be used to free
+ * `message`.
+ */
 using ChannelReadFn = ChannelReadFreeFn (*)(
   uint8_t** /*message*/,
   uint32_t* /*messageLen*/,
@@ -62,6 +66,7 @@ using ChannelReadFn = ChannelReadFreeFn (*)(
 );
 
 using ChannelWriteCtx = void*;
+
 using ChannelWriteFn =
   void (*)(const uint8_t* /*message*/, uint32_t /*messageLen*/, ChannelWriteCtx /*ctx*/);
 

@@ -69,11 +69,13 @@ SCENARIO("BWE SendPacketHistory", "[bwe][sendpackethistory]")
 		const RTC::BWE::Types::ProbeCluster probeCluster{ .id = 7, .minProbes = 5, .minBytes = 4000 };
 
 		const int64_t sequenceNumber = sendPacketHistory.AddPacket(
-		  { .ssrc         = Ssrc,
-			  .seq          = 100,
-			  .size         = PacketSize,
-			  .probeCluster = probeCluster,
-			  .createdAtUs  = InitialTimeUs });
+		  {
+		    .ssrc         = Ssrc,
+		    .seq          = 100,
+		    .size         = PacketSize,
+		    .probeCluster = probeCluster,
+		    .createdAtUs  = InitialTimeUs,
+		  });
 
 		sendPacketHistory.ProcessSentPacket(sequenceNumber, InitialTimeUs);
 
@@ -277,12 +279,14 @@ SCENARIO("BWE SendPacketHistory", "[bwe][sendpackethistory]")
 
 		// Retransmitted reusing the very same SSRC and RTP sequence number.
 		const int64_t sequenceNumber = sendPacketHistory.AddPacket(
-		  { .ssrc             = Ssrc,
-			  .seq              = 100,
-			  .size             = PacketSize,
-			  .isRetransmission = true,
-			  .originalSsrc     = Ssrc,
-			  .createdAtUs      = InitialTimeUs + 10000 });
+		  {
+		    .ssrc             = Ssrc,
+		    .seq              = 100,
+		    .size             = PacketSize,
+		    .isRetransmission = true,
+		    .originalSsrc     = Ssrc,
+		    .createdAtUs      = InitialTimeUs + 10000,
+		  });
 
 		sendPacketHistory.ProcessSentPacket(sequenceNumber, InitialTimeUs + 10000);
 
@@ -303,12 +307,14 @@ SCENARIO("BWE SendPacketHistory", "[bwe][sendpackethistory]")
 
 		// Retransmitted over RTX, so under another SSRC and sequence number.
 		const int64_t sequenceNumber = sendPacketHistory.AddPacket(
-		  { .ssrc             = Ssrc + 1,
-			  .seq              = 7,
-			  .size             = PacketSize,
-			  .isRetransmission = true,
-			  .originalSsrc     = Ssrc,
-			  .createdAtUs      = InitialTimeUs + 10000 });
+		  {
+		    .ssrc             = Ssrc + 1,
+		    .seq              = 7,
+		    .size             = PacketSize,
+		    .isRetransmission = true,
+		    .originalSsrc     = Ssrc,
+		    .createdAtUs      = InitialTimeUs + 10000,
+		  });
 
 		sendPacketHistory.ProcessSentPacket(sequenceNumber, InitialTimeUs + 10000);
 

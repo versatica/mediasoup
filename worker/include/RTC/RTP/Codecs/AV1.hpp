@@ -29,7 +29,7 @@ namespace RTC
 				class EncodingContext : public Codecs::EncodingContext
 				{
 				public:
-					explicit EncodingContext(Codecs::EncodingContext::Params& params)
+					explicit EncodingContext(const Codecs::EncodingContext::Params& params)
 					  : Codecs::EncodingContext(params, AV1::FrameIdLength)
 					{
 					}

@@ -8,7 +8,7 @@
 
 namespace helpers
 {
-	bool readBinaryFile(const char* file, uint8_t* buffer, size_t* len)
+	bool ReadBinaryFile(const char* file, uint8_t* buffer, size_t* len)
 	{
 		MS_TRACE();
 
@@ -16,7 +16,7 @@ namespace helpers
 		std::string filePath = "test/" + std::string(file);
 
 #ifdef _WIN32
-		std::replace(filePath.begin(), filePath.end(), '/', '\\');
+		std::ranges::replace(filePath, '/', '\\');
 #endif
 
 		std::ifstream in(filePath, std::ios::ate | std::ios::binary);
@@ -35,7 +35,7 @@ namespace helpers
 		return true;
 	}
 
-	bool areBuffersEqual(const uint8_t* data1, size_t size1, const uint8_t* data2, size_t size2)
+	bool AreBuffersEqual(const uint8_t* data1, size_t size1, const uint8_t* data2, size_t size2)
 	{
 		MS_TRACE();
 

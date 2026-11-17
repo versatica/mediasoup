@@ -19,7 +19,7 @@ SCENARIO("SCTP Unknown Chunk", "[serializable][sctp][chunk]")
 			// Unknown value: 0xAABBCC, 1 byte of padding
 			0xAA, 0xBB, 0xCC, 0x00,
 			// Extra bytes that should be ignored
-			0xAA, 0xBB, 0xCC
+			0xAA, 0xBB, 0xCC,
 		};
 		// clang-format on
 

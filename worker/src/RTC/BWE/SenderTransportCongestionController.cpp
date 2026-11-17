@@ -498,7 +498,8 @@ namespace RTC
 			    .isRetransmission = options.isRetransmission,
 			    .originalSsrc     = options.originalSsrc,
 			    .probeCluster     = probeCluster,
-			    .createdAtUs      = nowUs });
+			    .createdAtUs      = nowUs,
+			  });
 
 			packet->UpdateTransportWideCc01(static_cast<uint16_t>(sequenceNumber));
 

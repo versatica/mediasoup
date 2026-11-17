@@ -427,9 +427,11 @@ namespace RTC
 			const int64_t boundedBitrate = std::max(
 			  GetImmediateLowerBoundBitrate(),
 			  std::min(
-			    { bestCandidate.lossLimitedBitrate,
-					  GetImmediateUpperBoundBitrate(),
-					  this->delayBasedEstimate }));
+			    {
+			      bestCandidate.lossLimitedBitrate,
+			      GetImmediateUpperBoundBitrate(),
+			      this->delayBasedEstimate,
+			    }));
 
 			// A bitrate that had to be brought down to its bounds is not an estimate
 			// of the link anymore, so the pair of values is not kept as such.
@@ -488,13 +490,14 @@ namespace RTC
 					  this->lastHoldInfo.durationUs / 1000,
 					  this->averageReportedLossRatio);
 
-					this->lastHoldInfo = { .atUs       = lastSendTimeUs + this->lastHoldInfo.durationUs,
-					                       .durationUs = std::min<int64_t>(
-						                       MaxHoldDurationUs,
-						                       std::llround(
-						                         static_cast<double>(this->lastHoldInfo.durationUs) *
-						                         this->options.holdDurationFactor)),
-					                       .bitrate = boundedBitrate };
+					this->lastHoldInfo = {
+						.atUs       = lastSendTimeUs + this->lastHoldInfo.durationUs,
+						.durationUs = std::min<int64_t>(
+						  MaxHoldDurationUs,
+						  std::llround(
+						    static_cast<double>(this->lastHoldInfo.durationUs) * this->options.holdDurationFactor)),
+						.bitrate = boundedBitrate,
+					};
 				}
 
 				this->result.state = State::DECREASING;
@@ -503,9 +506,11 @@ namespace RTC
 			{
 				// The delay based path is what limits us, so any hold that was in place
 				// would only keep the estimate low for no reason.
-				this->lastHoldInfo = { .atUs       = 0,
-				                       .durationUs = InitHoldDurationUs,
-				                       .bitrate    = Types::BitrateInfinite };
+				this->lastHoldInfo = {
+					.atUs       = 0,
+					.durationUs = InitHoldDurationUs,
+					.bitrate    = Types::BitrateInfinite,
+				};
 
 				this->result.state = State::DELAY_BASED_ESTIMATE;
 			}

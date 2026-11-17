@@ -41,7 +41,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 			// PID: 1000, BLP: 0x8001
 			0x03, 0xE8, 0x80, 0x01,
 			// PID: 65535, BLP: 0x0000
-			0xFF, 0xFF, 0x00, 0x00
+			0xFF, 0xFF, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -118,7 +118,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 			// PID: 100, BLP: 0x0001
 			0x00, 0x64, 0x00, 0x01,
 			// Padding: 4 bytes
-			0x00, 0x00, 0x00, 0x04
+			0x00, 0x00, 0x00, 0x04,
 		};
 		// clang-format on
 
@@ -172,7 +172,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 			// V=2, P=0, FMT=1, PT:205, Length: 1
 			0b10000001, 0xCD, 0x00, 0x01,
 			// SSRC of packet sender: 1111
-			0x00, 0x00, 0x04, 0x57
+			0x00, 0x00, 0x04, 0x57,
 		};
 		// clang-format on
 
@@ -187,7 +187,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 			// SSRC of packet sender: 1111
 			0x00, 0x00, 0x04, 0x57,
 			// SSRC of media source: 2222
-			0x00, 0x00, 0x08, 0xAE
+			0x00, 0x00, 0x08, 0xAE,
 		};
 		// clang-format on
 
@@ -204,7 +204,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 			// SSRC of media source: 2222
 			0x00, 0x00, 0x08, 0xAE,
 			// PID: 1000, BLP: 0x0000
-			0x03, 0xE8, 0x00, 0x00
+			0x03, 0xE8, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -223,7 +223,7 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 			// PID: 1000, BLP: 0x0000
 			0x03, 0xE8, 0x00, 0x00,
 			// 2 extra bytes, Padding: 2 bytes
-			0x11, 0x22, 0x00, 0x02
+			0x11, 0x22, 0x00, 0x02,
 		};
 		// clang-format on
 

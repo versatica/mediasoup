@@ -274,7 +274,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// clang-format off
 		const std::vector<TestRateCalculatorData> input =
 		{
-			{ .offset=0, .size=5, .rate=std::nullopt }
+			{ .offset=0, .size=5, .rate=std::nullopt },
 		};
 		// clang-format on
 
@@ -296,7 +296,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 			{ .offset=300, .size=2, .rate=106          },
 			// The period is the whole window now, so every sample counts:
 			// (5 + 2 + 2 + 4) * 8000 / 1000.
-			{ .offset=999, .size=4, .rate=104          }
+			{ .offset=999, .size=4, .rate=104          },
 		};
 		// clang-format on
 
@@ -315,7 +315,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		{
 			{ .offset=0,    .size=5, .rate=std::nullopt },
 			{ .offset=1000, .size=5, .rate=40           },
-			{ .offset=2000, .size=5, .rate=40           }
+			{ .offset=2000, .size=5, .rate=40           },
 		};
 		// clang-format on
 
@@ -335,7 +335,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 			{ .offset=999,  .size=2, .rate=56           },
 			{ .offset=1001, .size=1, .rate=24           },
 			{ .offset=1001, .size=1, .rate=32           },
-			{ .offset=2000, .size=1, .rate=24           }
+			{ .offset=2000, .size=1, .rate=24           },
 		};
 		// clang-format on
 
@@ -355,7 +355,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 			{ .offset=999,  .size=2, .rate=56           },
 			{ .offset=1001, .size=1, .rate=24           }, // merged inside 999
 			{ .offset=1001, .size=1, .rate=32           }, // merged inside 999
-			{ .offset=2000, .size=1, .rate=8            }  // it will erase the item
+			{ .offset=2000, .size=1, .rate=8            },  // it will erase the item
 			                // with timestamp=999, removing also the next two samples.
 			                // Only the last sample is left, and it comes close enough
 			                // to the previous one to keep being measured over the

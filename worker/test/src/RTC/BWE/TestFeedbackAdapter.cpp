@@ -81,9 +81,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  RemoteTimeUs,
 		  {
 		    { 0, RemoteTimeUs         },
-        { 1, RemoteTimeUs + 10000 },
-        { 2, RemoteTimeUs + 20000 }
-    });
+		    { 1, RemoteTimeUs + 10000 },
+		    { 2, RemoteTimeUs + 20000 },
+		});
 
 		const auto processedFeedback =
 		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000);
@@ -128,8 +128,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  RemoteTimeUs,
 		  {
 		    { 0, RemoteTimeUs         },
-        { 2, RemoteTimeUs + 20000 }
-    });
+		    { 2, RemoteTimeUs + 20000 },
+		});
 
 		const auto processedFeedback =
 		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000);
@@ -158,8 +158,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  RemoteTimeUs,
 		  {
 		    { 0, RemoteTimeUs         },
-        { 1, RemoteTimeUs + 10000 }
-    });
+		    { 1, RemoteTimeUs + 10000 },
+		});
 
 		const auto processedFeedback =
 		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000);
@@ -186,14 +186,14 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  0,
 		  RemoteTimeUs,
 		  {
-		    { 0, RemoteTimeUs }
-    });
+		    { 0, RemoteTimeUs },
+		});
 		const auto secondFeedback = createFeedback(
 		  1,
 		  RemoteTimeUs + 10000,
 		  {
-		    { 1, RemoteTimeUs + 10000 }
-    });
+		    { 1, RemoteTimeUs + 10000 },
+		});
 
 		const auto firstResult =
 		  feedbackAdapter.ProcessTransportWideCcFeedback(firstFeedback.get(), InitialTimeUs + 50000);
@@ -227,8 +227,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  RemoteTimeUs,
 		  {
 		    { 0, RemoteTimeUs         },
-        { 1, RemoteTimeUs + 10000 }
-    });
+		    { 1, RemoteTimeUs + 10000 },
+		});
 
 		const auto processedFeedback = feedbackAdapter.ProcessTransportWideCcFeedback(
 		  feedback.get(), InitialTimeUs + WindowDurationUs + 50000);
@@ -254,14 +254,14 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  0,
 		  RemoteTimeUs,
 		  {
-		    { 0, RemoteTimeUs }
-    });
+		    { 0, RemoteTimeUs },
+		});
 		const auto secondFeedback = createFeedback(
 		  1,
 		  RemoteTimeUs + 100000,
 		  {
-		    { 1, RemoteTimeUs + 100000 }
-    });
+		    { 1, RemoteTimeUs + 100000 },
+		});
 
 		const auto firstProcessedFeedback =
 		  feedbackAdapter.ProcessTransportWideCcFeedback(firstFeedback.get(), InitialTimeUs + 50000);
@@ -306,14 +306,14 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  0,
 		  RemoteTimeUs,
 		  {
-		    { 0, RemoteTimeUs }
-    });
+		    { 0, RemoteTimeUs },
+		});
 		const auto secondFeedback = createFeedback(
 		  1,
 		  RemoteTimeUs + 100000,
 		  {
-		    { 1, RemoteTimeUs + 100000 }
-    });
+		    { 1, RemoteTimeUs + 100000 },
+		});
 
 		// The second feedback is processed first, and the first one arrives late.
 		const auto secondProcessedFeedback =
@@ -347,8 +347,10 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 
 	SECTION("the base time wrapping around does not break the timeline")
 	{
-		constexpr int64_t FirstBaseTimeUs{ RTC::RTCP::TransportWideCcPacket::TimeWrapPeriodUs -
-		                                   RTC::RTCP::TransportWideCcPacket::BaseTimeTickUs };
+		constexpr int64_t FirstBaseTimeUs{
+			RTC::RTCP::TransportWideCcPacket::TimeWrapPeriodUs -
+			  RTC::RTCP::TransportWideCcPacket::BaseTimeTickUs,
+		};
 		constexpr int64_t SecondBaseTimeUs{ RTC::RTCP::TransportWideCcPacket::TimeWrapPeriodUs };
 		constexpr int64_t ElapsedUs{ SecondBaseTimeUs - FirstBaseTimeUs };
 
@@ -362,14 +364,14 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  0,
 		  FirstBaseTimeUs,
 		  {
-		    { 0, FirstBaseTimeUs }
-    });
+		    { 0, FirstBaseTimeUs },
+		});
 		const auto secondFeedback = createFeedback(
 		  1,
 		  SecondBaseTimeUs,
 		  {
-		    { 1, SecondBaseTimeUs }
-    });
+		    { 1, SecondBaseTimeUs },
+		});
 
 		const auto firstProcessedFeedback =
 		  feedbackAdapter.ProcessTransportWideCcFeedback(firstFeedback.get(), InitialTimeUs + 50000);
@@ -416,9 +418,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  RemoteTimeUs + 20000,
 		  {
 		    { 0, RemoteTimeUs + 20000 },
-        { 1, RemoteTimeUs + 10000 },
-        { 2, RemoteTimeUs         }
-    });
+		    { 1, RemoteTimeUs + 10000 },
+		    { 2, RemoteTimeUs         },
+		});
 
 		const auto processedFeedback =
 		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000);
@@ -451,8 +453,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  2,
 		  RemoteTimeUs + 20000,
 		  {
-		    { 2, RemoteTimeUs + 20000 }
-    });
+		    { 2, RemoteTimeUs + 20000 },
+		});
 
 		const auto processedFeedback =
 		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000);
@@ -486,8 +488,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  RemoteTimeUs,
 		  {
 		    { 0, RemoteTimeUs },
-        { 1, RemoteTimeUs }
-    });
+		    { 1, RemoteTimeUs },
+		});
 
 		const auto firstResult =
 		  feedbackAdapter.ProcessTransportWideCcFeedback(firstFeedback.get(), InitialTimeUs + 50000);
@@ -507,8 +509,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  2,
 		  RemoteTimeUs,
 		  {
-		    { 2, RemoteTimeUs }
-    });
+		    { 2, RemoteTimeUs },
+		});
 
 		const auto secondProcessedFeedback =
 		  feedbackAdapter.ProcessTransportWideCcFeedback(secondFeedback.get(), InitialTimeUs + 60000);
@@ -546,8 +548,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  0,
 		  RemoteTimeUs,
 		  {
-		    { 0, RemoteTimeUs }
-    });
+		    { 0, RemoteTimeUs },
+		});
 
 		REQUIRE(
 		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000) ==
@@ -566,8 +568,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  1000,
 		  RemoteTimeUs,
 		  {
-		    { 1000, RemoteTimeUs }
-    });
+		    { 1000, RemoteTimeUs },
+		});
 
 		REQUIRE(
 		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000) ==

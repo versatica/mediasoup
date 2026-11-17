@@ -2,6 +2,7 @@
 #include "Utils.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
+#include <string>
 
 SCENARIO("Utils::String", "[utils][string]")
 {
@@ -11,10 +12,12 @@ SCENARIO("Utils::String", "[utils][string]")
 
 		str = "Foo";
 		Utils::String::ToLowerCase(str);
+
 		REQUIRE(str == "foo");
 
 		str = "Foo!œ";
 		Utils::String::ToLowerCase(str);
+
 		REQUIRE(str == "foo!œ");
 	}
 
@@ -31,6 +34,7 @@ SCENARIO("Utils::String", "[utils][string]")
 		encoded    = Utils::String::Base64Encode(data);
 		decodedPtr = Utils::String::Base64Decode(encoded, outLen);
 		decoded    = std::string(reinterpret_cast<char*>(decodedPtr), outLen);
+
 		REQUIRE(encoded == "YWJjZA==");
 		REQUIRE(decoded == data);
 
@@ -39,6 +43,7 @@ SCENARIO("Utils::String", "[utils][string]")
 		encoded    = Utils::String::Base64Encode(data);
 		decodedPtr = Utils::String::Base64Decode(encoded, outLen);
 		decoded    = std::string(reinterpret_cast<char*>(decodedPtr), outLen);
+
 		REQUIRE(encoded == "ScOxYWtp");
 		REQUIRE(decoded == data);
 		REQUIRE(encoded == Utils::String::Base64Encode(decoded));
@@ -49,6 +54,7 @@ SCENARIO("Utils::String", "[utils][string]")
 		encoded    = Utils::String::Base64Encode(data);
 		decodedPtr = Utils::String::Base64Decode(encoded, outLen);
 		decoded    = std::string(reinterpret_cast<char*>(decodedPtr), outLen);
+
 		REQUIRE(
 		  encoded ==
 		  "a2pzaCAyMyDDpeKIq+KIgiBpczg5IOKIq8K2IMKn4oiCwrYgaTgyM3kga2phaHNkIDIzNHUgYXNkIGthc2poZGlpNzY4MjM0MiBhc2Rramhhc2tqc2FoZCAgIGsgamFzaGQga2Fqc2RoYWtzamRoIHNrYWRoa2poa2poICAgICAgIGFza2RqaGFzZGtqYWhzIHV5cWl3ZXkgYXPDpeKIq+KIgsKi4oiewqziiKviiIIgYXNoa3NhamRoIGtqYXNkaGthanNoZGEgcyBramFoc2RramFzIDk4Nzg5N2FzODk3IDk3ODk4NjIzIDlzIGtqc2fDpeKIq+KIgiA0MzLDpeKIq8aS4oiCIMOl4oirI8KiIG91eXF3aXV5YWlzIGthanNkaGl1eWUgIGFqc2hra1NBSCBTREZZw5HDkcORIMOl4oir4oiCzqkgODcyNTM4NDdiIGFzZGJ1aWFzZGkgYXMga2FzdcWTw6bigqwKMzIx");
@@ -57,22 +63,26 @@ SCENARIO("Utils::String", "[utils][string]")
 
 		encoded    = "1WfmbWJXSlhTbGhUYkdoVVlrZG9WVmxyWkc5Vw==";
 		decodedPtr = Utils::String::Base64Decode(encoded, outLen);
+
 		REQUIRE(outLen == 28);
+
 		encoded = Utils::String::Base64Encode(decodedPtr, outLen);
+
 		REQUIRE(encoded == "1WfmbWJXSlhTbGhUYkdoVVlrZG9WVmxyWkc5Vw==");
 
 		// clang-format off
-		uint8_t rtpPacket[] =
+		const uint8_t rtpPacket[] =
 		{
 			0xBE, 0xDE, 0, 3, // Header extension
 			0b00010000, 0xFF, 0b00100001, 0xFF,
 			0xFF, 0, 0, 0b00110011,
-			0xFF, 0xFF, 0xFF, 0xFF
+			0xFF, 0xFF, 0xFF, 0xFF,
 		};
 		// clang-format on
 
 		encoded    = Utils::String::Base64Encode(rtpPacket, sizeof(rtpPacket));
 		decodedPtr = Utils::String::Base64Decode(encoded, outLen);
+
 		REQUIRE(outLen == sizeof(rtpPacket));
 		REQUIRE(std::memcmp(decodedPtr, rtpPacket, outLen) == 0);
 	}

@@ -18,7 +18,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[serializable][sctp][chunk]")
 			// Type:8 (SHUTDOWN-COMPLETE), Flags:0x00000001, T: 1, Length: 4
 			0x0E, 0b00000001, 0x00, 0x04,
 			// Extra bytes that should be ignored
-			0xAA, 0xBB, 0xCC, 0xDD
+			0xAA, 0xBB, 0xCC, 0xDD,
 		};
 		// clang-format on
 

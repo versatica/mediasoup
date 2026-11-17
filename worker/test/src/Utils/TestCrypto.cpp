@@ -10,13 +10,13 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 {
 	SECTION("GetCRC32()")
 	{
-		std::array<uint8_t, 0> dataEmpty{};
-		uint8_t dataZero[] = { 0 };
+		const std::array<uint8_t, 0> dataEmpty{};
+		const uint8_t dataZero[] = { 0 };
 		// clang-format off
-		uint8_t dataRandom[] =
+		const uint8_t dataRandom[] =
 		{
 			0xFF, 0x00, 0xAB, 0xCD, 0x12, 0x39, 0x54, 0xBB, 0xDD,
-			0xEE, 0x01, 0x01, 0x01, 0x01, 0x88, 0x88, 0xAA
+			0xEE, 0x01, 0x01, 0x01, 0x01, 0x88, 0x88, 0xAA,
 		};
 		// clang-format on
 
@@ -30,38 +30,38 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 		// Tests copied from dcSCTP code in libwebrtc:
 		// https://webrtc.googlesource.com/src//+/refs/heads/main/net/dcsctp/packet/crc32c_test.cc
 
-		std::array<uint8_t, 0> dataEmpty{};
-		uint8_t dataZero[]      = { 0 };
-		uint8_t dataManyZeros[] = { 0, 0, 0, 0 };
-		uint8_t dataShort[]     = { 1, 2, 3, 4 };
-		uint8_t dataLong[]      = { 1, 2, 3, 4, 5, 6, 7, 8 };
+		const std::array<uint8_t, 0> dataEmpty{};
+		const uint8_t dataZero[]      = { 0 };
+		const uint8_t dataManyZeros[] = { 0, 0, 0, 0 };
+		const uint8_t dataShort[]     = { 1, 2, 3, 4 };
+		const uint8_t dataLong[]      = { 1, 2, 3, 4, 5, 6, 7, 8 };
 		// clang-format off
-		uint8_t data32Zeros[]   =
+		const uint8_t data32Zeros[]   =
 		{
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		};
-		uint8_t data32Ones[] =
+		const uint8_t data32Ones[] =
 		{
 			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 		};
-		uint8_t data32Incrementing[] =
+		const uint8_t data32Incrementing[] =
 		{
 			0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
-			16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+			16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
 		};
-		uint8_t data32Decrementing[] =
+		const uint8_t data32Decrementing[] =
 		{
 			31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16,
-			15, 14, 13, 12, 11, 10, 9,  8,  7,  6,  5,  4,  3,  2,  1,  0
+			15, 14, 13, 12, 11, 10, 9,  8,  7,  6,  5,  4,  3,  2,  1,  0,
 		};
-		uint8_t dataSCSICommandPDU[] = {
+		const uint8_t dataSCSICommandPDU[] = {
 			0x01, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00,
 			0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00, 0x18, 0x28, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+			0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
