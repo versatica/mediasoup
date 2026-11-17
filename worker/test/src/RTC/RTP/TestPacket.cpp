@@ -1636,8 +1636,8 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 				RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID,
 				headerExtensionIds.rid,
 				static_cast<uint8_t>(rid.size()),
-				reinterpret_cast<uint8_t*>(rid.data())
-			}
+				reinterpret_cast<uint8_t*>(rid.data()),
+			},
 		};
 		// clang-format on
 
@@ -1665,8 +1665,8 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 				RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID,
 				headerExtensionIds.rrid,
 				static_cast<uint8_t>(rrid.size()),
-				reinterpret_cast<uint8_t*>(rrid.data())
-			}
+				reinterpret_cast<uint8_t*>(rrid.data()),
+			},
 		};
 		// clang-format on
 
