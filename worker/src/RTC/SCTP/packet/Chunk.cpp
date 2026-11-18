@@ -44,6 +44,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
+		// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 		const ankerl::unordered_dense::map<Chunk::ChunkType, std::string> Chunk::ChunkType2String =
 		{
 			{ Chunk::ChunkType::DATA,              "DATA"              },
@@ -286,7 +287,7 @@ namespace RTC
 			// Soft clone parameters into the given chunk.
 			if (CanHaveParameters())
 			{
-				for (auto* parameter : this->parameters)
+				for (const auto* parameter : this->parameters)
 				{
 					const size_t offset = parameter->GetBuffer() - GetBuffer();
 
@@ -299,7 +300,7 @@ namespace RTC
 			// Soft clone error causes into the given chunk.
 			if (CanHaveErrorCauses())
 			{
-				for (auto* errorCause : this->errorCauses)
+				for (const auto* errorCause : this->errorCauses)
 				{
 					const size_t offset = errorCause->GetBuffer() - GetBuffer();
 
@@ -333,7 +334,7 @@ namespace RTC
 			// subclass, so GetBuffer() + GetLength() points to the beginning of the
 			// potential parameters. And of course we assume that a chunk cannot have
 			// both parameters and error causes.
-			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+			const auto* ptr = GetBuffer() + GetLength();
 
 			// Here we assume that the chunk has been validated so length field is
 			// reliable. We want to be ready for length field to include or not the
@@ -516,8 +517,8 @@ namespace RTC
 
 			if (ptr != end)
 			{
-				auto expectedLength = end - GetBuffer();
-				auto computedLength = ptr - GetBuffer();
+				const auto expectedLength = static_cast<size_t>(end - GetBuffer());
+				const auto computedLength = static_cast<size_t>(ptr - GetBuffer());
 
 				MS_WARN_TAG(
 				  sctp,
@@ -542,7 +543,7 @@ namespace RTC
 			// GetBuffer() + GetLength() points to the beginning of the potential
 			// error causes. And of course we assume that a chunk cannot have both
 			// parameters and error causes.
-			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+			const auto* ptr = GetBuffer() + GetLength();
 
 			// Here we assume that the chunk has been validated so length field is
 			// reliable. We want to be ready for length field to include or not the
@@ -700,8 +701,8 @@ namespace RTC
 
 			if (ptr != end)
 			{
-				auto expectedLength = end - GetBuffer();
-				auto computedLength = ptr - GetBuffer();
+				const auto expectedLength = static_cast<size_t>(end - GetBuffer());
+				const auto computedLength = static_cast<size_t>(ptr - GetBuffer());
 
 				MS_WARN_TAG(
 				  sctp,

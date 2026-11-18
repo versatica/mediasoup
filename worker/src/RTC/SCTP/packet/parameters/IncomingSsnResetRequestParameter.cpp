@@ -166,7 +166,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto previousVariableLengthValueLength = GetVariableLengthValueLength();
+			const auto previousVariableLengthValueLength = GetVariableLengthValueLength();
 
 			// NOTE: This may throw.
 			SetVariableLengthValueLength(previousVariableLengthValueLength + 2);

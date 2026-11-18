@@ -555,6 +555,7 @@ namespace RTC
 			  index < this->outstandingData.size(),
 			  "index must be lower than this->outstandingData.size()");
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			return this->outstandingData[index];
 		}
 
@@ -573,6 +574,7 @@ namespace RTC
 			  index < this->outstandingData.size(),
 			  "index must be lower than this->outstandingData.size()");
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			return this->outstandingData[index];
 		}
 

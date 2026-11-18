@@ -801,7 +801,7 @@ namespace RTC
 			  tieTag,
 			  negotiatedCapabilities,
 			  this->maxPacketLength,
-			  [this]()
+			  [this]() -> bool
 			  {
 				  return this->state == State::ESTABLISHED;
 			  });
@@ -1132,17 +1132,14 @@ namespace RTC
 
 			// Validate the CRC32c checksum unless this is a zero checksum packet that we
 			// announced we are willing to accept.
-			if (!acceptZeroChecksum || receivedPacket->GetChecksum() != 0)
+			if ((!acceptZeroChecksum || receivedPacket->GetChecksum() != 0) && !receivedPacket->ValidateCRC32cChecksum())
 			{
-				if (!receivedPacket->ValidateCRC32cChecksum())
-				{
-					MS_WARN_TAG(sctp, "invalid CRC32c checksum, packet discarded");
+				MS_WARN_TAG(sctp, "invalid CRC32c checksum, packet discarded");
 
-					this->associationListenerDeferrer.OnAssociationError(
-					  Types::ErrorKind::PARSE_FAILED, "invalid CRC32c checksum");
+				this->associationListenerDeferrer.OnAssociationError(
+				  Types::ErrorKind::PARSE_FAILED, "invalid CRC32c checksum");
 
-					return false;
-				}
+				return false;
 			}
 
 			const uint32_t localVerificationTag = this->tcb ? this->tcb->GetLocalVerificationTag() : 0;
@@ -1827,12 +1824,9 @@ namespace RTC
 			// us (valid MAC) and is not stale before trusting any of its contents.
 			//
 			// @see RFC 9260 section 5.1.4.
-			if (this->sctpOptions.requireAuthenticatedCookie)
+			if (this->sctpOptions.requireAuthenticatedCookie && !VerifyReceivedStateCookie(cookie.get(), receivedAtUs))
 			{
-				if (!VerifyReceivedStateCookie(cookie.get(), receivedAtUs))
-				{
-					return false;
-				}
+				return false;
 			}
 
 			if (this->tcb)
@@ -2493,7 +2487,7 @@ namespace RTC
 					// NOTE: Don't set bit T in the ABORT chunk since TCB knows the
 					// verification tag expected by the remote.
 
-					auto* outOfResourceErrorCause =
+					const auto* outOfResourceErrorCause =
 					  abortAssociationChunk->BuildErrorCauseInPlace<OutOfResourceErrorCause>();
 
 					outOfResourceErrorCause->Consolidate();
@@ -2890,7 +2884,7 @@ namespace RTC
 			  firstExpectedState = false),
 			 ...);
 
-			auto expectedStatesString = expectedStatesOss.str();
+			const auto expectedStatesString = expectedStatesOss.str();
 
 			MS_ABORT(
 			  "current internal state %.*s does not match any of the given expected states (%s)",

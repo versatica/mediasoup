@@ -308,7 +308,7 @@ namespace RTC
 			if (!this->currentRequest->HasBeenSent())
 			{
 				this->currentRequest->PrepareToSend(this->nextOutgoingReqSeqNbr);
-				this->nextOutgoingReqSeqNbr = uint32_t{ this->nextOutgoingReqSeqNbr + 1 };
+				this->nextOutgoingReqSeqNbr = this->nextOutgoingReqSeqNbr + 1;
 			}
 
 			auto* reConfigChunk = packet->BuildChunkInPlace<ReConfigChunk>();
@@ -680,7 +680,7 @@ namespace RTC
 				// in retrying the request (but with a new `reqSeqNbr`) after a while.
 			}
 
-			auto packet = this->tcbContext->CreatePacket();
+			const auto packet = this->tcbContext->CreatePacket();
 
 			AddReConfigChunk(packet.get());
 

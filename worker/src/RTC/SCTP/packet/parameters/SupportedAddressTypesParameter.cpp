@@ -128,7 +128,7 @@ namespace RTC
 
 			// We must save previous count since SetVariableLengthValueLength() will
 			// make GetNumberOfAddressTypes() return a different value.
-			auto previousNumberOfAddressTypes = GetNumberOfAddressTypes();
+			const auto previousNumberOfAddressTypes = GetNumberOfAddressTypes();
 
 			// NOTE: This may throw.
 			SetVariableLengthValueLength(GetVariableLengthValueLength() + 2);

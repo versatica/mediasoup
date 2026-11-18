@@ -29,7 +29,7 @@ namespace RTC
 		    defaultStreamBufferedAmountLowThreshold(defaultStreamBufferedAmountLowThreshold),
 		    scheduler(mtu),
 		    totalBufferedAmountThresholdWatcher(
-		      [this]()
+		      [this]() -> void
 		      {
 			      this->associationListener.OnAssociationTotalBufferedAmountLow();
 		      })
@@ -315,7 +315,7 @@ namespace RTC
 			    std::addressof(this->scheduler),
 			    streamId,
 			    this->defaultPriority,
-			    [this, streamId]()
+			    [this, streamId]() -> void
 			    {
 				    this->associationListener.OnAssociationStreamBufferedAmountLow(streamId);
 			    }));
@@ -333,9 +333,9 @@ namespace RTC
 
 			// NOTE: This check walks every stream, so it only runs in tests.
 #ifdef MS_TEST
-			std::set<uint16_t> expectedActiveStreamIds;
 			const std::set<uint16_t> actualActiveStreamIds = this->scheduler.GetActiveStreamsForTesting();
 
+			std::set<uint16_t> expectedActiveStreamIds;
 			size_t totalBufferedAmount{ 0 };
 
 			for (const auto& [streamId, stream] : this->streams)
@@ -350,16 +350,16 @@ namespace RTC
 
 			if (expectedActiveStreamIds != actualActiveStreamIds)
 			{
-				const auto join = [](const auto& set)
+				const auto join = [](const std::set<uint16_t>& set) -> std::string
 				{
 					std::string out;
-
 					size_t i{ 0 };
+
 					for (const auto& v : set)
 					{
 						if (i++ != 0)
 						{
-							out += ",";
+							out += ',';
 						}
 
 						out += std::to_string(v);

@@ -250,6 +250,8 @@ namespace RTC
 			//
 			// "4)  Restart the T3-rtx timer only if ... the endpoint is retransmitting
 			// the first outstanding DATA chunk sent to that address."
+			//
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			if (toBeSent[0].first == this->outstandingData.GetLastCumulativeTsnAck().GetNextValue().Wrap())
 			{
 				MS_DEBUG_DEV("first outstanding data to be retransmitted, restarting T3-rtx timer");
@@ -411,6 +413,11 @@ namespace RTC
 			// "Every time a DATA chunk is sent to any address (including a
 			// retransmission), if the T3-rtx timer of that address is not running,
 			// start it running so that it will expire after the RTO of that address."
+			//
+			// NOTE: The outer block also holds the MS_LOG_DEV_LEVEL 3 log below, so
+			// both conditions cannot be merged.
+			//
+			// NOLINTNEXTLINE(readability-redundant-nested-if)
 			if (!toBeSent.empty())
 			{
 				if (!this->t3RtxTimer->IsRunning())

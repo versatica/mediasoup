@@ -315,8 +315,10 @@ namespace RTC
 			for (size_t i{ 0 }; i < tsnBlocks.size() && i < DataTracker::MaxGapAckBlocksReported; ++i)
 			{
 				const auto startDiff =
+				  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				  Types::UnwrappedTsn::Difference(tsnBlocks[i].firstTsn, this->lastCumulativeAckedTsn);
 				const auto endDiff =
+				  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				  Types::UnwrappedTsn::Difference(tsnBlocks[i].lastTsn, this->lastCumulativeAckedTsn);
 
 				sackChunk->AddAckBlock(startDiff, endDiff);

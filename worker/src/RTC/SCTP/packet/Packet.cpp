@@ -350,7 +350,7 @@ namespace RTC
 			Serializable::CloneInto(clonedPacket);
 
 			// Soft clone packet chunks into the given cloned packet.
-			for (auto* chunk : this->chunks)
+			for (const auto* chunk : this->chunks)
 			{
 				const size_t offset = chunk->GetBuffer() - GetBuffer();
 
@@ -429,7 +429,7 @@ namespace RTC
 
 			SetChecksum(0);
 
-			auto crc32c = Utils::Crypto::GetCRC32c(GetBuffer(), GetLength());
+			const auto crc32c = Utils::Crypto::GetCRC32c(GetBuffer(), GetLength());
 
 			SetChecksum(crc32c);
 		}
@@ -438,12 +438,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto crc32c = GetChecksum();
+			const auto crc32c = GetChecksum();
 
 			// NOTE: Cannot use `SetChecksum()` because this is a `const` method.
 			GetHeaderPointer()->checksum = 0;
 
-			auto computedCrc32c = Utils::Crypto::GetCRC32c(GetBuffer(), GetLength());
+			const auto computedCrc32c = Utils::Crypto::GetCRC32c(GetBuffer(), GetLength());
 
 			GetHeaderPointer()->checksum = htonl(crc32c);
 

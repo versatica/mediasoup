@@ -121,7 +121,7 @@ namespace RTC
 
 			// We must save previous count since SetVariableLengthValueLength() will
 			// make GetNumberOfChunkTypes() return a different value.
-			auto previousNumberOfChunkTypes = GetNumberOfChunkTypes();
+			const auto previousNumberOfChunkTypes = GetNumberOfChunkTypes();
 
 			// NOTE: This may throw.
 			SetVariableLengthValueLength(GetVariableLengthValueLength() + 1);
