@@ -1,4 +1,6 @@
 #include "common.hpp"
+#include "RTC/RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/UnknownPayloadSpecificFeedbackPacket.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -97,7 +99,7 @@ SCENARIO("RTCP Unknown Payload-Specific Feedback Packet (206)", "[serializable][
 	SECTION("UnknownPayloadSpecificFeedbackPacket::Parse() with an AFB that is not REMB succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=0, FMT=15, PT:206, Length: 3
 			0b10001111, 0xCE, 0x00, 0x03,
@@ -136,7 +138,7 @@ SCENARIO("RTCP Unknown Payload-Specific Feedback Packet (206)", "[serializable][
 	SECTION("UnknownPayloadSpecificFeedbackPacket::Parse() with padding succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=1, FMT=2, PT:206, Length: 3
 			0b10100010, 0xCE, 0x00, 0x03,
@@ -174,7 +176,7 @@ SCENARIO("RTCP Unknown Payload-Specific Feedback Packet (206)", "[serializable][
 	SECTION("UnknownPayloadSpecificFeedbackPacket::Parse() without value succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=0, FMT=2, PT:206, Length: 2
 			0b10000010, 0xCE, 0x00, 0x02,

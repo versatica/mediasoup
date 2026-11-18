@@ -85,7 +85,7 @@ SCENARIO("RTCP XR Unknown Extended Report", "[serializable][rtcp][extendedreport
 	SECTION("UnknownExtendedReport::Parse() without value succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// BT: 99, Type-specific: 0, Block length: 0
 			0x63, 0x00, 0x00, 0x00

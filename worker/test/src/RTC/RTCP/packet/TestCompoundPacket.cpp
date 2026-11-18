@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
 #include "RTC/RTCP/packet/ByePacket.hpp"
@@ -30,7 +31,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 	SECTION("CompoundPacket::Parse() succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// Bye Packet
 			// V=2, P=0, SC=3, PT:203, Length: 5
@@ -282,7 +283,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 	SECTION("CompoundPacket::Parse() succeeds with padding")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// Bye Packet
 			// V=2, P=1, SC=1, PT:203, Length: 2
@@ -390,15 +391,20 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(packet2->GetLength() == 16);
 			REQUIRE(packet2->GetNumberOfChunks() == 1);
 			REQUIRE(sdesItems.size() == 1);
+
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(sdesItems[0].ssrc == 3333);
 			REQUIRE(sdesItems[0].type == RTC::RTCP::SdesPacket::ItemType::CNAME);
 			REQUIRE(sdesItems[0].value == "abc");
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 			REQUIRE(packet3->GetBuffer() == buffer + 28);
 			REQUIRE(packet3->GetLength() == 32);
 			REQUIRE(packet3->GetSsrc() == 4444);
 			REQUIRE(packet3->GetNumberOfReportBlocks() == 1);
 			REQUIRE(reportBlocks.size() == 1);
+
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(reportBlocks[0].ssrc == 5555);
 			REQUIRE(reportBlocks[0].fractionLost == 10);
 			REQUIRE(reportBlocks[0].totalLost == -3);
@@ -406,6 +412,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(reportBlocks[0].jitter == 20);
 			REQUIRE(reportBlocks[0].lastSenderReport == 30);
 			REQUIRE(reportBlocks[0].delaySinceLastSenderReport == 40);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 			REQUIRE(packet4->GetBuffer() == buffer + 60);
 			REQUIRE(packet4->GetLength() == 28);
@@ -426,8 +433,11 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(packet5->GetMediaSsrc() == 8888);
 			REQUIRE(packet5->GetNumberOfItems() == 1);
 			REQUIRE(nackItems.size() == 1);
+
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(nackItems[0].packetId == 9999);
 			REQUIRE(nackItems[0].lostPacketBitmask == 0x0005);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 			REQUIRE(packet6->GetBuffer() == buffer + 104);
 			REQUIRE(packet6->GetLength() == 12);
@@ -444,8 +454,11 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(packet7->GetMediaSsrc() == 0);
 			REQUIRE(packet7->GetNumberOfItems() == 1);
 			REQUIRE(firItems.size() == 1);
+
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(firItems[0].ssrc == 1004);
 			REQUIRE(firItems[0].sequenceNumber == 7);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 			REQUIRE(packet8->GetBuffer() == buffer + 136);
 			REQUIRE(packet8->GetLength() == 24);
@@ -467,9 +480,12 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(dlrrExtendedReport->GetBuffer() == buffer + 180);
 			REQUIRE(dlrrExtendedReport->GetType() == RTC::RTCP::ExtendedReport::BlockType::DLRR);
 			REQUIRE(dlrrSubBlocks.size() == 1);
+
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(dlrrSubBlocks[0].ssrc == 1010);
 			REQUIRE(dlrrSubBlocks[0].lastReceiverReport == 1011);
 			REQUIRE(dlrrSubBlocks[0].delaySinceLastReceiverReport == 1012);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{ RTC::RTCP::CompoundPacket::Factory(
@@ -677,7 +693,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 	SECTION("CompoundPacket::Parse() dispatches AFB packets by application")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// REMB Packet
 			// V=2, P=0, FMT=15, PT:206, Length: 4
@@ -759,9 +775,12 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(dlrrExtendedReport->GetLength() == 16);
 			REQUIRE(dlrrExtendedReport->GetType() == RTC::RTCP::ExtendedReport::BlockType::DLRR);
 			REQUIRE(dlrrSubBlocks.size() == 1);
+
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(dlrrSubBlocks[0].ssrc == 3333);
 			REQUIRE(dlrrSubBlocks[0].lastReceiverReport == 4444);
 			REQUIRE(dlrrSubBlocks[0].delaySinceLastReceiverReport == 5555);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// clang-format off
@@ -857,6 +876,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(packet1->GetBuffer() == buffer);
 			REQUIRE(packet1->GetLength() == 16);
 			REQUIRE(items.size() == 1);
+
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(items[0].packetId == 1000);
 
 			REQUIRE(packet2->GetBuffer() == buffer + 16);
@@ -870,8 +891,11 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(packet2->GetBaseTimeUs() == 1076014080000);
 			REQUIRE(packet2->HasDeltas() == true);
 			REQUIRE(receivedRtpPackets.size() == 1);
+
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(receivedRtpPackets[0].sequenceNumber == 13);
 			REQUIRE(receivedRtpPackets[0].deltaTicks == 228);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// clang-format off
@@ -1006,12 +1030,17 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(packet1->GetBaseTimeUs() == 1000000000000);
 			REQUIRE(packet1->GetFeedbackPacketCount() == 3);
 			REQUIRE(receivedRtpPackets.size() == 3);
+
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(receivedRtpPackets[0].sequenceNumber == 1000);
 			REQUIRE(receivedRtpPackets[0].deltaTicks == 4);
+
 			REQUIRE(receivedRtpPackets[1].sequenceNumber == 1001);
 			REQUIRE(receivedRtpPackets[1].deltaTicks == 4);
+
 			REQUIRE(receivedRtpPackets[2].sequenceNumber == 1003);
 			REQUIRE(receivedRtpPackets[2].deltaTicks == 4);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
@@ -1178,7 +1207,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		const std::unique_ptr<RTC::RTCP::XrPacket> packet2{ RTC::RTCP::XrPacket::Factory(
 			rtcpCommon::FactoryBuffer + 2000, 1000) };
 
-		auto* const rrtExtendedReport =
+		const auto* const rrtExtendedReport =
 		  packet2->BuildExtendedReportInPlace<RTC::RTCP::RrtExtendedReport>();
 
 		REQUIRE(packet2->NeedsConsolidation() == true);

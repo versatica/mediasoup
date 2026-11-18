@@ -1,5 +1,8 @@
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
+#include "RTC/RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
 #include "RTC/RTCP/packet/NackPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
@@ -22,11 +25,13 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 			REQUIRE(packet->GetNumberOfItems() == 2);
 			REQUIRE(items.size() == 2);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(items[0].packetId == 1000);
 			REQUIRE(items[0].lostPacketBitmask == 0x8001);
 
 			REQUIRE(items[1].packetId == 65535);
 			REQUIRE(items[1].lostPacketBitmask == 0);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// clang-format off
@@ -157,10 +162,14 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 
 		REQUIRE(packet->GetNumberOfItems() == 2);
 		REQUIRE(items.size() == 2);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(items[0].packetId == 100);
 		REQUIRE(items[0].lostPacketBitmask == 0x0001);
+
 		REQUIRE(items[1].packetId == 200);
 		REQUIRE(items[1].lostPacketBitmask == 0x0002);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("NackPacket::Parse() fails")
@@ -243,11 +252,13 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 			REQUIRE(packet->GetNumberOfItems() == 2);
 			REQUIRE(items.size() == 2);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(items[0].packetId == 3333);
 			REQUIRE(items[0].lostPacketBitmask == 0x0001);
 
 			REQUIRE(items[1].packetId == 4444);
 			REQUIRE(items[1].lostPacketBitmask == 0xFFFF);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// Dirty the buffer to check that Factory() writes zeros in the feedback

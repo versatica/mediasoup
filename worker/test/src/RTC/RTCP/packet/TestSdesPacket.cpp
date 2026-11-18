@@ -1,7 +1,10 @@
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/SdesPacket.hpp"
 #include "Utils.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
+#include "test/include/testHelpers.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 #include <string>
@@ -19,6 +22,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			REQUIRE(packet->GetNumberOfChunks() == 3);
 			REQUIRE(items.size() == 3);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(items[0].ssrc == 0x9F65E742);
 			REQUIRE(items[0].type == RTC::RTCP::SdesPacket::ItemType::CNAME);
 			REQUIRE(items[0].value == "t7mkYnCm46OcINy/");
@@ -30,6 +34,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			REQUIRE(items[2].ssrc == 1234);
 			REQUIRE(items[2].type == RTC::RTCP::SdesPacket::ItemType::TOOL);
 			REQUIRE(items[2].value == "iñaki");
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// clang-format off
@@ -142,9 +147,13 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 
 		REQUIRE(packet->GetNumberOfChunks() == 3);
 		REQUIRE(items.size() == 4);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(items[3].ssrc == 5678);
 		REQUIRE(items[3].type == RTC::RTCP::SdesPacket::ItemType::LOC);
 		REQUIRE(items[3].value == "ab");
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+
 		// Check the null octet and padding bytes.
 		REQUIRE(packet->GetBuffer()[packet->GetLength() - 4] == 0);
 		REQUIRE(packet->GetBuffer()[packet->GetLength() - 3] == 0);
@@ -192,9 +201,12 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		const auto items = packet->GetItems();
 
 		REQUIRE(items.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(items[0].ssrc == 1234);
 		REQUIRE(items[0].type == RTC::RTCP::SdesPacket::ItemType::CNAME);
 		REQUIRE(items[0].value == "ab");
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 		/* Modify it (it removes the padding). */
 
@@ -310,6 +322,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			REQUIRE(packet->GetNumberOfChunks() == 2);
 			REQUIRE(items.size() == 2);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(items[0].ssrc == 1111);
 			REQUIRE(items[0].type == RTC::RTCP::SdesPacket::ItemType::CNAME);
 			REQUIRE(items[0].value == "foo");
@@ -317,6 +330,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			REQUIRE(items[1].ssrc == 2222);
 			REQUIRE(items[1].type == RTC::RTCP::SdesPacket::ItemType::NOTE);
 			REQUIRE(items[1].value == "bar baz");
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 			// Check the null octet and padding bytes of the first chunk.
 			REQUIRE(packet->GetBuffer()[13] == 0);
@@ -448,8 +462,12 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		const auto items = packet->GetItems();
 
 		REQUIRE(items.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(items[0].ssrc == 31);
 		REQUIRE(items[0].value == value255);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+
 		// 4 (header) + 30 empty chunks + 1 chunk with SSRC, item header, item
 		// value and null octet padded to 4 bytes.
 		REQUIRE(packet->GetLength() == 4 + (30 * 8) + 264);
@@ -482,6 +500,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			REQUIRE(packet->GetNumberOfChunks() == 2);
 			REQUIRE(items.size() == 2);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(items[0].ssrc == 0x11223344);
 			REQUIRE(items[0].type == RTC::RTCP::SdesPacket::ItemType::LOC);
 			REQUIRE(items[0].value == "abcdefghijklmnopq");
@@ -489,6 +508,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 			REQUIRE(items[1].ssrc == 5678);
 			REQUIRE(items[1].type == RTC::RTCP::SdesPacket::ItemType::CNAME);
 			REQUIRE(items[1].value == "ab");
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// clang-format off

@@ -261,7 +261,8 @@ namespace RTC
 
 			auto* const buffer = const_cast<uint8_t*>(GetBuffer());
 
-			Utils::Byte::Set1Byte(buffer, 17, static_cast<uint8_t>((exponent << 2) | (mantissa >> 16)));
+			Utils::Byte::Set1Byte(
+			  buffer, 17, static_cast<uint8_t>((uint64_t{ exponent } << 2) | (mantissa >> 16)));
 			Utils::Byte::Set2Bytes(buffer, 18, static_cast<uint16_t>(mantissa & 0xFFFF));
 		}
 

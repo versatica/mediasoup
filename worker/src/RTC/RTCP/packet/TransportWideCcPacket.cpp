@@ -438,8 +438,10 @@ namespace RTC
 			for (uint16_t sequenceNumber = GetBaseSequenceNumber(); sequenceNumber != endSequenceNumber;
 			     ++sequenceNumber)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				if (receivedIdx < receivedRtpPackets.size() && receivedRtpPackets[receivedIdx].sequenceNumber == sequenceNumber)
 				{
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					const auto& receivedRtpPacket = receivedRtpPackets[receivedIdx];
 
 					deltaSinceBaseUs += receivedRtpPacket.deltaTicks * TransportWideCcPacket::DeltaTickUs;
@@ -759,6 +761,7 @@ namespace RTC
 				return true;
 			}
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			if (this->size < LastChunk::MaxRunLengthCapacity && this->allSame && this->deltaSizes[0] == deltaSize)
 			{
 				return true;
@@ -775,11 +778,13 @@ namespace RTC
 
 			if (this->size < LastChunk::MaxVectorCapacity)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				this->deltaSizes[this->size] = deltaSize;
 			}
 
 			++this->size;
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			this->allSame       = this->allSame && deltaSize == this->deltaSizes[0];
 			this->hasLargeDelta = this->hasLargeDelta || deltaSize == LastChunk::Large;
 		}
@@ -834,11 +839,14 @@ namespace RTC
 
 			for (size_t idx{ 0 }; idx < this->size; ++idx)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				const DeltaSize deltaSize = this->deltaSizes[LastChunk::MaxTwoBitCapacity + idx];
 
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				this->deltaSizes[idx] = deltaSize;
-				this->allSame         = this->allSame && deltaSize == this->deltaSizes[0];
-				this->hasLargeDelta   = this->hasLargeDelta || deltaSize == LastChunk::Large;
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+				this->allSame       = this->allSame && deltaSize == this->deltaSizes[0];
+				this->hasLargeDelta = this->hasLargeDelta || deltaSize == LastChunk::Large;
 			}
 
 			return chunk;
@@ -887,6 +895,7 @@ namespace RTC
 
 			if (this->allSame)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				deltaSizes.insert(deltaSizes.end(), this->size, this->deltaSizes[0]);
 			}
 			else
@@ -923,7 +932,8 @@ namespace RTC
 
 			for (size_t idx{ 0 }; idx < this->size; ++idx)
 			{
-				chunk |= this->deltaSizes[idx] << (LastChunk::MaxOneBitCapacity - 1 - idx);
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+				chunk |= uint32_t{ this->deltaSizes[idx] } << (LastChunk::MaxOneBitCapacity - 1 - idx);
 			}
 
 			return chunk;
@@ -941,7 +951,9 @@ namespace RTC
 
 			for (size_t idx{ 0 }; idx < this->size; ++idx)
 			{
-				this->deltaSizes[idx] = (chunk >> (LastChunk::MaxOneBitCapacity - 1 - idx)) & 0x01;
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+				this->deltaSizes[idx] =
+				  (uint32_t{ chunk } >> (LastChunk::MaxOneBitCapacity - 1 - idx)) & 0x01;
 			}
 		}
 
@@ -968,7 +980,8 @@ namespace RTC
 
 			for (size_t idx{ 0 }; idx < count; ++idx)
 			{
-				chunk |= this->deltaSizes[idx] << (2 * (LastChunk::MaxTwoBitCapacity - 1 - idx));
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+				chunk |= uint32_t{ this->deltaSizes[idx] } << (2 * (LastChunk::MaxTwoBitCapacity - 1 - idx));
 			}
 
 			return chunk;
@@ -986,7 +999,9 @@ namespace RTC
 
 			for (size_t idx{ 0 }; idx < this->size; ++idx)
 			{
-				this->deltaSizes[idx] = (chunk >> (2 * (LastChunk::MaxTwoBitCapacity - 1 - idx))) & 0x03;
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+				this->deltaSizes[idx] =
+				  (uint32_t{ chunk } >> (2 * (LastChunk::MaxTwoBitCapacity - 1 - idx))) & 0x03;
 			}
 		}
 
@@ -1010,7 +1025,8 @@ namespace RTC
 			MS_ASSERT(this->allSame, "last chunk delta sizes are not all the same");
 			MS_ASSERT(this->size <= LastChunk::MaxRunLengthCapacity, "last chunk too big");
 
-			return static_cast<uint16_t>((this->deltaSizes[0] << 13) | this->size);
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			return static_cast<uint16_t>((uint32_t{ this->deltaSizes[0] } << 13) | this->size);
 		}
 
 		void TransportWideCcPacket::LastChunk::DecodeRunLength(uint16_t chunk, size_t maxSize)
@@ -1021,7 +1037,7 @@ namespace RTC
 
 			this->size = std::min<size_t>(chunk & 0x1FFF, maxSize);
 
-			const DeltaSize deltaSize = (chunk >> 13) & 0x03;
+			const DeltaSize deltaSize = (uint32_t{ chunk } >> 13) & 0x03;
 
 			this->hasLargeDelta = deltaSize >= LastChunk::Large;
 			this->allSame       = true;
@@ -1030,6 +1046,7 @@ namespace RTC
 			// first one.
 			for (size_t idx{ 0 }; idx < std::min<size_t>(this->size, LastChunk::MaxVectorCapacity); ++idx)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				this->deltaSizes[idx] = deltaSize;
 			}
 		}

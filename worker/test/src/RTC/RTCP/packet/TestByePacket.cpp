@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RTCP/packet/ByePacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()

@@ -1,4 +1,7 @@
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
+#include "RTC/RTCP/packet/AnyReportPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/SenderReportPacket.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -23,6 +26,7 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 			REQUIRE(packet->GetNumberOfReportBlocks() == 1);
 			REQUIRE(reportBlocks.size() == 1);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(reportBlocks[0].ssrc == 0x01932DB4);
 			REQUIRE(reportBlocks[0].fractionLost == 5);
 			REQUIRE(reportBlocks[0].totalLost == 258);
@@ -30,6 +34,7 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 			REQUIRE(reportBlocks[0].jitter == 15);
 			REQUIRE(reportBlocks[0].lastSenderReport == 0xB2C31234);
 			REQUIRE(reportBlocks[0].delaySinceLastSenderReport == 32768);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// clang-format off
@@ -120,7 +125,7 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 	SECTION("SenderReportPacket::Parse() with padding succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=1, RC=0, PT:200, Length: 7
 			0b10100000, 0xC8, 0x00, 0x07,
@@ -214,6 +219,7 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 			REQUIRE(packet->GetNumberOfReportBlocks() == 2);
 			REQUIRE(reportBlocks.size() == 2);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(reportBlocks[0].ssrc == 7777);
 			REQUIRE(reportBlocks[0].fractionLost == 1);
 			REQUIRE(reportBlocks[0].totalLost == 2);
@@ -229,6 +235,7 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 			REQUIRE(reportBlocks[1].jitter == 0xFFFFFFFF);
 			REQUIRE(reportBlocks[1].lastSenderReport == 0xFFFFFFFF);
 			REQUIRE(reportBlocks[1].delaySinceLastSenderReport == 0xFFFFFFFF);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// Dirty the buffer to check that Factory() writes zeros in the fixed

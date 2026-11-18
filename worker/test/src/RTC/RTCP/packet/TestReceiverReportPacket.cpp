@@ -1,4 +1,7 @@
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
+#include "RTC/RTCP/packet/AnyReportPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/ReceiverReportPacket.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -18,6 +21,7 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 			REQUIRE(packet->GetNumberOfReportBlocks() == 2);
 			REQUIRE(reportBlocks.size() == 2);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(reportBlocks[0].ssrc == 0x01932DB4);
 			REQUIRE(reportBlocks[0].fractionLost == 80);
 			REQUIRE(reportBlocks[0].totalLost == 8);
@@ -33,6 +37,7 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 			REQUIRE(reportBlocks[1].jitter == 0);
 			REQUIRE(reportBlocks[1].lastSenderReport == 0);
 			REQUIRE(reportBlocks[1].delaySinceLastSenderReport == 0);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// clang-format off
@@ -205,8 +210,11 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 
 		REQUIRE(packet->GetNumberOfReportBlocks() == 1);
 		REQUIRE(reportBlocks.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(reportBlocks[0].ssrc == 3333);
 		REQUIRE(reportBlocks[0].delaySinceLastSenderReport == 6);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("ReceiverReportPacket::Parse() fails")
@@ -266,6 +274,7 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 			REQUIRE(packet->GetNumberOfReportBlocks() == 2);
 			REQUIRE(reportBlocks.size() == 2);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(reportBlocks[0].ssrc == 2222);
 			REQUIRE(reportBlocks[0].fractionLost == 1);
 			REQUIRE(reportBlocks[0].totalLost == 2);
@@ -281,6 +290,7 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 			REQUIRE(reportBlocks[1].jitter == 0xFFFFFFFF);
 			REQUIRE(reportBlocks[1].lastSenderReport == 0xFFFFFFFF);
 			REQUIRE(reportBlocks[1].delaySinceLastSenderReport == 0xFFFFFFFF);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		std::unique_ptr<RTC::RTCP::ReceiverReportPacket> packet{ RTC::RTCP::ReceiverReportPacket::Factory(
@@ -412,10 +422,13 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 		const auto reportBlocks = packet->GetReportBlocks();
 
 		REQUIRE(reportBlocks.size() == 4);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(reportBlocks[0].totalLost == 8388607);
 		REQUIRE(reportBlocks[1].totalLost == 8388607);
 		REQUIRE(reportBlocks[2].totalLost == -8388608);
 		REQUIRE(reportBlocks[3].totalLost == -8388608);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("ReceiverReportPacket::AddReportBlock() throws")

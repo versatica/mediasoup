@@ -1,5 +1,7 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/TransportWideCcPacket.hpp"
 #include "Utils.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
@@ -103,26 +105,37 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			REQUIRE(packet->HasDeltas() == true);
 			REQUIRE(receivedRtpPackets.size() == 10);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(receivedRtpPackets[0].sequenceNumber == 39);
 			REQUIRE(receivedRtpPackets[0].deltaTicks == 16);
+
 			REQUIRE(receivedRtpPackets[1].sequenceNumber == 40);
 			REQUIRE(receivedRtpPackets[1].deltaTicks == 0);
+
 			REQUIRE(receivedRtpPackets[2].sequenceNumber == 41);
 			REQUIRE(receivedRtpPackets[2].deltaTicks == 0);
+
 			REQUIRE(receivedRtpPackets[3].sequenceNumber == 42);
 			REQUIRE(receivedRtpPackets[3].deltaTicks == 0);
+
 			REQUIRE(receivedRtpPackets[4].sequenceNumber == 43);
 			REQUIRE(receivedRtpPackets[4].deltaTicks == 0);
+
 			REQUIRE(receivedRtpPackets[5].sequenceNumber == 44);
 			REQUIRE(receivedRtpPackets[5].deltaTicks == 0);
+
 			REQUIRE(receivedRtpPackets[6].sequenceNumber == 45);
 			REQUIRE(receivedRtpPackets[6].deltaTicks == 0);
+
 			REQUIRE(receivedRtpPackets[7].sequenceNumber == 49);
 			REQUIRE(receivedRtpPackets[7].deltaTicks == 28);
+
 			REQUIRE(receivedRtpPackets[8].sequenceNumber == 50);
 			REQUIRE(receivedRtpPackets[8].deltaTicks == 4);
+
 			REQUIRE(receivedRtpPackets[9].sequenceNumber == 51);
 			REQUIRE(receivedRtpPackets[9].deltaTicks == 0);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// clang-format off
@@ -220,7 +233,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	SECTION("TransportWideCcPacket::Parse() with padding succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=1, FMT=15, PT:205, Length: 5
 			0xAF, 0xCD, 0x00, 0x05,
@@ -265,14 +278,17 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		REQUIRE(packet->GetFeedbackPacketCount() == 0);
 		REQUIRE(packet->HasDeltas() == true);
 		REQUIRE(receivedRtpPackets.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(receivedRtpPackets[0].sequenceNumber == 13);
 		REQUIRE(receivedRtpPackets[0].deltaTicks == 228);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("TransportWideCcPacket::Parse() with zero padding and P bit not set succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=0, FMT=15, PT:205, Length: 5
 			0x8F, 0xCD, 0x00, 0x05,
@@ -311,14 +327,17 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 
 		REQUIRE(packet->HasDeltas() == true);
 		REQUIRE(receivedRtpPackets.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(receivedRtpPackets[0].sequenceNumber == 0);
 		REQUIRE(receivedRtpPackets[0].deltaTicks == 0);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("TransportWideCcPacket::Parse() with more padding than needed succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=1, FMT=15, PT:205, Length: 6
 			0xAF, 0xCD, 0x00, 0x06,
@@ -358,14 +377,17 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 
 		REQUIRE(packet->HasDeltas() == true);
 		REQUIRE(receivedRtpPackets.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(receivedRtpPackets[0].sequenceNumber == 0);
 		REQUIRE(receivedRtpPackets[0].deltaTicks == 0);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("TransportWideCcPacket::Parse() without receive deltas succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=1, FMT=15, PT:205, Length: 5
 			0xAF, 0xCD, 0x00, 0x05,
@@ -404,6 +426,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		REQUIRE(packet->GetPacketStatusCount() == 13);
 		REQUIRE(packet->HasDeltas() == false);
 		REQUIRE(receivedRtpPackets.size() == 7);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(receivedRtpPackets[0].sequenceNumber == 1);
 		REQUIRE(receivedRtpPackets[1].sequenceNumber == 2);
 		REQUIRE(receivedRtpPackets[2].sequenceNumber == 7);
@@ -411,6 +435,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		REQUIRE(receivedRtpPackets[4].sequenceNumber == 9);
 		REQUIRE(receivedRtpPackets[5].sequenceNumber == 10);
 		REQUIRE(receivedRtpPackets[6].sequenceNumber == 13);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 		for (const auto& receivedRtpPacket : receivedRtpPackets)
 		{
@@ -601,12 +626,16 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			REQUIRE(packet->HasDeltas() == true);
 			REQUIRE(receivedRtpPackets.size() == 3);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(receivedRtpPackets[0].sequenceNumber == 1000);
 			REQUIRE(receivedRtpPackets[0].deltaTicks == 4);
+
 			REQUIRE(receivedRtpPackets[1].sequenceNumber == 1001);
 			REQUIRE(receivedRtpPackets[1].deltaTicks == 4);
+
 			REQUIRE(receivedRtpPackets[2].sequenceNumber == 1003);
 			REQUIRE(receivedRtpPackets[2].deltaTicks == 4);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// clang-format off
@@ -742,8 +771,11 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		REQUIRE(packet->GetPaddingLength() == 2);
 		REQUIRE(packet->GetPacketStatusCount() == 5);
 		REQUIRE(receivedRtpPackets.size() == 4);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(receivedRtpPackets[3].sequenceNumber == 1004);
 		REQUIRE(receivedRtpPackets[3].deltaTicks == 4);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("TransportWideCcPacket::Factory() without receive deltas succeeds")
@@ -836,6 +868,9 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	const auto generateReceiveTimestamps =
 	  [](const std::vector<uint16_t>& sequenceNumbers, int64_t defaultDeltaUs) -> std::vector<int64_t>
 	{
+		REQUIRE(!sequenceNumbers.empty());
+
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		uint16_t lastSequenceNumber = sequenceNumbers[0];
 		int64_t timeUs{ 0 };
 		std::vector<int64_t> timestampsUs;
@@ -863,6 +898,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	                            bool includeDeltas,
 	                            std::optional<size_t> expectedSize) -> void
 	{
+		REQUIRE(!receivedSequenceNumbers.empty());
 		REQUIRE(receivedSequenceNumbers.size() == receivedTimestampsUs.size());
 
 		const std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
@@ -872,20 +908,25 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 
 		std::vector<int64_t> expectedDeltasUs;
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		packet->SetBase(receivedSequenceNumbers[0], receivedTimestampsUs[0]);
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(packet->AddReceivedRtpPacket(receivedSequenceNumbers[0], receivedTimestampsUs[0]));
 
 		// The first delta is not the difference between two receive times but a
 		// compensation for the lower precision of the reference time, so it is
 		// the opposite of what GetBaseDeltaUs() returns for the first receive
 		// time.
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		expectedDeltasUs.push_back(-packet->GetBaseDeltaUs(receivedTimestampsUs[0]));
 
 		for (size_t idx{ 1 }; idx < receivedSequenceNumbers.size(); ++idx)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(packet->AddReceivedRtpPacket(receivedSequenceNumbers[idx], receivedTimestampsUs[idx]));
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			expectedDeltasUs.push_back(receivedTimestampsUs[idx] - receivedTimestampsUs[idx - 1]);
 		}
 
@@ -903,12 +944,15 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 
 			for (size_t idx{ 0 }; idx < receivedRtpPackets.size(); ++idx)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				REQUIRE(receivedRtpPackets[idx].sequenceNumber == receivedSequenceNumbers[idx]);
 
 				if (includeDeltas)
 				{
 					REQUIRE(
+					  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					  receivedRtpPackets[idx].deltaTicks * RTC::RTCP::TransportWideCcPacket::DeltaTickUs ==
+					  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					  expectedDeltasUs[idx]);
 				}
 			}
@@ -1453,14 +1497,20 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		const auto rtpPacketStatuses = getRtpPacketStatuses(parsedPacket.get());
 
 		REQUIRE(rtpPacketStatuses.size() == 4);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(rtpPacketStatuses[0].sequenceNumber == BaseSequenceNumber + 0);
 		REQUIRE(rtpPacketStatuses[0].deltaSinceBaseUs.has_value());
+
 		REQUIRE(rtpPacketStatuses[1].sequenceNumber == BaseSequenceNumber + 1);
 		REQUIRE(!rtpPacketStatuses[1].deltaSinceBaseUs.has_value());
+
 		REQUIRE(rtpPacketStatuses[2].sequenceNumber == BaseSequenceNumber + 2);
 		REQUIRE(!rtpPacketStatuses[2].deltaSinceBaseUs.has_value());
+
 		REQUIRE(rtpPacketStatuses[3].sequenceNumber == BaseSequenceNumber + 3);
 		REQUIRE(rtpPacketStatuses[3].deltaSinceBaseUs.has_value());
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("reports missing RTP packets without receive deltas")
@@ -1490,14 +1540,20 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		const auto rtpPacketStatuses = getRtpPacketStatuses(parsedPacket.get());
 
 		REQUIRE(rtpPacketStatuses.size() == 4);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(rtpPacketStatuses[0].sequenceNumber == BaseSequenceNumber + 0);
 		REQUIRE(rtpPacketStatuses[0].deltaSinceBaseUs.has_value());
+
 		REQUIRE(rtpPacketStatuses[1].sequenceNumber == BaseSequenceNumber + 1);
 		REQUIRE(!rtpPacketStatuses[1].deltaSinceBaseUs.has_value());
+
 		REQUIRE(rtpPacketStatuses[2].sequenceNumber == BaseSequenceNumber + 2);
 		REQUIRE(!rtpPacketStatuses[2].deltaSinceBaseUs.has_value());
+
 		REQUIRE(rtpPacketStatuses[3].sequenceNumber == BaseSequenceNumber + 3);
 		REQUIRE(rtpPacketStatuses[3].deltaSinceBaseUs.has_value());
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	/* Feedback packets built from a list of inputs whose first one sets the base. */
@@ -1525,6 +1581,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	                           uint8_t* buffer,
 	                           size_t bufferLength) -> std::unique_ptr<RTC::RTCP::TransportWideCcPacket>
 	{
+		REQUIRE(!inputs.empty());
+
 		std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
 			RTC::RTCP::TransportWideCcPacket::Factory(buffer, bufferLength, /*includeDeltas*/ true)
 		};
@@ -1537,6 +1595,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 
 		for (size_t idx{ 1 }; idx < inputs.size(); ++idx)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			const auto& input = inputs[idx];
 
 			REQUIRE(packet->AddReceivedRtpPacket(input.sequenceNumber, input.timestampUs));
@@ -1551,12 +1610,15 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 	                            const std::vector<Input>& inputs,
 	                            const RTC::RTCP::TransportWideCcPacket* packet) -> void
 	{
+		REQUIRE(!inputs.empty());
+
 		// The reference time only carries whole base time ticks and wraps around,
 		// so the reconstructed times sit in a frame shifted a constant amount from
 		// the given ones. The shift comes from the timestamp the base was set
 		// with, which is the first input.
-		const int64_t baseTimeTicks       = inputs.front().timestampUs / BaseTimeTickUs;
-		const int64_t maskedBaseTimeTicks = baseTimeTicks & 0xFFFFFF;
+		const int64_t baseTimeTicks = inputs.front().timestampUs / BaseTimeTickUs;
+		const auto maskedBaseTimeTicks =
+		  static_cast<int64_t>(static_cast<uint64_t>(baseTimeTicks) & 0xFFFFFF);
 
 		// The reference time is a 24 bits signed integer.
 		const int64_t referenceTime =
@@ -1571,6 +1633,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 
 		for (size_t inputIdx{ 1 }; inputIdx < inputs.size(); ++inputIdx)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			const auto& input = inputs[inputIdx];
 			const auto missingRtpPackets =
 			  static_cast<uint16_t>(input.sequenceNumber - lastInput.sequenceNumber - 1);
@@ -1580,6 +1643,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 			{
 				REQUIRE(statusIdx < rtpPacketStatuses.size());
 
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				const auto& rtpPacketStatus = rtpPacketStatuses[statusIdx];
 
 				REQUIRE(
@@ -1591,6 +1655,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 
 			REQUIRE(statusIdx < rtpPacketStatuses.size());
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			const auto& rtpPacketStatus = rtpPacketStatuses[statusIdx];
 
 			REQUIRE(rtpPacketStatus.sequenceNumber == input.sequenceNumber);
@@ -2047,6 +2112,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 
 			for (size_t idx{ 0 }; idx < feedbackPacketMeta.deltas.size(); ++idx)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				REQUIRE(receivedRtpPackets[idx].deltaTicks == feedbackPacketMeta.deltas[idx]);
 			}
 		}

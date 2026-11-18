@@ -15,6 +15,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
+		// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 		const ankerl::unordered_dense::map<SdesPacket::ItemType, std::string> SdesPacket::ItemType2String =
 		{
 			{ SdesPacket::ItemType::CNAME, "CNAME" },

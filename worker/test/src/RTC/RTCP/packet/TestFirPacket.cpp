@@ -1,6 +1,10 @@
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
+#include "RTC/RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/RTCP/packet/FirPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
+#include "test/include/testHelpers.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -22,11 +26,13 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 			REQUIRE(packet->GetNumberOfItems() == 2);
 			REQUIRE(items.size() == 2);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(items[0].ssrc == 0x02D03702);
 			REQUIRE(items[0].sequenceNumber == 4);
 
 			REQUIRE(items[1].ssrc == 0x23456789);
 			REQUIRE(items[1].sequenceNumber == 13);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// clang-format off
@@ -164,10 +170,14 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 
 		REQUIRE(packet->GetNumberOfItems() == 2);
 		REQUIRE(items.size() == 2);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(items[0].ssrc == 2222);
 		REQUIRE(items[0].sequenceNumber == 7);
+
 		REQUIRE(items[1].ssrc == 3333);
 		REQUIRE(items[1].sequenceNumber == 8);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("FirPacket::Parse() fails")
