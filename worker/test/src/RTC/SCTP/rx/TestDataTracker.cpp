@@ -1139,4 +1139,28 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(dataTracker.Observe(12, /*immediateAck*/ false) == true);
 		REQUIRE(dataTracker.Observe(12, /*immediateAck*/ false) == false);
 	}
+
+	SECTION("only accepts TSNs that fit in a gap-ack-block")
+	{
+		// The offsets of a gap-ack-block are 16 bits, relative to the cumulative
+		// TSN ack. A TSN farther than that could not be reported, and reporting it
+		// truncated would ack a TSN that was never received.
+		const uint32_t lastTsn = InitialTsn - 1;
+
+		REQUIRE(dataTracker.IsTsnValid(lastTsn + 65536) == false);
+		REQUIRE(dataTracker.IsTsnValid(lastTsn + 70001) == false);
+		REQUIRE(dataTracker.IsTsnValid(lastTsn + 65535) == true);
+
+		observe({ lastTsn + 65535 });
+
+		const auto packet     = createPacket();
+		const auto* sackChunk = addSackChunk(packet.get(), Arwnd);
+
+		REQUIRE(sackChunk);
+		REQUIRE(sackChunk->GetCumulativeTsnAck() == lastTsn);
+		REQUIRE(
+		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                    { 65535, 65535 }
+    });
+	}
 }

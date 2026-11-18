@@ -75,6 +75,14 @@ namespace RTC
 				return nullptr;
 			}
 
+			// Each stream identifier takes 2 bytes, so length field must be even.
+			if (parameterLength % 2 != 0)
+			{
+				MS_WARN_TAG(sctp, "wrong length value (not even)");
+
+				return nullptr;
+			}
+
 			auto* parameter =
 			  new IncomingSsnResetRequestParameter(const_cast<uint8_t*>(buffer), bufferLength);
 

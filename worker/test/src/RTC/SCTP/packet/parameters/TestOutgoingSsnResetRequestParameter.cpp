@@ -100,6 +100,30 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][para
 		delete clonedParameter;
 	}
 
+	SECTION("OutgoingSsnResetRequestParameter::Parse() fails")
+	{
+		// Wrong length field (not even).
+		// clang-format off
+		alignas(4) const uint8_t buffer1[] =
+		{
+			// Type:13 (OUTGOING-SSN-RESET-REQUEST), Length: 21
+			0x00, 0x0D, 0x00, 0x15,
+			// Re-configuration Request Sequence Number: 0x11223344
+			0x11, 0x22, 0x33, 0x44,
+			// Re-configuration Response Sequence Number: 0x55667788
+			0x55, 0x66, 0x77, 0x88,
+			// Sender's Last Assigned TSN: 0xAABBCCDD
+			0xAA, 0xBB, 0xCC, 0xDD,
+			// Stream 1: 0x5001, stream 2: 0x5002
+			0x50, 0x01, 0x50, 0x02,
+			// 1 extra byte, 3 bytes of padding
+			0x50, 0x00, 0x00, 0x00
+		};
+		// clang-format on
+
+		REQUIRE(!RTC::SCTP::OutgoingSsnResetRequestParameter::Parse(buffer1, sizeof(buffer1)));
+	}
+
 	SECTION("OutgoingSsnResetRequestParameter::Factory() succeeds")
 	{
 		auto* parameter = RTC::SCTP::OutgoingSsnResetRequestParameter::Factory(

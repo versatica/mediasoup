@@ -86,7 +86,7 @@ namespace RTC
 			// Here we must validate that length is multiple of 8.
 			if (chunkLength % 8 != 0)
 			{
-				MS_WARN_TAG(sctp, "wrong length (not multiple of 4)");
+				MS_WARN_TAG(sctp, "wrong length (not multiple of 8)");
 
 				return nullptr;
 			}

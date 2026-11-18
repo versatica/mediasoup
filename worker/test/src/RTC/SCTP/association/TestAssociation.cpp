@@ -440,6 +440,34 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(z.listener.HasRestarted() == false);
 	}
 
+	SECTION("notifies connecting only once when establishing connection")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		a.association.Connect();
+
+		REQUIRE(a.listener.CountOnAssociationConnectingCalls() == 1);
+
+		// Z reads INIT, produces INIT-ACK.
+		deliverFirstSentPacket(a, z);
+		// A reads INIT-ACK, produces COOKIE-ECHO.
+		deliverFirstSentPacket(z, a);
+
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTING);
+		REQUIRE(a.listener.CountOnAssociationConnectingCalls() == 1);
+
+		// Z reads COOKIE-ECHO, produces COOKIE-ACK.
+		deliverFirstSentPacket(a, z);
+		// A reads COOKIE-ACK.
+		deliverFirstSentPacket(z, a);
+
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
+		REQUIRE(z.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
+		REQUIRE(a.listener.CountOnAssociationConnectingCalls() == 1);
+		REQUIRE(z.listener.CountOnAssociationConnectingCalls() == 0);
+	}
+
 	SECTION("establishes connection with setup collision")
 	{
 		AssociationUnderTest a;
@@ -2009,6 +2037,79 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(a.listener.HasSentPackets() == false);
 	}
 
+	SECTION("processes the chunks after an unknown chunk whose type says to skip it")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		const uint32_t verificationTag = connectAndGetVerificationTag(a, z);
+
+		std::vector<uint8_t> buffer(a.sctpOptions.mtu);
+
+		const auto packet = buildPacket(buffer, verificationTag);
+
+		// Build a 4-byte chunk and patch its type to an unknown value (0x80), whose
+		// top two bits (10) request the receiver to skip it and continue
+		// processing the packet, without reporting it.
+		auto* const unknownChunk = packet->BuildChunkInPlace<RTC::SCTP::CookieAckChunk>();
+
+		unknownChunk->Consolidate();
+
+		auto* const heartbeatRequestChunk = packet->BuildChunkInPlace<RTC::SCTP::HeartbeatRequestChunk>();
+		auto* const heartbeatInfoParameter =
+		  heartbeatRequestChunk->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>();
+		const std::vector<uint8_t> info{ 1, 2, 3, 4 };
+
+		heartbeatInfoParameter->SetInfo(info.data(), info.size());
+		heartbeatInfoParameter->Consolidate();
+		heartbeatRequestChunk->Consolidate();
+
+		const_cast<uint8_t*>(packet->GetBuffer())[12] = 0x80;
+
+		injectPacket(a, packet.get());
+
+		// The HEARTBEAT-REQUEST chunk after the unknown chunk is processed, so A
+		// replies with a HEARTBEAT-ACK chunk.
+		REQUIRE(
+		  packetHasSingleChunkOfType<RTC::SCTP::HeartbeatAckChunk>(a.listener.ConsumeFirstSentPacket()));
+	}
+
+	SECTION("stops processing the packet at an unknown chunk whose type says to stop")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		const uint32_t verificationTag = connectAndGetVerificationTag(a, z);
+
+		std::vector<uint8_t> buffer(a.sctpOptions.mtu);
+
+		const auto packet = buildPacket(buffer, verificationTag);
+
+		// Build a 4-byte chunk and patch its type to an unknown value (0x00 is
+		// DATA, so 0x3F is used), whose top two bits (00) request the receiver to
+		// stop processing the packet, without reporting it.
+		auto* const unknownChunk = packet->BuildChunkInPlace<RTC::SCTP::CookieAckChunk>();
+
+		unknownChunk->Consolidate();
+
+		auto* const heartbeatRequestChunk = packet->BuildChunkInPlace<RTC::SCTP::HeartbeatRequestChunk>();
+		auto* const heartbeatInfoParameter =
+		  heartbeatRequestChunk->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>();
+		const std::vector<uint8_t> info{ 1, 2, 3, 4 };
+
+		heartbeatInfoParameter->SetInfo(info.data(), info.size());
+		heartbeatInfoParameter->Consolidate();
+		heartbeatRequestChunk->Consolidate();
+
+		const_cast<uint8_t*>(packet->GetBuffer())[12] = 0x3F;
+
+		injectPacket(a, packet.get());
+
+		// The HEARTBEAT-REQUEST chunk after the unknown chunk is not processed, so
+		// A sends nothing.
+		REQUIRE(a.listener.HasSentPackets() == false);
+	}
+
 	// Has A connect and replies to its INIT with an INIT-ACK carrying a cookie of
 	// given length. Returns the verification tag of A, which packets sent to it
 	// must carry.
@@ -2456,5 +2557,584 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(
 		  packetHasSingleChunkOfType<RTC::SCTP::OperationErrorChunk>(
 		    z.listener.ConsumeFirstSentPacket()) == true);
+	}
+
+	SECTION("delivers the messages received after a too large one")
+	{
+		auto sctpOptions = makeSctpOptions();
+
+		sctpOptions.maxReceiveMessageSize = 100;
+
+		AssociationUnderTest a(sctpOptions);
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		// Each message is sent in its own packet.
+		sendMessage(z, /*streamId*/ 1, /*ppid*/ 51, std::vector<uint8_t>(200));
+		sendMessage(z, /*streamId*/ 1, /*ppid*/ 52, std::vector<uint8_t>(10));
+
+		// Drop the packet with the too large message.
+		z.listener.ConsumeFirstSentPacket();
+
+		// A reads the packet with the second message, which is held since the
+		// stream is ordered and the first message is missing.
+		deliverFirstSentPacket(z, a);
+
+		REQUIRE(getReceivedMessagePpids(a).empty());
+
+		// Z retransmits the too large message once its T3-rtx timer expires, so A
+		// completes both messages while processing that packet.
+		exchangeMessagesAndAdvanceTime(a, z);
+
+		// The too large message is dropped, but the next one must be delivered.
+		REQUIRE(getReceivedMessagePpids(a) == std::vector<uint32_t>{ 52 });
+	}
+
+	SECTION("COOKIE-ECHO matching both tags while shutting down doesn't establish the association")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		const uint32_t localVerificationTag = connectAndGetVerificationTag(a, z);
+
+		z.association.Shutdown();
+		// A reads SHUTDOWN, produces SHUTDOWN-ACK and enters SHUTDOWN_ACK_SENT
+		// state with the T2-shutdown timer running.
+		deliverFirstSentPacket(z, a);
+
+		const auto shutdownAckBuffer = a.listener.ConsumeFirstSentPacket();
+
+		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::ShutdownAckChunk>(shutdownAckBuffer) == true);
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
+
+		// The SHUTDOWN-ACK sent to Z carries Z's verification tag, which is A's
+		// remote verification tag.
+		const uint32_t remoteVerificationTag = parsePacket(shutdownAckBuffer)->GetVerificationTag();
+
+		// A (not authenticated) State Cookie whose tags match the ones of A's TCB,
+		// so the COOKIE-ECHO is handled as a duplicated one (RFC 9260 section
+		// 5.2.4 action D).
+		const RTC::SCTP::Capabilities remoteCapabilities;
+
+		std::vector<uint8_t> cookieBuffer(RTC::SCTP::StateCookie::StateCookieLength);
+
+		RTC::SCTP::StateCookie::Write(
+		  cookieBuffer.data(),
+		  cookieBuffer.size(),
+		  /*localVerificationTag*/ localVerificationTag,
+		  /*remoteVerificationTag*/ remoteVerificationTag,
+		  /*localInitialTsn*/ 1000,
+		  /*remoteInitialTsn*/ 2000,
+		  /*remoteAdvertisedReceiverWindowCredit*/ 65535,
+		  /*tieTag*/ 0,
+		  remoteCapabilities);
+
+		std::vector<uint8_t> packetBuffer(a.sctpOptions.mtu);
+
+		const auto packet           = buildPacket(packetBuffer, localVerificationTag);
+		auto* const cookieEchoChunk = packet->BuildChunkInPlace<RTC::SCTP::CookieEchoChunk>();
+
+		cookieEchoChunk->SetCookie(cookieBuffer.data(), cookieBuffer.size());
+		cookieEchoChunk->Consolidate();
+
+		injectPacket(a, packet.get());
+
+		// A must only enter ESTABLISHED from COOKIE_ECHOED state, so it keeps
+		// shutting down.
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
+	}
+
+	SECTION("COOKIE-ECHO from a restarted peer in SHUTDOWN_SENT state doesn't establish the association")
+	{
+		constexpr uint32_t PeerNewVerificationTag{ 0x11223344 };
+		constexpr uint32_t LocalNewVerificationTag{ 0x55667788 };
+
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAndGetVerificationTag(a, z);
+
+		// A restarted peer sends an INIT, and A replies with an INIT-ACK whose
+		// State Cookie carries the Tie-Tag of its TCB.
+		std::vector<uint8_t> initBuffer(a.sctpOptions.mtu);
+
+		const auto initPacket = buildPacket(initBuffer, 0);
+		auto* const initChunk = initPacket->BuildChunkInPlace<RTC::SCTP::InitChunk>();
+
+		initChunk->SetInitiateTag(PeerNewVerificationTag);
+		initChunk->SetAdvertisedReceiverWindowCredit(65535);
+		initChunk->SetNumberOfOutboundStreams(10);
+		initChunk->SetNumberOfInboundStreams(10);
+		initChunk->SetInitialTsn(5000);
+		initChunk->Consolidate();
+
+		injectPacket(a, initPacket.get());
+
+		const auto initAckBuffer = a.listener.ConsumeFirstSentPacket();
+		const auto initAckPacket = parsePacket(initAckBuffer);
+
+		REQUIRE(initAckPacket);
+
+		const auto* const initAckChunk = initAckPacket->GetFirstChunkOfType<RTC::SCTP::InitAckChunk>();
+
+		REQUIRE(initAckChunk);
+
+		const auto* const stateCookieParameter =
+		  initAckChunk->GetFirstParameterOfType<RTC::SCTP::StateCookieParameter>();
+
+		REQUIRE(stateCookieParameter);
+
+		const std::unique_ptr<RTC::SCTP::StateCookie> initAckCookie{ RTC::SCTP::StateCookie::Parse(
+			stateCookieParameter->GetCookie(), stateCookieParameter->GetCookieLength()) };
+
+		REQUIRE(initAckCookie);
+
+		const uint64_t tieTag = initAckCookie->GetTieTag();
+
+		REQUIRE(tieTag != 0);
+
+		// A has no outstanding data, so it sends SHUTDOWN and enters
+		// SHUTDOWN_SENT state with the T2-shutdown timer running.
+		a.association.Shutdown();
+
+		REQUIRE(a.listener.HasSentPackets() == true);
+
+		a.listener.ConsumeFirstSentPacket();
+
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
+
+		// The restarted peer sends a COOKIE-ECHO with new tags and the Tie-Tag of
+		// A's TCB (RFC 9260 section 5.2.4 action A).
+		const RTC::SCTP::Capabilities remoteCapabilities;
+
+		std::vector<uint8_t> cookieBuffer(RTC::SCTP::StateCookie::StateCookieLength);
+
+		RTC::SCTP::StateCookie::Write(
+		  cookieBuffer.data(),
+		  cookieBuffer.size(),
+		  /*localVerificationTag*/ LocalNewVerificationTag,
+		  /*remoteVerificationTag*/ PeerNewVerificationTag,
+		  /*localInitialTsn*/ 1000,
+		  /*remoteInitialTsn*/ 5000,
+		  /*remoteAdvertisedReceiverWindowCredit*/ 65535,
+		  tieTag,
+		  remoteCapabilities);
+
+		std::vector<uint8_t> cookieEchoBuffer(a.sctpOptions.mtu);
+
+		const auto cookieEchoPacket = buildPacket(cookieEchoBuffer, LocalNewVerificationTag);
+		auto* const cookieEchoChunk = cookieEchoPacket->BuildChunkInPlace<RTC::SCTP::CookieEchoChunk>();
+
+		cookieEchoChunk->SetCookie(cookieBuffer.data(), cookieBuffer.size());
+		cookieEchoChunk->Consolidate();
+
+		injectPacket(a, cookieEchoPacket.get());
+
+		// A keeps shutting down, as the application requested.
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
+
+		// And A replies with an ERROR chunk with a Cookie Received While Shutting
+		// Down error cause.
+		const auto replyBuffer = a.listener.ConsumeFirstSentPacket();
+		const auto replyPacket = parsePacket(replyBuffer);
+
+		REQUIRE(replyPacket);
+
+		const auto* const operationErrorChunk =
+		  replyPacket->GetFirstChunkOfType<RTC::SCTP::OperationErrorChunk>();
+
+		REQUIRE(operationErrorChunk);
+
+		const auto* const errorCause = operationErrorChunk->GetErrorCauseAt(0);
+
+		REQUIRE(errorCause);
+		REQUIRE(
+		  errorCause->GetCode() ==
+		  RTC::SCTP::ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN);
+	}
+
+	SECTION(
+	  "COOKIE-ECHO of simultaneous associations in SHUTDOWN_ACK_SENT state doesn't establish the association")
+	{
+		constexpr uint32_t PeerNewVerificationTag{ 0x99AABBCC };
+
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		const uint32_t localVerificationTag = connectAndGetVerificationTag(a, z);
+
+		z.association.Shutdown();
+		// A reads SHUTDOWN, produces SHUTDOWN-ACK and enters SHUTDOWN_ACK_SENT
+		// state with the T2-shutdown timer running.
+		deliverFirstSentPacket(z, a);
+
+		REQUIRE(
+		  packetHasSingleChunkOfType<RTC::SCTP::ShutdownAckChunk>(a.listener.ConsumeFirstSentPacket()) ==
+		  true);
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
+
+		// A COOKIE-ECHO whose packet carries A's local verification tag but whose
+		// State Cookie carries a remote verification tag other than the one of
+		// A's TCB (RFC 9260 section 5.2.4 action B).
+		const RTC::SCTP::Capabilities remoteCapabilities;
+
+		std::vector<uint8_t> cookieBuffer(RTC::SCTP::StateCookie::StateCookieLength);
+
+		RTC::SCTP::StateCookie::Write(
+		  cookieBuffer.data(),
+		  cookieBuffer.size(),
+		  /*localVerificationTag*/ localVerificationTag,
+		  /*remoteVerificationTag*/ PeerNewVerificationTag,
+		  /*localInitialTsn*/ 1000,
+		  /*remoteInitialTsn*/ 5000,
+		  /*remoteAdvertisedReceiverWindowCredit*/ 65535,
+		  /*tieTag*/ 0,
+		  remoteCapabilities);
+
+		std::vector<uint8_t> cookieEchoBuffer(a.sctpOptions.mtu);
+
+		const auto cookieEchoPacket = buildPacket(cookieEchoBuffer, localVerificationTag);
+		auto* const cookieEchoChunk = cookieEchoPacket->BuildChunkInPlace<RTC::SCTP::CookieEchoChunk>();
+
+		cookieEchoChunk->SetCookie(cookieBuffer.data(), cookieBuffer.size());
+		cookieEchoChunk->Consolidate();
+
+		injectPacket(a, cookieEchoPacket.get());
+
+		// A keeps shutting down.
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
+
+		// And A replies with an ERROR chunk with a Cookie Received While Shutting
+		// Down error cause.
+		const auto replyBuffer = a.listener.ConsumeFirstSentPacket();
+		const auto replyPacket = parsePacket(replyBuffer);
+
+		REQUIRE(replyPacket);
+
+		const auto* const operationErrorChunk =
+		  replyPacket->GetFirstChunkOfType<RTC::SCTP::OperationErrorChunk>();
+
+		REQUIRE(operationErrorChunk);
+
+		const auto* const errorCause = operationErrorChunk->GetErrorCauseAt(0);
+
+		REQUIRE(errorCause);
+		REQUIRE(
+		  errorCause->GetCode() ==
+		  RTC::SCTP::ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN);
+	}
+
+	SECTION(
+	  "COOKIE-ECHO from a restarted peer in SHUTDOWN_PENDING state doesn't establish the association")
+	{
+		constexpr uint32_t PeerNewVerificationTag{ 0x11223344 };
+		constexpr uint32_t LocalNewVerificationTag{ 0x55667788 };
+
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAndGetVerificationTag(a, z);
+
+		// A restarted peer sends an INIT, and A replies with an INIT-ACK whose
+		// State Cookie carries the Tie-Tag of its TCB.
+		std::vector<uint8_t> initBuffer(a.sctpOptions.mtu);
+
+		const auto initPacket = buildPacket(initBuffer, 0);
+		auto* const initChunk = initPacket->BuildChunkInPlace<RTC::SCTP::InitChunk>();
+
+		initChunk->SetInitiateTag(PeerNewVerificationTag);
+		initChunk->SetAdvertisedReceiverWindowCredit(65535);
+		initChunk->SetNumberOfOutboundStreams(10);
+		initChunk->SetNumberOfInboundStreams(10);
+		initChunk->SetInitialTsn(5000);
+		initChunk->Consolidate();
+
+		injectPacket(a, initPacket.get());
+
+		const auto initAckBuffer = a.listener.ConsumeFirstSentPacket();
+		const auto initAckPacket = parsePacket(initAckBuffer);
+
+		REQUIRE(initAckPacket);
+
+		const auto* const initAckChunk = initAckPacket->GetFirstChunkOfType<RTC::SCTP::InitAckChunk>();
+
+		REQUIRE(initAckChunk);
+
+		const auto* const stateCookieParameter =
+		  initAckChunk->GetFirstParameterOfType<RTC::SCTP::StateCookieParameter>();
+
+		REQUIRE(stateCookieParameter);
+
+		const std::unique_ptr<RTC::SCTP::StateCookie> initAckCookie{ RTC::SCTP::StateCookie::Parse(
+			stateCookieParameter->GetCookie(), stateCookieParameter->GetCookieLength()) };
+
+		REQUIRE(initAckCookie);
+
+		const uint64_t tieTag = initAckCookie->GetTieTag();
+
+		REQUIRE(tieTag != 0);
+
+		// A sends a message that Z never receives, so it is outstanding.
+		sendMessage(a, /*streamId*/ 1, /*ppid*/ 51, { 1, 2, 3, 4 });
+
+		a.listener.ConsumeFirstSentPacket();
+
+		// A has outstanding data, so it enters SHUTDOWN_PENDING state.
+		a.association.Shutdown();
+
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
+
+		// The restarted peer sends a COOKIE-ECHO with new tags and the Tie-Tag of
+		// A's TCB (RFC 9260 section 5.2.4 action A).
+		const RTC::SCTP::Capabilities remoteCapabilities;
+
+		std::vector<uint8_t> cookieBuffer(RTC::SCTP::StateCookie::StateCookieLength);
+
+		RTC::SCTP::StateCookie::Write(
+		  cookieBuffer.data(),
+		  cookieBuffer.size(),
+		  /*localVerificationTag*/ LocalNewVerificationTag,
+		  /*remoteVerificationTag*/ PeerNewVerificationTag,
+		  /*localInitialTsn*/ 1000,
+		  /*remoteInitialTsn*/ 5000,
+		  /*remoteAdvertisedReceiverWindowCredit*/ 65535,
+		  tieTag,
+		  remoteCapabilities);
+
+		std::vector<uint8_t> cookieEchoBuffer(a.sctpOptions.mtu);
+
+		const auto cookieEchoPacket = buildPacket(cookieEchoBuffer, LocalNewVerificationTag);
+		auto* const cookieEchoChunk = cookieEchoPacket->BuildChunkInPlace<RTC::SCTP::CookieEchoChunk>();
+
+		cookieEchoChunk->SetCookie(cookieBuffer.data(), cookieBuffer.size());
+		cookieEchoChunk->Consolidate();
+
+		injectPacket(a, cookieEchoPacket.get());
+
+		// A keeps shutting down, as the application requested.
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
+
+		// And A replies with an ERROR chunk with a Cookie Received While Shutting
+		// Down error cause.
+		const auto replyBuffer = a.listener.ConsumeFirstSentPacket();
+		const auto replyPacket = parsePacket(replyBuffer);
+
+		REQUIRE(replyPacket);
+
+		const auto* const operationErrorChunk =
+		  replyPacket->GetFirstChunkOfType<RTC::SCTP::OperationErrorChunk>();
+
+		REQUIRE(operationErrorChunk);
+
+		const auto* const errorCause = operationErrorChunk->GetErrorCauseAt(0);
+
+		REQUIRE(errorCause);
+		REQUIRE(
+		  errorCause->GetCode() ==
+		  RTC::SCTP::ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN);
+	}
+
+	SECTION("COOKIE-ECHO doesn't bring a closed association back to life")
+	{
+		constexpr uint32_t ForgedVerificationTag{ 0xDEADBEEF };
+
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		a.association.Close();
+
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
+		REQUIRE(a.listener.IsClosed() == true);
+
+		// Drop the ABORT sent to Z.
+		a.listener.ConsumeFirstSentPacket();
+
+		// A (not authenticated) State Cookie whose local verification tag matches
+		// the one of the packet carrying it.
+		const RTC::SCTP::Capabilities remoteCapabilities;
+
+		std::vector<uint8_t> cookieBuffer(RTC::SCTP::StateCookie::StateCookieLength);
+
+		RTC::SCTP::StateCookie::Write(
+		  cookieBuffer.data(),
+		  cookieBuffer.size(),
+		  /*localVerificationTag*/ ForgedVerificationTag,
+		  /*remoteVerificationTag*/ 0xCAFEBABE,
+		  /*localInitialTsn*/ 1000,
+		  /*remoteInitialTsn*/ 2000,
+		  /*remoteAdvertisedReceiverWindowCredit*/ 65535,
+		  /*tieTag*/ 0,
+		  remoteCapabilities);
+
+		std::vector<uint8_t> cookieEchoBuffer(a.sctpOptions.mtu);
+
+		const auto cookieEchoPacket = buildPacket(cookieEchoBuffer, ForgedVerificationTag);
+		auto* const cookieEchoChunk = cookieEchoPacket->BuildChunkInPlace<RTC::SCTP::CookieEchoChunk>();
+
+		cookieEchoChunk->SetCookie(cookieBuffer.data(), cookieBuffer.size());
+		cookieEchoChunk->Consolidate();
+
+		injectPacket(a, cookieEchoPacket.get());
+
+		// A stays closed and doesn't reply.
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
+		REQUIRE(a.listener.HasSentPackets() == false);
+	}
+
+	SECTION("chunks bundled after an invalid COOKIE-ECHO are not processed")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		// A packet with a wrong verification tag carrying a COOKIE-ECHO chunk with
+		// an invalid State Cookie and an ABORT chunk after it.
+		std::vector<uint8_t> buffer(a.sctpOptions.mtu);
+
+		const auto packet           = buildPacket(buffer, 0x12345678);
+		auto* const cookieEchoChunk = packet->BuildChunkInPlace<RTC::SCTP::CookieEchoChunk>();
+		const std::vector<uint8_t> cookie(16, 0xAB);
+
+		cookieEchoChunk->SetCookie(cookie.data(), cookie.size());
+		cookieEchoChunk->Consolidate();
+
+		const auto* const abortAssociationChunk =
+		  packet->BuildChunkInPlace<RTC::SCTP::AbortAssociationChunk>();
+
+		abortAssociationChunk->Consolidate();
+
+		injectPacket(a, packet.get());
+
+		// The ABORT chunk is not processed, so A is still connected.
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
+	}
+
+	SECTION("COOKIE-ECHO not matching any case of RFC 9260 section 5.2.4 is discarded")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		// Get A's remote verification tag from a packet sent by A.
+		sendMessage(a, /*streamId*/ 1, /*ppid*/ 51, { 1, 2, 3, 4 });
+
+		const uint32_t remoteVerificationTag =
+		  parsePacket(a.listener.ConsumeFirstSentPacket())->GetVerificationTag();
+
+		// A (not authenticated) State Cookie with A's remote verification tag and a
+		// non zero Tie-Tag other than the one of A's TCB, carried in a packet with
+		// a verification tag other than A's local one. It matches none of the
+		// cases of RFC 9260 section 5.2.4.
+		const RTC::SCTP::Capabilities remoteCapabilities;
+
+		std::vector<uint8_t> cookieBuffer(RTC::SCTP::StateCookie::StateCookieLength);
+
+		RTC::SCTP::StateCookie::Write(
+		  cookieBuffer.data(),
+		  cookieBuffer.size(),
+		  /*localVerificationTag*/ 0x12345678,
+		  /*remoteVerificationTag*/ remoteVerificationTag,
+		  /*localInitialTsn*/ 1000,
+		  /*remoteInitialTsn*/ 2000,
+		  /*remoteAdvertisedReceiverWindowCredit*/ 65535,
+		  /*tieTag*/ 1234,
+		  remoteCapabilities);
+
+		std::vector<uint8_t> buffer(a.sctpOptions.mtu);
+
+		const auto packet           = buildPacket(buffer, 0x12345678);
+		auto* const cookieEchoChunk = packet->BuildChunkInPlace<RTC::SCTP::CookieEchoChunk>();
+
+		cookieEchoChunk->SetCookie(cookieBuffer.data(), cookieBuffer.size());
+		cookieEchoChunk->Consolidate();
+
+		const auto* const abortAssociationChunk =
+		  packet->BuildChunkInPlace<RTC::SCTP::AbortAssociationChunk>();
+
+		abortAssociationChunk->Consolidate();
+
+		injectPacket(a, packet.get());
+
+		// The COOKIE-ECHO is silently discarded, so A doesn't reply with a
+		// COOKIE-ACK, and the ABORT chunk after it is not processed.
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
+		REQUIRE(a.listener.HasSentPackets() == false);
+	}
+
+	SECTION("INIT with zero outbound streams doesn't close an established association")
+	{
+		constexpr uint32_t InitiateTag{ 0x11223344 };
+
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		std::vector<uint8_t> buffer(a.sctpOptions.mtu);
+
+		const auto packet     = buildPacket(buffer, 0);
+		auto* const initChunk = packet->BuildChunkInPlace<RTC::SCTP::InitChunk>();
+
+		initChunk->SetInitiateTag(InitiateTag);
+		initChunk->SetAdvertisedReceiverWindowCredit(65535);
+		initChunk->SetNumberOfOutboundStreams(0);
+		initChunk->SetNumberOfInboundStreams(10);
+		initChunk->SetInitialTsn(5000);
+		initChunk->Consolidate();
+
+		injectPacket(a, packet.get());
+
+		// The packet is discarded, so A is still connected.
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
+
+		// And A replies with an ABORT chunk using the Initiate Tag as the
+		// Verification Tag (RFC 9260 section 3.3.2).
+		const auto replyBuffer = a.listener.ConsumeFirstSentPacket();
+		const auto replyPacket = parsePacket(replyBuffer);
+
+		REQUIRE(replyPacket);
+		REQUIRE(replyPacket->GetVerificationTag() == InitiateTag);
+
+		const auto* const abortAssociationChunk =
+		  replyPacket->GetFirstChunkOfType<RTC::SCTP::AbortAssociationChunk>();
+
+		REQUIRE(abortAssociationChunk);
+		REQUIRE(abortAssociationChunk->GetT() == false);
+	}
+
+	SECTION("INIT with zero outbound streams in CLOSED state doesn't notify the closure again")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		a.association.Close();
+
+		REQUIRE(a.listener.IsClosed() == true);
+		REQUIRE(a.listener.GetClosedErrorKind() == RTC::SCTP::Types::ErrorKind::SUCCESS);
+
+		std::vector<uint8_t> buffer(a.sctpOptions.mtu);
+
+		const auto packet     = buildPacket(buffer, 0);
+		auto* const initChunk = packet->BuildChunkInPlace<RTC::SCTP::InitChunk>();
+
+		initChunk->SetInitiateTag(0x11223344);
+		initChunk->SetAdvertisedReceiverWindowCredit(65535);
+		initChunk->SetNumberOfOutboundStreams(0);
+		initChunk->SetNumberOfInboundStreams(10);
+		initChunk->SetInitialTsn(5000);
+		initChunk->Consolidate();
+
+		injectPacket(a, packet.get());
+
+		// The closure is not notified again (it would carry another error kind).
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
+		REQUIRE(a.listener.GetClosedErrorKind() == RTC::SCTP::Types::ErrorKind::SUCCESS);
 	}
 }

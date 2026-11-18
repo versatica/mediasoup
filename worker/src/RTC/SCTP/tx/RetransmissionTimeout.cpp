@@ -65,9 +65,9 @@ namespace RTC
 			// Unrealistic values will be skipped. If a wrongly measured (or otherwise
 			// corrupt) value was processed, it could change the state in a way that
 			// would take a very long time to recover.
-			if (rttUs <= 0 || rttUs > this->maxRttUs)
+			if (rttUs < 0 || rttUs > this->maxRttUs)
 			{
-				MS_WARN_DEV(sctp, "skipping given unrealistic rttUs value %" PRIi64, rttUs);
+				MS_WARN_DEV("skipping given unrealistic rttUs value %" PRIi64, rttUs);
 
 				return;
 			}

@@ -233,7 +233,7 @@ namespace RTC
 			 * Closes the association non-gracefully. Will send ABORT if the connection
 			 * is not already closed. No callbacks will be made after Close() has
 			 * returned. However, before Close() returns, it may have called
-			 * `OnAssociationClosed()` or `OnAssociationAborted()` callbacks.
+			 * `OnAssociationClosed()` or `OnAssociationFailed()` callbacks.
 			 */
 			void Close() override;
 
@@ -369,6 +369,17 @@ namespace RTC
 
 			void SetState(State state, const std::string_view& message);
 
+			/**
+			 * Whether the association is in SHUTDOWN_PENDING, SHUTDOWN_SENT,
+			 * SHUTDOWN_RECEIVED or SHUTDOWN_ACK_SENT state.
+			 */
+			bool IsShuttingDown() const
+			{
+				return (
+				  this->state == State::SHUTDOWN_PENDING || this->state == State::SHUTDOWN_SENT ||
+				  this->state == State::SHUTDOWN_RECEIVED || this->state == State::SHUTDOWN_ACK_SENT);
+			}
+
 			void AddCapabilitiesParametersToInitOrInitAckChunk(AnyInitChunk* chunk) const;
 
 			void CreateTransmissionControlBlock(
@@ -389,6 +400,16 @@ namespace RTC
 			void SendShutdownChunk();
 
 			void SendShutdownAckChunk();
+
+			/**
+			 * Reply to a COOKIE-ECHO chunk that would set up a new association while
+			 * shutting down with an ERROR chunk with a "Cookie Received While
+			 * Shutting Down" error cause (preceded by a SHUTDOWN ACK chunk in
+			 * SHUTDOWN_ACK_SENT state).
+			 *
+			 * @param verificationTag - Verification Tag of the reply packet.
+			 */
+			void SendCookieReceivedWhileShuttingDown(uint32_t verificationTag);
 
 			/**
 			 * Sends SHUTDOWN or SHUTDOWN-ACK if the association is shutting down and
@@ -427,7 +448,13 @@ namespace RTC
 			void HandleReceivedInitAckChunk(
 			  const Packet* receivedPacket, const InitAckChunk* receivedInitAckChunk, int64_t receivedAtUs);
 
-			void HandleReceivedCookieEchoChunk(
+			/**
+			 * @returns false if the COOKIE-ECHO chunk is rejected, in which case the
+			 *   chunks after it in the packet must not be processed (since the
+			 *   Verification Tag of a packet starting with a COOKIE-ECHO chunk is not
+			 *   validated).
+			 */
+			[[nodiscard]] bool HandleReceivedCookieEchoChunk(
 			  const Packet* receivedPacket,
 			  const CookieEchoChunk* receivedCookieEchoChunk,
 			  int64_t receivedAtUs);

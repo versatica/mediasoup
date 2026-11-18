@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/association/Capabilities.hpp"
 #include "RTC/SCTP/association/StateCookie.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
@@ -226,5 +227,49 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 		REQUIRE(parsedParameter->GetCookieLength() == RTC::SCTP::StateCookie::StateCookieLength);
 
 		delete parsedParameter;
+	}
+
+	SECTION("StateCookieParameter::SetCookie() throws if cookieLength is too big")
+	{
+		const std::unique_ptr<RTC::SCTP::StateCookieParameter> parameter{
+			RTC::SCTP::StateCookieParameter::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
+
+		CHECK_SCTP_PARAMETER(
+		  /*parameter*/ parameter.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+		  /*length*/ 4,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::STATE_COOKIE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
+
+		REQUIRE_THROWS_AS(parameter->SetCookie(sctpCommon::DataBuffer, 65535), MediaSoupError);
+
+		CHECK_SCTP_PARAMETER(
+		  /*parameter*/ parameter.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+		  /*length*/ 4,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::STATE_COOKIE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
+
+		REQUIRE(parameter->HasCookie() == false);
+
+		// A length that does not fit in 16 bits must throw too, not be truncated.
+		REQUIRE_THROWS_AS(parameter->SetCookie(sctpCommon::DataBuffer, 65539), MediaSoupError);
+
+		CHECK_SCTP_PARAMETER(
+		  /*parameter*/ parameter.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+		  /*length*/ 4,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::STATE_COOKIE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
+
+		REQUIRE(parameter->HasCookie() == false);
 	}
 }

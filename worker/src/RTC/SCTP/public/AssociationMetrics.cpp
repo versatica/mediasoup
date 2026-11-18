@@ -34,6 +34,10 @@ namespace RTC
 			  static_cast<int>(peerImplementationStringView.size()),
 			  peerImplementationStringView.data());
 			MS_DUMP_CLEAN(
+			  indentation, "  negotiated max outbound streams: %" PRIu16, this->negotiatedMaxOutboundStreams);
+			MS_DUMP_CLEAN(
+			  indentation, "  negotiated max inbound streams: %" PRIu16, this->negotiatedMaxInboundStreams);
+			MS_DUMP_CLEAN(
 			  indentation, "  uses partial reliability: %s", this->usesPartialReliability ? "yes" : "no");
 			MS_DUMP_CLEAN(
 			  indentation, "  uses message interleaving: %s", this->usesMessageInterleaving ? "yes" : "no");

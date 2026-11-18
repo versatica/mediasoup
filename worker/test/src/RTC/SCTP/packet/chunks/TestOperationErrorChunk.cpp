@@ -9,7 +9,7 @@
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cstring> // std::memset()
+#include <cstring> // std::memcpy(), std::memset()
 
 SCENARIO("SCTP Operation Error Chunk (9)", "[serializable][sctp][chunk]")
 {
@@ -442,5 +442,38 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetLength() == length);
 
 		delete chunk;
+	}
+
+	SECTION("OperationErrorChunk::Parse() with Chunk Length field close to 65535 succeeds")
+	{
+		// The 4-byte padded Chunk Length (65536) does not fit in 16 bits.
+		alignas(4) uint8_t buffer[65536]{};
+
+		// clang-format off
+		const uint8_t header[] =
+		{
+			// Type:9 (OPERATION_ERROR), Flags:0b00000000, Length: 65533
+			0x09, 0b00000000, 0xFF, 0xFD,
+			// Error Cause 1: Code:6 (UNRECOGNIZED_CHUNK_TYPE), Length: 65529
+			0x00, 0x06, 0xFF, 0xF9
+		};
+		// clang-format on
+
+		std::memcpy(buffer, header, sizeof(header));
+
+		const std::unique_ptr<RTC::SCTP::OperationErrorChunk> chunk{
+			RTC::SCTP::OperationErrorChunk::Parse(buffer, sizeof(buffer))
+		};
+
+		REQUIRE(chunk);
+		REQUIRE(chunk->GetLength() == 65536);
+		REQUIRE(chunk->GetErrorCausesCount() == 1);
+
+		const auto* errorCause1 =
+		  reinterpret_cast<const RTC::SCTP::UnrecognizedChunkTypeErrorCause*>(chunk->GetErrorCauseAt(0));
+
+		REQUIRE(errorCause1->GetCode() == RTC::SCTP::ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE);
+		REQUIRE(errorCause1->GetLength() == 65532);
+		REQUIRE(errorCause1->GetUnrecognizedChunkLength() == 65525);
 	}
 }

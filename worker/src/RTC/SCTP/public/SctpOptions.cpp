@@ -31,6 +31,10 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  max receiver window size: %zu", this->maxReceiverWindowBufferSize);
 			MS_DUMP_CLEAN(
 			  indentation,
+			  "  default stream buffered amount low threshold: %zu",
+			  this->defaultStreamBufferedAmountLowThreshold);
+			MS_DUMP_CLEAN(
+			  indentation,
 			  "  total buffered amount low threshold: %zu",
 			  this->totalBufferedAmountLowThreshold);
 			MS_DUMP_CLEAN(indentation, "  default stream priority: %" PRIu16, this->defaultStreamPriority);

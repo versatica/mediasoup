@@ -82,7 +82,7 @@ namespace RTC
 			/**
 			 * Handles an expired retransmission timer.
 			 */
-			void HandleT3RtxTimerExpiry();
+			void HandleT3RtxTimerExpiry(int64_t nowUs);
 
 			bool HasDataToBeFastRetransmitted() const
 			{
@@ -93,7 +93,8 @@ namespace RTC
 			 * Returns a list of chunks to "fast retransmit" that would fit in
 			 * `maxLength` (bytes). The current value of `cwnd` is ignored.
 			 */
-			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksForFastRetransmit(size_t maxLength);
+			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksForFastRetransmit(
+			  int64_t nowUs, size_t maxLength);
 
 			/**
 			 * Returns a list of chunks to send that would fit in `maxLength`

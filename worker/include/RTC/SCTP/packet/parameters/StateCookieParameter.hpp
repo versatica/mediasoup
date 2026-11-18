@@ -84,7 +84,18 @@ namespace RTC
 				return GetVariableLengthValueLength();
 			}
 
-			void SetCookie(const uint8_t* cookie, uint16_t cookieLength);
+			/**
+			 * @param cookie - Cookie to copy into the parameter.
+			 * @param cookieLength - Length of the cookie.
+			 *
+			 * @remarks
+			 * - The maximum `cookieLength` is 65531, that is, 65535 (the maximum
+			 *   value of the 16 bits Length field) minus
+			 *   `Parameter::ParameterHeaderLength`.
+			 * - Throws `MediaSoupError` if `cookieLength` is bigger than that or if
+			 *   the buffer has no room for it, and leaves the parameter untouched.
+			 */
+			void SetCookie(const uint8_t* cookie, size_t cookieLength);
 
 			/**
 			 * Write a locally generated StateCookie in place within the cookie

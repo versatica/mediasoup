@@ -88,7 +88,7 @@ namespace RTC
 			{
 				/**
 				 * Indicates that no error has occurred. This will never be the case when
-				 * OnError() or OnAborted() is called.
+				 * `OnAssociationError()` or `OnAssociationFailed()` is called.
 				 */
 				SUCCESS,
 				/**
@@ -166,7 +166,7 @@ namespace RTC
 
 					case ErrorKind::PROTOCOL_VIOLATION:
 					{
-						return "PROTOCOL-VIOLATION";
+						return "PROTOCOL_VIOLATION";
 					}
 
 					case ErrorKind::RESOURCE_EXHAUSTION:
@@ -264,6 +264,8 @@ namespace RTC
 					{
 						return "NOT_SUPPORTED";
 					}
+
+						NO_DEFAULT();
 				}
 			}
 

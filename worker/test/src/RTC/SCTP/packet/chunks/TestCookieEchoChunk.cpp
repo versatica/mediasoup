@@ -254,6 +254,23 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
+		// A length that does not fit in 16 bits must throw too, not be truncated.
+		REQUIRE_THROWS_AS(chunk->SetCookie(sctpCommon::ThrowBuffer, 65539), MediaSoupError);
+
+		CHECK_SCTP_CHUNK(
+		  /*chunk*/ chunk,
+		  /*buffer*/ sctpCommon::ThrowBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
+		  /*length*/ 4,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
+
 		delete chunk;
 	}
 

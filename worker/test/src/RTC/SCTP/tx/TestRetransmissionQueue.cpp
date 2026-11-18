@@ -141,11 +141,11 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		return chunk;
 	};
 
-	const auto getTSNsForFastRetransmit = [](RTC::SCTP::RetransmissionQueue& queue)
+	const auto getTSNsForFastRetransmit = [&nowUs](RTC::SCTP::RetransmissionQueue& queue)
 	{
 		std::vector<uint32_t> tsns;
 
-		for (const auto& elem : queue.GetChunksForFastRetransmit(10000))
+		for (const auto& elem : queue.GetChunksForFastRetransmit(nowUs, 10000))
 		{
 			tsns.push_back(elem.first);
 		}
@@ -600,7 +600,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		});
 
 		// Will force chunks to be retransmitted.
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -648,7 +648,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		});
 
 		// Will force chunks to be retransmitted.
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -689,7 +689,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// `maxRetransmissions: 0`).
 		sendQueue.WillDiscardOnce(1, 42, /*returnValue*/ false);
 
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -741,19 +741,19 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		sendQueue.ExpectDiscardCalledTimes(0);
 
 		// Retransmission 1.
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 1000).size() == 1);
 
 		// Retransmission 2.
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 1000).size() == 1);
 
 		// Retransmission 3.
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 1000).size() == 1);
@@ -763,7 +763,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Retransmission 4. Not allowed, chunk is abandoned.
 		sendQueue.WillDiscardOnce(1, 42, /*returnValue*/ false);
 
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == true);
 		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 1000).empty());
@@ -816,7 +816,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(retransmissionQueue.GetUnackedItems() == 1);
 
 		// Will force chunks to be retransmitted.
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -905,7 +905,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// T3 expiry: TSN 11, 12 abandoned. `Discard()` returns true, placeholder TSN 13.
 		sendQueue.WillDiscardOnce(1, 42, /*returnValue*/ true);
 
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		// NOTE: TSN 13 represents the placeholder end fragment.
 		REQUIRE(
@@ -993,7 +993,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// T3 expiry: TSN 11, 12 abandoned. `Discard()` returns false, no placeholder.
 		sendQueue.WillDiscardOnce(1, 42, /*returnValue*/ false);
 
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -1112,7 +1112,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		sendQueue.WillDiscardOnce(2, 43, /*returnValue*/ true);
 		sendQueue.WillDiscardOnce(3, 44, /*returnValue*/ true);
 
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -1495,7 +1495,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Mark the message as lost.
 		sendQueue.WillDiscardOnce(1, 42, /*returnValue*/ false);
 
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == true);
 
@@ -2109,7 +2109,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    .get());
 
 		// Force TSN 10 to be retransmitted.
-		retransmissionQueue.HandleT3RtxTimerExpiry();
+		retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 		// Even with rwnd=0, one packet can be sent (no in-flight data after NackAll).
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, mtu) == std::vector<uint32_t>{ 10 });
@@ -2278,5 +2278,37 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		});
 
 		REQUIRE(retransmissionQueue.GetRwnd() == 2000);
+	}
+
+	SECTION("rwnd does not wrap around when sending with an empty receiver window")
+	{
+		auto retransmissionQueue = createRetransmissionQueue();
+
+		sendQueue
+		  .WillProduceOnce(createDataToSend(0)) // TSN 10.
+		  .WillProduceOnce(createDataToSend(1)) // TSN 11.
+		  .WillProduceRepeatedly(
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
+		      -> std::optional<RTC::SCTP::SendQueueInterface::DataToSend>
+		    {
+			    return std::nullopt;
+		    });
+
+		// The peer announces an empty receiver window while nothing is in flight.
+		REQUIRE(
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(9, /*aRwnd*/ 0).get()) ==
+		  true);
+		REQUIRE(retransmissionQueue.GetRwnd() == 0);
+
+		// Since nothing is in flight, data can be sent even with rwnd 0. Limit the
+		// packet to a single DATA chunk (16 bytes of header plus 4 bytes of
+		// payload) so only TSN 10 is sent.
+		REQUIRE(getSentPacketTSNs(retransmissionQueue, 20) == std::vector<uint32_t>{ 10 });
+
+		// The receiver window must stay at 0 instead of wrapping around.
+		REQUIRE(retransmissionQueue.GetRwnd() == 0);
+
+		// So no more data can be sent until the peer opens the receiver window.
+		REQUIRE(getSentPacketTSNs(retransmissionQueue).empty());
 	}
 }

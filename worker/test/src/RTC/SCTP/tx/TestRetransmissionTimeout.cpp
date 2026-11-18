@@ -63,17 +63,23 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 		REQUIRE(rto.GetSrttUs() == 500);
 	}
 
-	SECTION("zero and negative values don't affect RTO")
+	SECTION("negative values don't affect RTO")
 	{
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		rto.ObserveRttUs(0);
+		// Initial negative value.
+		rto.ObserveRttUs(-10 * 1000);
 
 		REQUIRE(rto.GetRtoUs() == InitialRtoMs * 1000);
 
-		rto.ObserveRttUs(-1);
+		rto.ObserveRttUs(124 * 1000);
 
-		REQUIRE(rto.GetRtoUs() == InitialRtoMs * 1000);
+		REQUIRE(rto.GetRtoUs() == 372000);
+
+		// Subsequent negative value.
+		rto.ObserveRttUs(-10 * 1000);
+
+		REQUIRE(rto.GetRtoUs() == 372000);
 	}
 
 	SECTION("will never go below minimum RTO")

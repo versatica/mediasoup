@@ -19,7 +19,7 @@ namespace RTC
 		 *
 		 * As a result of these operations - mainly when data is received - the
 		 * implementations of this interface should notify when a message has been
-		 * assembled, by calling the provided callback of type `OnAssembledMessage()`.
+		 * assembled, by calling the provided callback of type `OnAssembledMessage`.
 		 * How it assembles messages will depend on e.g. if a message was sent on an
 		 * ordered or unordered stream.
 		 *

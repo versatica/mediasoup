@@ -29,6 +29,8 @@ namespace mocks
 
 				void OnAssociationConnecting() override
 				{
+					++this->onAssociationConnectingCalls;
+
 					this->connecting = true;
 				}
 
@@ -149,6 +151,11 @@ namespace mocks
 				bool IsConnecting() const
 				{
 					return this->connecting;
+				}
+
+				size_t CountOnAssociationConnectingCalls() const
+				{
+					return this->onAssociationConnectingCalls;
 				}
 
 				bool IsConnected() const
@@ -336,6 +343,7 @@ namespace mocks
 
 			private:
 				// Observable state for tests.
+				size_t onAssociationConnectingCalls{ 0 };
 				bool connecting{ false };
 				bool connected{ false };
 				bool restarted{ false };

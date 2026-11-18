@@ -141,7 +141,7 @@ namespace RTC
 			 * `GetStreamsReadyToBeReset()`. Will resume the paused streams without
 			 * resetting the stream sequence numbers (SSNs) or message identifiers
 			 * (MIDs). Note that the non-partial messages that were discarded when
-			 * calling `PrepareResetStreams()` will not be recovered, to better match
+			 * calling `PrepareResetStream()` will not be recovered, to better match
 			 * the intention from the sender to "close the channel".
 			 */
 			virtual void RollbackResetStreams() = 0;

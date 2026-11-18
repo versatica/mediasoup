@@ -23,6 +23,21 @@
   - Fix `ICE::StunPacket::IsStun()`: Packets whose first byte is 3 were not considered STUN (RFC 7983).
   - Fix `ICE::IceServer`: In 'completed' state, a Binding request with USE-CANDIDATE and a nomination not higher than the current one changed the selected tuple (ICE renomination).
   - Fix `ICE::IceServer`: A Binding request with ICE-CONTROLLED and a tie-breaker of 0 was not rejected with a 487 (role conflict).
+  - SCTP: Fix receiver window wrapping around after sending with a zero receiver window.
+  - SCTP: Fix SACK acking unreceived TSNs more than 65535 ahead of the cumulative TSN ack.
+  - SCTP: Fix inverted handling of unknown chunk types, which stopped processing the packet when it had to skip the chunk and continue, and vice versa.
+  - SCTP: Fix complete received messages not being delivered when they follow a message larger than `maxReceiveMessageSize`.
+  - SCTP: Fix worker crash when a COOKIE-ECHO matching the association arrives while it is shutting down.
+  - SCTP: Fix worker crash when a restarted peer sends a COOKIE-ECHO in SHUTDOWN_SENT state.
+  - SCTP: Fix worker crash and association being re-established when a COOKIE-ECHO of a restarted peer or of simultaneous associations arrives while it is shutting down.
+  - SCTP: Fix closed association being reopened by a received COOKIE-ECHO.
+  - SCTP: Fix chunks bundled after an invalid or mismatching COOKIE-ECHO being processed without verification tag validation.
+  - SCTP: Fix association being closed by an INIT with zero outbound or inbound streams, which must only be discarded and answered with an ABORT as per RFC 9260.
+  - SCTP: Fix association closure being notified again when already closed.
+  - SCTP: Fix expired chunks being retransmitted instead of abandoned.
+  - SCTP: Fix "connecting" SCTP state being notified twice when the association is opened by mediasoup.
+  - SCTP: Fix OUTGOING-SSN-RESET-REQUEST and INCOMING-SSN-RESET-REQUEST parameters with odd length being accepted.
+  - SCTP: Performance: Run expensive internal consistency checks only in test builds, since they walk every outstanding chunk, stream and queued message on each send and SACK.
 
 ### 3.32.2
 

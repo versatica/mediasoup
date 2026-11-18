@@ -105,7 +105,7 @@ namespace RTC
 			for (uint32_t idx{ 0 }; idx < GetNumberOfAddressTypes(); ++idx)
 			{
 				MS_DUMP_CLEAN(
-				  indentation, "  - idx: %" PRIu16 ", address type: %" PRIu16, idx, GetAddressTypeAt(idx));
+				  indentation, "  - idx: %" PRIu32 ", address type: %" PRIu16, idx, GetAddressTypeAt(idx));
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::SupportedAddressTypesParameter>");
 		}

@@ -5,6 +5,7 @@
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
+#include <string>
 
 SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcause]")
 {
@@ -173,5 +174,46 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 		REQUIRE(parsedErrorCause->GetUpperLayerAbortReason() == "go go go");
 
 		delete parsedErrorCause;
+	}
+
+	SECTION("UserInitiatedAbortErrorCause::SetUpperLayerAbortReason() throws if reason is too big")
+	{
+		const std::unique_ptr<RTC::SCTP::UserInitiatedAbortErrorCause> errorCause{
+			RTC::SCTP::UserInitiatedAbortErrorCause::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
+
+		CHECK_SCTP_ERROR_CAUSE(
+		  /*errorCause*/ errorCause.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+		  /*length*/ 4,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::USER_INITIATED_ABORT,
+		  /*unknownCode*/ false);
+
+		REQUIRE_THROWS_AS(errorCause->SetUpperLayerAbortReason(std::string(65532, 'x')), MediaSoupError);
+
+		CHECK_SCTP_ERROR_CAUSE(
+		  /*errorCause*/ errorCause.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+		  /*length*/ 4,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::USER_INITIATED_ABORT,
+		  /*unknownCode*/ false);
+
+		REQUIRE(errorCause->HasUpperLayerAbortReason() == false);
+
+		// A length that does not fit in 16 bits must throw too, not be truncated.
+		REQUIRE_THROWS_AS(errorCause->SetUpperLayerAbortReason(std::string(65539, 'x')), MediaSoupError);
+
+		CHECK_SCTP_ERROR_CAUSE(
+		  /*errorCause*/ errorCause.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+		  /*length*/ 4,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::USER_INITIATED_ABORT,
+		  /*unknownCode*/ false);
+
+		REQUIRE(errorCause->HasUpperLayerAbortReason() == false);
 	}
 }

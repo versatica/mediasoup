@@ -379,6 +379,23 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		  /*parametersCount*/ 0,
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
+
+		// A length that does not fit in 16 bits must throw too, not be truncated.
+		REQUIRE_THROWS_AS(chunk->SetUserDataPayload(sctpCommon::DataBuffer, 65539), MediaSoupError);
+
+		CHECK_SCTP_CHUNK(
+		  /*chunk*/ chunk.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+		  /*length*/ 20,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::I_DATA,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP_AND_REPORT,
+		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 	}
 
 	SECTION("IDataChunk::SetUserData() succeeds")

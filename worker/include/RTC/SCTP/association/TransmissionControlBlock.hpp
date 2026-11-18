@@ -232,7 +232,7 @@ namespace RTC
 			 */
 			void MayAddForwardTsnChunk(Packet* packet, int64_t nowUs);
 
-			void MaySendFastRetransmit();
+			void MaySendFastRetransmit(int64_t nowUs);
 
 			/**
 			 * Create and fill packets with control and DATA/I-DATA chunks, and sends
@@ -339,7 +339,7 @@ namespace RTC
 			// Only valid when state is State::COOKIE_ECHOED. In this state, the
 			// association must wait for COOKIE-ACK to continue sending any packets (not
 			// including a COOKIE-ECHO). So if this state cookie is present, the
-			// `SendBufferedChunks()` method will always only send one packet, with
+			// `SendBufferedPackets()` method will always only send one packet, with
 			// a CookieEchoChunk containing this cookie as the first chunk in the packet.
 			std::optional<std::vector<uint8_t>> remoteStateCookie;
 		};

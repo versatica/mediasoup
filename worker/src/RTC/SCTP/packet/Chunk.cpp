@@ -339,9 +339,11 @@ namespace RTC
 			// reliable. We want to be ready for length field to include or not the
 			// possible padding of the last parameter (as per RFC recommendation). In
 			// fact, we rely on parameter->GetLength() while parsing the buffer so we
-			// want to provide each Parameter::StrictParse() call with a 4-bytes
+			// want to provide each Parameter::ParseStrict() call with a 4-bytes
 			// padded buffer length.
-			const auto* end = GetBuffer() + Utils::Byte::PadTo4Bytes(GetLengthField());
+			// NOTE: We must cast to size_t, otherwise a length field value of 65533
+			// or more would generate a padded length of 0 bytes.
+			const auto* end = GetBuffer() + Utils::Byte::PadTo4Bytes(size_t{ GetLengthField() });
 
 			while (ptr < end)
 			{
@@ -546,9 +548,11 @@ namespace RTC
 			// reliable. We want to be ready for length field to include or not the
 			// possible padding of the last error cause (as per RFCrecommendation).
 			// In fact, we rely on errorCause->GetLength() while parsing the buffer
-			// so we want to provide each ErrorCause::StrictParse() call with a
+			// so we want to provide each ErrorCause::ParseStrict() call with a
 			// 4-bytes padded buffer length.
-			const auto* end = GetBuffer() + Utils::Byte::PadTo4Bytes(GetLengthField());
+			// NOTE: We must cast to size_t, otherwise a length field value of 65533
+			// or more would generate a padded length of 0 bytes.
+			const auto* end = GetBuffer() + Utils::Byte::PadTo4Bytes(size_t{ GetLengthField() });
 
 			while (ptr < end)
 			{

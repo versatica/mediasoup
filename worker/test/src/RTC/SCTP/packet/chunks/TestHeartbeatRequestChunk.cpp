@@ -7,7 +7,7 @@
 #include "RTC/SCTP/packet/parameters/UnknownParameter.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cstring> // std::memset()
+#include <cstring> // std::memcpy(), std::memset()
 
 SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 {
@@ -551,5 +551,38 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedParameter2->GetInfo()[3] == 0x00);
 
 		delete parsedChunk;
+	}
+
+	SECTION("HeartbeatRequestChunk::Parse() with Chunk Length field close to 65535 succeeds")
+	{
+		// The 4-byte padded Chunk Length (65536) does not fit in 16 bits.
+		alignas(4) uint8_t buffer[65536]{};
+
+		// clang-format off
+		const uint8_t header[] =
+		{
+			// Type:4 (HEARTBEAT-REQUEST), Flags:0b00000000, Length: 65533
+			0x04, 0b00000000, 0xFF, 0xFD,
+			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 65529
+			0x00, 0x01, 0xFF, 0xF9
+		};
+		// clang-format on
+
+		std::memcpy(buffer, header, sizeof(header));
+
+		const std::unique_ptr<RTC::SCTP::HeartbeatRequestChunk> chunk{
+			RTC::SCTP::HeartbeatRequestChunk::Parse(buffer, sizeof(buffer))
+		};
+
+		REQUIRE(chunk);
+		REQUIRE(chunk->GetLength() == 65536);
+		REQUIRE(chunk->GetParametersCount() == 1);
+
+		const auto* parameter1 =
+		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
+
+		REQUIRE(parameter1->GetType() == RTC::SCTP::Parameter::ParameterType::HEARTBEAT_INFO);
+		REQUIRE(parameter1->GetLength() == 65532);
+		REQUIRE(parameter1->GetInfoLength() == 65525);
 	}
 }

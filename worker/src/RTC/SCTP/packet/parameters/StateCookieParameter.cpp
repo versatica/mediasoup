@@ -108,7 +108,7 @@ namespace RTC
 			return clonedParameter;
 		}
 
-		void StateCookieParameter::SetCookie(const uint8_t* cookie, uint16_t cookieLength)
+		void StateCookieParameter::SetCookie(const uint8_t* cookie, size_t cookieLength)
 		{
 			MS_TRACE();
 

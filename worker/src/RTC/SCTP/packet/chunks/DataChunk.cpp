@@ -198,7 +198,7 @@ namespace RTC
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 12, value);
 		}
 
-		void DataChunk::SetUserDataPayload(const uint8_t* userDataPayload, uint16_t userDataPayloadLength)
+		void DataChunk::SetUserDataPayload(const uint8_t* userDataPayload, size_t userDataPayloadLength)
 		{
 			MS_TRACE();
 

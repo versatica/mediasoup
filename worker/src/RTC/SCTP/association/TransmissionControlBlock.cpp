@@ -263,7 +263,7 @@ namespace RTC
 			}
 		}
 
-		void TransmissionControlBlock::MaySendFastRetransmit()
+		void TransmissionControlBlock::MaySendFastRetransmit(int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -285,7 +285,7 @@ namespace RTC
 			const auto packet = CreatePacket();
 
 			auto result =
-			  this->retransmissionQueue.GetChunksForFastRetransmit(packet->GetAvailableLength());
+			  this->retransmissionQueue.GetChunksForFastRetransmit(nowUs, packet->GetAvailableLength());
 
 			for (auto& [tsn, data] : result)
 			{
@@ -347,7 +347,7 @@ namespace RTC
 						auto* cookieEchoChunk = packet->BuildChunkInPlace<CookieEchoChunk>();
 
 						cookieEchoChunk->SetCookie(
-						  remoteStateCookie->data(), static_cast<uint16_t>(remoteStateCookie->size()));
+						  this->remoteStateCookie->data(), this->remoteStateCookie->size());
 						cookieEchoChunk->Consolidate();
 					}
 
@@ -468,9 +468,9 @@ namespace RTC
 			{
 				if (IncrementTxErrorCounter("t3-rtx expired"))
 				{
-					this->retransmissionQueue.HandleT3RtxTimerExpiry();
-
 					const int64_t nowUs = this->shared->GetTimeUs();
+
+					this->retransmissionQueue.HandleT3RtxTimerExpiry(nowUs);
 
 					SendBufferedPackets(nowUs);
 				}

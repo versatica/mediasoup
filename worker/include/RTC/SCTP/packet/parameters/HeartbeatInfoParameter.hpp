@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP HeartbeatInfo Parameter (HEARBEAT_INFO) (1).
+		 * SCTP Heartbeat Info Parameter (HEARTBEAT-INFO) (1).
 		 *
 		 * @see RFC 9260.
 		 *
