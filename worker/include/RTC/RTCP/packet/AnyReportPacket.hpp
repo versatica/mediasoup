@@ -50,6 +50,7 @@ namespace RTC
 			 * Length (in bytes) of a report block.
 			 */
 			static constexpr size_t ReportBlockLength{ 24 };
+
 			/**
 			 * Maximum number of report blocks in a packet (the RC field has 5 bits).
 			 */

@@ -68,6 +68,12 @@ namespace RTC
 
 		public:
 			/**
+			 * Maximum number of chunks in a SDES packet (the SC field has 5 bits).
+			 */
+			static constexpr size_t MaxChunks{ 31 };
+
+		public:
+			/**
 			 * SDES Item Type.
 			 */
 			enum class ItemType : uint8_t
@@ -100,12 +106,6 @@ namespace RTC
 				 */
 				std::string_view value;
 			};
-
-		public:
-			/**
-			 * Maximum number of chunks in a SDES packet (the SC field has 5 bits).
-			 */
-			static constexpr size_t MaxChunks{ 31 };
 
 		public:
 			static const std::string& ItemTypeToString(ItemType itemType);

@@ -39,7 +39,6 @@ namespace RTC
 		 *   are kept as UnknownExtendedReport and parsing continues with the next
 		 *   block.
 		 */
-
 		class XrPacket : public Packet
 		{
 			// We need that compound packet calls protected and private methods in
@@ -227,12 +226,13 @@ namespace RTC
 				// NOTE: This doesn't throw since the length doesn't grow.
 				SetVariableLengthValueLength(GetVariableLengthValueLength());
 
-				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+				auto* const ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+
 				// The remaining length in the buffer is the potential buffer length
 				// of the Extended Report block.
 				const size_t extendedReportMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
 
-				auto* extendedReport = T::Factory(ptr, extendedReportMaxBufferLength);
+				auto* const extendedReport = T::Factory(ptr, extendedReportMaxBufferLength);
 
 				// NOTE: Do not fix/update the Extended Report block buffer length since
 				// the caller probably wants to modify the Extended Report block.

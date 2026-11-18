@@ -23,7 +23,6 @@ namespace RTC
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
-
 		class UnknownPacket : public Packet
 		{
 			// We need that compound packet calls protected and private methods in

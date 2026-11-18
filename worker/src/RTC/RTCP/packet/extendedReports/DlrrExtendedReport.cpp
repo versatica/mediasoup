@@ -113,8 +113,11 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<RTCP::DlrrExtendedReport>");
+
 			DumpCommon(indentation);
+
 			MS_DUMP_CLEAN(indentation, "  sub-blocks: %zu", GetNumberOfSubBlocks());
+
 			for (const auto& subBlock : GetSubBlocks())
 			{
 				MS_DUMP_CLEAN(
@@ -124,6 +127,7 @@ namespace RTC
 				  subBlock.lastReceiverReport,
 				  subBlock.delaySinceLastReceiverReport);
 			}
+
 			MS_DUMP_CLEAN(indentation, "</RTCP::DlrrExtendedReport>");
 		}
 

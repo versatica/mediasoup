@@ -35,7 +35,6 @@ namespace RTC
 		 *   receiver.
 		 * - Sub-blocks: One per Receiver Report. See SubBlock.
 		 */
-
 		class DlrrExtendedReport : public ExtendedReport
 		{
 			// We need that XrPacket calls protected and private methods in this

@@ -53,7 +53,7 @@ namespace RTC
 			 */
 			struct FixedHeader
 			{
-#if defined(MS_LITTLE_ENDIAN)
+#ifdef MS_LITTLE_ENDIAN
 				uint8_t csrcCount : 4;
 				uint8_t extension : 1;
 				uint8_t padding : 1;
@@ -136,7 +136,7 @@ namespace RTC
 			 */
 			struct OneByteExtension
 			{
-#if defined(MS_LITTLE_ENDIAN)
+#ifdef MS_LITTLE_ENDIAN
 				uint8_t len : 4;
 				uint8_t id : 4;
 #elif defined(MS_BIG_ENDIAN)

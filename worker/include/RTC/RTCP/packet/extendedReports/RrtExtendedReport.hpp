@@ -30,7 +30,6 @@ namespace RTC
 		 * - Block length (16 bits): The constant 2.
 		 * - NTP timestamp (64 bits): Wallclock time when this block was sent.
 		 */
-
 		class RrtExtendedReport : public ExtendedReport
 		{
 			// We need that XrPacket calls protected and private methods in this

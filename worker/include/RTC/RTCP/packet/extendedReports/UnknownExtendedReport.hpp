@@ -24,7 +24,6 @@ namespace RTC
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
-
 		class UnknownExtendedReport : public ExtendedReport
 		{
 			// We need that XrPacket calls protected and private methods in this

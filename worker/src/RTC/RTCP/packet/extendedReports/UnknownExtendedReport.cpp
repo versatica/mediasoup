@@ -60,12 +60,15 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<RTCP::UnknownExtendedReport>");
+
 			DumpCommon(indentation);
+
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  unknown value length: %zu (has unknown value: %s)",
 			  GetUnknownValueLength(),
 			  HasUnknownValue() ? "yes" : "no");
+
 			MS_DUMP_CLEAN(indentation, "</RTCP::UnknownExtendedReport>");
 		}
 

@@ -163,12 +163,13 @@ namespace RTC
 
 				// The new packet will be added after other packet in the compound
 				// packet, this is, at the end of the compound packet.
-				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+				auto* const ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+
 				// The remaining length in the buffer is the potential buffer length
 				// of the packet.
 				const size_t packetMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
 
-				auto* packet = T::Factory(ptr, packetMaxBufferLength);
+				auto* const packet = T::Factory(ptr, packetMaxBufferLength);
 
 				// NOTE: Do not fix/update the packet buffer length since the caller
 				// probably wants to modify the packet.

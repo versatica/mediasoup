@@ -105,6 +105,7 @@ namespace RTC
 				MS_WARN_TAG(rtcp, "report blocks exceed the packet length");
 
 				delete packet;
+
 				return nullptr;
 			}
 
@@ -133,14 +134,18 @@ namespace RTC
 			const Utils::Time::Ntp ntp = GetNtp();
 
 			MS_DUMP_CLEAN(indentation, "<RTCP::SenderReportPacket>");
+
 			DumpCommon(indentation);
+
 			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, GetSsrc());
 			MS_DUMP_CLEAN(indentation, "  ntp sec: %" PRIu32, ntp.seconds);
 			MS_DUMP_CLEAN(indentation, "  ntp frac: %" PRIu32, ntp.fractions);
 			MS_DUMP_CLEAN(indentation, "  rtp timestamp: %" PRIu32, GetRtpTimestamp());
 			MS_DUMP_CLEAN(indentation, "  packet count: %" PRIu32, GetPacketCount());
 			MS_DUMP_CLEAN(indentation, "  octet count: %" PRIu32, GetOctetCount());
+
 			DumpReportBlocks(indentation);
+
 			MS_DUMP_CLEAN(indentation, "</RTCP::SenderReportPacket>");
 		}
 

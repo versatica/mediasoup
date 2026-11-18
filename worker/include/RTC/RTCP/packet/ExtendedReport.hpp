@@ -11,6 +11,9 @@ namespace RTC
 {
 	namespace RTCP
 	{
+		// Forward declaration.
+		class XrPacket;
+
 		/**
 		 * RTCP XR Extended Report block.
 		 *
@@ -33,15 +36,17 @@ namespace RTC
 		 * - Type-specific block contents (variable length): Its format depends
 		 *   on the block type (BT). It's a multiple of 32 bits long.
 		 */
-
-		// Forward declaration.
-		class XrPacket;
-
 		class ExtendedReport : public Serializable
 		{
 			// We need that XrPacket calls protected and private methods in this
 			// class.
 			friend class XrPacket;
+
+		public:
+			/**
+			 * Length (in bytes) of the Extended Report block header.
+			 */
+			static constexpr size_t ExtendedReportHeaderLength{ 4 };
 
 		public:
 			/**
@@ -73,11 +78,6 @@ namespace RTC
 			};
 
 		public:
-			/**
-			 * Length (in bytes) of the Extended Report block header.
-			 */
-			static constexpr size_t ExtendedReportHeaderLength{ 4 };
-
 			static const std::string& BlockTypeToString(BlockType blockType);
 
 		protected:

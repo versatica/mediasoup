@@ -53,11 +53,13 @@ namespace RTC
 			 * Value of the Unique identifier field ('R' 'E' 'M' 'B').
 			 */
 			static constexpr uint32_t UniqueIdentifier{ 0x52454D42 };
+
 			/**
 			 * Length (in bytes) of the fixed header that precedes the SSRCs, RTCP
 			 * Common Header included.
 			 */
 			static constexpr size_t RembHeaderLength{ 20 };
+
 			/**
 			 * Maximum number of SSRCs in a packet (the Num SSRC field has 8 bits).
 			 */

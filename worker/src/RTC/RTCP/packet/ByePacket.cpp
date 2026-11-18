@@ -77,6 +77,7 @@ namespace RTC
 				MS_WARN_TAG(rtcp, "SSRC/CSRC count exceeds the packet length");
 
 				delete packet;
+
 				return nullptr;
 			}
 
@@ -94,6 +95,7 @@ namespace RTC
 					  rtcp, "Reason length (%" PRIu8 " bytes) exceeds the packet length", reasonLength);
 
 					delete packet;
+
 					return nullptr;
 				}
 
@@ -108,6 +110,7 @@ namespace RTC
 					  Utils::Byte::PadTo4Bytes(reasonEndOffset));
 
 					delete packet;
+
 					return nullptr;
 				}
 			}
@@ -134,12 +137,16 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<RTCP::ByePacket>");
+
 			DumpCommon(indentation);
+
 			MS_DUMP_CLEAN(indentation, "  ssrcs:");
+
 			for (const uint32_t ssrc : GetSsrcs())
 			{
 				MS_DUMP_CLEAN(indentation, "  - ssrc: %" PRIu32, ssrc);
 			}
+
 			if (HasReason())
 			{
 				const auto reason = GetReason();
@@ -152,6 +159,7 @@ namespace RTC
 			{
 				MS_DUMP_CLEAN(indentation, "  has reason: no");
 			}
+
 			MS_DUMP_CLEAN(indentation, "</RTCP::ByePacket>");
 		}
 
@@ -171,6 +179,7 @@ namespace RTC
 			MS_TRACE();
 
 			const uint8_t numberOfSsrcs = GetCount();
+
 			std::vector<uint32_t> ssrcs;
 
 			ssrcs.reserve(numberOfSsrcs);
