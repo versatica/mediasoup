@@ -1757,6 +1757,92 @@ SCENARIO("SeqManager", "[seqmanager]")
 		REQUIRE(actual == expected);
 	}
 
+	SECTION("forward an input lower than a dropped one, then receive an older dropped input")
+	{
+		// clang-format off
+		const std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 0, 0, false, false },
+			{ 1, 1, false, false },
+			{ 4, 0, false, true  },
+			{ 3, 3, false, false },
+			{ 2, 0, false, true  },
+			{ 5, 4, false, false },
+			{ 6, 5, false, false }
+		};
+		// clang-format on
+
+		const auto [actual, expected] = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
+		REQUIRE(actual == expected);
+	}
+
+	SECTION("forward inputs lower than a dropped one, then receive many older dropped inputs")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 0,  0,  false, false },
+			{ 31, 0,  false, true  },
+			{ 27, 27, false, false },
+			{ 30, 30, false, false }
+		};
+		// clang-format on
+
+		for (uint16_t input{ 1 }; input <= 26; ++input)
+		{
+			inputs.emplace_back(input, 0, false, true);
+		}
+
+		inputs.emplace_back(28, 0, false, true);
+		inputs.emplace_back(29, 0, false, true);
+		inputs.emplace_back(32, 31, false, false);
+		inputs.emplace_back(33, 32, false, false);
+
+		const auto [actual, expected] = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
+		REQUIRE(actual == expected);
+	}
+
+	SECTION("forward an input lower than a dropped one, then drop the same input")
+	{
+		// clang-format off
+		const std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 0, 0, false, false },
+			{ 4, 0, false, true  },
+			{ 3, 3, false, false },
+			{ 3, 0, false, true  },
+			{ 5, 4, false, false }
+		};
+		// clang-format on
+
+		const auto [actual, expected] = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
+		REQUIRE(actual == expected);
+	}
+
+	SECTION("forward an input lower than a dropped one, then drop an input between both")
+	{
+		// clang-format off
+		const std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 0,  0, false, false },
+			{ 10, 0, false, true  },
+			{ 5,  5, false, false },
+			{ 7,  0, false, true  },
+			{ 6,  6, false, false },
+			{ 8,  7, false, false },
+			{ 9,  8, false, false },
+			{ 11, 9, false, false }
+		};
+		// clang-format on
+
+		const auto [actual, expected] = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
+		REQUIRE(actual == expected);
+	}
+
 	SECTION("GetMaxOutput() returns the real max output (with initial output)")
 	{
 		RTC::SeqManager<uint16_t> seqManager(/*initialOutput*/ 1000);

@@ -77,9 +77,9 @@ namespace RTC
 			ClearDropped();
 			AddDropped(input);
 		}
-		// Mark as dropped if no input was forwarded after the last dropped one and
-		// 'input' is higher than the last forwarded input 'this->maxForwarded'.
-		// Allows for properly accounting for out of order drops until an input is forwarded.
+		// Mark as dropped if the highest input seen was dropped and 'input' is
+		// higher than the highest forwarded input 'this->maxForwarded'.
+		// Allows for properly accounting for out of order drops until a higher input is forwarded.
 		else if (this->maxInput == this->maxDropped && SeqManager<T, N>::IsSeqHigherThan(input, this->maxForwarded))
 		{
 			// NOTE: Must clear before inserting, see 'ClearDropped()'.
@@ -156,6 +156,11 @@ namespace RTC
 			if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 			{
 				this->maxInput     = input;
+				this->maxForwarded = input;
+			}
+			// New input is the highest forwarded one, though lower than a dropped one.
+			else if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxForwarded))
+			{
 				this->maxForwarded = input;
 			}
 

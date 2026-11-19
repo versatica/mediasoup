@@ -23,6 +23,7 @@
   - Fix `ICE::StunPacket::IsStun()`: Packets whose first byte is 3 were not considered STUN (RFC 7983).
   - Fix `ICE::IceServer`: In 'completed' state, a Binding request with USE-CANDIDATE and a nomination not higher than the current one changed the selected tuple (ICE renomination).
   - Fix `ICE::IceServer`: A Binding request with ICE-CONTROLLED and a tie-breaker of 0 was not rejected with a 487 (role conflict).
+- Worker: Fix `SeqManager` moving outputs back (or duplicating them) when an input lower than a dropped one is forwarded and an older input is dropped afterwards.
 
 ### 3.32.2
 
