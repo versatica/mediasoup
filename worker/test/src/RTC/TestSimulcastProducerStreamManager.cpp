@@ -14,9 +14,9 @@
 
 SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulcast]")
 {
-	static constexpr uint32_t MappedSsrc0 = 1000;
-	static constexpr uint32_t MappedSsrc1 = 2000;
-	static constexpr uint32_t MappedSsrc2 = 3000;
+	constexpr uint32_t MappedSsrc0 = 1000;
+	constexpr uint32_t MappedSsrc1 = 2000;
+	constexpr uint32_t MappedSsrc2 = 3000;
 
 	// Milliseconds between the packets fed by feedRtpStreamRecv() below.
 	constexpr int64_t PacketSpacingMs{ 1 };
@@ -164,15 +164,14 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		                         return nowUs;
 	                         });
 
-	const auto createManager =
-	  [&shared](
-	    MockListener* listener,
-	    const std::vector<uint32_t>& ssrcs              = { MappedSsrc0, MappedSsrc1, MappedSsrc2 },
-	    RTC::ConsumerTypes::VideoLayers preferredLayers = { 2, 2 },
-	    bool keyFrameSupported                          = true,
-	    RTC::Media::Kind kind                           = RTC::Media::Kind::VIDEO,
-	    std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext =
-	      nullptr) -> std::unique_ptr<RTC::SimulcastProducerStreamManager>
+	const auto createManager = [&shared](
+	                             MockListener* listener,
+	                             const std::vector<uint32_t>& ssrcs,
+	                             RTC::ConsumerTypes::VideoLayers preferredLayers = { 2, 2 },
+	                             bool keyFrameSupported                          = true,
+	                             RTC::Media::Kind kind = RTC::Media::Kind::VIDEO,
+	                             std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext =
+	                               nullptr) -> std::unique_ptr<RTC::SimulcastProducerStreamManager>
 	{
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
 
@@ -353,7 +352,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	SECTION("ProcessRtpPacket() returns DROP when target temporal layer is -1")
 	{
 		MockListener listener;
-		auto manager    = createManager(std::addressof(listener));
+		auto manager    = createManager(std::addressof(listener), /*ssrcs*/ threeSsrcs);
 		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
@@ -386,7 +385,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	  "ProcessRtpPacket() returns BUFFER when sync required and packet is from target spatial layer but not keyframe")
 	{
 		MockListener listener;
-		auto manager    = createManager(std::addressof(listener));
+		auto manager    = createManager(std::addressof(listener), /*ssrcs*/ threeSsrcs);
 		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
@@ -406,7 +405,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	SECTION("ProcessRtpPacket() requires keyframe for spatial layer switch")
 	{
 		MockListener listener;
-		auto manager    = createManager(std::addressof(listener));
+		auto manager    = createManager(std::addressof(listener), /*ssrcs*/ threeSsrcs);
 		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
 
@@ -468,7 +467,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	SECTION("ProcessRtpPacket() returns SILENT_DROP for non-target and non-current spatial layer packet")
 	{
 		MockListener listener;
-		auto manager    = createManager(std::addressof(listener));
+		auto manager    = createManager(std::addressof(listener), /*ssrcs*/ threeSsrcs);
 		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
@@ -526,7 +525,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	SECTION("ProcessRtpPacket() returns FORWARD with sendBufferedPackets when syncing with a keyframe")
 	{
 		MockListener listener;
-		auto manager    = createManager(std::addressof(listener));
+		auto manager    = createManager(std::addressof(listener), /*ssrcs*/ threeSsrcs);
 		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
@@ -769,7 +768,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		MockListener listener;
 		listener.isActive = false;
 
-		auto manager = createManager(std::addressof(listener));
+		auto manager = createManager(std::addressof(listener), /*ssrcs*/ threeSsrcs);
 
 		// Don't wire producerRtpStream — manager is not active.
 		manager->OnTransportConnected();
@@ -2364,7 +2363,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	SECTION("OnTransportDisconnected() resets target layers")
 	{
 		MockListener listener;
-		auto manager    = createManager(std::addressof(listener));
+		auto manager    = createManager(std::addressof(listener), /*ssrcs*/ threeSsrcs);
 		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
@@ -2381,7 +2380,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	SECTION("OnPaused() resets target layers")
 	{
 		MockListener listener;
-		auto manager    = createManager(std::addressof(listener));
+		auto manager    = createManager(std::addressof(listener), /*ssrcs*/ threeSsrcs);
 		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
@@ -2587,7 +2586,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	SECTION("GetProducerCurrentRtpStream() returns nullptr before sync")
 	{
 		MockListener listener;
-		auto manager    = createManager(std::addressof(listener));
+		auto manager    = createManager(std::addressof(listener), /*ssrcs*/ threeSsrcs);
 		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
@@ -2599,7 +2598,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	SECTION("GetProducerTargetRtpStream() returns correct stream after UpdateTargetLayers()")
 	{
 		MockListener listener;
-		auto manager    = createManager(std::addressof(listener));
+		auto manager    = createManager(std::addressof(listener), /*ssrcs*/ threeSsrcs);
 		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
 

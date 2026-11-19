@@ -8,9 +8,9 @@
 
 SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 {
-	static constexpr uint32_t MappedSsrc0 = 1000;
-	static constexpr uint32_t MappedSsrc1 = 2000;
-	static constexpr uint32_t MappedSsrc2 = 3000;
+	constexpr uint32_t MappedSsrc0 = 1000;
+	constexpr uint32_t MappedSsrc1 = 2000;
+	constexpr uint32_t MappedSsrc2 = 3000;
 
 	using RtpPacketProcessResult = RTC::ProducerStreamManager::RtpPacketProcessResult;
 
@@ -98,8 +98,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	const auto createManager =
 	  [&shared](
 	    MockListener* listener,
-	    const std::vector<uint32_t>& ssrcs = { MappedSsrc0, MappedSsrc1, MappedSsrc2 },
-	    bool keyFrameSupported             = true,
+	    const std::vector<uint32_t>& ssrcs,
+	    bool keyFrameSupported = true,
 	    RTC::Media::Kind kind =
 	      RTC::Media::Kind::VIDEO) -> std::unique_ptr<RTC::PipeProducerStreamManager>
 	{
@@ -134,7 +134,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("IsActive() returns listener state")
 	{
 		MockListener listener;
-		auto manager = createManager(std::addressof(listener));
+		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
 
 		REQUIRE(manager->IsActive() == true);
 
@@ -175,7 +175,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("ProcessRtpPacket() returns BUFFER when sync required and packet is not a key frame")
 	{
 		MockListener listener;
-		auto manager = createManager(std::addressof(listener));
+		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
 
 		manager->OnTransportConnected();
 
@@ -229,7 +229,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("ProcessRtpPacket() returns FORWARD with sendBufferedPackets on key frame sync")
 	{
 		MockListener listener;
-		auto manager = createManager(std::addressof(listener));
+		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
 
 		manager->OnTransportConnected();
 
@@ -330,7 +330,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	{
 		MockListener listener;
 		listener.isActive = false;
-		auto manager      = createManager(std::addressof(listener));
+		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
 
 		manager->OnTransportConnected();
 
@@ -439,7 +439,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("RecalculateTargetLayers() always returns false")
 	{
 		MockListener listener;
-		auto manager = createManager(std::addressof(listener));
+		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
 
 		RTC::ConsumerTypes::VideoLayers newTargetLayers;
 
@@ -449,7 +449,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("GetBitrateOptions() offers a single point of 0 while no Producer stream has arrived")
 	{
 		MockListener listener;
-		auto manager = createManager(std::addressof(listener));
+		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
 
 		const auto bitrateOptions = manager->GetBitrateOptions(DepLibUV::GetTimeMs());
 
