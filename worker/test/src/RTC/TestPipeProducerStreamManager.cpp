@@ -46,7 +46,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 	public:
 		bool isActive{ true };
-		int keyFrameRequestCount{ 0 };
+		uint32_t keyFrameRequestCount{ 0 };
 		std::vector<uint32_t> keyFrameRequestedSsrcs;
 	};
 
@@ -396,7 +396,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		manager->OnTransportConnected();
 
-		const int countBefore = listener.keyFrameRequestCount;
+		const uint32_t countBefore = listener.keyFrameRequestCount;
 
 		manager->OnResumed();
 

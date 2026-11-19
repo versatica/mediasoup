@@ -18,7 +18,7 @@ namespace bweHelpers
 	// How far off the expected bitrate an estimation may be (bps).
 	static constexpr int64_t AcceptedBitrateErrorBps{ 50000 };
 	// Packets needed before there is a valid estimation.
-	static constexpr int NumInitialPackets{ 2 };
+	static constexpr uint32_t NumInitialPackets{ 2 };
 	// Instant the scenarios start at, which is only far from zero so that nothing
 	// passes by sharing an origin with something else.
 	static constexpr int64_t InitialTimeUs{ 100000000 };
@@ -142,7 +142,7 @@ namespace bweHelpers
 
 	int64_t RemoteBitrateEstimatorAbsSendTimeTestHelper::SteadyStateRun(
 	  uint32_t ssrc,
-	  int maxNumberOfFrames,
+	  uint32_t maxNumberOfFrames,
 	  int64_t startBitrate,
 	  int64_t minBitrate,
 	  int64_t maxBitrate,
@@ -153,7 +153,7 @@ namespace bweHelpers
 		int64_t bitrateBps{ startBitrate };
 		bool bitrateUpdateSeen{ false };
 
-		for (int idx{ 0 }; idx < maxNumberOfFrames; ++idx)
+		for (uint32_t idx{ 0 }; idx < maxNumberOfFrames; ++idx)
 		{
 			const bool overuse = GenerateAndProcessFrame(ssrc, bitrateBps);
 
@@ -188,8 +188,8 @@ namespace bweHelpers
 		MS_TRACE();
 
 		// 50 fps to avoid rounding errors.
-		constexpr int Framerate{ 50 };
-		constexpr int FrameIntervalMs{ 1000 / Framerate };
+		constexpr uint32_t Framerate{ 50 };
+		constexpr uint32_t FrameIntervalMs{ 1000 / Framerate };
 
 		const uint32_t frameIntervalAbsSendTime =
 		  RemoteBitrateEstimatorAbsSendTimeTestHelper::AbsSendTime(1, Framerate);
@@ -207,7 +207,7 @@ namespace bweHelpers
 		this->nowUs += 1000 * 1000;
 
 		// Inserting packets for 5 seconds to get a valid estimate.
-		for (int idx{ 0 }; idx < (5 * Framerate) + 1 + NumInitialPackets; ++idx)
+		for (uint32_t idx{ 0 }; idx < (5 * Framerate) + 1 + NumInitialPackets; ++idx)
 		{
 			if (idx == NumInitialPackets)
 			{
@@ -252,8 +252,8 @@ namespace bweHelpers
 		MS_TRACE();
 
 		// 50 fps to avoid rounding errors.
-		constexpr int Framerate{ 50 };
-		constexpr int FrameIntervalMs{ 1000 / Framerate };
+		constexpr uint32_t Framerate{ 50 };
+		constexpr uint32_t FrameIntervalMs{ 1000 / Framerate };
 
 		const uint32_t frameIntervalAbsSendTime =
 		  RemoteBitrateEstimatorAbsSendTimeTestHelper::AbsSendTime(1, Framerate);
@@ -261,7 +261,7 @@ namespace bweHelpers
 		uint32_t absSendTime{ 0 };
 
 		// Inserting packets for five seconds to get a valid estimate.
-		for (int idx{ 0 }; idx < (5 * Framerate) + 1 + NumInitialPackets; ++idx)
+		for (uint32_t idx{ 0 }; idx < (5 * Framerate) + 1 + NumInitialPackets; ++idx)
 		{
 			if (idx == NumInitialPackets)
 			{
@@ -288,7 +288,7 @@ namespace bweHelpers
 
 		// The same stream with every pair of packets swapped, which the estimation
 		// has to ride out unchanged.
-		for (int idx{ 0 }; idx < 10; ++idx)
+		for (uint32_t idx{ 0 }; idx < 10; ++idx)
 		{
 			this->nowUs += 2 * FrameIntervalMs * 1000;
 			rtpTimestamp += 2 * 90 * FrameIntervalMs;
@@ -317,7 +317,7 @@ namespace bweHelpers
 	}
 
 	void RemoteBitrateEstimatorAbsSendTimeTestHelper::RateIncreaseRtpTimestampsTestHelper(
-	  int expectedIterations)
+	  uint32_t expectedIterations)
 	{
 		MS_TRACE();
 
@@ -325,7 +325,7 @@ namespace bweHelpers
 		// bitrate(i) = 1.04 * bitrate(i-1) + 1000
 		// until bitrate(i) > 500000, with bitrate(1) ~= 30000.
 		int64_t bitrateBps{ 30000 };
-		int iterations{ 0 };
+		uint32_t iterations{ 0 };
 
 		AddDefaultStream();
 
@@ -358,21 +358,21 @@ namespace bweHelpers
 	}
 
 	void RemoteBitrateEstimatorAbsSendTimeTestHelper::CapacityDropTestHelper(
-	  int numberOfStreams,
+	  uint32_t numberOfStreams,
 	  bool wrapTimestamp,
 	  int64_t expectedBitrateDropDeltaMs,
 	  int64_t receiverClockOffsetChangeMs)
 	{
 		MS_TRACE();
 
-		constexpr int Framerate{ 30 };
+		constexpr uint32_t Framerate{ 30 };
 		constexpr int64_t StartBitrate{ 900000 };
 		constexpr int64_t MinExpectedBitrate{ 800000 };
 		constexpr int64_t MaxExpectedBitrate{ 1100000 };
 		constexpr int64_t CapacityBps{ 1000000 };
 		constexpr int64_t ReducedCapacityBps{ 500000 };
 
-		int steadyStateTime{ 0 };
+		uint32_t steadyStateTime{ 0 };
 
 		if (numberOfStreams <= 1)
 		{
@@ -387,7 +387,7 @@ namespace bweHelpers
 			int64_t bitrateSum{ 0 };
 			const int64_t bitrateDenom = numberOfStreams * (numberOfStreams - 1);
 
-			for (int idx{ 0 }; idx < numberOfStreams; ++idx)
+			for (uint32_t idx{ 0 }; idx < numberOfStreams; ++idx)
 			{
 				// The first stream gets half of the bitrate and the rest share the
 				// other half.
@@ -446,7 +446,7 @@ namespace bweHelpers
 		const int64_t overuseStartTimeMs = Utils::Time::TimeUsToMs(this->nowUs);
 		int64_t bitrateDropTimeMs{ -1 };
 
-		for (int idx{ 0 }; idx < 100 * numberOfStreams; ++idx)
+		for (uint32_t idx{ 0 }; idx < 100 * numberOfStreams; ++idx)
 		{
 			GenerateAndProcessFrame(RemoteBitrateEstimatorAbsSendTimeTestHelper::DefaultSsrc, bitrateBps);
 
@@ -464,7 +464,7 @@ namespace bweHelpers
 		REQUIRE(std::abs((bitrateDropTimeMs - overuseStartTimeMs) - expectedBitrateDropDeltaMs) <= 33);
 
 		// Remove the streams one by one.
-		for (int idx{ 0 }; idx < numberOfStreams; ++idx)
+		for (uint32_t idx{ 0 }; idx < numberOfStreams; ++idx)
 		{
 			REQUIRE(this->remoteBitrateEstimator.GetLatestEstimate() == bitrateBps);
 
@@ -480,11 +480,11 @@ namespace bweHelpers
 		MS_TRACE();
 
 		// 50 fps to avoid rounding errors.
-		constexpr int Framerate{ 50 };
-		constexpr int FrameIntervalMs{ 1000 / Framerate };
+		constexpr uint32_t Framerate{ 50 };
+		constexpr uint32_t FrameIntervalMs{ 1000 / Framerate };
 		// How many frames go out with a single timestamp tick between them, which
 		// the estimator has to take as one group.
-		constexpr int TimestampGroupLength{ 15 };
+		constexpr uint32_t TimestampGroupLength{ 15 };
 
 		const uint32_t frameIntervalAbsSendTime =
 		  RemoteBitrateEstimatorAbsSendTimeTestHelper::AbsSendTime(1, Framerate);
@@ -492,11 +492,11 @@ namespace bweHelpers
 		// Started near the top of the 24 bits so that it definitely wraps during
 		// the run.
 		uint32_t absSendTime = RemoteBitrateEstimatorAbsSendTimeTestHelper::AddAbsSendTime(
-		  1 << 24, -static_cast<int>(50 * frameIntervalAbsSendTime));
+		  1U << 24, -static_cast<int>(50 * frameIntervalAbsSendTime));
 
 		// Initial set of frames to increase the bitrate, over six seconds so that
 		// there is time for the first estimation to come out.
-		for (int idx{ 0 }; idx <= 6 * Framerate; ++idx)
+		for (uint32_t idx{ 0 }; idx <= 6 * Framerate; ++idx)
 		{
 			IncomingPacket(
 			  RemoteBitrateEstimatorAbsSendTimeTestHelper::DefaultSsrc,
@@ -522,9 +522,9 @@ namespace bweHelpers
 
 		// Batches of frames sent very close together, with the gap between batches
 		// stretched so that the link looks overused.
-		for (int idx{ 0 }; idx < 100; ++idx)
+		for (uint32_t idx{ 0 }; idx < 100; ++idx)
 		{
-			for (int groupIdx{ 0 }; groupIdx < TimestampGroupLength; ++groupIdx)
+			for (uint32_t groupIdx{ 0 }; groupIdx < TimestampGroupLength; ++groupIdx)
 			{
 				IncomingPacket(
 				  RemoteBitrateEstimatorAbsSendTimeTestHelper::DefaultSsrc,
@@ -554,12 +554,12 @@ namespace bweHelpers
 		REQUIRE(this->latestBitrate < 400000);
 	}
 
-	void RemoteBitrateEstimatorAbsSendTimeTestHelper::TestWrappingHelper(int silenceTimeS)
+	void RemoteBitrateEstimatorAbsSendTimeTestHelper::TestWrappingHelper(uint32_t silenceTimeS)
 	{
 		MS_TRACE();
 
-		constexpr int Framerate{ 100 };
-		constexpr int FrameIntervalMs{ 1000 / Framerate };
+		constexpr uint32_t Framerate{ 100 };
+		constexpr uint32_t FrameIntervalMs{ 1000 / Framerate };
 
 		const uint32_t frameIntervalAbsSendTime =
 		  RemoteBitrateEstimatorAbsSendTimeTestHelper::AbsSendTime(1, Framerate);

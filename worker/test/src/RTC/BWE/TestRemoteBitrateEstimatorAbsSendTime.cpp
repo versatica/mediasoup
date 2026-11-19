@@ -37,7 +37,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 	// being far from zero.
 	constexpr int64_t BaseTimeUs{ 1000 * 1000 };
 	// Fewest packets a burst needs for it to be taken as one.
-	constexpr int Probes{ 5 };
+	constexpr uint32_t Probes{ 5 };
 
 	// Builds a packet of the given size carrying the given instant in its
 	// `abs-send-time` extension.
@@ -96,7 +96,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 		int64_t nowUs{ BaseTimeUs };
 
 		// First burst sent at 8 * 1000 / 10 = 800 kbps.
-		for (int i{ 0 }; i < Probes; ++i)
+		for (uint32_t i{ 0 }; i < Probes; ++i)
 		{
 			nowUs += 10 * 1000;
 
@@ -104,7 +104,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 		}
 
 		// Second burst sent at 8 * 1000 / 5 = 1600 kbps.
-		for (int i{ 0 }; i < Probes; ++i)
+		for (uint32_t i{ 0 }; i < Probes; ++i)
 		{
 			nowUs += 5 * 1000;
 
@@ -124,7 +124,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 
 		// Burst sent at 8 * 1000 / 10 = 800 kbps, with a small packet in between
 		// each pair of its packets.
-		for (int i{ 0 }; i < Probes; ++i)
+		for (uint32_t i{ 0 }; i < Probes; ++i)
 		{
 			nowUs += 5 * 1000;
 
@@ -150,7 +150,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 		int64_t sendTimeUs{ BaseTimeUs };
 
 		// First burst sent at 8 * 1000 / 10 = 800 kbps.
-		for (int i{ 0 }; i < Probes; ++i)
+		for (uint32_t i{ 0 }; i < Probes; ++i)
 		{
 			nowUs += 10 * 1000;
 			sendTimeUs += 10 * 1000;
@@ -160,7 +160,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 
 		// Second burst sent at 8 * 1000 / 5 = 1600 kbps but arriving at
 		// 8 * 1000 / 8 = 1000 kbps, so the link did not take it.
-		for (int i{ 0 }; i < Probes; ++i)
+		for (uint32_t i{ 0 }; i < Probes; ++i)
 		{
 			nowUs += 8 * 1000;
 			sendTimeUs += 5 * 1000;
@@ -181,7 +181,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 		int64_t sendTimeUs{ BaseTimeUs };
 
 		// Sent at 8 * 1000 / 10 = 800 kbps, arriving at 8 * 1000 / 5 = 1600 kbps.
-		for (int i{ 0 }; i < Probes; ++i)
+		for (uint32_t i{ 0 }; i < Probes; ++i)
 		{
 			nowUs += 5 * 1000;
 			sendTimeUs += 10 * 1000;
@@ -203,7 +203,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 
 		// Sent at 8 * 1000 / 10 = 800 kbps, arriving ten times faster, which no
 		// link explains.
-		for (int i{ 0 }; i < Probes; ++i)
+		for (uint32_t i{ 0 }; i < Probes; ++i)
 		{
 			nowUs += 1 * 1000;
 			sendTimeUs += 10 * 1000;
@@ -223,7 +223,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 		int64_t sendTimeUs{ BaseTimeUs };
 
 		// Sent at 8 * 1000 / 5 = 1600 kbps, arriving at 8 * 1000 / 7 = 1142 kbps.
-		for (int i{ 0 }; i < Probes; ++i)
+		for (uint32_t i{ 0 }; i < Probes; ++i)
 		{
 			nowUs += 7 * 1000;
 			sendTimeUs += 5 * 1000;
@@ -244,7 +244,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 		int64_t sendTimeUs{ BaseTimeUs };
 
 		// Sent at 8 * 1000 / 1 = 8000 kbps, arriving at 8 * 1000 / 2 = 4000 kbps.
-		for (int i{ 0 }; i < Probes; ++i)
+		for (uint32_t i{ 0 }; i < Probes; ++i)
 		{
 			nowUs += 2 * 1000;
 			sendTimeUs += 1 * 1000;
@@ -264,7 +264,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 		int64_t nowUs{ BaseTimeUs };
 
 		// 200 bytes every 10 ms, which is not big enough to have been paced.
-		for (int i{ 0 }; i < Probes; ++i)
+		for (uint32_t i{ 0 }; i < Probes; ++i)
 		{
 			nowUs += 10 * 1000;
 
@@ -274,7 +274,7 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 		REQUIRE(!listener.updated);
 
 		// The same cadence with packets that are big enough is a burst.
-		for (int i{ 0 }; i < Probes; ++i)
+		for (uint32_t i{ 0 }; i < Probes; ++i)
 		{
 			nowUs += 10 * 1000;
 

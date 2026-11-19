@@ -107,7 +107,7 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 			this->producer.PushBytesToSend(packetLength); // MayMakeActive().
 
 			// Equivalent to WillRepeatedly() in dcsctp.
-			for (int i{ 0 }; i < 100; ++i)
+			for (uint32_t i{ 0 }; i < 100; ++i)
 			{
 				this->producer.PushProduce(CreateChunk(i, streamId, i, packetLength));
 				this->producer.PushBytesToSend(packetLength);

@@ -68,8 +68,8 @@ namespace rtpCommon
 		REQUIRE(packet->GetLength() != 0);                                                                   \
 		REQUIRE(packet->GetLength() == length);                                                              \
 		REQUIRE(packet->GetAvailableLength() == packet->GetBufferLength() - packet->GetLength());            \
-		REQUIRE(static_cast<unsigned>(packet->GetVersion()) == 2);                                           \
-		REQUIRE(static_cast<unsigned>(packet->GetPayloadType()) == payloadType);                             \
+		REQUIRE(static_cast<uint32_t>(packet->GetVersion()) == 2);                                           \
+		REQUIRE(static_cast<uint32_t>(packet->GetPayloadType()) == payloadType);                             \
 		REQUIRE(packet->HasMarker() == hasMarker);                                                           \
 		REQUIRE(packet->GetSequenceNumber() == seqNumber);                                                   \
 		REQUIRE(packet->GetTimestamp() == timestamp);                                                        \
@@ -107,11 +107,11 @@ namespace rtpCommon
 		}                                                                                                    \
                                                                                                          \
 		REQUIRE(packet->HasPadding() == hasPadding);                                                         \
-		REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == paddingLength);                         \
+		REQUIRE(static_cast<uint32_t>(packet->GetPaddingLength()) == paddingLength);                         \
                                                                                                          \
 		if (!packet->HasPadding())                                                                           \
 		{                                                                                                    \
-			REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == 0);                                   \
+			REQUIRE(static_cast<uint32_t>(packet->GetPaddingLength()) == 0);                                   \
 		}                                                                                                    \
                                                                                                          \
 		REQUIRE(packet->Validate(/*storeExtensions*/ false));                                                \

@@ -55,10 +55,10 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 	public:
 		bool isActive{ true };
-		int keyFrameRequestCount{ 0 };
+		uint32_t keyFrameRequestCount{ 0 };
 		uint32_t lastKeyFrameRequestedMappedSsrc{ 0 };
-		int layersChangedCount{ 0 };
-		int needBitrateChangeCount{ 0 };
+		uint32_t layersChangedCount{ 0 };
+		uint32_t needBitrateChangeCount{ 0 };
 	};
 
 	class RtpStreamRecvListener : public RTC::RTP::RtpStreamRecv::Listener

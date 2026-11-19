@@ -77,7 +77,7 @@ namespace bweHelpers
 		 */
 		int64_t SteadyStateRun(
 		  uint32_t ssrc,
-		  int maxNumberOfFrames,
+		  uint32_t maxNumberOfFrames,
 		  int64_t startBitrate,
 		  int64_t minBitrate,
 		  int64_t maxBitrate,
@@ -87,17 +87,17 @@ namespace bweHelpers
 
 		void RateIncreaseReorderingTestHelper(int64_t expectedBitrate);
 
-		void RateIncreaseRtpTimestampsTestHelper(int expectedIterations);
+		void RateIncreaseRtpTimestampsTestHelper(uint32_t expectedIterations);
 
 		void CapacityDropTestHelper(
-		  int numberOfStreams,
+		  uint32_t numberOfStreams,
 		  bool wrapTimestamp,
 		  int64_t expectedBitrateDropDeltaMs,
 		  int64_t receiverClockOffsetChangeMs);
 
 		void TestTimestampGroupingTestHelper();
 
-		void TestWrappingHelper(int silenceTimeS);
+		void TestWrappingHelper(uint32_t silenceTimeS);
 
 		/* Pure virtual methods inherited from RemoteBitrateEstimatorAbsSendTime::Listener. */
 	public:

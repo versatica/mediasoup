@@ -208,7 +208,7 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 		// later, so every single one of them qualifies for the ongoing burst. The
 		// burst must end anyway once it lasts 100 ms, which takes 26 packets. Two
 		// bursts must be completed before deltas can be computed between them.
-		for (int i{ 0 }; i < 60; ++i)
+		for (uint32_t i{ 0 }; i < 60; ++i)
 		{
 			sendTimeMs += 10;
 			arrivalTimeMs += 4;

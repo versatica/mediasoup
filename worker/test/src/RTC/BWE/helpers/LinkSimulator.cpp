@@ -18,7 +18,7 @@ namespace bweHelpers
 	/* Instance methods. */
 
 	RtpStream::RtpStream(
-	  int fps, int64_t bitrateBps, uint32_t ssrc, uint32_t frequency, uint32_t rtpTimestampOffset)
+	  uint32_t fps, int64_t bitrateBps, uint32_t ssrc, uint32_t frequency, uint32_t rtpTimestampOffset)
 	  : fps(fps),
 	    ssrc(ssrc),
 	    frequency(frequency),
@@ -27,7 +27,7 @@ namespace bweHelpers
 	{
 		MS_TRACE();
 
-		MS_ASSERT(fps > 0, "fps must be greater than zero [fps:%d]", fps);
+		MS_ASSERT(fps > 0, "fps must be greater than zero [fps:%" PRIu32 "]", fps);
 	}
 
 	void RtpStream::SetBitrateBps(int64_t bitrateBps)

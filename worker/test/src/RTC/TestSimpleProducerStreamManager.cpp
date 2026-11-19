@@ -21,7 +21,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	{
 	public:
 		bool isActive{ true };
-		int keyFrameRequestCount{ 0 };
+		uint32_t keyFrameRequestCount{ 0 };
 		uint32_t lastKeyFrameRequestedMappedSsrc{ 0 };
 
 		bool IsActive() const override
@@ -396,7 +396,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->OnTransportConnected();
 
-		const int keyFrameCount = listener.keyFrameRequestCount;
+		const uint32_t keyFrameCount = listener.keyFrameRequestCount;
 
 		// Call OnResumed — should set syncRequired and request keyframe again.
 		manager->OnResumed();
