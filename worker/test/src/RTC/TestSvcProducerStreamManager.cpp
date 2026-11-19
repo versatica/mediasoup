@@ -11,7 +11,8 @@
 
 SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 {
-	constexpr uint32_t MappedSsrc = 1234567890;
+	static constexpr uint32_t MappedSsrc = 1234567890;
+
 	// Milliseconds between the packets fed by feedRtpStreamRecv() below.
 	constexpr int64_t PacketSpacingMs{ 1 };
 
