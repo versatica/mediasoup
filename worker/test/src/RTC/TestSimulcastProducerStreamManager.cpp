@@ -14,9 +14,9 @@
 
 SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulcast]")
 {
-	constexpr uint32_t MappedSsrc0 = 1000;
-	constexpr uint32_t MappedSsrc1 = 2000;
-	constexpr uint32_t MappedSsrc2 = 3000;
+	static constexpr uint32_t MappedSsrc0 = 1000;
+	static constexpr uint32_t MappedSsrc1 = 2000;
+	static constexpr uint32_t MappedSsrc2 = 3000;
 	// Milliseconds between the packets fed by feedRtpStreamRecv() below.
 	constexpr int64_t PacketSpacingMs{ 1 };
 

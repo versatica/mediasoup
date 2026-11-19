@@ -8,9 +8,9 @@
 
 SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 {
-	constexpr uint32_t MappedSsrc0 = 1000;
-	constexpr uint32_t MappedSsrc1 = 2000;
-	constexpr uint32_t MappedSsrc2 = 3000;
+	static constexpr uint32_t MappedSsrc0 = 1000;
+	static constexpr uint32_t MappedSsrc1 = 2000;
+	static constexpr uint32_t MappedSsrc2 = 3000;
 
 	using RtpPacketProcessResult = RTC::ProducerStreamManager::RtpPacketProcessResult;
 
