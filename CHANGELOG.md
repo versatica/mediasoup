@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- BWE: Probe while the application wants more than the estimate and nothing limits the link, which is what lets an SFU that can only send discrete bitrates (simulcast layers) climb back once a capped link opens.
+- BWE: Probe while the application wants more than the estimate and nothing limits the link, which is what lets an SFU that can only send discrete bitrates (simulcast layers) climb back once a capped link opens ([PR #2067](https://github.com/versatica/mediasoup/pull/2067)).
 - Worker: Complete Dependency Descriptor implementation ([PR #2015](https://github.com/versatica/mediasoup/pull/2015)).
 - Worker: Don’t take a template dependency structure older than the one in use ([PR #2047](https://github.com/versatica/mediasoup/pull/2047)).
 - New RTCP stack ([task #2049](https://github.com/versatica/mediasoup/issues/2049)).
