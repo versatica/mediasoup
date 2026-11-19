@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_DICTIONARIES_HPP
 
 #include "common.hpp"
-#include "FBS/sctpParameters.h"
+#include <FBS/sctpParameters.h>
 
 namespace RTC
 {

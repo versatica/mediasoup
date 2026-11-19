@@ -2,7 +2,6 @@
 #define MS_RTC_WEBRTC_TRANSPORT_HPP
 
 #include "common.hpp"
-#include "FBS/webRtcTransport.h"
 #include "handles/SendCallbacks.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/ICE/IceCandidate.hpp"
@@ -17,6 +16,7 @@
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
 #include "SharedInterface.hpp"
+#include <FBS/webRtcTransport.h>
 #include <uv.h>
 #include <string>
 #include <vector>

@@ -3,9 +3,9 @@
 
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "FBS/message.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <FBS/message.h>
 #include <ankerl/unordered_dense.h>
 
 namespace Channel

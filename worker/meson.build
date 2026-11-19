@@ -90,6 +90,22 @@ else
   cpp_args += ['-Werror=unused-result']
 endif
 
+# Compiler warnings are errors in mediasoup targets only if ms_werror is
+# enabled (never in subprojects). It is disabled by default so that a newer
+# compiler that emits a new warning does not break the build of mediasoup in
+# users' machines.
+werror_override_options = get_option('ms_werror') ? ['werror=true'] : []
+
+# MSVC has no system include directories, so as_system() on the dependencies
+# below does nothing there. Instead, every header included with angle brackets
+# is treated as external and its warnings are disabled.
+if cpp.get_argument_syntax() == 'msvc'
+  cpp_args += [
+    '/external:anglebrackets',
+    '/external:W0',
+  ]
+endif
+
 # This is a workaround to define FLATBUFFERS_LOCALE_INDEPENDENT=0 outside
 # flatbuffers project, which is needed in case the current arch doesn't support
 # strtoll_l or strtoull_l (such as musl in Alpine Linux). Problem is that
@@ -366,13 +382,20 @@ flatbuffers_proj = subproject(
 # flatbuffers schemas subdirectory.
 subdir('fbs')
 
+# Dependencies are marked with as_system() so that their headers are included
+# as system headers. Otherwise warnings in them would be reported when
+# compiling mediasoup files and would make the build fail when ms_werror is
+# enabled. as_system() does not reach the dependencies nested in a dependency,
+# so OpenSSL is added through libcrypto_dep and libssl_dep, which declare its
+# include directories, rather than openssl_dep.
 dependencies = [
-  libuv_proj.get_variable('libuv_dep'),
-  openssl_proj.get_variable('openssl_dep'),
-  libsrtp3_proj.get_variable('libsrtp3_dep'),
-  ankerl_unordered_dense_dep,
-  flatbuffers_proj.get_variable('flatbuffers_dep'),
-  flatbuffers_generator_dep,
+  libuv_proj.get_variable('libuv_dep').as_system(),
+  openssl_proj.get_variable('libcrypto_dep').as_system(),
+  openssl_proj.get_variable('libssl_dep').as_system(),
+  libsrtp3_proj.get_variable('libsrtp3_dep').as_system(),
+  ankerl_unordered_dense_dep.as_system(),
+  flatbuffers_proj.get_variable('flatbuffers_dep').as_system(),
+  flatbuffers_generator_dep.as_system(),
 ]
 
 link_whole = [
@@ -392,7 +415,7 @@ if host_machine.system() == 'windows'
   )
 
   dependencies += [
-    wingetopt_proj.get_variable('wingetopt_dep'),
+    wingetopt_proj.get_variable('wingetopt_dep').as_system(),
   ]
   link_whole += [
     wingetopt_proj.get_variable('wingetopt_lib'),
@@ -408,7 +431,7 @@ if get_option('ms_build_tests')
   )
 
   dependencies += [
-    catch2_proj.get_variable('catch2_dep'),
+    catch2_proj.get_variable('catch2_dep').as_system(),
   ]
 endif
 
@@ -423,6 +446,7 @@ libmediasoup_worker = library(
   include_directories: include_directories('include'),
   cpp_args: cpp_args,
   link_whole: link_whole,
+  override_options: werror_override_options,
 )
 
 executable(
@@ -434,6 +458,7 @@ executable(
   sources: common_sources + ['src/main.cpp'],
   include_directories: include_directories('include'),
   cpp_args: cpp_args + ['-DMS_EXECUTABLE'],
+  override_options: werror_override_options,
 )
 
 mock_sources = [
@@ -620,6 +645,7 @@ mediasoup_worker_test = executable(
   sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories('include'),
   cpp_args: cpp_args,
+  override_options: werror_override_options,
 )
 
 test(
@@ -645,6 +671,7 @@ mediasoup_worker_test_asan_address = executable(
   link_args: [
     '-fsanitize=address',
   ],
+  override_options: werror_override_options,
 )
 
 test(
@@ -670,6 +697,7 @@ mediasoup_worker_test_asan_undefined = executable(
   link_args: [
     '-fsanitize=undefined',
   ],
+  override_options: werror_override_options,
 )
 
 test(
@@ -780,4 +808,5 @@ executable(
   link_args: [
     '-fsanitize=address,undefined,fuzzer',
   ],
+  override_options: werror_override_options,
 )

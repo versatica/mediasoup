@@ -2,8 +2,8 @@
 #define MS_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
-#include "FBS/request.h"
-#include "FBS/response.h"
+#include <FBS/request.h>
+#include <FBS/response.h>
 #include <flatbuffers/flatbuffer_builder.h>
 #include <string>
 

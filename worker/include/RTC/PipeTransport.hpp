@@ -2,7 +2,6 @@
 #define MS_RTC_PIPE_TRANSPORT_HPP
 
 #include "common.hpp"
-#include "FBS/pipeTransport.h"
 #include "handles/SendCallbacks.hpp"
 #include "RTC/RTCP/packet/CompoundPacket.hpp"
 #include "RTC/RTCP/packet/Packet.hpp"
@@ -11,6 +10,7 @@
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
 #include "SharedInterface.hpp"
+#include <FBS/pipeTransport.h>
 #include <uv.h>
 #include <string>
 

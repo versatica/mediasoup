@@ -2,7 +2,6 @@
 #define MS_RTC_RTP_RTX_STREAM_HPP
 
 #include "common.hpp"
-#include "FBS/rtxStream.h"
 #include "RTC/Consts.hpp"
 #include "RTC/RTCP/packet/ReceiverReportPacket.hpp"
 #include "RTC/RTCP/packet/SenderReportPacket.hpp"
@@ -10,6 +9,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "SharedInterface.hpp"
 #include "Utils.hpp"
+#include <FBS/rtxStream.h>
 #include <string>
 
 namespace RTC

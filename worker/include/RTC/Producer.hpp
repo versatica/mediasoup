@@ -4,8 +4,6 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "FBS/producer.h"
-#include "FBS/transport.h"
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/SenderReportPacket.hpp"
@@ -16,6 +14,8 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "SharedInterface.hpp"
 #include "Utils.hpp"
+#include <FBS/producer.h>
+#include <FBS/transport.h>
 #include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>

@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "Channel/ChannelMessageRegistratorInterface.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "FBS/worker.h"
+#include <FBS/worker.h>
 #include <flatbuffers/flatbuffer_builder.h>
 #include <ankerl/unordered_dense.h>
 #include <string>

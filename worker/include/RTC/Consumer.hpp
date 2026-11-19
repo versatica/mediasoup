@@ -4,8 +4,6 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "FBS/consumer.h"
-#include "FBS/transport.h"
 #include "RTC/BWE/BitrateAllocator.hpp"
 #include "RTC/ConsumerTypes.hpp"
 #include "RTC/ProducerStreamManager.hpp"
@@ -20,6 +18,8 @@
 #include "RTC/SeqManager.hpp"
 #include "SharedInterface.hpp"
 #include "Utils.hpp"
+#include <FBS/consumer.h>
+#include <FBS/transport.h>
 #include <ankerl/unordered_dense.h>
 #include <bitset>
 #include <map>
