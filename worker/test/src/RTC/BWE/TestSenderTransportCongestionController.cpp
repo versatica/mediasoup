@@ -10,6 +10,7 @@
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <deque>
 #include <string_view>
 #include <vector>
 
@@ -689,5 +690,293 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		// Aiming far above what the application could ever send would measure room
 		// that nothing is going to use, so the burst is held to what is wanted.
 		REQUIRE(totalBytes(bounded) < totalBytes(unbounded));
+	}
+
+	SECTION("a sender that can only put out a few bitrates climbs back once a capped link opens")
+	{
+		// An SFU forwarding simulcast layers sends exactly what it is allowed and
+		// nothing in between, so the link never carries more than the layer it is
+		// on. Once a cap brought the estimate below the next layer up, only a burst
+		// can tell that the link has room again.
+		constexpr size_t PacketOverhead{ 40 };
+		constexpr int64_t PropagationUs{ 20 * 1000 };
+		constexpr int64_t MaxQueueingDelayUs{ 150 * 1000 };
+		constexpr int64_t FeedbackIntervalUs{ 100 * 1000 };
+		constexpr int64_t TickUs{ 1000 };
+		// What the allocator charges for climbing back to a point already held.
+		constexpr double ClimbBackHysteresis{ 1.2 };
+		// Open link, 30 s at 900 kbit, 30 s at 400 kbit with a spell of loss as it
+		// begins, which is what a queue overflowing on the way down looks like to
+		// the receiver, then open again.
+		constexpr int64_t OpenCapacity{ 20000000 };
+		constexpr int64_t Cap1Capacity{ 900000 };
+		constexpr int64_t Cap2Capacity{ 400000 };
+		constexpr int64_t CapStartUs{ 20 * 1000 * 1000 };
+		constexpr int64_t Cap2StartUs{ 50 * 1000 * 1000 };
+		constexpr int64_t LossStartUs{ 53 * 1000 * 1000 };
+		constexpr int64_t LossEndUs{ 57 * 1000 * 1000 };
+		constexpr uint32_t LossPercent{ 20 };
+		constexpr int64_t CapEndUs{ 80 * 1000 * 1000 };
+		constexpr int64_t EndUs{ 120 * 1000 * 1000 };
+		constexpr int64_t MaxRecoveryUs{ 10 * 1000 * 1000 };
+		// What the allocation offers: the lowest spatial layer at two temporal
+		// layers, then the two spatial layers above it.
+		const std::vector<int64_t> layerBitrates{ 80000, 150000, 340000, 700000 };
+
+		struct InFlight
+		{
+			int64_t sequenceNumber;
+			size_t size;
+			std::optional<int64_t> arrivalUs;
+		};
+
+		class LinkListener : public RTC::BWE::SenderTransportCongestionController::Listener
+		{
+		public:
+			explicit LinkListener(std::function<void(int64_t, size_t)> onProbePacket)
+			  : onProbePacket(std::move(onProbePacket))
+			{
+			}
+
+			void OnSenderTransportCongestionControllerTargetBitrate(
+			  RTC::BWE::SenderTransportCongestionController* /*senderTransportCongestionController*/,
+			  int64_t targetBitrate) override
+			{
+				this->targetBitrate = targetBitrate;
+			}
+
+			void OnSenderTransportCongestionControllerSendRtpProbePacket(
+			  RTC::BWE::SenderTransportCongestionController* /*senderTransportCongestionController*/,
+			  RTC::RTP::Packet* packet,
+			  std::optional<int64_t> sequenceNumber) override
+			{
+				// A packet without a sequence number was not taken note of, so there is
+				// nothing to report back about it.
+				if (sequenceNumber.has_value())
+				{
+					// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+					this->onProbePacket(sequenceNumber.value(), packet->GetLength());
+				}
+			}
+
+		public:
+			int64_t targetBitrate{ 0 };
+
+		private:
+			// Hands a packet of a burst to the link, in the order it was numbered.
+			const std::function<void(int64_t, size_t)> onProbePacket;
+		};
+
+		int64_t linkNowUs{ InitialTimeUs };
+		mocks::MockShared linkShared(/*getTimeUs*/
+		                             [&linkNowUs]() -> int64_t
+		                             {
+			                             return linkNowUs;
+		                             });
+
+		// One queue draining at the capacity of the moment, dropping what would
+		// wait too long in it.
+		int64_t linkCapacity{ OpenCapacity };
+		int64_t linkNextFreeUs{ 0 };
+		bool linkLossy{ false };
+		uint32_t lcg{ 12345 };
+		std::deque<InFlight> inFlight;
+		const auto sendOverLink = [&](int64_t sequenceNumber, size_t size) -> void
+		{
+			// A linear congruential generator, so that the loss is the same every run.
+			lcg = lcg * 1664525u + 1013904223u;
+
+			if (linkLossy && (lcg >> 16) % 100 < LossPercent)
+			{
+				inFlight.push_back(
+				  { .sequenceNumber = sequenceNumber, .size = size, .arrivalUs = std::nullopt });
+
+				return;
+			}
+
+			const int64_t startUs   = std::max(linkNextFreeUs, linkNowUs);
+			const int64_t serviceUs = static_cast<int64_t>(size) * 8 * 1000000 / linkCapacity;
+
+			if (startUs - linkNowUs > MaxQueueingDelayUs)
+			{
+				inFlight.push_back(
+				  { .sequenceNumber = sequenceNumber, .size = size, .arrivalUs = std::nullopt });
+
+				return;
+			}
+
+			linkNextFreeUs = startUs + serviceUs;
+
+			inFlight.push_back(
+			  { .sequenceNumber = sequenceNumber, .size = size, .arrivalUs = linkNextFreeUs + PropagationUs });
+		};
+
+		// NOTE: The listener needs the controller and the controller needs the
+		// listener, hence the pointer filled in right after construction.
+		RTC::BWE::SenderTransportCongestionController* linkControllerPtr{ nullptr };
+		LinkListener linkListener(
+		  [&](int64_t sequenceNumber, size_t length) -> void
+		  {
+			  const size_t size = length + PacketOverhead;
+
+			  linkControllerPtr->OnRtpPacketSent(sequenceNumber, size, linkNowUs);
+			  sendOverLink(sequenceNumber, size);
+		  });
+		RTC::BWE::SenderTransportCongestionController linkController(
+		  std::addressof(linkListener),
+		  std::addressof(linkShared),
+		  { .startBitrate = StartBitrate, .minBitrate = MinBitrate, .maxBitrate = MaxBitrate });
+
+		linkControllerPtr = std::addressof(linkController);
+		linkController.SetTransportCcFeedbackSupported(true);
+		linkController.SetPacketOverhead(PacketOverhead);
+		linkController.SetDesiredBitrate(layerBitrates.back());
+		linkController.SetEnableProbing(true);
+		linkController.SetNetworkAvailable(true);
+		linkListener.targetBitrate = linkController.GetAvailableBitrate();
+
+		// The layer picked for a target, with the allocator's hysteresis for one
+		// that was held before.
+		size_t option{ 0 };
+		size_t highestOptionHeld{ 0 };
+		const auto chooseOption = [&](int64_t target) -> void
+		{
+			size_t chosen{ 0 };
+
+			for (size_t i = 0; i < layerBitrates.size(); ++i)
+			{
+				const double factor = i > option && i <= highestOptionHeld ? ClimbBackHysteresis : 1.0;
+
+				if (static_cast<double>(layerBitrates[i]) * factor <= static_cast<double>(target))
+				{
+					chosen = i;
+				}
+			}
+
+			option            = chosen;
+			highestOptionHeld = std::max(highestOptionHeld, option);
+		};
+
+		const auto fireLinkTimers = [&]() -> void
+		{
+			for (const auto label :
+			     { ProcessTimerLabel, std::string_view{ "probing-scheduler-next-probe" } })
+			{
+				auto* timer = linkShared.GetTimer(label);
+
+				if (timer && timer->IsActive() && timer->GetExpiresAtMs() <= linkNowUs / 1000)
+				{
+					timer->EvaluateHasExpired();
+				}
+			}
+		};
+
+		uint16_t linkRtpSequenceNumber{ 0 };
+		double bytesDue{ 0 };
+		int64_t nextFeedbackAtUs{ linkNowUs + FeedbackIntervalUs };
+		int64_t maxTargetWhileCapped{ 0 };
+		std::optional<int64_t> recoveredAfterUs;
+
+		while (linkNowUs - InitialTimeUs < EndUs)
+		{
+			const int64_t tUs = linkNowUs - InitialTimeUs;
+
+			linkCapacity = tUs < CapStartUs || tUs >= CapEndUs ? OpenCapacity
+			               : tUs < Cap2StartUs                 ? Cap1Capacity
+			                                                   : Cap2Capacity;
+			linkLossy    = tUs >= LossStartUs && tUs < LossEndUs;
+
+			chooseOption(linkListener.targetBitrate);
+
+			// The layer's bitrate goes out packet by packet.
+			bytesDue +=
+			  static_cast<double>(layerBitrates[option]) / 8.0 * (static_cast<double>(TickUs) / 1e6);
+
+			while (bytesDue >= static_cast<double>(PayloadSize))
+			{
+				bytesDue -= static_cast<double>(PayloadSize);
+
+				const auto packet = buildPacket();
+
+				packet->SetSequenceNumber(linkRtpSequenceNumber++);
+
+				const auto sequenceNumber = linkController.OnRtpPacketToBeSent(
+				  packet.get(), RTC::BWE::SenderTransportCongestionController::RtpPacketToBeSentOptions{});
+
+				REQUIRE(sequenceNumber.has_value());
+
+				const size_t size = packet->GetLength() + PacketOverhead;
+
+				linkController.OnRtpPacketSent(sequenceNumber, size, linkNowUs);
+				// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+				sendOverLink(sequenceNumber.value(), size);
+			}
+
+			if (linkNowUs >= nextFeedbackAtUs)
+			{
+				nextFeedbackAtUs += FeedbackIntervalUs;
+
+				std::vector<std::pair<uint16_t, int64_t>> received;
+				std::optional<uint16_t> baseSequenceNumber;
+
+				while (!inFlight.empty() && (!inFlight.front().arrivalUs.has_value() ||
+				                             inFlight.front().arrivalUs.value() <= linkNowUs))
+				{
+					const auto& packet = inFlight.front();
+
+					if (!baseSequenceNumber.has_value())
+					{
+						baseSequenceNumber = static_cast<uint16_t>(packet.sequenceNumber);
+					}
+
+					if (packet.arrivalUs.has_value())
+					{
+						received.emplace_back(
+						  static_cast<uint16_t>(packet.sequenceNumber),
+						  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+						  RemoteTimeUs + (packet.arrivalUs.value() - InitialTimeUs));
+					}
+
+					inFlight.pop_front();
+				}
+
+				if (baseSequenceNumber.has_value())
+				{
+					const auto feedback = createFeedback(
+					  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+					  baseSequenceNumber.value(),
+					  RemoteTimeUs + (linkNowUs - InitialTimeUs),
+					  received);
+
+					linkController.ReceiveTransportWideCcFeedback(feedback.get(), linkNowUs + PropagationUs);
+				}
+			}
+
+			fireLinkTimers();
+
+			// The estimate takes a few seconds to come down once a cap is there, so
+			// what the bursts do to it is read in the second half of the lower cap.
+			if (tUs >= (Cap2StartUs + CapEndUs) / 2 && tUs < CapEndUs)
+			{
+				maxTargetWhileCapped = std::max(maxTargetWhileCapped, linkListener.targetBitrate);
+			}
+
+			if (tUs >= CapEndUs && !recoveredAfterUs.has_value() && option == layerBitrates.size() - 1)
+			{
+				recoveredAfterUs = tUs - CapEndUs;
+			}
+
+			linkNowUs += TickUs;
+		}
+
+		// The bursts sent while the link stayed capped did not talk it into more
+		// than it carries.
+		REQUIRE(maxTargetWhileCapped < 2 * Cap2Capacity);
+
+		// And once the cap is gone the top layer is back within seconds, which is
+		// what the bursts for an allocation above the estimate are for.
+		REQUIRE(recoveredAfterUs.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		REQUIRE(recoveredAfterUs.value() <= MaxRecoveryUs);
 	}
 }

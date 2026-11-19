@@ -351,6 +351,21 @@ namespace RTC
 				  /*probeFurther*/ true);
 			}
 
+			if (IsTimeForAllocationLimitedProbe(nowUs))
+			{
+				MS_DEBUG_DEV(
+				  "the application wants more than the estimate, probing [estimatedBitrate:%" PRIi64
+				  ", maxTotalAllocatedBitrate:%" PRIi64 "]",
+				  this->estimatedBitrate,
+				  this->maxTotalAllocatedBitrate);
+
+				return InitiateProbing(
+				  nowUs,
+				  { BitrateUtils::ApplyBitrateFactor(
+				    this->estimatedBitrate, this->options.allocationLimitedProbeScale) },
+				  /*probeFurther*/ true);
+			}
+
 			return {};
 		}
 
@@ -547,6 +562,37 @@ namespace RTC
 			  this->lastProbingInitiatedAtUs.value_or(this->alrStartTimeUs.value()));
 
 			return nowUs >= sinceUs + this->options.alrProbingIntervalUs;
+		}
+
+		bool ProbeController::IsTimeForAllocationLimitedProbe(int64_t nowUs) const
+		{
+			MS_TRACE();
+
+			if (!this->options.enableAllocationLimitedProbing || this->maxTotalAllocatedBitrate == 0)
+			{
+				return false;
+			}
+
+			// The application is already given what it asked for.
+			if (this->estimatedBitrate >= this->maxTotalAllocatedBitrate)
+			{
+				return false;
+			}
+
+			// Something is holding the estimate back, so a burst would measure that
+			// rather than room that may be there. While the loss based estimate is
+			// growing a bounded burst is fine, and InitiateProbing() bounds it.
+			if (
+			  this->bandwidthLimitedCause != BandwidthLimitedCause::DELAY_BASED_LIMITED &&
+			  this->bandwidthLimitedCause != BandwidthLimitedCause::LOSS_LIMITED_BWE_INCREASING)
+			{
+				return false;
+			}
+
+			// NOTE: Never having probed means that the wait is already over.
+			return !this->lastProbingInitiatedAtUs.has_value() ||
+			       nowUs >= this->lastProbingInitiatedAtUs.value() +
+			                  this->options.allocationLimitedProbingIntervalUs;
 		}
 
 		bool ProbeController::IsTimeForNetworkStateProbe(int64_t nowUs) const

@@ -155,6 +155,28 @@ namespace RTC
 				 */
 				int64_t networkStateMinProbeDeltaUs{ 20 * 1000 };
 				/**
+				 * Whether to keep probing while the application wants to send more than
+				 * the estimate allows and nothing says the link cannot carry it.
+				 *
+				 * @remarks
+				 * - A sender that can only put out a few discrete bitrates, such as an
+				 *   SFU forwarding simulcast layers, sends exactly what it is allowed,
+				 *   so it never fills the link less than the target and never enters
+				 *   the application limited region. Meanwhile the delay based estimate
+				 *   does not climb above 1.5 times what it measures arriving, which is
+				 *   what the sender puts out. Without these bursts the estimate can
+				 *   never reach the next bitrate up once a drop brought it below it.
+				 */
+				bool enableAllocationLimitedProbing{ true };
+				/**
+				 * How often to send those bursts.
+				 */
+				int64_t allocationLimitedProbingIntervalUs{ 5 * 1000 * 1000 };
+				/**
+				 * Factor applied to the estimate for those bursts.
+				 */
+				double allocationLimitedProbeScale{ 2.0 };
+				/**
 				 * Whether to probe when the application raises how much it wants to
 				 * send.
 				 */
@@ -334,6 +356,7 @@ namespace RTC
 			  int64_t nowUs, const std::vector<int64_t>& bitratesToProbe, bool probeFurther);
 
 			bool IsTimeForAlrProbe(int64_t nowUs) const;
+			bool IsTimeForAllocationLimitedProbe(int64_t nowUs) const;
 
 			bool IsTimeForNetworkStateProbe(int64_t nowUs) const;
 

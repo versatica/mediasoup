@@ -228,7 +228,10 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("asking for less is not probed, but asking for more again is")
 	{
-		RTC::BWE::ProbeController probeController;
+		// What this section is about is the reaction to the allocation moving, so
+		// the periodic bursts for an allocation above the estimate stay out of it.
+		RTC::BWE::ProbeController probeController(
+		  RTC::BWE::ProbeController::ProbeControllerOptions{ .enableAllocationLimitedProbing = false });
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
 
@@ -252,6 +255,67 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.OnMaxTotalAllocatedBitrate(MaxBitrate * 3 / 4, nowUs);
 
 		REQUIRE(!probes.empty());
+	}
+
+	SECTION("an application wanting more than the estimate is probed for while nothing limits the link")
+	{
+		constexpr int64_t AllocationProbingIntervalUs{ 5 * 1000 * 1000 };
+
+		RTC::BWE::ProbeController probeController(
+		  RTC::BWE::ProbeController::ProbeControllerOptions{ .allocationLimitedProbingIntervalUs =
+			                                                     AllocationProbingIntervalUs,
+			                                                   .allocationLimitedProbeScale = 2.0 });
+
+		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
+
+		auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
+
+		REQUIRE(!probes.empty());
+
+		// The first allocation arrives while the initial bursts are still going.
+		REQUIRE(probeController.OnMaxTotalAllocatedBitrate(MaxBitrate, nowUs).empty());
+
+		probes = probeController.SetEstimatedBitrate(
+		  StartBitrate, RTC::BWE::ProbeController::BandwidthLimitedCause::DELAY_BASED_LIMITED, nowUs);
+
+		nowUs += ExponentialProbingTimeoutUs;
+
+		// The initial bursts are given up on, and the application still wants far
+		// more than the estimate, so a burst goes out at twice the estimate.
+		probes = probeController.Process(nowUs);
+
+		REQUIRE(probes.size() == 1);
+		REQUIRE(probes.at(0).targetBitrate == 2 * StartBitrate);
+
+		// Not again before the interval has gone by.
+		nowUs += AllocationProbingIntervalUs / 2;
+
+		REQUIRE(probeController.Process(nowUs).empty());
+
+		nowUs += AllocationProbingIntervalUs;
+
+		probes = probeController.Process(nowUs);
+
+		REQUIRE(probes.size() == 1);
+
+		// Nor while something is already holding the estimate back.
+		nowUs += AllocationProbingIntervalUs;
+
+		REQUIRE(probeController
+		          .SetEstimatedBitrate(
+		            StartBitrate, RTC::BWE::ProbeController::BandwidthLimitedCause::LOSS_LIMITED_BWE, nowUs)
+		          .empty());
+		REQUIRE(probeController.Process(nowUs).empty());
+
+		// Nor once the application is given what it asked for.
+		nowUs += AllocationProbingIntervalUs;
+
+		REQUIRE(
+		  probeController
+		    .SetEstimatedBitrate(
+		      MaxBitrate, RTC::BWE::ProbeController::BandwidthLimitedCause::DELAY_BASED_LIMITED, nowUs)
+		    .empty());
+		REQUIRE(probeController.Process(nowUs).empty());
 	}
 
 	SECTION("what is asked for is bounded by the current estimate")

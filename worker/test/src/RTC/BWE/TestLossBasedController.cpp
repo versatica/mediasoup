@@ -750,6 +750,81 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		REQUIRE(lossBasedController.GetResult().bitrate == bitrateAfterLoss + 1);
 	}
 
+	SECTION("once allowed to grow, a candidate bounded only by what the sender puts out hands over")
+	{
+		// A sender that can only send a few discrete bitrates never acknowledges
+		// more than the one it is on, so the bound by the acknowledged bitrate
+		// would keep this state for good while the link loses nothing.
+		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
+			.bitrateRampupUpperBoundFactor        = 1.5,
+			.lossThresholdOfHighBitratePreference = 0.99,
+			.observationWindowSize                = 2,
+			.minNumObservations                   = 1,
+			.immediateUpperBoundBitrateBalance    = 10000000
+		};
+
+		RTC::BWE::LossBasedController lossBasedController(options);
+
+		lossBasedController.SetBitrateEstimate(600000);
+		lossBasedController.SetAcknowledgedBitrate(300000);
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createLostResults(/*firstSendTimeUs*/ 0, /*numPackets*/ 2),
+		  /*delayBasedEstimate*/ 5000000,
+		  /*inAlr*/ false);
+
+		REQUIRE(lossBasedController.GetResult().state == RTC::BWE::LossBasedController::State::DECREASING);
+
+		// The sender keeps putting out well below what it was allowed and the link
+		// loses nothing more.
+		lossBasedController.SetAcknowledgedBitrate(150000);
+
+		int64_t feedbackCount{ 1 };
+
+		while (lossBasedController.GetResult().state != RTC::BWE::LossBasedController::State::INCREASING &&
+		       feedbackCount < 100)
+		{
+			lossBasedController.UpdateBitrateEstimate(
+			  createResults(
+			    feedbackCount * ObservationDurationLowerBoundUs, /*numPackets*/ 2, /*numLostPackets*/ 0),
+			  /*delayBasedEstimate*/ 5000000,
+			  /*inAlr*/ false);
+
+			++feedbackCount;
+		}
+
+		REQUIRE(lossBasedController.GetResult().state == RTC::BWE::LossBasedController::State::INCREASING);
+
+		// Having been allowed to grow once with nothing but its own output in the
+		// way, it hands over rather than holding again. Nothing jumps: what it
+		// answers is still what the acknowledged bitrate bounds it to.
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(
+		    feedbackCount * ObservationDurationLowerBoundUs, /*numPackets*/ 2, /*numLostPackets*/ 0),
+		  /*delayBasedEstimate*/ 5000000,
+		  /*inAlr*/ false);
+
+		++feedbackCount;
+
+		REQUIRE(
+		  lossBasedController.GetResult().state ==
+		  RTC::BWE::LossBasedController::State::DELAY_BASED_ESTIMATE);
+		REQUIRE(lossBasedController.GetResult().bitrate < 600000);
+
+		// From here the delay based path leads, which is what a burst that
+		// measured the link moves.
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(
+		    feedbackCount * ObservationDurationLowerBoundUs, /*numPackets*/ 2, /*numLostPackets*/ 0),
+		  /*delayBasedEstimate*/ 650000,
+		  /*inAlr*/ false);
+
+		REQUIRE(
+		  lossBasedController.GetResult().state ==
+		  RTC::BWE::LossBasedController::State::DELAY_BASED_ESTIMATE);
+		REQUIRE(lossBasedController.GetResult().bitrate == 650000);
+	}
+
 	SECTION("the delay based estimate caps this one while the network is fine")
 	{
 		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{

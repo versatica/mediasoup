@@ -373,6 +373,10 @@ namespace RTC
 				bestCandidate.lossLimitedBitrate = this->currentBestEstimate.lossLimitedBitrate;
 			}
 
+			// Whether the acknowledged bitrate, and not loss, is what bounds the
+			// candidate below.
+			bool boundedByAcknowledgedBitrate{ false };
+
 			if (IsInLossLimitedState())
 			{
 				// Right after a decrease the estimate may not grow past what that
@@ -404,6 +408,10 @@ namespace RTC
 					{
 						rampupFactor = this->options.bitrateRampupUpperBoundFactorInHold;
 					}
+
+					boundedByAcknowledgedBitrate =
+					  bestCandidate.lossLimitedBitrate >
+					  BitrateUtils::ApplyBitrateFactor(this->acknowledgedBitrate, rampupFactor);
 
 					bestCandidate.lossLimitedBitrate = std::max(
 					  this->currentBestEstimate.lossLimitedBitrate,
@@ -470,13 +478,25 @@ namespace RTC
 				return;
 			}
 
+			// The estimate was already allowed to grow, the link loses no more than
+			// the candidate says it does by itself, and what bounds the candidate is
+			// the acknowledged bitrate, which is what the sender itself puts out. A
+			// sender that can only send a few discrete bitrates never acknowledges
+			// more than its allocation, so this state would otherwise never end: the
+			// delay based path, bounded by the same acknowledged bitrate, takes over
+			// and only a burst can lift it from here.
+			const bool heldByOwnSendingRate = boundedByAcknowledgedBitrate &&
+			                                  this->result.state == State::INCREASING &&
+			                                  this->averageReportedLossRatio <= bestCandidate.inherentLoss;
+
 			if (
 			  IsEstimateIncreasingWhenLossLimited(this->result.bitrate, boundedBitrate) &&
-			  boundedBitrate < this->delayBasedEstimate && boundedBitrate < this->maxBitrate)
+			  boundedBitrate < this->delayBasedEstimate && boundedBitrate < this->maxBitrate &&
+			  !heldByOwnSendingRate)
 			{
 				this->result.state = State::INCREASING;
 			}
-			else if (boundedBitrate < this->delayBasedEstimate && boundedBitrate < this->maxBitrate)
+			else if (boundedBitrate < this->delayBasedEstimate && boundedBitrate < this->maxBitrate && !heldByOwnSendingRate)
 			{
 				// A factor of zero means that no hold is ever entered, since each hold
 				// would last no time at all.
