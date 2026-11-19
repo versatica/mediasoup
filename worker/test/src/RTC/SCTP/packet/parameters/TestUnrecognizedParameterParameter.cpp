@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/UnrecognizedParameterParameter.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -25,10 +24,12 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[serializable][sctp][parameter
 		};
 		// clang-format on
 
-		auto* parameter = RTC::SCTP::UnrecognizedParameterParameter::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::UnrecognizedParameterParameter> parameter{
+			RTC::SCTP::UnrecognizedParameterParameter::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
@@ -51,7 +52,7 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[serializable][sctp][parameter
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 8,
@@ -69,15 +70,12 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[serializable][sctp][parameter
 
 		/* Clone it. */
 
-		auto* clonedParameter =
-		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		parameter.reset(parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete parameter;
-
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ clonedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 8,
@@ -85,24 +83,24 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[serializable][sctp][parameter
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
-		REQUIRE(clonedParameter->HasUnrecognizedParameter() == true);
-		REQUIRE(clonedParameter->GetUnrecognizedParameterLength() == 3);
-		REQUIRE(clonedParameter->GetUnrecognizedParameter()[0] == 0xDD);
-		REQUIRE(clonedParameter->GetUnrecognizedParameter()[1] == 0xCC);
-		REQUIRE(clonedParameter->GetUnrecognizedParameter()[2] == 0xEE);
+		REQUIRE(parameter->HasUnrecognizedParameter() == true);
+		REQUIRE(parameter->GetUnrecognizedParameterLength() == 3);
+		REQUIRE(parameter->GetUnrecognizedParameter()[0] == 0xDD);
+		REQUIRE(parameter->GetUnrecognizedParameter()[1] == 0xCC);
+		REQUIRE(parameter->GetUnrecognizedParameter()[2] == 0xEE);
 		// This should be padding.
-		REQUIRE(clonedParameter->GetUnrecognizedParameter()[3] == 0x00);
-
-		delete clonedParameter;
+		REQUIRE(parameter->GetUnrecognizedParameter()[3] == 0x00);
 	}
 
 	SECTION("UnrecognizedParameterParameter::Factory() succeeds")
 	{
-		auto* parameter = RTC::SCTP::UnrecognizedParameterParameter::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::UnrecognizedParameterParameter> parameter{
+			RTC::SCTP::UnrecognizedParameterParameter::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -131,13 +129,12 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[serializable][sctp][parameter
 
 		/* Parse itself and compare. */
 
-		auto* parsedParameter = RTC::SCTP::UnrecognizedParameterParameter::Parse(
-		  parameter->GetBuffer(), parameter->GetLength());
-
-		delete parameter;
+		parameter.reset(
+		  RTC::SCTP::UnrecognizedParameterParameter::Parse(
+		    parameter->GetBuffer(), parameter->GetLength()));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parsedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
@@ -145,14 +142,12 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[serializable][sctp][parameter
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
-		REQUIRE(parsedParameter->HasUnrecognizedParameter() == true);
-		REQUIRE(parsedParameter->GetUnrecognizedParameterLength() == 1);
-		REQUIRE(parsedParameter->GetUnrecognizedParameter()[0] == 0x0A);
+		REQUIRE(parameter->HasUnrecognizedParameter() == true);
+		REQUIRE(parameter->GetUnrecognizedParameterLength() == 1);
+		REQUIRE(parameter->GetUnrecognizedParameter()[0] == 0x0A);
 		// These should be padding.
-		REQUIRE(parsedParameter->GetUnrecognizedParameter()[1] == 0x00);
-		REQUIRE(parsedParameter->GetUnrecognizedParameter()[2] == 0x00);
-		REQUIRE(parsedParameter->GetUnrecognizedParameter()[3] == 0x00);
-
-		delete parsedParameter;
+		REQUIRE(parameter->GetUnrecognizedParameter()[1] == 0x00);
+		REQUIRE(parameter->GetUnrecognizedParameter()[2] == 0x00);
+		REQUIRE(parameter->GetUnrecognizedParameter()[3] == 0x00);
 	}
 }

@@ -50,7 +50,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer, sizeof(buffer)) ==
 		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 
-		auto* const stateCookie = RTC::SCTP::StateCookie::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::StateCookie> stateCookie{ RTC::SCTP::StateCookie::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(stateCookie);
 		REQUIRE(stateCookie->GetBuffer() == buffer);
@@ -118,32 +119,29 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		/* Clone it. */
 
-		auto* const clonedStateCookie =
-		  stateCookie->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		stateCookie.reset(stateCookie->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete stateCookie;
-
-		REQUIRE(clonedStateCookie);
-		REQUIRE(clonedStateCookie->GetBuffer() == sctpCommon::CloneBuffer);
-		REQUIRE(clonedStateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
-		REQUIRE(clonedStateCookie->GetBufferLength() == sizeof(sctpCommon::CloneBuffer));
-		REQUIRE(clonedStateCookie->GetLocalVerificationTag() == 11223344);
-		REQUIRE(clonedStateCookie->GetRemoteVerificationTag() == 55667788);
-		REQUIRE(clonedStateCookie->GetLocalInitialTsn() == 12345678);
-		REQUIRE(clonedStateCookie->GetRemoteInitialTsn() == 87654321);
-		REQUIRE(clonedStateCookie->GetRemoteAdvertisedReceiverWindowCredit() == 66666666);
-		REQUIRE(clonedStateCookie->GetTieTag() == 0xABCDEF0011223344);
+		REQUIRE(stateCookie);
+		REQUIRE(stateCookie->GetBuffer() == sctpCommon::CloneBuffer);
+		REQUIRE(stateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(stateCookie->GetBufferLength() == sizeof(sctpCommon::CloneBuffer));
+		REQUIRE(stateCookie->GetLocalVerificationTag() == 11223344);
+		REQUIRE(stateCookie->GetRemoteVerificationTag() == 55667788);
+		REQUIRE(stateCookie->GetLocalInitialTsn() == 12345678);
+		REQUIRE(stateCookie->GetRemoteInitialTsn() == 87654321);
+		REQUIRE(stateCookie->GetRemoteAdvertisedReceiverWindowCredit() == 66666666);
+		REQUIRE(stateCookie->GetTieTag() == 0xABCDEF0011223344);
 		REQUIRE(
 		  RTC::SCTP::StateCookie::IsMediasoupStateCookie(
-		    clonedStateCookie->GetBuffer(), clonedStateCookie->GetLength()) == true);
+		    stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
-		    clonedStateCookie->GetBuffer(), clonedStateCookie->GetLength()) ==
+		    stateCookie->GetBuffer(), stateCookie->GetLength()) ==
 		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 
-		remoteCapabilities = clonedStateCookie->GetRemoteCapabilities();
+		remoteCapabilities = stateCookie->GetRemoteCapabilities();
 
 		REQUIRE(remoteCapabilities.maxOutboundStreams == 15000);
 		REQUIRE(remoteCapabilities.maxInboundStreams == 2500);
@@ -153,8 +151,6 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(
 		  remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod ==
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
-
-		delete clonedStateCookie;
 	}
 
 	SECTION("StateCookie::Parse() fails")
@@ -362,16 +358,16 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
 		};
 
-		auto* const stateCookie = RTC::SCTP::StateCookie::Factory(
-		  /*buffer*/ sctpCommon::FactoryBuffer,
-		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
-		  /*localVerificationTag*/ 6660666,
-		  /*remoteVerificationTag*/ 9990999,
-		  /*localInitialTsn*/ 1110111,
-		  /*remoteInitialTsn*/ 2220222,
-		  /*remoteAdvertisedReceiverWindowCredit*/ 999909999,
-		  /*tieTag*/ 1111222233334444,
-		  remoteCapabilities);
+		std::unique_ptr<RTC::SCTP::StateCookie> stateCookie{ RTC::SCTP::StateCookie::Factory(
+			/*buffer*/ sctpCommon::FactoryBuffer,
+			/*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+			/*localVerificationTag*/ 6660666,
+			/*remoteVerificationTag*/ 9990999,
+			/*localInitialTsn*/ 1110111,
+			/*remoteInitialTsn*/ 2220222,
+			/*remoteAdvertisedReceiverWindowCredit*/ 999909999,
+			/*tieTag*/ 1111222233334444,
+			remoteCapabilities) };
 
 		// Change values of the original Capabilities to assert that it doesn't
 		// affect the internals of StateCookie.
@@ -409,30 +405,28 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		/* Parse itself and compare. */
 
-		auto* const parsedStateCookie =
-		  RTC::SCTP::StateCookie::Parse(stateCookie->GetBuffer(), stateCookie->GetLength());
+		stateCookie.reset(
+		  RTC::SCTP::StateCookie::Parse(stateCookie->GetBuffer(), stateCookie->GetLength()));
 
-		delete stateCookie;
-
-		REQUIRE(parsedStateCookie);
-		REQUIRE(parsedStateCookie->GetBuffer() == sctpCommon::FactoryBuffer);
-		REQUIRE(parsedStateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
-		REQUIRE(parsedStateCookie->GetBufferLength() == RTC::SCTP::StateCookie::StateCookieLength);
-		REQUIRE(parsedStateCookie->GetLocalVerificationTag() == 6660666);
-		REQUIRE(parsedStateCookie->GetRemoteVerificationTag() == 9990999);
-		REQUIRE(parsedStateCookie->GetLocalInitialTsn() == 1110111);
-		REQUIRE(parsedStateCookie->GetRemoteInitialTsn() == 2220222);
-		REQUIRE(parsedStateCookie->GetRemoteAdvertisedReceiverWindowCredit() == 999909999);
-		REQUIRE(parsedStateCookie->GetTieTag() == 1111222233334444);
+		REQUIRE(stateCookie);
+		REQUIRE(stateCookie->GetBuffer() == sctpCommon::FactoryBuffer);
+		REQUIRE(stateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(stateCookie->GetBufferLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(stateCookie->GetLocalVerificationTag() == 6660666);
+		REQUIRE(stateCookie->GetRemoteVerificationTag() == 9990999);
+		REQUIRE(stateCookie->GetLocalInitialTsn() == 1110111);
+		REQUIRE(stateCookie->GetRemoteInitialTsn() == 2220222);
+		REQUIRE(stateCookie->GetRemoteAdvertisedReceiverWindowCredit() == 999909999);
+		REQUIRE(stateCookie->GetTieTag() == 1111222233334444);
 		REQUIRE(
 		  RTC::SCTP::StateCookie::IsMediasoupStateCookie(
-		    parsedStateCookie->GetBuffer(), parsedStateCookie->GetLength()) == true);
+		    stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
-		    parsedStateCookie->GetBuffer(), parsedStateCookie->GetLength()) ==
+		    stateCookie->GetBuffer(), stateCookie->GetLength()) ==
 		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 
-		const auto retrievedParsedRemoteCapabilities = parsedStateCookie->GetRemoteCapabilities();
+		const auto retrievedParsedRemoteCapabilities = stateCookie->GetRemoteCapabilities();
 
 		REQUIRE(retrievedParsedRemoteCapabilities.maxOutboundStreams == 62000);
 		REQUIRE(retrievedParsedRemoteCapabilities.maxInboundStreams == 55555);
@@ -442,8 +436,6 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(
 		  retrievedParsedRemoteCapabilities.zeroChecksumAlternateErrorDetectionMethod ==
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE);
-
-		delete parsedStateCookie;
 	}
 
 	SECTION("StateCookie::Write() succeeds")
@@ -478,8 +470,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		/* Parse the buffer. */
 
-		auto* const stateCookie =
-		  RTC::SCTP::StateCookie::Parse(buffer, RTC::SCTP::StateCookie::StateCookieLength);
+		const std::unique_ptr<RTC::SCTP::StateCookie> stateCookie{ RTC::SCTP::StateCookie::Parse(
+			buffer, RTC::SCTP::StateCookie::StateCookieLength) };
 
 		REQUIRE(stateCookie);
 		REQUIRE(stateCookie->GetBuffer() == buffer);
@@ -509,8 +501,6 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(
 		  retrievedRemoteCapabilities.zeroChecksumAlternateErrorDetectionMethod ==
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE);
-
-		delete stateCookie;
 	}
 
 	SECTION("StateCookie keeps known Zero Checksum Alternate Error Detection Methods only")
@@ -547,7 +537,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		};
 		// clang-format on
 
-		auto* stateCookie = RTC::SCTP::StateCookie::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::StateCookie> stateCookie{ RTC::SCTP::StateCookie::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(stateCookie);
 
@@ -557,15 +548,13 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		  remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod ==
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK);
 
-		delete stateCookie;
-
 		// Unknown Zero Checksum Alternate Error Detection Method (0x00000002).
 		buffer[40] = 0x00;
 		buffer[41] = 0x00;
 		buffer[42] = 0x00;
 		buffer[43] = 0x02;
 
-		stateCookie = RTC::SCTP::StateCookie::Parse(buffer, sizeof(buffer));
+		stateCookie.reset(RTC::SCTP::StateCookie::Parse(buffer, sizeof(buffer)));
 
 		REQUIRE(stateCookie);
 
@@ -574,8 +563,6 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(
 		  remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod ==
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE);
-
-		delete stateCookie;
 	}
 
 	SECTION("StateCookie::DetermineSctpImplementation() succeeds")
@@ -707,8 +694,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		/* Parse it. */
 
-		auto* const stateCookie =
-		  RTC::SCTP::StateCookie::Parse(buffer, RTC::SCTP::StateCookie::AuthenticatedStateCookieLength);
+		const std::unique_ptr<RTC::SCTP::StateCookie> stateCookie{ RTC::SCTP::StateCookie::Parse(
+			buffer, RTC::SCTP::StateCookie::AuthenticatedStateCookieLength) };
 
 		REQUIRE(stateCookie);
 		REQUIRE(stateCookie->GetLength() == RTC::SCTP::StateCookie::AuthenticatedStateCookieLength);
@@ -753,8 +740,6 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		  RTC::SCTP::StateCookie::VerifyMac(
 		    buffer, RTC::SCTP::StateCookie::AuthenticatedStateCookieLength, macKey, sizeof(macKey)) ==
 		  true);
-
-		delete stateCookie;
 	}
 
 	SECTION("StateCookie::VerifyMac() fails on a non-authenticated (plain) cookie")

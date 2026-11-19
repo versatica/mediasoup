@@ -18,6 +18,7 @@
 #include "mocks/include/MockShared.hpp"
 #include "mocks/include/RTC/SCTP/association/MockAssociationListener.hpp"
 #include "mocks/include/RTC/SCTP/association/MockTransmissionControlBlockContext.hpp"
+#include <array>
 #include <catch2/catch_test_macros.hpp>
 #include <span>
 #include <vector>
@@ -29,7 +30,7 @@ namespace
 	constexpr uint32_t RemoteInitialTsn{ 0 };
 	constexpr int64_t InitialNowUs{ 10000 * 1000 };
 	constexpr int64_t RtoMs{ 250 };
-	const std::vector<uint8_t> ShortPayload{ 1, 2, 3, 4 };
+	constexpr std::array<uint8_t, 4> ShortPayload{ 1, 2, 3, 4 };
 
 	/**
 	 * A RTC::SCTP::StreamResetHandler under test, together with all the (real)
@@ -85,7 +86,7 @@ namespace
 		      std::addressof(this->retransmissionQueue))
 		{
 			this->tcbContext.WillGetCurrentRtoUsOnce(
-			  []()
+			  []() -> int64_t
 			  {
 				  return static_cast<int64_t>(RtoMs * 1000);
 			  });
@@ -627,7 +628,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 			    /*mid*/ 0,
 			    /*fsn*/ 0,
 			    /*ppid*/ ppid,
-			    /*payload*/ ShortPayload,
+			    /*payload*/ std::vector<uint8_t>(ShortPayload.begin(), ShortPayload.end()),
 			    /*isBeginning*/ true,
 			    /*isEnd*/ true,
 			    /*isUnordered*/ false));
@@ -644,7 +645,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 			const auto payload = message->GetPayload();
 
-			REQUIRE(std::vector<uint8_t>(payload.begin(), payload.end()) == ShortPayload);
+			REQUIRE(std::ranges::equal(payload, ShortPayload));
 		};
 
 		// A first message is received and delivered, so stream 1 now expects SSN 1.
@@ -773,7 +774,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 			    /*mid*/ 0,
 			    /*fsn*/ 0,
 			    /*ppid*/ ppid,
-			    /*payload*/ ShortPayload,
+			    /*payload*/ std::vector<uint8_t>(ShortPayload.begin(), ShortPayload.end()),
 			    /*isBeginning*/ true,
 			    /*isEnd*/ true,
 			    /*isUnordered*/ false));
@@ -790,7 +791,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 			const auto payload = message->GetPayload();
 
-			REQUIRE(std::vector<uint8_t>(payload.begin(), payload.end()) == ShortPayload);
+			REQUIRE(std::ranges::equal(payload, ShortPayload));
 		};
 
 		const std::vector<uint16_t> resetStreamIds{ 1, 2 };
@@ -900,7 +901,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 			    /*mid*/ 0,
 			    /*fsn*/ 0,
 			    /*ppid*/ ppid,
-			    /*payload*/ ShortPayload,
+			    /*payload*/ std::vector<uint8_t>(ShortPayload.begin(), ShortPayload.end()),
 			    /*isBeginning*/ true,
 			    /*isEnd*/ true,
 			    /*isUnordered*/ false));
@@ -917,7 +918,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 			const auto payload = message->GetPayload();
 
-			REQUIRE(std::vector<uint8_t>(payload.begin(), payload.end()) == ShortPayload);
+			REQUIRE(std::ranges::equal(payload, ShortPayload));
 		};
 
 		handleReceivedOrderedData(

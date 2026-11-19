@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/NoUserDataErrorCause.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -26,10 +25,12 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 		};
 		// clang-format on
 
-		auto* errorCause = RTC::SCTP::NoUserDataErrorCause::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::NoUserDataErrorCause> errorCause{
+			RTC::SCTP::NoUserDataErrorCause::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
@@ -45,7 +46,7 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 8,
@@ -56,24 +57,19 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 
 		/* Clone it. */
 
-		auto* clonedErrorCause =
-		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		errorCause.reset(errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete errorCause;
-
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ clonedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 8,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
-		REQUIRE(clonedErrorCause->GetTsn() == 987654321);
-
-		delete clonedErrorCause;
+		REQUIRE(errorCause->GetTsn() == 987654321);
 	}
 
 	SECTION("NoUserDataErrorCause::Parse() fails")
@@ -97,8 +93,8 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 		{
 			// Code:9 (NO-USER-DATA), Length: 7
 			0x00, 0x09, 0x00, 0x07,
-			// TSN: 987654321
-			0x3A, 0xDE, 0x68
+			// TSN (last byte missing), 1 byte of padding
+			0x3A, 0xDE, 0x68, 0x00
 		};
 		// clang-format on
 
@@ -112,7 +108,8 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 			0x00, 0x09, 0x00, 0x09,
 			// TSN: 987654321
 			0x3A, 0xDE, 0x68, 0xB1,
-			0xEE
+			// 0xEE, 3 bytes of padding
+			0xEE, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -134,11 +131,11 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 
 	SECTION("NoUserDataErrorCause::Factory() succeeds")
 	{
-		auto* errorCause = RTC::SCTP::NoUserDataErrorCause::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::NoUserDataErrorCause> errorCause{ RTC::SCTP::NoUserDataErrorCause::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
@@ -152,7 +149,7 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 		errorCause->SetTsn(666666);
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
@@ -163,21 +160,17 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause =
-		  RTC::SCTP::NoUserDataErrorCause::Parse(errorCause->GetBuffer(), errorCause->GetLength());
-
-		delete errorCause;
+		errorCause.reset(
+		  RTC::SCTP::NoUserDataErrorCause::Parse(errorCause->GetBuffer(), errorCause->GetLength()));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ parsedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
-		REQUIRE(parsedErrorCause->GetTsn() == 666666);
-
-		delete parsedErrorCause;
+		REQUIRE(errorCause->GetTsn() == 666666);
 	}
 }

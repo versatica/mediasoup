@@ -41,10 +41,10 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 		};
 		// clang-format on
 
-		auto* chunk = RTC::SCTP::SackChunk::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::SackChunk> chunk{ RTC::SCTP::SackChunk::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 36,
@@ -70,8 +70,8 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
     });
 		REQUIRE(
 		  chunk->GetValidatedGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		                                         { 1000, 2999 },
-		});
+		                                         { 1000, 2999 }
+    });
 
 		/* Serialize it. */
 
@@ -80,7 +80,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 36,
@@ -111,14 +111,12 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		chunk.reset(chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete chunk;
-
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ clonedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 36,
@@ -131,23 +129,21 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(clonedChunk->GetCumulativeTsnAck() == 287454020);
-		REQUIRE(clonedChunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
+		REQUIRE(chunk->GetCumulativeTsnAck() == 287454020);
+		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
 		REQUIRE(
-		  clonedChunk->GetDuplicateTsns() == std::vector<uint32_t>{
-		                                       { 287454020, 4278216311, 556942164 }
+		  chunk->GetDuplicateTsns() == std::vector<uint32_t>{
+		                                 { 287454020, 4278216311, 556942164 }
     });
 		REQUIRE(
-		  clonedChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		                                      { 1000, 1999 },
-                                          { 2000, 2999 }
+		  chunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                { 1000, 1999 },
+                                    { 2000, 2999 }
     });
 		REQUIRE(
-		  clonedChunk->GetValidatedGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		                                               { 1000, 2999 }
+		  chunk->GetValidatedGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                         { 1000, 2999 }
     });
-
-		delete clonedChunk;
 	}
 
 	SECTION("SackChunk::Parse() fails")
@@ -230,11 +226,11 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 	SECTION("SackChunk::Factory() succeeds")
 	{
-		auto* chunk =
-		  RTC::SCTP::SackChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::SackChunk> chunk{ RTC::SCTP::SackChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16,
@@ -268,7 +264,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 		chunk->AddDuplicateTsn(40000000);
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 44,
@@ -299,12 +295,10 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = RTC::SCTP::SackChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
-
-		delete chunk;
+		chunk.reset(RTC::SCTP::SackChunk::Parse(chunk->GetBuffer(), chunk->GetLength()));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ parsedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 44,
 		  /*length*/ 44,
@@ -317,32 +311,29 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(parsedChunk->GetCumulativeTsnAck() == 1234);
-		REQUIRE(parsedChunk->GetAdvertisedReceiverWindowCredit() == 5678);
+		REQUIRE(chunk->GetCumulativeTsnAck() == 1234);
+		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 5678);
 		REQUIRE(
-		  parsedChunk->GetDuplicateTsns() ==
-		  std::vector<uint32_t>{ 10000000, 20000000, 30000000, 40000000 });
+		  chunk->GetDuplicateTsns() == std::vector<uint32_t>{ 10000000, 20000000, 30000000, 40000000 });
 		REQUIRE(
-		  parsedChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		                                      { 10000, 19999 },
-                                          { 20000, 20999 },
-                                          { 60000, 60999 }
+		  chunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                { 10000, 19999 },
+                                    { 20000, 20999 },
+                                    { 60000, 60999 }
     });
 		REQUIRE(
-		  parsedChunk->GetValidatedGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		                                               { 10000, 20999 },
-                                                   { 60000, 60999 }
+		  chunk->GetValidatedGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                         { 10000, 20999 },
+                                             { 60000, 60999 }
     });
-
-		delete parsedChunk;
 	}
 
 	SECTION("SackChunk::ComputeLengthFor() succeeds")
 	{
 		REQUIRE(RTC::SCTP::SackChunk::ComputeLengthFor(0, 0) == 16);
 
-		auto* const chunk =
-		  RTC::SCTP::SackChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::SackChunk> chunk{ RTC::SCTP::SackChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		chunk->AddAckBlock(10000, 19999);
 		chunk->AddAckBlock(20000, 20999);
@@ -352,7 +343,5 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(RTC::SCTP::SackChunk::ComputeLengthFor(3, 2) == 36);
 		REQUIRE(chunk->GetLength() == RTC::SCTP::SackChunk::ComputeLengthFor(3, 2));
-
-		delete chunk;
 	}
 }

@@ -16,7 +16,8 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 	public:
 		RTC::SCTP::ReassemblyStreamsInterface::OnAssembledMessage MakeCallback()
 		{
-			return [this](std::span<const RTC::SCTP::Types::UnwrappedTsn> tsns, RTC::SCTP::Message message)
+			return
+			  [this](std::span<const RTC::SCTP::Types::UnwrappedTsn> tsns, RTC::SCTP::Message message) -> void
 			{
 				this->callCount++;
 
@@ -75,7 +76,7 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 
 	RTC::SCTP::Types::UnwrappedTsn::Unwrapper tsn;
 
-	const auto getTsn = [&tsn](uint32_t value)
+	const auto getTsn = [&tsn](uint32_t value) -> RTC::SCTP::Types::UnwrappedTsn
 	{
 		return tsn.Unwrap(value);
 	};
@@ -431,6 +432,7 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		auto& lastMessages = tester.GetLastMessages();
 
 		REQUIRE(lastMessages.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(std::move(lastMessages[0]).ReleasePayload() == std::vector<uint8_t>{ 0x02, 0x03, 0x04 });
 	}
 
@@ -460,6 +462,7 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		auto& lastMessages1 = tester.GetLastMessages();
 
 		REQUIRE(lastMessages1.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(std::move(lastMessages1[0]).ReleasePayload() == std::vector<uint8_t>{ 0x01 });
 
 		tester.Reset();
@@ -474,6 +477,7 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		auto& lastMessages2 = tester.GetLastMessages();
 
 		REQUIRE(lastMessages2.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(std::move(lastMessages2[0]).ReleasePayload() == std::vector<uint8_t>{ 0x03 });
 
 		tester.Reset();
@@ -488,6 +492,7 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		auto& lastMessages3 = tester.GetLastMessages();
 
 		REQUIRE(lastMessages3.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(std::move(lastMessages3[0]).ReleasePayload() == std::vector<uint8_t>{ 0x02 });
 
 		tester.Reset();
@@ -502,6 +507,7 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		auto& lastMessages4 = tester.GetLastMessages();
 
 		REQUIRE(lastMessages4.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(std::move(lastMessages4[0]).ReleasePayload() == std::vector<uint8_t>{ 0x04 });
 	}
 
@@ -525,6 +531,7 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		auto& lastMessages1 = tester.GetLastMessages();
 
 		REQUIRE(lastMessages1.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(std::move(lastMessages1[0]).ReleasePayload() == std::vector<uint8_t>{ 0x01 });
 
 		tester.Reset();
@@ -545,8 +552,11 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		auto& lastMessages2 = tester.GetLastMessages();
 
 		REQUIRE(lastMessages2.size() == 2);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(std::move(lastMessages2[0]).ReleasePayload() == std::vector<uint8_t>{ 0x02 });
 		REQUIRE(std::move(lastMessages2[1]).ReleasePayload() == std::vector<uint8_t>{ 0x03 });
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 		tester.Reset();
 
@@ -560,6 +570,7 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		auto& lastMessages3 = tester.GetLastMessages();
 
 		REQUIRE(lastMessages3.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(std::move(lastMessages3[0]).ReleasePayload() == std::vector<uint8_t>{ 0x04 });
 	}
 }

@@ -25,10 +25,11 @@ SCENARIO("Unknown Parameter", "[serializable][sctp][parameter]")
 		};
 		// clang-format on
 
-		auto* parameter = RTC::SCTP::UnknownParameter::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::UnknownParameter> parameter{ RTC::SCTP::UnknownParameter::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -57,7 +58,7 @@ SCENARIO("Unknown Parameter", "[serializable][sctp][parameter]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
@@ -80,15 +81,12 @@ SCENARIO("Unknown Parameter", "[serializable][sctp][parameter]")
 
 		/* Clone it. */
 
-		auto* clonedParameter =
-		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		parameter.reset(parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete parameter;
-
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ clonedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
@@ -97,19 +95,17 @@ SCENARIO("Unknown Parameter", "[serializable][sctp][parameter]")
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
 
-		REQUIRE(clonedParameter->HasUnknownValue() == true);
-		REQUIRE(clonedParameter->GetUnknownValueLength() == 7);
-		REQUIRE(clonedParameter->GetUnknownValue()[0] == 0x01);
-		REQUIRE(clonedParameter->GetUnknownValue()[1] == 0x23);
-		REQUIRE(clonedParameter->GetUnknownValue()[2] == 0x45);
-		REQUIRE(clonedParameter->GetUnknownValue()[3] == 0x67);
-		REQUIRE(clonedParameter->GetUnknownValue()[4] == 0x89);
-		REQUIRE(clonedParameter->GetUnknownValue()[5] == 0xAB);
-		REQUIRE(clonedParameter->GetUnknownValue()[6] == 0xCD);
+		REQUIRE(parameter->HasUnknownValue() == true);
+		REQUIRE(parameter->GetUnknownValueLength() == 7);
+		REQUIRE(parameter->GetUnknownValue()[0] == 0x01);
+		REQUIRE(parameter->GetUnknownValue()[1] == 0x23);
+		REQUIRE(parameter->GetUnknownValue()[2] == 0x45);
+		REQUIRE(parameter->GetUnknownValue()[3] == 0x67);
+		REQUIRE(parameter->GetUnknownValue()[4] == 0x89);
+		REQUIRE(parameter->GetUnknownValue()[5] == 0xAB);
+		REQUIRE(parameter->GetUnknownValue()[6] == 0xCD);
 		// This should be padding.
-		REQUIRE(clonedParameter->GetUnknownValue()[7] == 0x00);
-
-		delete clonedParameter;
+		REQUIRE(parameter->GetUnknownValue()[7] == 0x00);
 	}
 
 	SECTION("UnknownParameter::Parse() fails")

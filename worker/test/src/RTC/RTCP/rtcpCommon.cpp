@@ -1,5 +1,5 @@
 #include "test/include/RTC/RTCP/rtcpCommon.hpp" // in worker/test/include/
-#include <cstring>                              // std::memset()
+#include "test/include/testHelpers.hpp"
 
 namespace rtcpCommon
 {
@@ -15,15 +15,10 @@ namespace rtcpCommon
 
 	void ResetBuffers()
 	{
-		std::memset(FactoryBuffer, 0xAA, sizeof(FactoryBuffer));
-		std::memset(SerializeBuffer, 0xBB, sizeof(SerializeBuffer));
-		std::memset(CloneBuffer, 0xCC, sizeof(CloneBuffer));
-		std::memset(DataBuffer, 0xDD, sizeof(DataBuffer));
-		std::memset(ThrowBuffer, 0xEE, sizeof(ThrowBuffer));
-
-		for (size_t i = 0; i < 256; ++i)
-		{
-			DataBuffer[i] = static_cast<uint8_t>(i);
-		}
+		helpers::FillBuffer(FactoryBuffer, sizeof(FactoryBuffer), 0xAA);
+		helpers::FillBuffer(SerializeBuffer, sizeof(SerializeBuffer), 0xBB);
+		helpers::FillBuffer(CloneBuffer, sizeof(CloneBuffer), 0xCC);
+		helpers::FillBuffer(DataBuffer, sizeof(DataBuffer), 0x00);
+		helpers::FillBuffer(ThrowBuffer, sizeof(ThrowBuffer), 0xEE);
 	}
 } // namespace rtcpCommon

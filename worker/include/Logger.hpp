@@ -164,7 +164,7 @@ public:
 #define _MS_FILE (std::strchr(__FILE__, '/') ? std::strchr(__FILE__, '/') + 1 : __FILE__)
 #define _MS_LOG_ARG _MS_FILE, __LINE__, MS_CLASS, __FUNCTION__
 #else
-// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define _MS_LOG_STR "%s::%s()"
 #define _MS_LOG_STR_DESC _MS_LOG_STR " | "
 #define _MS_LOG_ARG MS_CLASS, __FUNCTION__

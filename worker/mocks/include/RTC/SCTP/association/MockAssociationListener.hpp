@@ -36,6 +36,8 @@ namespace mocks
 
 				void OnAssociationConnected() override
 				{
+					++this->onAssociationConnectedCalls;
+
 					this->connecting = false;
 					this->connected  = true;
 				}
@@ -53,6 +55,8 @@ namespace mocks
 				void OnAssociationClosed(
 				  ::RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage) override
 				{
+					++this->onAssociationClosedCalls;
+
 					this->connecting         = false;
 					this->connected          = false;
 					this->closed             = true;
@@ -163,6 +167,11 @@ namespace mocks
 					return this->connected;
 				}
 
+				size_t CountOnAssociationConnectedCalls() const
+				{
+					return this->onAssociationConnectedCalls;
+				}
+
 				bool HasRestarted() const
 				{
 					return this->restarted;
@@ -186,6 +195,11 @@ namespace mocks
 				bool IsClosed() const
 				{
 					return this->closed;
+				}
+
+				size_t CountOnAssociationClosedCalls() const
+				{
+					return this->onAssociationClosedCalls;
 				}
 
 				::RTC::SCTP::Types::ErrorKind GetClosedErrorKind() const
@@ -345,11 +359,13 @@ namespace mocks
 				// Observable state for tests.
 				size_t onAssociationConnectingCalls{ 0 };
 				bool connecting{ false };
+				size_t onAssociationConnectedCalls{ 0 };
 				bool connected{ false };
 				bool restarted{ false };
 				bool failed{ false };
 				::RTC::SCTP::Types::ErrorKind failedErrorKind;
 				std::string failedErrorMessage;
+				size_t onAssociationClosedCalls{ 0 };
 				bool closed{ false };
 				::RTC::SCTP::Types::ErrorKind closedErrorKind;
 				std::string closedErrorMessage;

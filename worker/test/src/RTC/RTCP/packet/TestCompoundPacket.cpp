@@ -20,6 +20,7 @@
 #include "RTC/RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
 #include "RTC/RTCP/packet/extendedReports/RrtExtendedReport.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
+#include "test/include/testHelpers.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 #include <vector>
@@ -1194,12 +1195,18 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		packet1->BuildExtendedReportInPlace<RTC::RTCP::RrtExtendedReport>()->Consolidate();
 
 		REQUIRE(packet1->GetLength() == 20);
+
+		const std::vector<uint8_t> originalBytes(
+		  rtcpCommon::FactoryBuffer, rtcpCommon::FactoryBuffer + packet1->GetLength());
+
 		REQUIRE_THROWS_AS(compoundPacket->AddPacket(packet1.get()), MediaSoupTypeError);
 		REQUIRE(compoundPacket->GetLength() == 0);
 		REQUIRE(compoundPacket->GetPacketsCount() == 0);
 		// Nothing was written into the compound packet buffer.
-		REQUIRE(rtcpCommon::FactoryBuffer[0] == 0xAA);
-		REQUIRE(rtcpCommon::FactoryBuffer[19] == 0xAA);
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    rtcpCommon::FactoryBuffer, originalBytes.size(), originalBytes.data(), originalBytes.size()) ==
+		  true);
 
 		// XR packet, length: 8 bytes, which fits in the compound packet buffer but
 		// has an Extended Report block being built in place within it (so it needs

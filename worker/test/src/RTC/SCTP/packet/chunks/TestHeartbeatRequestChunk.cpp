@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
@@ -38,10 +37,11 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		};
 		// clang-format on
 
-		auto* chunk = RTC::SCTP::HeartbeatRequestChunk::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::HeartbeatRequestChunk> chunk{ RTC::SCTP::HeartbeatRequestChunk::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 24,
@@ -55,7 +55,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*errorCausesCount*/ 0);
 
 		const auto* parameter1 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -79,7 +79,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
 		const auto* parameter2 =
-		  reinterpret_cast<const RTC::SCTP::UnknownParameter*>(chunk->GetParameterAt(1));
+		  static_cast<const RTC::SCTP::UnknownParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -106,7 +106,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 24,
@@ -119,7 +119,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		parameter1 = reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
+		parameter1 = static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -142,7 +142,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		// This should be padding.
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
-		parameter2 = reinterpret_cast<const RTC::SCTP::UnknownParameter*>(chunk->GetParameterAt(1));
+		parameter2 = static_cast<const RTC::SCTP::UnknownParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -164,14 +164,12 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		chunk.reset(chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete chunk;
-
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ clonedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 24,
@@ -184,8 +182,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		parameter1 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(clonedChunk->GetParameterAt(0));
+		parameter1 = static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -208,7 +205,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		// This should be padding.
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
-		parameter2 = reinterpret_cast<const RTC::SCTP::UnknownParameter*>(clonedChunk->GetParameterAt(1));
+		parameter2 = static_cast<const RTC::SCTP::UnknownParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -227,8 +224,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		// These should be padding.
 		REQUIRE(parameter2->GetUnknownValue()[2] == 0x00);
 		REQUIRE(parameter2->GetUnknownValue()[3] == 0x00);
-
-		delete clonedChunk;
 	}
 
 	SECTION("HeartbeatRequestChunk::Parse() with incorrect but valid Chunk Length field succeeds")
@@ -264,10 +259,11 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		};
 		// clang-format on
 
-		auto* chunk = RTC::SCTP::HeartbeatRequestChunk::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::HeartbeatRequestChunk> chunk{ RTC::SCTP::HeartbeatRequestChunk::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 24,
@@ -281,7 +277,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*errorCausesCount*/ 0);
 
 		const auto* parameter1 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -305,7 +301,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
 		const auto* parameter2 =
-		  reinterpret_cast<const RTC::SCTP::UnknownParameter*>(chunk->GetParameterAt(1));
+		  static_cast<const RTC::SCTP::UnknownParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -327,14 +323,12 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		chunk.reset(chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete chunk;
-
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ clonedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 24,
@@ -347,8 +341,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		parameter1 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(clonedChunk->GetParameterAt(0));
+		parameter1 = static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -371,7 +364,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		// This should be padding.
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
-		parameter2 = reinterpret_cast<const RTC::SCTP::UnknownParameter*>(clonedChunk->GetParameterAt(1));
+		parameter2 = static_cast<const RTC::SCTP::UnknownParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -390,17 +383,15 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		// These should be padding.
 		REQUIRE(parameter2->GetUnknownValue()[2] == 0x00);
 		REQUIRE(parameter2->GetUnknownValue()[3] == 0x00);
-
-		delete clonedChunk;
 	}
 
 	SECTION("HeartbeatRequestChunk::Factory() succeeds")
 	{
-		auto* chunk = RTC::SCTP::HeartbeatRequestChunk::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::HeartbeatRequestChunk> chunk{ RTC::SCTP::HeartbeatRequestChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -430,7 +421,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		parameter2->Consolidate();
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
@@ -444,7 +435,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*errorCausesCount*/ 0);
 
 		const auto* addedParameter1 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ addedParameter1,
@@ -467,7 +458,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		REQUIRE(addedParameter1->GetInfo()[6] == 0x00);
 
 		const auto* addedParameter2 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(1));
+		  static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ addedParameter2,
@@ -488,13 +479,10 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk =
-		  RTC::SCTP::HeartbeatRequestChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
-
-		delete chunk;
+		chunk.reset(RTC::SCTP::HeartbeatRequestChunk::Parse(chunk->GetBuffer(), chunk->GetLength()));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ parsedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
 		  /*length*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
@@ -508,7 +496,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*errorCausesCount*/ 0);
 
 		const auto* parsedParameter1 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(parsedChunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter1,
@@ -531,7 +519,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedParameter1->GetInfo()[6] == 0x00);
 
 		const auto* parsedParameter2 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(parsedChunk->GetParameterAt(1));
+		  static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter2,
@@ -549,8 +537,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		// These should be padding.
 		REQUIRE(parsedParameter2->GetInfo()[2] == 0x00);
 		REQUIRE(parsedParameter2->GetInfo()[3] == 0x00);
-
-		delete parsedChunk;
 	}
 
 	SECTION("HeartbeatRequestChunk::Parse() with Chunk Length field close to 65535 succeeds")
@@ -579,7 +565,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetParametersCount() == 1);
 
 		const auto* parameter1 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		REQUIRE(parameter1->GetType() == RTC::SCTP::Parameter::ParameterType::HEARTBEAT_INFO);
 		REQUIRE(parameter1->GetLength() == 65532);

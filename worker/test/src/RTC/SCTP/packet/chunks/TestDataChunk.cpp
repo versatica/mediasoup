@@ -5,7 +5,6 @@
 #include "RTC/SCTP/packet/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/AnyDataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
-#include "RTC/SCTP/packet/parameters/IPv4AddressParameter.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
@@ -39,10 +38,10 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		};
 		// clang-format on
 
-		auto* chunk = RTC::SCTP::DataChunk::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::DataChunk> chunk{ RTC::SCTP::DataChunk::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 20,
@@ -91,7 +90,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 20,
@@ -132,14 +131,12 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		chunk.reset(chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete chunk;
-
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ clonedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 20,
@@ -152,23 +149,23 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(clonedChunk->GetI() == true);
-		REQUIRE(clonedChunk->GetU() == false);
-		REQUIRE(clonedChunk->GetB() == true);
-		REQUIRE(clonedChunk->GetE() == true);
-		REQUIRE(clonedChunk->GetTsn() == 0x11223344);
-		REQUIRE(clonedChunk->GetStreamId() == 0xFF00);
-		REQUIRE(clonedChunk->GetStreamSequenceNumber() == 0x6677);
-		REQUIRE(clonedChunk->GetPayloadProtocolId() == 0x12341234);
-		REQUIRE(clonedChunk->HasUserDataPayload() == true);
-		REQUIRE(clonedChunk->GetUserDataPayloadLength() == 3);
-		REQUIRE(clonedChunk->GetUserDataPayload()[0] == 0xAB);
-		REQUIRE(clonedChunk->GetUserDataPayload()[1] == 0xCD);
-		REQUIRE(clonedChunk->GetUserDataPayload()[2] == 0xEF);
+		REQUIRE(chunk->GetI() == true);
+		REQUIRE(chunk->GetU() == false);
+		REQUIRE(chunk->GetB() == true);
+		REQUIRE(chunk->GetE() == true);
+		REQUIRE(chunk->GetTsn() == 0x11223344);
+		REQUIRE(chunk->GetStreamId() == 0xFF00);
+		REQUIRE(chunk->GetStreamSequenceNumber() == 0x6677);
+		REQUIRE(chunk->GetPayloadProtocolId() == 0x12341234);
+		REQUIRE(chunk->HasUserDataPayload() == true);
+		REQUIRE(chunk->GetUserDataPayloadLength() == 3);
+		REQUIRE(chunk->GetUserDataPayload()[0] == 0xAB);
+		REQUIRE(chunk->GetUserDataPayload()[1] == 0xCD);
+		REQUIRE(chunk->GetUserDataPayload()[2] == 0xEF);
 		// This should be padding.
-		REQUIRE(clonedChunk->GetUserDataPayload()[3] == 0x00);
+		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		userData = clonedChunk->MakeUserData();
+		userData = chunk->MakeUserData();
 
 		REQUIRE(userData.GetStreamId() == 0xFF00);
 		REQUIRE(userData.GetStreamSequenceNumber() == 0x6677);
@@ -177,17 +174,15 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(userData.GetPayloadProtocolId() == 0x12341234);
 		// NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
-
-		delete clonedChunk;
 	}
 
 	SECTION("DataChunk::Factory() succeeds")
 	{
-		auto* chunk =
-		  RTC::SCTP::DataChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::DataChunk> chunk{ RTC::SCTP::DataChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16,
@@ -249,7 +244,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		chunk->SetUserDataPayload(sctpCommon::DataBuffer, 3);
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16 + 3 + 1,
@@ -291,12 +286,10 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = RTC::SCTP::DataChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
-
-		delete chunk;
+		chunk.reset(RTC::SCTP::DataChunk::Parse(chunk->GetBuffer(), chunk->GetLength()));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ parsedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 16 + 3 + 1,
 		  /*length*/ 16 + 3 + 1,
@@ -309,23 +302,23 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(parsedChunk->GetI() == true);
-		REQUIRE(parsedChunk->GetU() == false);
-		REQUIRE(parsedChunk->GetB() == false);
-		REQUIRE(parsedChunk->GetE() == true);
-		REQUIRE(parsedChunk->GetTsn() == 12345678);
-		REQUIRE(parsedChunk->GetStreamId() == 9988);
-		REQUIRE(parsedChunk->GetStreamSequenceNumber() == 2211);
-		REQUIRE(parsedChunk->GetPayloadProtocolId() == 987654321);
-		REQUIRE(parsedChunk->HasUserDataPayload() == true);
-		REQUIRE(parsedChunk->GetUserDataPayloadLength() == 3);
-		REQUIRE(parsedChunk->GetUserDataPayload()[0] == 0x00);
-		REQUIRE(parsedChunk->GetUserDataPayload()[1] == 0x01);
-		REQUIRE(parsedChunk->GetUserDataPayload()[2] == 0x02);
+		REQUIRE(chunk->GetI() == true);
+		REQUIRE(chunk->GetU() == false);
+		REQUIRE(chunk->GetB() == false);
+		REQUIRE(chunk->GetE() == true);
+		REQUIRE(chunk->GetTsn() == 12345678);
+		REQUIRE(chunk->GetStreamId() == 9988);
+		REQUIRE(chunk->GetStreamSequenceNumber() == 2211);
+		REQUIRE(chunk->GetPayloadProtocolId() == 987654321);
+		REQUIRE(chunk->HasUserDataPayload() == true);
+		REQUIRE(chunk->GetUserDataPayloadLength() == 3);
+		REQUIRE(chunk->GetUserDataPayload()[0] == 0x00);
+		REQUIRE(chunk->GetUserDataPayload()[1] == 0x01);
+		REQUIRE(chunk->GetUserDataPayload()[2] == 0x02);
 		// Last byte must be a zero byte padding.
-		REQUIRE(parsedChunk->GetUserDataPayload()[3] == 0x00);
+		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		userData = parsedChunk->MakeUserData();
+		userData = chunk->MakeUserData();
 
 		REQUIRE(userData.GetStreamId() == 9988);
 		REQUIRE(userData.GetStreamSequenceNumber() == 2211);
@@ -334,17 +327,15 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(userData.GetPayloadProtocolId() == 987654321);
 		// NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
-
-		delete parsedChunk;
 	}
 
 	SECTION("DataChunk::SetUserDataPayload() throws if userDataLength is too big")
 	{
-		auto* chunk =
-		  RTC::SCTP::DataChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::DataChunk> chunk{ RTC::SCTP::DataChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16,
@@ -360,7 +351,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE_THROWS_AS(chunk->SetUserDataPayload(sctpCommon::DataBuffer, 65535), MediaSoupError);
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16,
@@ -377,7 +368,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE_THROWS_AS(chunk->SetUserDataPayload(sctpCommon::DataBuffer, 65539), MediaSoupError);
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16,
@@ -389,14 +380,12 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		  /*parametersCount*/ 0,
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
-
-		delete chunk;
 	}
 
 	SECTION("DataChunk::SetUserData() succeeds")
 	{
-		auto* chunk =
-		  RTC::SCTP::DataChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::DataChunk> chunk{ RTC::SCTP::DataChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		RTC::SCTP::UserData userData(
 		  /*streamId*/ 123,
@@ -415,10 +404,14 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(userData.GetFragmentSequenceNumber() == 0);
 		REQUIRE(userData.GetPayloadProtocolId() == 56789);
 		REQUIRE(userData.GetPayloadLength() == 4);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(userData.GetPayload()[0] == 1);
 		REQUIRE(userData.GetPayload()[1] == 2);
 		REQUIRE(userData.GetPayload()[2] == 3);
 		REQUIRE(userData.GetPayload()[3] == 4);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+
 		REQUIRE(userData.IsBeginning() == true);
 		REQUIRE(userData.IsEnd() == true);
 		REQUIRE(userData.IsUnordered() == true);
@@ -426,7 +419,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		chunk->SetUserData(std::move(userData));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16 + 4,
@@ -449,25 +442,27 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(gotUserData.GetFragmentSequenceNumber() == 0);
 		REQUIRE(gotUserData.GetPayloadProtocolId() == 56789);
 		REQUIRE(gotUserData.GetPayloadLength() == 4);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(gotUserData.GetPayload()[0] == 1);
 		REQUIRE(gotUserData.GetPayload()[1] == 2);
 		REQUIRE(gotUserData.GetPayload()[2] == 3);
 		REQUIRE(gotUserData.GetPayload()[3] == 4);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+
 		REQUIRE(gotUserData.IsBeginning() == true);
 		REQUIRE(gotUserData.IsEnd() == true);
 		REQUIRE(gotUserData.IsUnordered() == true);
 		// NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(std::move(gotUserData).ReleasePayload() == expectedPayload);
-
-		delete chunk;
 	}
 
 	SECTION("DataChunk::ComputeLengthFor() succeeds")
 	{
 		REQUIRE(RTC::SCTP::DataChunk::ComputeLengthFor(0) == 16);
 
-		auto* const chunk =
-		  RTC::SCTP::DataChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::DataChunk> chunk{ RTC::SCTP::DataChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		// A payload whose length is not a multiple of 4, so the chunk needs padding.
 		chunk->SetUserDataPayload(sctpCommon::DataBuffer, 5);
@@ -477,7 +472,5 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(
 		  RTC::SCTP::AnyDataChunk::ComputeLengthFor(/*useMessageInterleaving*/ false, 5) ==
 		  RTC::SCTP::DataChunk::ComputeLengthFor(5));
-
-		delete chunk;
 	}
 }

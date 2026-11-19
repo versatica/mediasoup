@@ -247,11 +247,7 @@ SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 		};
 		// clang-format on
 
-		const std::unique_ptr<RTC::RTP::Codecs::VP8::PayloadDescriptor> payloadDescriptor{
-			RTC::RTP::Codecs::VP8::Parse(buffer, sizeof(buffer))
-		};
-
-		REQUIRE(!payloadDescriptor);
+		REQUIRE(!RTC::RTP::Codecs::VP8::Parse(buffer, sizeof(buffer)));
 	}
 
 	SECTION("parse payload descriptor, X flag is not set, no keyframe")

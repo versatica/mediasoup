@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
@@ -50,10 +49,10 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		};
 		// clang-format on
 
-		auto* chunk = RTC::SCTP::InitChunk::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::InitChunk> chunk{ RTC::SCTP::InitChunk::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 56,
@@ -73,7 +72,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetInitialTsn() == 2882339074);
 
 		const auto* parameter1 =
-		  reinterpret_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -90,7 +89,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter1->GetIPv4Address()[3] == 0x05);
 
 		const auto* parameter2 =
-		  reinterpret_cast<const RTC::SCTP::IPv6AddressParameter*>(chunk->GetParameterAt(1));
+		  static_cast<const RTC::SCTP::IPv6AddressParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -108,7 +107,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter2->GetIPv6Address()[15] == 0x34);
 
 		const auto* parameter3 =
-		  reinterpret_cast<const RTC::SCTP::CookiePreservativeParameter*>(chunk->GetParameterAt(2));
+		  static_cast<const RTC::SCTP::CookiePreservativeParameter*>(chunk->GetParameterAt(2));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter3,
@@ -128,7 +127,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 56,
@@ -147,7 +146,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 22136);
 		REQUIRE(chunk->GetInitialTsn() == 2882339074);
 
-		parameter1 = reinterpret_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
+		parameter1 = static_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -163,7 +162,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter1->GetIPv4Address()[2] == 0x04);
 		REQUIRE(parameter1->GetIPv4Address()[3] == 0x05);
 
-		parameter2 = reinterpret_cast<const RTC::SCTP::IPv6AddressParameter*>(chunk->GetParameterAt(1));
+		parameter2 = static_cast<const RTC::SCTP::IPv6AddressParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -180,8 +179,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter2->GetIPv6Address()[3] == 0xB8);
 		REQUIRE(parameter2->GetIPv6Address()[15] == 0x34);
 
-		parameter3 =
-		  reinterpret_cast<const RTC::SCTP::CookiePreservativeParameter*>(chunk->GetParameterAt(2));
+		parameter3 = static_cast<const RTC::SCTP::CookiePreservativeParameter*>(chunk->GetParameterAt(2));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter3,
@@ -196,14 +194,12 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		chunk.reset(chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete chunk;
-
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ clonedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 56,
@@ -216,14 +212,13 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(clonedChunk->GetInitiateTag() == 287454020);
-		REQUIRE(clonedChunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
-		REQUIRE(clonedChunk->GetNumberOfOutboundStreams() == 4660);
-		REQUIRE(clonedChunk->GetNumberOfInboundStreams() == 22136);
-		REQUIRE(clonedChunk->GetInitialTsn() == 2882339074);
+		REQUIRE(chunk->GetInitiateTag() == 287454020);
+		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
+		REQUIRE(chunk->GetNumberOfOutboundStreams() == 4660);
+		REQUIRE(chunk->GetNumberOfInboundStreams() == 22136);
+		REQUIRE(chunk->GetInitialTsn() == 2882339074);
 
-		parameter1 =
-		  reinterpret_cast<const RTC::SCTP::IPv4AddressParameter*>(clonedChunk->GetParameterAt(0));
+		parameter1 = static_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -239,8 +234,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter1->GetIPv4Address()[2] == 0x04);
 		REQUIRE(parameter1->GetIPv4Address()[3] == 0x05);
 
-		parameter2 =
-		  reinterpret_cast<const RTC::SCTP::IPv6AddressParameter*>(clonedChunk->GetParameterAt(1));
+		parameter2 = static_cast<const RTC::SCTP::IPv6AddressParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -257,8 +251,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter2->GetIPv6Address()[3] == 0xB8);
 		REQUIRE(parameter2->GetIPv6Address()[15] == 0x34);
 
-		parameter3 =
-		  reinterpret_cast<const RTC::SCTP::CookiePreservativeParameter*>(clonedChunk->GetParameterAt(2));
+		parameter3 = static_cast<const RTC::SCTP::CookiePreservativeParameter*>(chunk->GetParameterAt(2));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter3,
@@ -270,17 +263,15 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter3->GetLifeSpanIncrement() == 556942164);
-
-		delete clonedChunk;
 	}
 
 	SECTION("InitChunk::Factory() succeeds")
 	{
-		auto* chunk =
-		  RTC::SCTP::InitChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::InitChunk> chunk{ RTC::SCTP::InitChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 20,
@@ -330,7 +321,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		parameter3->Consolidate();
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 56,
@@ -350,7 +341,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetInitialTsn() == 3333333330);
 
 		const auto* addedParameter1 =
-		  reinterpret_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ addedParameter1,
@@ -367,7 +358,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(addedParameter1->GetIPv4Address()[3] == 0x2C);
 
 		const auto* addedParameter2 =
-		  reinterpret_cast<const RTC::SCTP::IPv6AddressParameter*>(chunk->GetParameterAt(1));
+		  static_cast<const RTC::SCTP::IPv6AddressParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ addedParameter2,
@@ -385,7 +376,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(addedParameter2->GetIPv6Address()[15] == 0xB5);
 
 		const auto* addedParameter3 =
-		  reinterpret_cast<const RTC::SCTP::CookiePreservativeParameter*>(chunk->GetParameterAt(2));
+		  static_cast<const RTC::SCTP::CookiePreservativeParameter*>(chunk->GetParameterAt(2));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ addedParameter3,
@@ -400,12 +391,10 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = RTC::SCTP::InitChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
-
-		delete chunk;
+		chunk.reset(RTC::SCTP::InitChunk::Parse(chunk->GetBuffer(), chunk->GetLength()));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ parsedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 56,
 		  /*length*/ 56,
@@ -418,14 +407,14 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(parsedChunk->GetInitiateTag() == 1111111110);
-		REQUIRE(parsedChunk->GetAdvertisedReceiverWindowCredit() == 2222222220);
-		REQUIRE(parsedChunk->GetNumberOfOutboundStreams() == 1234);
-		REQUIRE(parsedChunk->GetNumberOfInboundStreams() == 5678);
-		REQUIRE(parsedChunk->GetInitialTsn() == 3333333330);
+		REQUIRE(chunk->GetInitiateTag() == 1111111110);
+		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 2222222220);
+		REQUIRE(chunk->GetNumberOfOutboundStreams() == 1234);
+		REQUIRE(chunk->GetNumberOfInboundStreams() == 5678);
+		REQUIRE(chunk->GetInitialTsn() == 3333333330);
 
 		const auto* parsedParameter1 =
-		  reinterpret_cast<const RTC::SCTP::IPv4AddressParameter*>(parsedChunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter1,
@@ -442,7 +431,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedParameter1->GetIPv4Address()[3] == 0x2C);
 
 		const auto* parsedParameter2 =
-		  reinterpret_cast<const RTC::SCTP::IPv6AddressParameter*>(parsedChunk->GetParameterAt(1));
+		  static_cast<const RTC::SCTP::IPv6AddressParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter2,
@@ -460,7 +449,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedParameter2->GetIPv6Address()[15] == 0xB5);
 
 		const auto* parsedParameter3 =
-		  reinterpret_cast<const RTC::SCTP::CookiePreservativeParameter*>(parsedChunk->GetParameterAt(2));
+		  static_cast<const RTC::SCTP::CookiePreservativeParameter*>(chunk->GetParameterAt(2));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter3,
@@ -472,14 +461,12 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parsedParameter3->GetLifeSpanIncrement() == 876543210);
-
-		delete parsedChunk;
 	}
 
 	SECTION("InitChunk::Factory() using AddParameter() succeeds")
 	{
-		auto* chunk =
-		  RTC::SCTP::InitChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::InitChunk> chunk{ RTC::SCTP::InitChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		chunk->SetInitiateTag(1);
 		chunk->SetAdvertisedReceiverWindowCredit(2);
@@ -487,16 +474,15 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		chunk->SetNumberOfInboundStreams(4);
 		chunk->SetInitialTsn(5);
 
-		auto* parameter1 = RTC::SCTP::CookiePreservativeParameter::Factory(
-		  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::CookiePreservativeParameter> parameter1{
+			RTC::SCTP::CookiePreservativeParameter::Factory(
+			  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer) - 1000)
+		};
 
 		// 8 bytes parameter.
 		parameter1->SetLifeSpanIncrement(123456);
 
-		chunk->AddParameter(parameter1);
-
-		// Once added, we can delete the parameter.
-		delete parameter1;
+		chunk->AddParameter(parameter1.get());
 
 		// Chunk length must be:
 		// - Chunk header: 20
@@ -504,7 +490,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		// - Total: 28
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 28,
@@ -518,7 +504,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		  /*errorCausesCount*/ 0);
 
 		const auto* obtainedParameter1 =
-		  reinterpret_cast<const RTC::SCTP::CookiePreservativeParameter*>(chunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::CookiePreservativeParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ obtainedParameter1,
@@ -532,18 +518,17 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(obtainedParameter1->GetLifeSpanIncrement() == 123456);
 
 		// 4 bytes parameter.
-		auto* parameter2 = RTC::SCTP::SupportedAddressTypesParameter::Factory(
-		  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::SupportedAddressTypesParameter> parameter2{
+			RTC::SCTP::SupportedAddressTypesParameter::Factory(
+			  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer) - 1000)
+		};
 
 		// Add 6 bytes.
 		parameter2->AddAddressType(1111);
 		parameter2->AddAddressType(2222);
 		parameter2->AddAddressType(3333);
 
-		chunk->AddParameter(parameter2);
-
-		// Once added, we can delete the parameter.
-		delete parameter2;
+		chunk->AddParameter(parameter2.get());
 
 		// Chunk length must be:
 		// - Chunk header: 20
@@ -552,7 +537,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		// - Total: 40
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 40,
@@ -566,7 +551,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		  /*errorCausesCount*/ 0);
 
 		const auto* obtainedParameter2 =
-		  reinterpret_cast<const RTC::SCTP::SupportedAddressTypesParameter*>(chunk->GetParameterAt(1));
+		  static_cast<const RTC::SCTP::SupportedAddressTypesParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ obtainedParameter2,
@@ -584,12 +569,10 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = RTC::SCTP::InitChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
-
-		delete chunk;
+		chunk.reset(RTC::SCTP::InitChunk::Parse(chunk->GetBuffer(), chunk->GetLength()));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ parsedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 40,
 		  /*length*/ 40,
@@ -602,14 +585,14 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(parsedChunk->GetInitiateTag() == 1);
-		REQUIRE(parsedChunk->GetAdvertisedReceiverWindowCredit() == 2);
-		REQUIRE(parsedChunk->GetNumberOfOutboundStreams() == 3);
-		REQUIRE(parsedChunk->GetNumberOfInboundStreams() == 4);
-		REQUIRE(parsedChunk->GetInitialTsn() == 5);
+		REQUIRE(chunk->GetInitiateTag() == 1);
+		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 2);
+		REQUIRE(chunk->GetNumberOfOutboundStreams() == 3);
+		REQUIRE(chunk->GetNumberOfInboundStreams() == 4);
+		REQUIRE(chunk->GetInitialTsn() == 5);
 
 		obtainedParameter1 =
-		  reinterpret_cast<const RTC::SCTP::CookiePreservativeParameter*>(parsedChunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::CookiePreservativeParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ obtainedParameter1,
@@ -622,8 +605,8 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 
 		REQUIRE(obtainedParameter1->GetLifeSpanIncrement() == 123456);
 
-		obtainedParameter2 = reinterpret_cast<const RTC::SCTP::SupportedAddressTypesParameter*>(
-		  parsedChunk->GetParameterAt(1));
+		obtainedParameter2 =
+		  static_cast<const RTC::SCTP::SupportedAddressTypesParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ obtainedParameter2,
@@ -638,7 +621,5 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(obtainedParameter2->GetAddressTypeAt(0) == 1111);
 		REQUIRE(obtainedParameter2->GetAddressTypeAt(1) == 2222);
 		REQUIRE(obtainedParameter2->GetAddressTypeAt(2) == 3333);
-
-		delete parsedChunk;
 	}
 }

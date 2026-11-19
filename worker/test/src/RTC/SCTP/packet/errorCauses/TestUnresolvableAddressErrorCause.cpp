@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnresolvableAddressErrorCause.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -27,10 +26,12 @@ SCENARIO("Unresolvable Address Error Cause (5)", "[serializable][sctp][errorcaus
 		};
 		// clang-format on
 
-		auto* errorCause = RTC::SCTP::UnresolvableAddressErrorCause::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::UnresolvableAddressErrorCause> errorCause{
+			RTC::SCTP::UnresolvableAddressErrorCause::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -56,7 +57,7 @@ SCENARIO("Unresolvable Address Error Cause (5)", "[serializable][sctp][errorcaus
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
@@ -77,34 +78,29 @@ SCENARIO("Unresolvable Address Error Cause (5)", "[serializable][sctp][errorcaus
 
 		/* Clone it. */
 
-		auto* clonedErrorCause =
-		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		errorCause.reset(errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete errorCause;
-
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ clonedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::UNRESOLVABLE_ADDRESS,
 		  /*unknownCode*/ false);
 
-		REQUIRE(clonedErrorCause->HasUnresolvableAddress() == true);
-		REQUIRE(clonedErrorCause->GetUnresolvableAddressLength() == 5);
-		REQUIRE(clonedErrorCause->GetUnresolvableAddress()[0] == 0x12);
-		REQUIRE(clonedErrorCause->GetUnresolvableAddress()[1] == 0x34);
-		REQUIRE(clonedErrorCause->GetUnresolvableAddress()[2] == 0x56);
-		REQUIRE(clonedErrorCause->GetUnresolvableAddress()[3] == 0x78);
-		REQUIRE(clonedErrorCause->GetUnresolvableAddress()[4] == 0x90);
+		REQUIRE(errorCause->HasUnresolvableAddress() == true);
+		REQUIRE(errorCause->GetUnresolvableAddressLength() == 5);
+		REQUIRE(errorCause->GetUnresolvableAddress()[0] == 0x12);
+		REQUIRE(errorCause->GetUnresolvableAddress()[1] == 0x34);
+		REQUIRE(errorCause->GetUnresolvableAddress()[2] == 0x56);
+		REQUIRE(errorCause->GetUnresolvableAddress()[3] == 0x78);
+		REQUIRE(errorCause->GetUnresolvableAddress()[4] == 0x90);
 		// These should be padding.
-		REQUIRE(clonedErrorCause->GetUnresolvableAddress()[5] == 0x00);
-		REQUIRE(clonedErrorCause->GetUnresolvableAddress()[6] == 0x00);
-		REQUIRE(clonedErrorCause->GetUnresolvableAddress()[7] == 0x00);
-
-		delete clonedErrorCause;
+		REQUIRE(errorCause->GetUnresolvableAddress()[5] == 0x00);
+		REQUIRE(errorCause->GetUnresolvableAddress()[6] == 0x00);
+		REQUIRE(errorCause->GetUnresolvableAddress()[7] == 0x00);
 	}
 
 	SECTION("UnresolvableAddressErrorCause::Parse() fails")
@@ -138,11 +134,13 @@ SCENARIO("Unresolvable Address Error Cause (5)", "[serializable][sctp][errorcaus
 
 	SECTION("UnresolvableAddressErrorCause::Factory() succeeds")
 	{
-		auto* errorCause = RTC::SCTP::UnresolvableAddressErrorCause::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::UnresolvableAddressErrorCause> errorCause{
+			RTC::SCTP::UnresolvableAddressErrorCause::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -171,7 +169,7 @@ SCENARIO("Unresolvable Address Error Cause (5)", "[serializable][sctp][errorcaus
 		errorCause->SetUnresolvableAddress(sctpCommon::DataBuffer, 6);
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
@@ -192,31 +190,28 @@ SCENARIO("Unresolvable Address Error Cause (5)", "[serializable][sctp][errorcaus
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause = RTC::SCTP::UnresolvableAddressErrorCause::Parse(
-		  errorCause->GetBuffer(), errorCause->GetLength());
-
-		delete errorCause;
+		errorCause.reset(
+		  RTC::SCTP::UnresolvableAddressErrorCause::Parse(
+		    errorCause->GetBuffer(), errorCause->GetLength()));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ parsedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::UNRESOLVABLE_ADDRESS,
 		  /*unknownCode*/ false);
 
-		REQUIRE(parsedErrorCause->HasUnresolvableAddress() == true);
-		REQUIRE(parsedErrorCause->GetUnresolvableAddressLength() == 6);
-		REQUIRE(parsedErrorCause->GetUnresolvableAddress()[0] == 0x00);
-		REQUIRE(parsedErrorCause->GetUnresolvableAddress()[1] == 0x01);
-		REQUIRE(parsedErrorCause->GetUnresolvableAddress()[2] == 0x02);
-		REQUIRE(parsedErrorCause->GetUnresolvableAddress()[3] == 0x03);
-		REQUIRE(parsedErrorCause->GetUnresolvableAddress()[4] == 0x04);
-		REQUIRE(parsedErrorCause->GetUnresolvableAddress()[5] == 0x05);
+		REQUIRE(errorCause->HasUnresolvableAddress() == true);
+		REQUIRE(errorCause->GetUnresolvableAddressLength() == 6);
+		REQUIRE(errorCause->GetUnresolvableAddress()[0] == 0x00);
+		REQUIRE(errorCause->GetUnresolvableAddress()[1] == 0x01);
+		REQUIRE(errorCause->GetUnresolvableAddress()[2] == 0x02);
+		REQUIRE(errorCause->GetUnresolvableAddress()[3] == 0x03);
+		REQUIRE(errorCause->GetUnresolvableAddress()[4] == 0x04);
+		REQUIRE(errorCause->GetUnresolvableAddress()[5] == 0x05);
 		// These should be padding.
-		REQUIRE(parsedErrorCause->GetUnresolvableAddress()[6] == 0x00);
-		REQUIRE(parsedErrorCause->GetUnresolvableAddress()[7] == 0x00);
-
-		delete parsedErrorCause;
+		REQUIRE(errorCause->GetUnresolvableAddress()[6] == 0x00);
+		REQUIRE(errorCause->GetUnresolvableAddress()[7] == 0x00);
 	}
 }

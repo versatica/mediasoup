@@ -41,7 +41,7 @@ namespace
 
 		packet->SetVerificationTag(VerificationTag);
 
-		auto* cookieAckChunk = packet->BuildChunkInPlace<RTC::SCTP::CookieAckChunk>();
+		const auto* cookieAckChunk = packet->BuildChunkInPlace<RTC::SCTP::CookieAckChunk>();
 
 		cookieAckChunk->Consolidate();
 

@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/ProtocolViolationErrorCause.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -27,10 +26,12 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 		};
 		// clang-format on
 
-		auto* errorCause = RTC::SCTP::ProtocolViolationErrorCause::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::ProtocolViolationErrorCause> errorCause{
+			RTC::SCTP::ProtocolViolationErrorCause::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -62,7 +63,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
@@ -89,40 +90,35 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 
 		/* Clone it. */
 
-		auto* clonedErrorCause =
-		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		errorCause.reset(errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete errorCause;
-
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ clonedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,
 		  /*unknownCode*/ false);
 
-		REQUIRE(clonedErrorCause->HasAdditionalInformation() == true);
-		REQUIRE(clonedErrorCause->GetAdditionalInformationLength() == 6);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[0] == 0x65);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[1] == 0x72);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[2] == 0x72);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[3] == 0x6F);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[4] == 0x72);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[5] == 0x31);
+		REQUIRE(errorCause->HasAdditionalInformation() == true);
+		REQUIRE(errorCause->GetAdditionalInformationLength() == 6);
+		REQUIRE(errorCause->GetAdditionalInformation()[0] == 0x65);
+		REQUIRE(errorCause->GetAdditionalInformation()[1] == 0x72);
+		REQUIRE(errorCause->GetAdditionalInformation()[2] == 0x72);
+		REQUIRE(errorCause->GetAdditionalInformation()[3] == 0x6F);
+		REQUIRE(errorCause->GetAdditionalInformation()[4] == 0x72);
+		REQUIRE(errorCause->GetAdditionalInformation()[5] == 0x31);
 
 		additionalInfo = std::string(
-		  reinterpret_cast<const char*>(clonedErrorCause->GetAdditionalInformation()),
-		  clonedErrorCause->GetAdditionalInformationLength());
+		  reinterpret_cast<const char*>(errorCause->GetAdditionalInformation()),
+		  errorCause->GetAdditionalInformationLength());
 
 		REQUIRE(additionalInfo == "error1");
 		// These should be padding.
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[6] == 0x00);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[7] == 0x00);
-
-		delete clonedErrorCause;
+		REQUIRE(errorCause->GetAdditionalInformation()[6] == 0x00);
+		REQUIRE(errorCause->GetAdditionalInformation()[7] == 0x00);
 	}
 
 	SECTION("ProtocolViolationErrorCause::Parse() fails")
@@ -156,11 +152,13 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 
 	SECTION("ProtocolViolationErrorCause::Factory() succeeds")
 	{
-		auto* errorCause = RTC::SCTP::ProtocolViolationErrorCause::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::ProtocolViolationErrorCause> errorCause{
+			RTC::SCTP::ProtocolViolationErrorCause::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -189,7 +187,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 		errorCause->SetAdditionalInformation("iñaki");
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
@@ -210,32 +208,28 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause = RTC::SCTP::ProtocolViolationErrorCause::Parse(
-		  errorCause->GetBuffer(), errorCause->GetLength());
-
-		delete errorCause;
+		errorCause.reset(
+		  RTC::SCTP::ProtocolViolationErrorCause::Parse(errorCause->GetBuffer(), errorCause->GetLength()));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ parsedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,
 		  /*unknownCode*/ false);
 
-		REQUIRE(parsedErrorCause->HasAdditionalInformation() == true);
-		REQUIRE(parsedErrorCause->GetAdditionalInformationLength() == 6);
+		REQUIRE(errorCause->HasAdditionalInformation() == true);
+		REQUIRE(errorCause->GetAdditionalInformationLength() == 6);
 
 		additionalInfo = std::string(
-		  reinterpret_cast<const char*>(parsedErrorCause->GetAdditionalInformation()),
-		  parsedErrorCause->GetAdditionalInformationLength());
+		  reinterpret_cast<const char*>(errorCause->GetAdditionalInformation()),
+		  errorCause->GetAdditionalInformationLength());
 
 		REQUIRE(additionalInfo == "iñaki");
 
 		// These should be padding.
-		REQUIRE(parsedErrorCause->GetAdditionalInformation()[6] == 0x00);
-		REQUIRE(parsedErrorCause->GetAdditionalInformation()[7] == 0x00);
-
-		delete parsedErrorCause;
+		REQUIRE(errorCause->GetAdditionalInformation()[6] == 0x00);
+		REQUIRE(errorCause->GetAdditionalInformation()[7] == 0x00);
 	}
 }

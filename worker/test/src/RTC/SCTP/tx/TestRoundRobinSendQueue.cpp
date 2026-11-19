@@ -4,7 +4,6 @@
 #include "RTC/SCTP/tx/RoundRobinSendQueue.hpp"
 #include "mocks/include/RTC/SCTP/association/MockAssociationListener.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <ranges>
 #include <vector>
 
 SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
@@ -50,8 +49,12 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSend = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSend.has_value());
-		REQUIRE(dataToSend->data.IsBeginning());
-		REQUIRE(dataToSend->data.IsEnd());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendValue = dataToSend.value();
+
+		REQUIRE(dataToSendValue.data.IsBeginning());
+		REQUIRE(dataToSendValue.data.IsEnd());
 	}
 
 	SECTION("carve out beginning middle and end")
@@ -71,20 +74,32 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendBeg = q.Produce(NowUs, /*maxLength*/ 20);
 
 		REQUIRE(dataToSendBeg.has_value());
-		REQUIRE(dataToSendBeg->data.IsBeginning());
-		REQUIRE(!dataToSendBeg->data.IsEnd());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendBegValue = dataToSendBeg.value();
+
+		REQUIRE(dataToSendBegValue.data.IsBeginning());
+		REQUIRE(!dataToSendBegValue.data.IsEnd());
 
 		const auto dataToSendMid = q.Produce(NowUs, /*maxLength*/ 20);
 
 		REQUIRE(dataToSendMid.has_value());
-		REQUIRE(!dataToSendMid->data.IsBeginning());
-		REQUIRE(!dataToSendMid->data.IsEnd());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendMidValue = dataToSendMid.value();
+
+		REQUIRE(!dataToSendMidValue.data.IsBeginning());
+		REQUIRE(!dataToSendMidValue.data.IsEnd());
 
 		const auto dataToSendEnd = q.Produce(NowUs, /*maxLength*/ 20);
 
 		REQUIRE(dataToSendEnd.has_value());
-		REQUIRE(!dataToSendEnd->data.IsBeginning());
-		REQUIRE(dataToSendEnd->data.IsEnd());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendEndValue = dataToSendEnd.value();
+
+		REQUIRE(!dataToSendEndValue.data.IsBeginning());
+		REQUIRE(dataToSendEndValue.data.IsEnd());
 
 		REQUIRE(q.Produce(NowUs, OneFragmentPacketLength).has_value() == false);
 	}
@@ -107,18 +122,26 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(dataToSendOne->data.GetStreamId() == StreamId);
-		REQUIRE(dataToSendOne->data.GetPayloadProtocolId() == Ppid);
-		REQUIRE(dataToSendOne->data.IsBeginning());
-		REQUIRE(dataToSendOne->data.IsEnd());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == StreamId);
+		REQUIRE(dataToSendOneValue.data.GetPayloadProtocolId() == Ppid);
+		REQUIRE(dataToSendOneValue.data.IsBeginning());
+		REQUIRE(dataToSendOneValue.data.IsEnd());
 
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(dataToSendTwo->data.GetStreamId() == 3);
-		REQUIRE(dataToSendTwo->data.GetPayloadProtocolId() == 54);
-		REQUIRE(dataToSendTwo->data.IsBeginning());
-		REQUIRE(dataToSendTwo->data.IsEnd());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendTwoValue = dataToSendTwo.value();
+
+		REQUIRE(dataToSendTwoValue.data.GetStreamId() == 3);
+		REQUIRE(dataToSendTwoValue.data.GetPayloadProtocolId() == 54);
+		REQUIRE(dataToSendTwoValue.data.IsBeginning());
+		REQUIRE(dataToSendTwoValue.data.IsEnd());
 	}
 
 	SECTION("buffer becomes full and emptied")
@@ -150,16 +173,24 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		auto dataToSendOne = q.Produce(NowUs, 1000);
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(dataToSendOne->data.GetStreamId() == StreamId);
-		REQUIRE(dataToSendOne->data.GetPayloadProtocolId() == Ppid);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == StreamId);
+		REQUIRE(dataToSendOneValue.data.GetPayloadProtocolId() == Ppid);
 
 		REQUIRE(q.GetTotalBufferedAmount() >= 1000);
 
 		auto dataToSendTwo = q.Produce(NowUs, 1000);
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(dataToSendTwo->data.GetStreamId() == 3);
-		REQUIRE(dataToSendTwo->data.GetPayloadProtocolId() == 54);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendTwoValue = dataToSendTwo.value();
+
+		REQUIRE(dataToSendTwoValue.data.GetStreamId() == 3);
+		REQUIRE(dataToSendTwoValue.data.GetPayloadProtocolId() == 54);
 
 		REQUIRE(q.GetTotalBufferedAmount() < 1000);
 		REQUIRE(!q.IsEmpty());
@@ -167,8 +198,12 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		auto dataToSendThree = q.Produce(NowUs, 1000);
 
 		REQUIRE(dataToSendThree.has_value());
-		REQUIRE(dataToSendThree->data.GetStreamId() == 5);
-		REQUIRE(dataToSendThree->data.GetPayloadProtocolId() == 55);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendThreeValue = dataToSendThree.value();
+
+		REQUIRE(dataToSendThreeValue.data.GetStreamId() == 5);
+		REQUIRE(dataToSendThreeValue.data.GetPayloadProtocolId() == 55);
 
 		REQUIRE(q.GetTotalBufferedAmount() < 1000);
 		REQUIRE(q.IsEmpty());
@@ -191,6 +226,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(!dataToSendOne->data.IsUnordered());
 
 		RTC::SCTP::SendMessageOptions options;
@@ -202,6 +238,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendTwo->data.IsUnordered());
 	}
 
@@ -278,26 +315,38 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(!dataToSendOne->data.IsEnd());
-		REQUIRE(dataToSendOne->data.GetStreamId() == StreamId);
 
-		q.Discard(dataToSendOne->data.GetStreamId(), dataToSendOne->outgoingMessageId);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(!dataToSendOneValue.data.IsEnd());
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == StreamId);
+
+		q.Discard(dataToSendOneValue.data.GetStreamId(), dataToSendOneValue.outgoingMessageId);
 
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(!dataToSendTwo->data.IsEnd());
-		REQUIRE(dataToSendTwo->data.GetStreamId() == 2);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendTwoValue = dataToSendTwo.value();
+
+		REQUIRE(!dataToSendTwoValue.data.IsEnd());
+		REQUIRE(dataToSendTwoValue.data.GetStreamId() == 2);
 
 		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
-		REQUIRE(dataToSendThree->data.IsEnd());
-		REQUIRE(dataToSendThree->data.GetStreamId() == 2);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendThreeValue = dataToSendThree.value();
+
+		REQUIRE(dataToSendThreeValue.data.IsEnd());
+		REQUIRE(dataToSendThreeValue.data.GetStreamId() == 2);
 
 		REQUIRE(!q.Produce(NowUs, OneFragmentPacketLength).has_value());
 
-		q.Discard(dataToSendOne->data.GetStreamId(), dataToSendOne->outgoingMessageId);
+		q.Discard(dataToSendOneValue.data.GetStreamId(), dataToSendOneValue.outgoingMessageId);
 
 		REQUIRE(!q.Produce(NowUs, OneFragmentPacketLength).has_value());
 	}
@@ -351,6 +400,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, 50);
 
 		REQUIRE(dataToSendOne.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendOne->data.GetStreamId() == StreamId);
 
 		REQUIRE(q.GetTotalBufferedAmount() == (2 * payload.size()) - 50);
@@ -398,6 +448,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, 50);
 
 		REQUIRE(dataToSendOne.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendOne->data.GetStreamId() == StreamId);
 
 		REQUIRE(q.GetTotalBufferedAmount() == 0);
@@ -424,6 +475,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, fragmentLength);
 
 		REQUIRE(dataToSendOne.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendOne->data.GetStreamId() == StreamId);
 
 		REQUIRE(q.GetTotalBufferedAmount() == (2 * payloadLength) - fragmentLength);
@@ -435,6 +487,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendTwo = q.Produce(NowUs, fragmentLength);
 
 		REQUIRE(dataToSendTwo.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendTwo->data.GetStreamId() == StreamId);
 
 		REQUIRE(q.GetTotalBufferedAmount() == 0);
@@ -460,11 +513,13 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendOne->data.GetStreamSequenceNumber() == 0);
 
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendTwo->data.GetStreamSequenceNumber() == 1);
 
 		q.PrepareResetStream(StreamId);
@@ -483,6 +538,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendThree->data.GetStreamSequenceNumber() == 0);
 	}
 
@@ -503,16 +559,24 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(dataToSendOne->data.GetStreamSequenceNumber() == 0);
-		REQUIRE(dataToSendOne->outgoingMessageId == 0);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(dataToSendOneValue.data.GetStreamSequenceNumber() == 0);
+		REQUIRE(dataToSendOneValue.outgoingMessageId == 0);
 
 		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(dataToSendTwo->data.GetStreamSequenceNumber() == 1);
-		REQUIRE(dataToSendTwo->outgoingMessageId == 1);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendTwoValue = dataToSendTwo.value();
+
+		REQUIRE(dataToSendTwoValue.data.GetStreamSequenceNumber() == 1);
+		REQUIRE(dataToSendTwoValue.outgoingMessageId == 1);
 
 		q.PrepareResetStream(StreamId);
 
@@ -528,8 +592,12 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
-		REQUIRE(dataToSendThree->data.GetStreamSequenceNumber() == 0);
-		REQUIRE(dataToSendThree->outgoingMessageId == 2);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendThreeValue = dataToSendThree.value();
+
+		REQUIRE(dataToSendThreeValue.data.GetStreamSequenceNumber() == 0);
+		REQUIRE(dataToSendThreeValue.outgoingMessageId == 2);
 	}
 
 	SECTION("committing resets SSN for paused streams only")
@@ -550,19 +618,29 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
-		REQUIRE(dataToSendOne->data.GetStreamSequenceNumber() == 0);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendOneValue.data.GetStreamSequenceNumber() == 0);
 
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(dataToSendTwo->data.GetStreamId() == 3);
-		REQUIRE(dataToSendTwo->data.GetStreamSequenceNumber() == 0);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendTwoValue = dataToSendTwo.value();
+
+		REQUIRE(dataToSendTwoValue.data.GetStreamId() == 3);
+		REQUIRE(dataToSendTwoValue.data.GetStreamSequenceNumber() == 0);
 
 		q.PrepareResetStream(3);
 
 		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, payload));
 		q.AddMessage(NowUs, RTC::SCTP::Message(3, Ppid, payload));
+
+		REQUIRE(q.HasStreamsReadyToBeReset());
 
 		const auto streamsReadyToBeReset = q.GetStreamsReadyToBeReset();
 
@@ -574,14 +652,22 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
-		REQUIRE(dataToSendThree->data.GetStreamId() == 1);
-		REQUIRE(dataToSendThree->data.GetStreamSequenceNumber() == 1);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendThreeValue = dataToSendThree.value();
+
+		REQUIRE(dataToSendThreeValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendThreeValue.data.GetStreamSequenceNumber() == 1);
 
 		const auto dataToSendFour = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendFour.has_value());
-		REQUIRE(dataToSendFour->data.GetStreamId() == 3);
-		REQUIRE(dataToSendFour->data.GetStreamSequenceNumber() == 0);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendFourValue = dataToSendFour.value();
+
+		REQUIRE(dataToSendFourValue.data.GetStreamId() == 3);
+		REQUIRE(dataToSendFourValue.data.GetStreamSequenceNumber() == 0);
 	}
 
 	SECTION("rollback resumes SSN")
@@ -602,16 +688,20 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendOne->data.GetStreamSequenceNumber() == 0);
 
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendTwo->data.GetStreamSequenceNumber() == 1);
 
 		q.PrepareResetStream(1);
 
 		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
+
+		REQUIRE(q.HasStreamsReadyToBeReset());
 
 		const auto streamsReadyToBeReset = q.GetStreamsReadyToBeReset();
 
@@ -623,6 +713,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendThree->data.GetStreamSequenceNumber() == 2);
 	}
 
@@ -644,21 +735,25 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
 
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
 
 		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendThree->data.GetStreamId() == 2);
 
 		const auto dataToSendFour = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendFour.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendFour->data.GetStreamId() == 2);
 	}
 
@@ -680,28 +775,45 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
-		REQUIRE(dataToSendOne->data.GetPayloadLength() == OneFragmentPacketLength);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendOneValue.data.GetPayloadLength() == OneFragmentPacketLength);
 
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendTwoValue = dataToSendTwo.value();
+
+		REQUIRE(dataToSendTwoValue.data.GetStreamId() == 1);
 		REQUIRE(
-		  dataToSendTwo->data.GetPayloadLength() == TwoFragmentPacketLength - OneFragmentPacketLength);
+		  dataToSendTwoValue.data.GetPayloadLength() == TwoFragmentPacketLength - OneFragmentPacketLength);
 
 		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
-		REQUIRE(dataToSendThree->data.GetStreamId() == 2);
-		REQUIRE(dataToSendThree->data.GetPayloadLength() == OneFragmentPacketLength);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendThreeValue = dataToSendThree.value();
+
+		REQUIRE(dataToSendThreeValue.data.GetStreamId() == 2);
+		REQUIRE(dataToSendThreeValue.data.GetPayloadLength() == OneFragmentPacketLength);
 
 		const auto dataToSendFour = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendFour.has_value());
-		REQUIRE(dataToSendFour->data.GetStreamId() == 2);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendFourValue = dataToSendFour.value();
+
+		REQUIRE(dataToSendFourValue.data.GetStreamId() == 2);
 		REQUIRE(
-		  dataToSendFour->data.GetPayloadLength() == TwoFragmentPacketLength - OneFragmentPacketLength);
+		  dataToSendFourValue.data.GetPayloadLength() ==
+		  TwoFragmentPacketLength - OneFragmentPacketLength);
 	}
 
 	SECTION("will cycle in round robin fashion between streams")
@@ -726,50 +838,82 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
-		REQUIRE(dataToSendOne->data.GetPayloadLength() == 1);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendOneValue.data.GetPayloadLength() == 1);
 
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(dataToSendTwo->data.GetStreamId() == 2);
-		REQUIRE(dataToSendTwo->data.GetPayloadLength() == 3);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendTwoValue = dataToSendTwo.value();
+
+		REQUIRE(dataToSendTwoValue.data.GetStreamId() == 2);
+		REQUIRE(dataToSendTwoValue.data.GetPayloadLength() == 3);
 
 		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
-		REQUIRE(dataToSendThree->data.GetStreamId() == 3);
-		REQUIRE(dataToSendThree->data.GetPayloadLength() == 5);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendThreeValue = dataToSendThree.value();
+
+		REQUIRE(dataToSendThreeValue.data.GetStreamId() == 3);
+		REQUIRE(dataToSendThreeValue.data.GetPayloadLength() == 5);
 
 		const auto dataToSendFour = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendFour.has_value());
-		REQUIRE(dataToSendFour->data.GetStreamId() == 4);
-		REQUIRE(dataToSendFour->data.GetPayloadLength() == 7);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendFourValue = dataToSendFour.value();
+
+		REQUIRE(dataToSendFourValue.data.GetStreamId() == 4);
+		REQUIRE(dataToSendFourValue.data.GetPayloadLength() == 7);
 
 		const auto dataToSendFive = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendFive.has_value());
-		REQUIRE(dataToSendFive->data.GetStreamId() == 1);
-		REQUIRE(dataToSendFive->data.GetPayloadLength() == 2);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendFiveValue = dataToSendFive.value();
+
+		REQUIRE(dataToSendFiveValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendFiveValue.data.GetPayloadLength() == 2);
 
 		const auto dataToSendSix = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendSix.has_value());
-		REQUIRE(dataToSendSix->data.GetStreamId() == 2);
-		REQUIRE(dataToSendSix->data.GetPayloadLength() == 4);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendSixValue = dataToSendSix.value();
+
+		REQUIRE(dataToSendSixValue.data.GetStreamId() == 2);
+		REQUIRE(dataToSendSixValue.data.GetPayloadLength() == 4);
 
 		const auto dataToSendSeven = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendSeven.has_value());
-		REQUIRE(dataToSendSeven->data.GetStreamId() == 3);
-		REQUIRE(dataToSendSeven->data.GetPayloadLength() == 6);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendSevenValue = dataToSendSeven.value();
+
+		REQUIRE(dataToSendSevenValue.data.GetStreamId() == 3);
+		REQUIRE(dataToSendSevenValue.data.GetPayloadLength() == 6);
 
 		const auto dataToSendEight = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendEight.has_value());
-		REQUIRE(dataToSendEight->data.GetStreamId() == 4);
-		REQUIRE(dataToSendEight->data.GetPayloadLength() == 8);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendEightValue = dataToSendEight.value();
+
+		REQUIRE(dataToSendEightValue.data.GetStreamId() == 4);
+		REQUIRE(dataToSendEightValue.data.GetPayloadLength() == 8);
 	}
 
 	SECTION("doesn't trigger stream buffered amount low when set to zero")
@@ -807,8 +951,12 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
-		REQUIRE(dataToSendOne->data.GetPayloadLength() == 1);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendOneValue.data.GetPayloadLength() == 1);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 0);
 	}
 
@@ -828,21 +976,33 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
+		REQUIRE(dataToSendOne.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendOneValue.data.GetPayloadLength() == 1);
 		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 
 		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
 
+		// Adding a message must not trigger it.
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 1);
 
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
-		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
-		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 2);
+		REQUIRE(dataToSendTwo.has_value());
 
-		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
-		REQUIRE(dataToSendOne->data.GetPayloadLength() == 1);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendTwoValue = dataToSendTwo.value();
+
+		// Should now trigger again, as buffered amount went above the threshold.
+		REQUIRE(dataToSendTwoValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendTwoValue.data.GetPayloadLength() == 1);
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 2);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 0);
 	}
 
@@ -868,8 +1028,12 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(!associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
-		REQUIRE(dataToSendOne->data.GetPayloadLength() == 10);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendOneValue.data.GetPayloadLength() == 10);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 0);
 
 		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(20)));
@@ -881,8 +1045,12 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(!associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
-		REQUIRE(dataToSendTwo->data.GetPayloadLength() == 20);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendTwoValue = dataToSendTwo.value();
+
+		REQUIRE(dataToSendTwoValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendTwoValue.data.GetPayloadLength() == 20);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 0);
 	}
 
@@ -905,15 +1073,26 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
-		REQUIRE(dataToSendOne->data.GetPayloadLength() == OneFragmentPacketLength);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendOneValue.data.GetPayloadLength() == OneFragmentPacketLength);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 900);
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 0);
 
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(dataToSendTwo->data.GetPayloadLength() == OneFragmentPacketLength);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendTwoValue = dataToSendTwo.value();
+
+		REQUIRE(dataToSendTwoValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendTwoValue.data.GetPayloadLength() == OneFragmentPacketLength);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 800);
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 0);
 
 		// It goes beyond 700 bytes, it should trigger the event.
 		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
@@ -922,7 +1101,12 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 
 		REQUIRE(dataToSendThree.has_value());
-		REQUIRE(dataToSendThree->data.GetPayloadLength() == OneFragmentPacketLength);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendThreeValue = dataToSendThree.value();
+
+		REQUIRE(dataToSendThreeValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendThreeValue.data.GetPayloadLength() == OneFragmentPacketLength);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 700);
 
 		// Buffer decreases so it shouldn't emit the event.
@@ -931,7 +1115,12 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 
 		REQUIRE(dataToSendFour.has_value());
-		REQUIRE(dataToSendFour->data.GetPayloadLength() == OneFragmentPacketLength);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendFourValue = dataToSendFour.value();
+
+		REQUIRE(dataToSendFourValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendFourValue.data.GetPayloadLength() == OneFragmentPacketLength);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 600);
 	}
 
@@ -955,8 +1144,12 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
-		REQUIRE(dataToSendOne->data.GetPayloadLength() == 400);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendOneValue.data.GetPayloadLength() == 400);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 600);
 
 		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(200)));
@@ -968,8 +1161,12 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 2);
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
-		REQUIRE(dataToSendTwo->data.GetPayloadLength() == 200);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendTwoValue = dataToSendTwo.value();
+
+		REQUIRE(dataToSendTwoValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendTwoValue.data.GetPayloadLength() == 200);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 600);
 	}
 
@@ -1083,8 +1280,12 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketSize);
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(dataToSendOne->data.GetStreamId() == 5);
-		REQUIRE(dataToSendOne->data.GetPayloadLength() == 1);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == 5);
+		REQUIRE(dataToSendOneValue.data.GetPayloadLength() == 1);
 
 		// Next, it should pick a different stream.
 		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(OneFragmentPacketSize * 2)));
@@ -1092,8 +1293,12 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketSize);
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
-		REQUIRE(dataToSendTwo->data.GetPayloadLength() == OneFragmentPacketSize);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendTwoValue = dataToSendTwo.value();
+
+		REQUIRE(dataToSendTwoValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendTwoValue.data.GetPayloadLength() == OneFragmentPacketSize);
 
 		// It should still stay on the Stream1 now, even if might be tempted to switch
 		// to this stream, as it's the stream following 5.
@@ -1102,15 +1307,23 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketSize);
 
 		REQUIRE(dataToSendThree.has_value());
-		REQUIRE(dataToSendThree->data.GetStreamId() == 1);
-		REQUIRE(dataToSendThree->data.GetPayloadLength() == OneFragmentPacketSize);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendThreeValue = dataToSendThree.value();
+
+		REQUIRE(dataToSendThreeValue.data.GetStreamId() == 1);
+		REQUIRE(dataToSendThreeValue.data.GetPayloadLength() == OneFragmentPacketSize);
 
 		// After stream 1 message is complete, it should move to stream 6.
 		const auto dataToSendFour = q.Produce(NowUs, OneFragmentPacketSize);
 
 		REQUIRE(dataToSendFour.has_value());
-		REQUIRE(dataToSendFour->data.GetStreamId() == 6);
-		REQUIRE(dataToSendFour->data.GetPayloadLength() == 1);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendFourValue = dataToSendFour.value();
+
+		REQUIRE(dataToSendFourValue.data.GetStreamId() == 6);
+		REQUIRE(dataToSendFourValue.data.GetPayloadLength() == 1);
 
 		REQUIRE(q.Produce(NowUs, OneFragmentPacketSize).has_value() == false);
 	}
@@ -1179,6 +1392,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 			const auto dataToSend = q.Produce(NowUs, 10);
 
 			REQUIRE(dataToSend.has_value());
+			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			REQUIRE(dataToSend->data.GetStreamId() == streamId);
 		}
 
@@ -1229,6 +1443,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, 50);
 
 		REQUIRE(dataToSendOne.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
 
 		REQUIRE(q.GetTotalBufferedAmount() == (2 * payload.size()) - 50);
@@ -1259,10 +1474,14 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
-		REQUIRE(!dataToSendOne->data.IsEnd());
-		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
 
-		q.Discard(dataToSendOne->data.GetStreamId(), dataToSendOne->outgoingMessageId);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& dataToSendOneValue = dataToSendOne.value();
+
+		REQUIRE(!dataToSendOneValue.data.IsEnd());
+		REQUIRE(dataToSendOneValue.data.GetStreamId() == 1);
+
+		q.Discard(dataToSendOneValue.data.GetStreamId(), dataToSendOneValue.outgoingMessageId);
 
 		REQUIRE(associationListener.HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
 		  1, false));

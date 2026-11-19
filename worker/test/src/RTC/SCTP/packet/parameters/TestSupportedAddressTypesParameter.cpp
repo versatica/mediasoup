@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedAddressTypesParameter.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -26,10 +25,12 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 		};
 		// clang-format on
 
-		auto* parameter = RTC::SCTP::SupportedAddressTypesParameter::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::SupportedAddressTypesParameter> parameter{
+			RTC::SCTP::SupportedAddressTypesParameter::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -49,7 +50,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
@@ -64,15 +65,12 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 
 		/* Clone it. */
 
-		auto* clonedParameter =
-		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		parameter.reset(parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete parameter;
-
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ clonedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
@@ -80,12 +78,10 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
-		REQUIRE(clonedParameter->GetNumberOfAddressTypes() == 3);
-		REQUIRE(clonedParameter->GetAddressTypeAt(0) == 0x1001);
-		REQUIRE(clonedParameter->GetAddressTypeAt(1) == 0x2002);
-		REQUIRE(clonedParameter->GetAddressTypeAt(2) == 0x3003);
-
-		delete clonedParameter;
+		REQUIRE(parameter->GetNumberOfAddressTypes() == 3);
+		REQUIRE(parameter->GetAddressTypeAt(0) == 0x1001);
+		REQUIRE(parameter->GetAddressTypeAt(1) == 0x2002);
+		REQUIRE(parameter->GetAddressTypeAt(2) == 0x3003);
 	}
 
 	SECTION("SupportedAddressTypesParameter::Parse() fails")
@@ -106,11 +102,13 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 
 	SECTION("SupportedAddressTypesParameter::Factory() succeeds")
 	{
-		auto* parameter = RTC::SCTP::SupportedAddressTypesParameter::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::SupportedAddressTypesParameter> parameter{
+			RTC::SCTP::SupportedAddressTypesParameter::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -127,7 +125,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 		parameter->AddAddressType(33333);
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
@@ -144,7 +142,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 		parameter->AddAddressType(55555);
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16,
@@ -161,13 +159,12 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 
 		/* Parse itself and compare. */
 
-		auto* parsedParameter = RTC::SCTP::SupportedAddressTypesParameter::Parse(
-		  parameter->GetBuffer(), parameter->GetLength());
-
-		delete parameter;
+		parameter.reset(
+		  RTC::SCTP::SupportedAddressTypesParameter::Parse(
+		    parameter->GetBuffer(), parameter->GetLength()));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parsedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 16,
 		  /*length*/ 16,
@@ -175,13 +172,11 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
-		REQUIRE(parsedParameter->GetNumberOfAddressTypes() == 5);
-		REQUIRE(parsedParameter->GetAddressTypeAt(0) == 11111);
-		REQUIRE(parsedParameter->GetAddressTypeAt(1) == 22222);
-		REQUIRE(parsedParameter->GetAddressTypeAt(2) == 33333);
-		REQUIRE(parsedParameter->GetAddressTypeAt(3) == 44444);
-		REQUIRE(parsedParameter->GetAddressTypeAt(4) == 55555);
-
-		delete parsedParameter;
+		REQUIRE(parameter->GetNumberOfAddressTypes() == 5);
+		REQUIRE(parameter->GetAddressTypeAt(0) == 11111);
+		REQUIRE(parameter->GetAddressTypeAt(1) == 22222);
+		REQUIRE(parameter->GetAddressTypeAt(2) == 33333);
+		REQUIRE(parameter->GetAddressTypeAt(3) == 44444);
+		REQUIRE(parameter->GetAddressTypeAt(4) == 55555);
 	}
 }

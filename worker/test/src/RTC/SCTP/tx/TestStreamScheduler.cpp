@@ -1,5 +1,7 @@
 #include "common.hpp"
+#include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
+#include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
 #include "RTC/SCTP/tx/StreamScheduler.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -32,7 +34,9 @@ namespace
 	std::function<std::optional<RTC::SCTP::SendQueueInterface::DataToSend>(int64_t, size_t)> createChunk(
 	  uint32_t outgoingMessageId, uint16_t streamId, uint32_t mid, size_t payloadLength = PayloadLength)
 	{
-		return [streamId, mid, payloadLength, outgoingMessageId](int64_t /*nowUs*/, size_t /*maxLength*/)
+		return [streamId, mid, payloadLength, outgoingMessageId](
+		         int64_t /*nowUs*/,
+		         size_t /*maxLength*/) -> std::optional<RTC::SCTP::SendQueueInterface::DataToSend>
 		{
 			return RTC::SCTP::SendQueueInterface::DataToSend(
 			  outgoingMessageId,
@@ -88,6 +92,16 @@ namespace
 		void PushBytesToSend(size_t bytes)
 		{
 			this->bytesQueue.push_back(bytes);
+		}
+
+		/**
+		 * Whether any response pushed with PushProduce() or PushBytesToSend() has
+		 * not been consumed yet, meaning that the scheduler called the producer
+		 * fewer times than the test expects.
+		 */
+		bool HasPendingResponses() const
+		{
+			return !this->produceQueue.empty() || !this->bytesQueue.empty();
 		}
 
 		std::optional<RTC::SCTP::SendQueueInterface::DataToSend> Produce(int64_t nowUs, size_t maxLength) override
@@ -176,6 +190,7 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		REQUIRE(stream->GetPriority() == 0);
 	}
 
+	// A scheduler with a single stream produced packets from it.
 	SECTION("can produce from a single stream")
 	{
 		RTC::SCTP::StreamScheduler scheduler(Mtu);
@@ -190,47 +205,6 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		stream->MayMakeActive();
 
 		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 0));
-		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
-	}
-
-	// A scheduler with a single stream produced packets from it.
-	SECTION("will round-robin between streams")
-	{
-		RTC::SCTP::StreamScheduler scheduler(Mtu);
-		MockStreamProducer producer1;
-
-		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(0, 1, 100));
-		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(1, 1, 101));
-		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(2, 1, 102));
-		producer1.PushBytesToSend(0);
-
-		auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 2);
-
-		stream1->MayMakeActive();
-
-		MockStreamProducer producer2;
-
-		producer2.PushBytesToSend(PayloadLength);
-		producer2.PushProduce(createChunk(3, 2, 200));
-		producer2.PushBytesToSend(PayloadLength);
-		producer2.PushProduce(createChunk(4, 2, 201));
-		producer2.PushBytesToSend(PayloadLength);
-		producer2.PushProduce(createChunk(5, 2, 202));
-		producer2.PushBytesToSend(0);
-
-		auto stream2 = scheduler.CreateStream(std::addressof(producer2), 2, 2);
-
-		stream2->MayMakeActive();
-
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 100));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 200));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 101));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 201));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 102));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 202));
 		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
 	}
 
@@ -290,21 +264,21 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		// 2. beginning:false, end:false
 		// 3. beginning:false, end:true
 		producer1.PushProduce(
-		  [](int64_t, size_t)
+		  [](int64_t, size_t) -> std::optional<RTC::SCTP::SendQueueInterface::DataToSend>
 		  {
 			  return RTC::SCTP::SendQueueInterface::DataToSend(
 			    1, RTC::SCTP::UserData(1, 0, 101, 0, 42, std::vector<uint8_t>(4), true, false, true));
 		  });
 		producer1.PushBytesToSend(PayloadLength);
 		producer1.PushProduce(
-		  [](int64_t, size_t)
+		  [](int64_t, size_t) -> std::optional<RTC::SCTP::SendQueueInterface::DataToSend>
 		  {
 			  return RTC::SCTP::SendQueueInterface::DataToSend(
 			    1, RTC::SCTP::UserData(1, 0, 101, 0, 42, std::vector<uint8_t>(4), false, false, true));
 		  });
 		producer1.PushBytesToSend(PayloadLength);
 		producer1.PushProduce(
-		  [](int64_t, size_t)
+		  [](int64_t, size_t) -> std::optional<RTC::SCTP::SendQueueInterface::DataToSend>
 		  {
 			  return RTC::SCTP::SendQueueInterface::DataToSend(
 			    1, RTC::SCTP::UserData(1, 0, 101, 0, 42, std::vector<uint8_t>(4), false, true, true));
@@ -341,6 +315,32 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 102));
 		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 202));
 		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
+	}
+
+	// Deactivates a stream before it has finished producing all packets.
+	SECTION("streams can be made inactive")
+	{
+		RTC::SCTP::StreamScheduler scheduler(Mtu);
+		MockStreamProducer producer1;
+
+		producer1.PushBytesToSend(PayloadLength); // MayMakeActive().
+		producer1.PushProduce(createChunk(0, 1, 100));
+		producer1.PushBytesToSend(PayloadLength);
+		producer1.PushProduce(createChunk(1, 1, 101));
+		producer1.PushBytesToSend(PayloadLength); // Hints that there is a MID(102) coming.
+
+		const auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 2);
+
+		stream1->MayMakeActive();
+
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 100));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 101));
+
+		// ... but the stream is made inactive before it can be produced.
+		stream1->MakeInactive();
+
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
+		REQUIRE(!producer1.HasPendingResponses());
 	}
 
 	// Resumes a paused stream - makes a stream active after inactivating it.
@@ -716,5 +716,110 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		REQUIRE(packetCounts.at(1) == 10);
 		REQUIRE(packetCounts.at(2) == 80);
+	}
+
+	// Same as "will distribute from two streams fairly" but more complicated.
+	SECTION("will distribute from four streams fairly")
+	{
+		RTC::SCTP::StreamScheduler scheduler(Mtu);
+
+		scheduler.EnableMessageInterleaving(true);
+
+		const TestStream stream1(scheduler, 1, 100, /*packetLength*/ 10);
+		const TestStream stream2(scheduler, 2, 200, /*packetLength*/ 10);
+		const TestStream stream3(scheduler, 3, 200, /*packetLength*/ 20);
+		const TestStream stream4(scheduler, 4, 400, /*packetLength*/ 30);
+
+		const auto packetCounts = getPacketCounts(scheduler, 80);
+
+		// - 15 packets * 10 bytes = 150 bytes at priority 100.
+		// - 30 packets * 10 bytes = 300 bytes at priority 200.
+		// - 15 packets * 20 bytes = 300 bytes at priority 200.
+		// - 20 packets * 30 bytes = 600 bytes at priority 400.
+		REQUIRE(packetCounts.at(1) == 15);
+		REQUIRE(packetCounts.at(2) == 30);
+		REQUIRE(packetCounts.at(3) == 15);
+		REQUIRE(packetCounts.at(4) == 20);
+	}
+
+	// Sending large messages with small MTU will fragment the messages and
+	// produce a first fragment not larger than the MTU, and will then not first
+	// send from the stream with the smallest message, as their first fragment
+	// will be equally small for both streams. See "send large message with large
+	// MTU" for the same test, but with a larger MTU.
+	SECTION("send large message with small MTU")
+	{
+		RTC::SCTP::StreamScheduler scheduler(
+		  100 + RTC::SCTP::Packet::CommonHeaderLength + RTC::SCTP::IDataChunk::IDataChunkHeaderLength);
+
+		scheduler.EnableMessageInterleaving(true);
+
+		MockStreamProducer producer1;
+
+		producer1.PushBytesToSend(200); // MayMakeActive().
+		producer1.PushProduce(createChunk(0, 1, 0, 100));
+		producer1.PushBytesToSend(100);
+		producer1.PushProduce(createChunk(1, 1, 0, 100));
+		producer1.PushBytesToSend(0);
+
+		const auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 1);
+
+		stream1->MayMakeActive();
+
+		MockStreamProducer producer2;
+
+		producer2.PushBytesToSend(150); // MayMakeActive().
+		producer2.PushProduce(createChunk(2, 2, 1, 100));
+		producer2.PushBytesToSend(50);
+		producer2.PushProduce(createChunk(3, 2, 1, 50));
+		producer2.PushBytesToSend(0);
+
+		const auto stream2 = scheduler.CreateStream(std::addressof(producer2), 2, 1);
+
+		stream2->MayMakeActive();
+
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 0));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 1));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 1));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 0));
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
+		REQUIRE(!producer1.HasPendingResponses());
+		REQUIRE(!producer2.HasPendingResponses());
+	}
+
+	// Sending large messages with large MTU will not fragment messages and will
+	// send the message first from the stream that has the smallest message.
+	SECTION("send large message with large MTU")
+	{
+		RTC::SCTP::StreamScheduler scheduler(
+		  200 + RTC::SCTP::Packet::CommonHeaderLength + RTC::SCTP::IDataChunk::IDataChunkHeaderLength);
+
+		scheduler.EnableMessageInterleaving(true);
+
+		MockStreamProducer producer1;
+
+		producer1.PushBytesToSend(200); // MayMakeActive().
+		producer1.PushProduce(createChunk(0, 1, 0, 200));
+		producer1.PushBytesToSend(0);
+
+		const auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 1);
+
+		stream1->MayMakeActive();
+
+		MockStreamProducer producer2;
+
+		producer2.PushBytesToSend(150); // MayMakeActive().
+		producer2.PushProduce(createChunk(1, 2, 1, 150));
+		producer2.PushBytesToSend(0);
+
+		const auto stream2 = scheduler.CreateStream(std::addressof(producer2), 2, 1);
+
+		stream2->MayMakeActive();
+
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 1));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 0));
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
+		REQUIRE(!producer1.HasPendingResponses());
+		REQUIRE(!producer2.HasPendingResponses());
 	}
 }

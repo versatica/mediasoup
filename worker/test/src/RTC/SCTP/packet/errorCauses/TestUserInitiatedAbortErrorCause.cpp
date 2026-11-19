@@ -28,10 +28,12 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 		};
 		// clang-format on
 
-		auto* errorCause = RTC::SCTP::UserInitiatedAbortErrorCause::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::UserInitiatedAbortErrorCause> errorCause{
+			RTC::SCTP::UserInitiatedAbortErrorCause::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -48,7 +50,7 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
@@ -60,25 +62,20 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 
 		/* Clone it. */
 
-		auto* clonedErrorCause =
-		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		errorCause.reset(errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete errorCause;
-
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ clonedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::USER_INITIATED_ABORT,
 		  /*unknownCode*/ false);
 
-		REQUIRE(clonedErrorCause->HasUpperLayerAbortReason() == true);
-		REQUIRE(clonedErrorCause->GetUpperLayerAbortReason() == "I DIE!");
-
-		delete clonedErrorCause;
+		REQUIRE(errorCause->HasUpperLayerAbortReason() == true);
+		REQUIRE(errorCause->GetUpperLayerAbortReason() == "I DIE!");
 	}
 
 	SECTION("UserInitiatedAbortErrorCause::Parse() fails")
@@ -112,11 +109,13 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 
 	SECTION("UserInitiatedAbortErrorCause::Factory() succeeds")
 	{
-		auto* errorCause = RTC::SCTP::UserInitiatedAbortErrorCause::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::UserInitiatedAbortErrorCause> errorCause{
+			RTC::SCTP::UserInitiatedAbortErrorCause::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -145,7 +144,7 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 		errorCause->SetUpperLayerAbortReason("go go go");
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
@@ -157,23 +156,20 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause = RTC::SCTP::UserInitiatedAbortErrorCause::Parse(
-		  errorCause->GetBuffer(), errorCause->GetLength());
-
-		delete errorCause;
+		errorCause.reset(
+		  RTC::SCTP::UserInitiatedAbortErrorCause::Parse(
+		    errorCause->GetBuffer(), errorCause->GetLength()));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ parsedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::USER_INITIATED_ABORT,
 		  /*unknownCode*/ false);
 
-		REQUIRE(parsedErrorCause->HasUpperLayerAbortReason() == true);
-		REQUIRE(parsedErrorCause->GetUpperLayerAbortReason() == "go go go");
-
-		delete parsedErrorCause;
+		REQUIRE(errorCause->HasUpperLayerAbortReason() == true);
+		REQUIRE(errorCause->GetUpperLayerAbortReason() == "go go go");
 	}
 
 	SECTION("UserInitiatedAbortErrorCause::SetUpperLayerAbortReason() throws if reason is too big")

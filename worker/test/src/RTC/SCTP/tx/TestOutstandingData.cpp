@@ -34,7 +34,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		{
 			if (!this->prepared)
 			{
-				return false;
+				FAIL("discardFromSendQueue called unexpectedly");
 			}
 
 			this->callCount++;
@@ -78,8 +78,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	RTC::SCTP::Types::UnwrappedTsn::Unwrapper unwrapper;
 	DiscardFromSendQueueTester discardFromSendQueueTester;
 
-	const auto discardFromSendQueue =
-	  [&discardFromSendQueueTester](uint16_t streamId, uint32_t outgoingMessageId)
+	const auto discardFromSendQueue = [&discardFromSendQueueTester](
+	                                    uint16_t streamId, uint32_t outgoingMessageId) -> bool
 	{
 		return discardFromSendQueueTester.Called(streamId, outgoingMessageId);
 	};
@@ -178,6 +178,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	{
 		buffer.Insert(
 		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowUs);
+
+		buffer.HandleSack(NowUs, unwrapper.Unwrap(9), {}, false);
 
 		REQUIRE(buffer.IsEmpty() == false);
 		REQUIRE(buffer.GetUnackedPayloadBytes() == 1);
@@ -613,6 +615,11 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		buffer.NackAll(NowUs);
 
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 1,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ OutgoingMessageId);
+
 		REQUIRE(buffer.ShouldSendForwardTsn() == true);
 
 		// The FORWARD-TSN takes 8 bytes plus 4 for the single skipped stream, so
@@ -794,6 +801,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto fastRetransmit = buffer.GetChunksToBeFastRetransmitted(NowUs, 1000);
 
 		REQUIRE(fastRetransmit.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(fastRetransmit[0].first == 10);
 		REQUIRE(buffer.GetChunksToBeRetransmitted(NowUs, 1000).empty() == true);
 
@@ -834,6 +842,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    .hasPacketLoss == false);
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
 		const auto ackInfo3 = buffer.HandleSack(
 		  NowUs,
 		  unwrapper.Unwrap(9),
@@ -841,6 +851,11 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 2, 14 }
     },
 		  false);
+
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 1,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ OutgoingMessageId);
 
 		REQUIRE(ackInfo3.hasPacketLoss == true);
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
@@ -885,6 +900,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto fastRetransmit = buffer.GetChunksToBeFastRetransmitted(NowUs, 1000);
 
 		REQUIRE(fastRetransmit.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(fastRetransmit[0].first == 10);
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
@@ -949,6 +965,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto retransmit = buffer.GetChunksToBeFastRetransmitted(NowUs, 1000);
 
 		REQUIRE(retransmit.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(retransmit[0].first == 10);
 	}
 
@@ -1015,7 +1032,9 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false),
 		  NowUs,
-		  /*maxRetransmits*/ 0);
+		  /*maxRetransmits*/ 0,
+		  /*expiresAtUs*/ RTC::SCTP::Types::ExpiresAtUsInfinite,
+		  /*lifecycleId*/ 42);
 
 		const auto ackInfo1 = buffer.HandleSack(
 		  NowUs,
@@ -1056,6 +1075,22 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		REQUIRE(ackInfo3.hasPacketLoss == true);
 		REQUIRE(ackInfo3.abandonedLifecycleIds.empty() == true);
+
+		// This will generate a FORWARD-TSN, which is acked.
+		REQUIRE(buffer.ShouldSendForwardTsn() == true);
+
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
+
+		const auto* forwardTsnChunk = buffer.AddForwardTsn(packet.get());
+
+		REQUIRE(forwardTsnChunk);
+		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 13);
+
+		const auto ackInfo4 = buffer.HandleSack(NowUs, unwrapper.Unwrap(13), {}, false);
+
+		REQUIRE(ackInfo4.hasPacketLoss == false);
+		REQUIRE(ackInfo4.abandonedLifecycleIds == std::vector<uint64_t>{ 42 });
 	}
 
 	SECTION("lifecyle returns abandoned after T3 RTX timer expired")
@@ -1211,7 +1246,16 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(buffer.ShouldSendForwardTsn() == false);
 
 		buffer.HandleSack(NowUs, unwrapper.Unwrap(11), {}, false);
+
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
 		buffer.NackAll(NowUs);
+
+		// TSN 12 to 15 are abandoned, one message each.
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 4,
+		  /*expectedLastStreamId*/ 3,
+		  /*expectedLastOutgoingMessageId*/ 5);
 
 		REQUIRE(
 		  buffer.GetChunkStatesForTesting() ==
@@ -1321,7 +1365,15 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  NowUs,
 		  /*maxRetransmits*/ 0);
 
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
 		buffer.NackAll(NowUs);
+
+		// The four messages are abandoned.
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 4,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ 3);
 
 		REQUIRE(
 		  buffer.GetChunkStatesForTesting() ==
@@ -1376,7 +1428,15 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  NowUs,
 		  /*maxRetransmits*/ 0);
 
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
 		interleavingBuffer.NackAll(NowUs);
+
+		// The four messages are abandoned.
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 4,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ 3);
 
 		REQUIRE(
 		  interleavingBuffer.GetChunkStatesForTesting() ==

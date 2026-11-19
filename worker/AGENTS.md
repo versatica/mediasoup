@@ -30,6 +30,7 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 ## Ownership
 
 - New code avoids manual memory management: no `new`/`delete` on raw pointers. Whatever is allocated, or returned as an owning raw pointer by a factory (`Parse()`, `Clone()`, `Factory()`...), goes straight into a `std::unique_ptr` (`const` unless it is later `reset()`), created with `std::make_unique()` when it is our own allocation. This applies everywhere: classes, functions, tests and fuzzers.
+- A `Xxx::Parse()` or `Xxx::Factory()` call that is expected to fail and return `nullptr` is checked directly, never stored in a `std::unique_ptr`, since nothing was allocated: `REQUIRE(!RTC::SCTP::SackChunk::Parse(buffer, sizeof(buffer)));`.
 - An object owned by a class is held in a `std::unique_ptr`, never as a raw pointer with `new`/`delete`.
 - If it is created once in the constructor and never replaced, the `std::unique_ptr` is `const` and is created in the initializer list (a ternary is fine when it is optional and the condition is known at construction).
 - If it is created lazily, conditionally with complex logic, or replaced during the object's life, the `std::unique_ptr` is not `const` and is set with `reset()` or `std::make_unique()`.
@@ -167,6 +168,14 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
   REQUIRE(lossValue.expectedPackets == 100);
   ```
 
+- The check diagnoses the access itself, whatever is done with the result, and only a `has_value()` check with an early exit in the same function counts as a guard. So an access with no such guard always gets the `NOLINT`, even when the value is guaranteed by other means (a default member initializer, a `REQUIRE()`, the caller) and even when it is stored in a `const auto`:
+
+  ```cpp
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  const auto maxInitRetransmissions = a.sctpOptions.maxInitRetransmissions.value();
+  ```
+
+- A clean `make tidy` run does not prove that an access needs no `NOLINT`: in very large functions (such as the `SCENARIO` of `TestAssociation.cpp`) the analysis gives up silently and reports nothing, and the warning appears as soon as the function shrinks. The only exception is an access inside a lambda, which the check never reports, so it takes no `NOLINT`.
 - Before calling a test file done, search it for `.value()`, `->` and `*` on optionals and check one by one that each access has its `NOLINT` or comes from an already bound value.
 - Use the existing mocks (`mocks::MockShared`, `mocks::MockTimerHandle`, `mocks::MockBackoffTimerHandle`) instead of writing new ones.
 - A test expectation states what the code must do. Never change an expected value, widen a tolerance or loosen an assertion just because the code now produces something else.

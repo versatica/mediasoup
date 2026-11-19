@@ -14,8 +14,10 @@
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/packet/parameters/IPv4AddressParameter.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
+#include "test/include/testHelpers.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
+#include <vector>
 
 SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 {
@@ -80,6 +82,8 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 
 		/* Insert CRC32C checksum. */
 
+		packet->WriteCRC32cChecksum();
+
 		CHECK_SCTP_PACKET(
 		  /*packet*/ packet.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
@@ -88,8 +92,8 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*sourcePort*/ 10000,
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
-		  /*checksum*/ 5,
-		  /*hasValidCrc32cChecksum*/ false,
+		  /*checksum*/ 3098504256,
+		  /*hasValidCrc32cChecksum*/ true,
 		  /*chunksCount*/ 0);
 
 		/* Clone it. */
@@ -106,8 +110,8 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*sourcePort*/ 10000,
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
-		  /*checksum*/ 5,
-		  /*hasValidCrc32cChecksum*/ false,
+		  /*checksum*/ 3098504256,
+		  /*hasValidCrc32cChecksum*/ true,
 		  /*chunksCount*/ 0);
 
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::DataChunk>() == nullptr);
@@ -169,7 +173,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::HeartbeatRequestChunk>() == nullptr);
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::ShutdownCompleteChunk>() == nullptr);
 
-		const auto* chunk1 = reinterpret_cast<const RTC::SCTP::DataChunk*>(packet->GetChunkAt(0));
+		const auto* chunk1 = static_cast<const RTC::SCTP::DataChunk*>(packet->GetChunkAt(0));
 
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::DataChunk>() == chunk1);
 
@@ -200,7 +204,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(chunk1->GetUserDataPayload()[0] == 0xAB);
 		REQUIRE(chunk1->GetUserDataPayload()[1] == 0xCD);
 
-		const auto* chunk2 = reinterpret_cast<const RTC::SCTP::UnknownChunk*>(packet->GetChunkAt(1));
+		const auto* chunk2 = static_cast<const RTC::SCTP::UnknownChunk*>(packet->GetChunkAt(1));
 
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::UnknownChunk>() == chunk2);
 
@@ -227,7 +231,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		// Padding.
 		REQUIRE(chunk2->GetUnknownValue()[3] == 0x00);
 
-		const auto* chunk3 = reinterpret_cast<const RTC::SCTP::HeartbeatAckChunk*>(packet->GetChunkAt(2));
+		const auto* chunk3 = static_cast<const RTC::SCTP::HeartbeatAckChunk*>(packet->GetChunkAt(2));
 
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::HeartbeatAckChunk>() == chunk3);
 
@@ -245,9 +249,9 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		// NOLINTNEXTLINE (readability-identifier-naming)
+		// NOLINTNEXTLINE(readability-identifier-naming)
 		const auto* parameter3_1 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter3_1,
@@ -291,7 +295,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::HeartbeatRequestChunk>() == nullptr);
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::ShutdownCompleteChunk>() == nullptr);
 
-		chunk1 = reinterpret_cast<const RTC::SCTP::DataChunk*>(packet->GetChunkAt(0));
+		chunk1 = static_cast<const RTC::SCTP::DataChunk*>(packet->GetChunkAt(0));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk1,
@@ -320,7 +324,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(chunk1->GetUserDataPayload()[0] == 0xAB);
 		REQUIRE(chunk1->GetUserDataPayload()[1] == 0xCD);
 
-		chunk2 = reinterpret_cast<const RTC::SCTP::UnknownChunk*>(packet->GetChunkAt(1));
+		chunk2 = static_cast<const RTC::SCTP::UnknownChunk*>(packet->GetChunkAt(1));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk2,
@@ -345,7 +349,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		// Padding.
 		REQUIRE(chunk2->GetUnknownValue()[3] == 0x00);
 
-		chunk3 = reinterpret_cast<const RTC::SCTP::HeartbeatAckChunk*>(packet->GetChunkAt(2));
+		chunk3 = static_cast<const RTC::SCTP::HeartbeatAckChunk*>(packet->GetChunkAt(2));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk3,
@@ -361,8 +365,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		parameter3_1 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
+		parameter3_1 = static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter3_1,
@@ -406,7 +409,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::HeartbeatRequestChunk>() == nullptr);
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::ShutdownCompleteChunk>() == nullptr);
 
-		chunk1 = reinterpret_cast<const RTC::SCTP::DataChunk*>(packet->GetChunkAt(0));
+		chunk1 = static_cast<const RTC::SCTP::DataChunk*>(packet->GetChunkAt(0));
 
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::DataChunk>() == chunk1);
 
@@ -437,7 +440,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(chunk1->GetUserDataPayload()[0] == 0xAB);
 		REQUIRE(chunk1->GetUserDataPayload()[1] == 0xCD);
 
-		chunk2 = reinterpret_cast<const RTC::SCTP::UnknownChunk*>(packet->GetChunkAt(1));
+		chunk2 = static_cast<const RTC::SCTP::UnknownChunk*>(packet->GetChunkAt(1));
 
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::UnknownChunk>() == chunk2);
 
@@ -464,7 +467,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		// Padding.
 		REQUIRE(chunk2->GetUnknownValue()[3] == 0x00);
 
-		chunk3 = reinterpret_cast<const RTC::SCTP::HeartbeatAckChunk*>(packet->GetChunkAt(2));
+		chunk3 = static_cast<const RTC::SCTP::HeartbeatAckChunk*>(packet->GetChunkAt(2));
 
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::HeartbeatAckChunk>() == chunk3);
 
@@ -482,8 +485,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		parameter3_1 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
+		parameter3_1 = static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter3_1,
@@ -539,7 +541,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		chunk1->SetInitialTsn(14141414);
 
 		// Parameter 1.1: IPV4-ADDRESS, length: 8 bytes.
-		// NOLINTNEXTLINE (readability-identifier-naming)
+		// NOLINTNEXTLINE(readability-identifier-naming)
 		auto* parameter1_1 = chunk1->BuildParameterInPlace<RTC::SCTP::IPv4AddressParameter>();
 
 		// 192.168.0.3 IPv4 in network order.
@@ -551,7 +553,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(chunk1->GetFirstParameterOfType<RTC::SCTP::IPv4AddressParameter>() == parameter1_1);
 
 		// Parameter 1.2: COOKIE-PRESERVATIVE, length: 8 bytes.
-		// NOLINTNEXTLINE (readability-identifier-naming)
+		// NOLINTNEXTLINE(readability-identifier-naming)
 		auto* parameter1_2 = chunk1->BuildParameterInPlace<RTC::SCTP::CookiePreservativeParameter>();
 
 		parameter1_2->SetLifeSpanIncrement(987654321);
@@ -571,7 +573,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		auto* chunk2 = packet->BuildChunkInPlace<RTC::SCTP::HeartbeatRequestChunk>();
 
 		// Parameter 2.1: HEARTBEAT-INFO, length: 4 bytes.
-		// NOLINTNEXTLINE (readability-identifier-naming)
+		// NOLINTNEXTLINE(readability-identifier-naming)
 		auto* parameter2_1 = chunk2->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>();
 
 		// Parameter 2.1: Add 3 bytes of info + 1 byte of padding.
@@ -592,7 +594,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		// Insert CRC32C checksum.
 		packet->WriteCRC32cChecksum();
 
-		auto crc32cChecksum = packet->GetChecksum();
+		const auto crc32cChecksum = packet->GetChecksum();
 
 		// Packet length must be:
 		// - Packet header: 12
@@ -642,23 +644,22 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		const auto* obtainedChunk1 = reinterpret_cast<const RTC::SCTP::InitChunk*>(packet->GetChunkAt(0));
+		const auto* obtainedChunk1 = static_cast<const RTC::SCTP::InitChunk*>(packet->GetChunkAt(0));
 
-		// NOLINTNEXTLINE (readability-identifier-naming)
+		// NOLINTNEXTLINE(readability-identifier-naming)
 		const auto* obtainedParameter1_1 =
-		  reinterpret_cast<const RTC::SCTP::IPv4AddressParameter*>(obtainedChunk1->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::IPv4AddressParameter*>(obtainedChunk1->GetParameterAt(0));
 
-		// NOLINTNEXTLINE (readability-identifier-naming)
+		// NOLINTNEXTLINE(readability-identifier-naming)
 		const auto* obtainedParameter1_2 =
-		  reinterpret_cast<const RTC::SCTP::CookiePreservativeParameter*>(
-		    obtainedChunk1->GetParameterAt(1));
+		  static_cast<const RTC::SCTP::CookiePreservativeParameter*>(obtainedChunk1->GetParameterAt(1));
 
 		const auto* obtainedChunk2 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatRequestChunk*>(packet->GetChunkAt(1));
+		  static_cast<const RTC::SCTP::HeartbeatRequestChunk*>(packet->GetChunkAt(1));
 
-		// NOLINTNEXTLINE (readability-identifier-naming)
+		// NOLINTNEXTLINE(readability-identifier-naming)
 		const auto* obtainedParameter2_1 =
-		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(obtainedChunk2->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::HeartbeatInfoParameter*>(obtainedChunk2->GetParameterAt(0));
 
 		CHECK_SCTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -752,7 +753,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 
 	SECTION("Factory() using AddChunk() succeeds")
 	{
-		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, 1000) };
 
 		packet->SetSourcePort(1);
@@ -761,19 +762,18 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		packet->SetChecksum(4);
 
 		// 4 bytes chunk.
-		auto* chunk1 = RTC::SCTP::ShutdownCompleteChunk::Factory(sctpCommon::FactoryBuffer + 1000, 1000);
+		const std::unique_ptr<RTC::SCTP::ShutdownCompleteChunk> chunk1{
+			RTC::SCTP::ShutdownCompleteChunk::Factory(sctpCommon::FactoryBuffer + 1000, 1000)
+		};
 
 		chunk1->SetT(true);
 
-		packet->AddChunk(chunk1);
+		packet->AddChunk(chunk1.get());
 
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::ShutdownCompleteChunk>() != nullptr);
 		// NOTE: The stored chunk is not the same than the given one since it's
 		// internally cloned.
-		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::ShutdownCompleteChunk>() != chunk1);
-
-		// Once added, we can delete the chunk.
-		delete chunk1;
+		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::ShutdownCompleteChunk>() != chunk1.get());
 
 		// Packet length must be:
 		// - Packet header: 12
@@ -793,7 +793,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*chunksCount*/ 1);
 
 		const auto* obtainedChunk1 =
-		  reinterpret_cast<const RTC::SCTP::ShutdownCompleteChunk*>(packet->GetChunkAt(0));
+		  static_cast<const RTC::SCTP::ShutdownCompleteChunk*>(packet->GetChunkAt(0));
 
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::ShutdownCompleteChunk>() == obtainedChunk1);
 
@@ -816,13 +816,18 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 
 	SECTION("AddChunk() throws and leaves the Packet as it was")
 	{
-		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, 28) };
 
 		// INIT chunk, length: 20 bytes, which exceeds the Packet buffer length.
-		auto* const chunk1 = RTC::SCTP::InitChunk::Factory(sctpCommon::FactoryBuffer + 1000, 1000);
+		const std::unique_ptr<RTC::SCTP::InitChunk> chunk1{ RTC::SCTP::InitChunk::Factory(
+			sctpCommon::FactoryBuffer + 1000, 1000) };
 
-		REQUIRE_THROWS_AS(packet->AddChunk(chunk1), MediaSoupTypeError);
+		const std::vector<uint8_t> originalBytesAfterHeader(
+		  sctpCommon::FactoryBuffer + RTC::SCTP::Packet::CommonHeaderLength,
+		  sctpCommon::FactoryBuffer + 32);
+
+		REQUIRE_THROWS_AS(packet->AddChunk(chunk1.get()), MediaSoupTypeError);
 
 		CHECK_SCTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -837,22 +842,26 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*chunksCount*/ 0);
 
 		// Nothing was written after the Packet header.
-		REQUIRE(sctpCommon::FactoryBuffer[12] == 0xAA);
-		REQUIRE(sctpCommon::FactoryBuffer[31] == 0xAA);
-
-		delete chunk1;
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    sctpCommon::FactoryBuffer + RTC::SCTP::Packet::CommonHeaderLength,
+		    originalBytesAfterHeader.size(),
+		    originalBytesAfterHeader.data(),
+		    originalBytesAfterHeader.size()) == true);
 
 		// INIT chunk, length: 20 bytes, which fits in the Packet buffer but has a
 		// parameter being built in place within it (so it needs consolidation).
-		auto* const chunk2 = RTC::SCTP::InitChunk::Factory(sctpCommon::FactoryBuffer + 1000, 1000);
-		auto* const parameter2 = chunk2->BuildParameterInPlace<RTC::SCTP::CookiePreservativeParameter>();
+		const std::unique_ptr<RTC::SCTP::InitChunk> chunk2{ RTC::SCTP::InitChunk::Factory(
+			sctpCommon::FactoryBuffer + 1000, 1000) };
+		const auto* const parameter2 =
+		  chunk2->BuildParameterInPlace<RTC::SCTP::CookiePreservativeParameter>();
 
 		REQUIRE(chunk2->NeedsConsolidation() == true);
 
-		std::unique_ptr<RTC::SCTP::Packet> packet2{ RTC::SCTP::Packet::Factory(
+		const std::unique_ptr<RTC::SCTP::Packet> packet2{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer + 2000, 1000) };
 
-		REQUIRE_THROWS_AS(packet2->AddChunk(chunk2), MediaSoupError);
+		REQUIRE_THROWS_AS(packet2->AddChunk(chunk2.get()), MediaSoupError);
 
 		CHECK_SCTP_PACKET(
 		  /*packet*/ packet2.get(),
@@ -867,13 +876,11 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*chunksCount*/ 0);
 
 		parameter2->Discard();
-
-		delete chunk2;
 	}
 
 	SECTION("BuildChunkInPlace() throws if given chunk exceeds Packet buffer length")
 	{
-		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, 28) };
 
 		CHECK_SCTP_PACKET(
@@ -894,7 +901,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		// Adding user data 10 bytes, must throw.
 		REQUIRE_THROWS_AS(chunk1->SetUserDataPayload(sctpCommon::DataBuffer, 10), MediaSoupError);
 
-		delete chunk1;
+		chunk1->Discard();
 
 		// Chunk 2: INIT, length: 20 bytes. Must throw.
 		REQUIRE_THROWS_AS(packet->BuildChunkInPlace<RTC::SCTP::InitChunk>(), MediaSoupError);
@@ -914,7 +921,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 
 	SECTION("BuildChunkInPlace() and AddChunk() throw if the Packet needs consolidation")
 	{
-		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, 1000) };
 
 		REQUIRE(packet->NeedsConsolidation() == false);
@@ -926,13 +933,13 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		// We didn't call chunk1->Consolidate() yet so this must throw.
 		REQUIRE_THROWS_AS(packet->BuildChunkInPlace<RTC::SCTP::ShutdownCompleteChunk>(), MediaSoupError);
 
-		const auto* chunk2 = RTC::SCTP::ShutdownCompleteChunk::Factory(
-		  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::ShutdownCompleteChunk> chunk2{
+			RTC::SCTP::ShutdownCompleteChunk::Factory(
+			  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer) - 1000)
+		};
 
 		// We didn't call chunk1->Consolidate() yet so this must throw.
-		REQUIRE_THROWS_AS(packet->AddChunk(chunk2), MediaSoupError);
-
-		delete chunk2;
+		REQUIRE_THROWS_AS(packet->AddChunk(chunk2.get()), MediaSoupError);
 
 		chunk1->Consolidate();
 
@@ -947,20 +954,20 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 
 		REQUIRE(packet->NeedsConsolidation() == false);
 
-		const auto* chunk4 = RTC::SCTP::ShutdownCompleteChunk::Factory(
-		  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::ShutdownCompleteChunk> chunk4{
+			RTC::SCTP::ShutdownCompleteChunk::Factory(
+			  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer) - 1000)
+		};
 
 		// This shouldn't throw now.
-		packet->AddChunk(chunk4);
+		packet->AddChunk(chunk4.get());
 
 		REQUIRE(packet->NeedsConsolidation() == false);
-
-		delete chunk4;
 	}
 
 	SECTION("Discard() removes the chunk being built in place")
 	{
-		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, 1000) };
 
 		const auto* chunk1 = packet->BuildChunkInPlace<RTC::SCTP::ShutdownCompleteChunk>();
