@@ -803,16 +803,27 @@ namespace RTC
 
 			/**
 			 * Set payload descriptor handler.
+			 *
+			 * @remarks
+			 * - The packet takes ownership of the handler, which it shares with its
+			 *   clones, and replaces (and frees if nobody else holds it) any handler
+			 *   it had.
 			 */
-			void SetPayloadDescriptorHandler(Codecs::PayloadDescriptorHandler* payloadDescriptorHandler);
+			void SetPayloadDescriptorHandler(
+			  std::unique_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler);
 
 			/**
 			 * Set the payload descriptor handler made out of the Dependency
 			 * Descriptor this packet carries, which serves the Consumers that
 			 * negotiated the extension. The rest are served by the one of the codec.
+			 *
+			 * @remarks
+			 * - The packet takes ownership of the handler, which it shares with its
+			 *   clones, and replaces (and frees if nobody else holds it) any handler
+			 *   it had.
 			 */
 			void SetDependencyDescriptorPayloadDescriptorHandler(
-			  Codecs::PayloadDescriptorHandler* payloadDescriptorHandler);
+			  std::unique_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler);
 
 			/**
 			 * Process the payload.

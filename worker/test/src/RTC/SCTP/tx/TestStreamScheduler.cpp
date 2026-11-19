@@ -9,30 +9,16 @@
 #include <map>
 #include <vector>
 
-namespace
+SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 {
-	constexpr uint64_t Mtu{ 1000 };
-	constexpr size_t PayloadLength{ 4 };
-	constexpr int64_t NowUs{ 0 };
+	// NOTE: These are `static` because the local classes below use them.
+	static constexpr uint64_t Mtu{ 1000 };
+	static constexpr size_t PayloadLength{ 4 };
+	static constexpr int64_t NowUs{ 0 };
 
-	bool checkDataToSendHasMid(
-	  std::optional<RTC::SCTP::SendQueueInterface::DataToSend> dataToSend, uint32_t mid)
-	{
-		if (!dataToSend.has_value())
-		{
-			return false;
-		}
-
-		if (dataToSend->data.GetMessageId() != mid)
-		{
-			return false;
-		}
-
-		return true;
-	}
-
-	std::function<std::optional<RTC::SCTP::SendQueueInterface::DataToSend>(int64_t, size_t)> createChunk(
-	  uint32_t outgoingMessageId, uint16_t streamId, uint32_t mid, size_t payloadLength = PayloadLength)
+	static const auto CreateChunk =
+	  [](uint32_t outgoingMessageId, uint16_t streamId, uint32_t mid, size_t payloadLength = PayloadLength)
+	  -> std::function<std::optional<RTC::SCTP::SendQueueInterface::DataToSend>(int64_t, size_t)>
 	{
 		return [streamId, mid, payloadLength, outgoingMessageId](
 		         int64_t /*nowUs*/,
@@ -51,26 +37,7 @@ namespace
 			    /*isEnd*/ true,
 			    /*unoreded*/ true));
 		};
-	}
-
-	std::map<uint16_t, size_t> getPacketCounts(
-	  RTC::SCTP::StreamScheduler& scheduler, size_t packetsToGenerate)
-	{
-		std::map</*streamId*/ uint16_t, size_t> packetCounts;
-
-		for (size_t i{ 0 }; i < packetsToGenerate; ++i)
-		{
-			const std::optional<RTC::SCTP::SendQueueInterface::DataToSend> dataToSend =
-			  scheduler.Produce(NowUs, Mtu);
-
-			if (dataToSend.has_value())
-			{
-				++packetCounts[dataToSend->data.GetStreamId()];
-			}
-		}
-
-		return packetCounts;
-	}
+	};
 
 	class MockStreamProducer : public RTC::SCTP::StreamScheduler::StreamProducer
 	{
@@ -146,7 +113,7 @@ namespace
 			// Equivalent to WillRepeatedly() in dcsctp.
 			for (int i{ 0 }; i < 100; ++i)
 			{
-				this->producer.PushProduce(createChunk(i, streamId, i, packetLength));
+				this->producer.PushProduce(CreateChunk(i, streamId, i, packetLength));
 				this->producer.PushBytesToSend(packetLength);
 			}
 
@@ -163,10 +130,42 @@ namespace
 		MockStreamProducer producer;
 		std::unique_ptr<RTC::SCTP::StreamScheduler::Stream> stream;
 	};
-} // namespace
 
-SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
-{
+	const auto checkDataToSendHasMid =
+	  [](std::optional<RTC::SCTP::SendQueueInterface::DataToSend> dataToSend, uint32_t mid) -> bool
+	{
+		if (!dataToSend.has_value())
+		{
+			return false;
+		}
+
+		if (dataToSend->data.GetMessageId() != mid)
+		{
+			return false;
+		}
+
+		return true;
+	};
+
+	const auto getPacketCounts =
+	  [](RTC::SCTP::StreamScheduler& scheduler, size_t packetsToGenerate) -> std::map<uint16_t, size_t>
+	{
+		std::map</*streamId*/ uint16_t, size_t> packetCounts;
+
+		for (size_t i{ 0 }; i < packetsToGenerate; ++i)
+		{
+			const std::optional<RTC::SCTP::SendQueueInterface::DataToSend> dataToSend =
+			  scheduler.Produce(NowUs, Mtu);
+
+			if (dataToSend.has_value())
+			{
+				++packetCounts[dataToSend->data.GetStreamId()];
+			}
+		}
+
+		return packetCounts;
+	};
+
 	// A scheduler without active streams doesn't produce data.
 	SECTION("has no active streams")
 	{
@@ -197,7 +196,7 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer;
 
 		producer.PushBytesToSend(PayloadLength);
-		producer.PushProduce(createChunk(0, 1, 0));
+		producer.PushProduce(CreateChunk(0, 1, 0));
 		producer.PushBytesToSend(0);
 
 		auto stream = scheduler.CreateStream(std::addressof(producer), 1, 2);
@@ -215,11 +214,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer1;
 
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(0, 1, 100));
+		producer1.PushProduce(CreateChunk(0, 1, 100));
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(1, 1, 101));
+		producer1.PushProduce(CreateChunk(1, 1, 101));
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(2, 1, 102));
+		producer1.PushProduce(CreateChunk(2, 1, 102));
 		producer1.PushBytesToSend(0);
 
 		auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 2);
@@ -229,11 +228,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer2;
 
 		producer2.PushBytesToSend(PayloadLength);
-		producer2.PushProduce(createChunk(3, 2, 200));
+		producer2.PushProduce(CreateChunk(3, 2, 200));
 		producer2.PushBytesToSend(PayloadLength);
-		producer2.PushProduce(createChunk(4, 2, 201));
+		producer2.PushProduce(CreateChunk(4, 2, 201));
 		producer2.PushBytesToSend(PayloadLength);
-		producer2.PushProduce(createChunk(5, 2, 202));
+		producer2.PushProduce(CreateChunk(5, 2, 202));
 		producer2.PushBytesToSend(0);
 
 		auto stream2 = scheduler.CreateStream(std::addressof(producer2), 2, 2);
@@ -257,7 +256,7 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer1;
 
 		producer1.PushBytesToSend(PayloadLength); // MayMakeActive
-		producer1.PushProduce(createChunk(0, 1, 100));
+		producer1.PushProduce(CreateChunk(0, 1, 100));
 		producer1.PushBytesToSend(PayloadLength);
 		// MID(101) fragmented in 3 chunks:
 		// 1. beginning:true, end:false
@@ -284,7 +283,7 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 			    1, RTC::SCTP::UserData(1, 0, 101, 0, 42, std::vector<uint8_t>(4), false, true, true));
 		  });
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(2, 1, 102));
+		producer1.PushProduce(CreateChunk(2, 1, 102));
 		producer1.PushBytesToSend(0);
 
 		auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 2);
@@ -294,11 +293,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer2;
 
 		producer2.PushBytesToSend(PayloadLength); // MayMakeActive().
-		producer2.PushProduce(createChunk(3, 2, 200));
+		producer2.PushProduce(CreateChunk(3, 2, 200));
 		producer2.PushBytesToSend(PayloadLength);
-		producer2.PushProduce(createChunk(4, 2, 201));
+		producer2.PushProduce(CreateChunk(4, 2, 201));
 		producer2.PushBytesToSend(PayloadLength);
-		producer2.PushProduce(createChunk(5, 2, 202));
+		producer2.PushProduce(CreateChunk(5, 2, 202));
 		producer2.PushBytesToSend(0);
 
 		auto stream2 = scheduler.CreateStream(std::addressof(producer2), 2, 2);
@@ -324,9 +323,9 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer1;
 
 		producer1.PushBytesToSend(PayloadLength); // MayMakeActive().
-		producer1.PushProduce(createChunk(0, 1, 100));
+		producer1.PushProduce(CreateChunk(0, 1, 100));
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(1, 1, 101));
+		producer1.PushProduce(CreateChunk(1, 1, 101));
 		producer1.PushBytesToSend(PayloadLength); // Hints that there is a MID(102) coming.
 
 		const auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 2);
@@ -350,11 +349,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer1;
 
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(0, 1, 100));
+		producer1.PushProduce(CreateChunk(0, 1, 100));
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(1, 1, 101));
+		producer1.PushProduce(CreateChunk(1, 1, 101));
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(2, 1, 102));
+		producer1.PushProduce(CreateChunk(2, 1, 102));
 		producer1.PushBytesToSend(PayloadLength); // When making active again.
 		producer1.PushBytesToSend(0);
 
@@ -382,11 +381,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer1;
 
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(0, 1, 100));
+		producer1.PushProduce(CreateChunk(0, 1, 100));
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(1, 1, 101));
+		producer1.PushProduce(CreateChunk(1, 1, 101));
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(2, 1, 102));
+		producer1.PushProduce(CreateChunk(2, 1, 102));
 		producer1.PushBytesToSend(PayloadLength); // When making active again.
 		producer1.PushBytesToSend(0);
 
@@ -397,11 +396,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer2;
 
 		producer2.PushBytesToSend(PayloadLength); // MayMakeActive().
-		producer2.PushProduce(createChunk(3, 2, 200));
+		producer2.PushProduce(CreateChunk(3, 2, 200));
 		producer2.PushBytesToSend(PayloadLength);
-		producer2.PushProduce(createChunk(4, 2, 201));
+		producer2.PushProduce(CreateChunk(4, 2, 201));
 		producer2.PushBytesToSend(PayloadLength);
-		producer2.PushProduce(createChunk(5, 2, 202));
+		producer2.PushProduce(CreateChunk(5, 2, 202));
 		producer2.PushBytesToSend(0);
 
 		auto stream2 = scheduler.CreateStream(std::addressof(producer2), 2, 2);
@@ -488,11 +487,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer1;
 
 		producer1.PushBytesToSend(SmallPacket); // MayMakeActive().
-		producer1.PushProduce(createChunk(0, 1, 100, SmallPacket));
+		producer1.PushProduce(CreateChunk(0, 1, 100, SmallPacket));
 		producer1.PushBytesToSend(SmallPacket);
-		producer1.PushProduce(createChunk(1, 1, 101, SmallPacket));
+		producer1.PushProduce(CreateChunk(1, 1, 101, SmallPacket));
 		producer1.PushBytesToSend(SmallPacket);
-		producer1.PushProduce(createChunk(2, 1, 102, SmallPacket));
+		producer1.PushProduce(CreateChunk(2, 1, 102, SmallPacket));
 		producer1.PushBytesToSend(0);
 
 		auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 2);
@@ -502,11 +501,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer2;
 
 		producer2.PushBytesToSend(LargePacket); // MayMakeActive().
-		producer2.PushProduce(createChunk(3, 2, 200, LargePacket));
+		producer2.PushProduce(CreateChunk(3, 2, 200, LargePacket));
 		producer2.PushBytesToSend(LargePacket);
-		producer2.PushProduce(createChunk(4, 2, 201, LargePacket));
+		producer2.PushProduce(CreateChunk(4, 2, 201, LargePacket));
 		producer2.PushBytesToSend(LargePacket);
-		producer2.PushProduce(createChunk(5, 2, 202, LargePacket));
+		producer2.PushProduce(CreateChunk(5, 2, 202, LargePacket));
 		producer2.PushBytesToSend(0);
 
 		auto stream2 = scheduler.CreateStream(std::addressof(producer2), 2, 2);
@@ -533,11 +532,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		// Priority 125 -> allowed to produce every 1000/125 ~= 80 time units.
 		producer1.PushBytesToSend(PayloadLength); // MayMakeActive().
-		producer1.PushProduce(createChunk(0, 1, 100));
+		producer1.PushProduce(CreateChunk(0, 1, 100));
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(1, 1, 101));
+		producer1.PushProduce(CreateChunk(1, 1, 101));
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushProduce(createChunk(2, 1, 102));
+		producer1.PushProduce(CreateChunk(2, 1, 102));
 		producer1.PushBytesToSend(0);
 
 		auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 125);
@@ -548,11 +547,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		// Priority 200 -> allowed to produce every 1000/200 ~= 50 time units.
 		producer2.PushBytesToSend(PayloadLength); // MayMakeActive().
-		producer2.PushProduce(createChunk(3, 2, 200));
+		producer2.PushProduce(CreateChunk(3, 2, 200));
 		producer2.PushBytesToSend(PayloadLength);
-		producer2.PushProduce(createChunk(4, 2, 201));
+		producer2.PushProduce(CreateChunk(4, 2, 201));
 		producer2.PushBytesToSend(PayloadLength);
-		producer2.PushProduce(createChunk(5, 2, 202));
+		producer2.PushProduce(CreateChunk(5, 2, 202));
 		producer2.PushBytesToSend(0);
 
 		auto stream2 = scheduler.CreateStream(std::addressof(producer2), 2, 200);
@@ -563,11 +562,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		// Priority 500 -> allowed to produce every 1000/500 ~= 20 time units.
 		producer3.PushBytesToSend(PayloadLength); // MayMakeActive().
-		producer3.PushProduce(createChunk(6, 3, 300));
+		producer3.PushProduce(CreateChunk(6, 3, 300));
 		producer3.PushBytesToSend(PayloadLength);
-		producer3.PushProduce(createChunk(7, 3, 301));
+		producer3.PushProduce(CreateChunk(7, 3, 301));
 		producer3.PushBytesToSend(PayloadLength);
-		producer3.PushProduce(createChunk(8, 3, 302));
+		producer3.PushProduce(CreateChunk(8, 3, 302));
 		producer3.PushBytesToSend(0);
 
 		auto stream3 = scheduler.CreateStream(std::addressof(producer3), 3, 500);
@@ -602,11 +601,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		// Stream with priority = 125 -> inverse weight ~= 80.
 		producer1.PushBytesToSend(MediumPacket); // MayMakeActive(); vft ~ 0 + 50*80 = 4000
-		producer1.PushProduce(createChunk(0, 1, 100, MediumPacket));
+		producer1.PushProduce(CreateChunk(0, 1, 100, MediumPacket));
 		producer1.PushBytesToSend(SmallPacket); // vft ~ 4000 + 20*80 = 5600
-		producer1.PushProduce(createChunk(1, 1, 101, SmallPacket));
+		producer1.PushProduce(CreateChunk(1, 1, 101, SmallPacket));
 		producer1.PushBytesToSend(LargePacket); // vft ~ 5600 + 70*80 = 11200
-		producer1.PushProduce(createChunk(2, 1, 102, LargePacket));
+		producer1.PushProduce(CreateChunk(2, 1, 102, LargePacket));
 		producer1.PushBytesToSend(0);
 
 		auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 125);
@@ -617,11 +616,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		// Stream with priority = 200 -> inverse weight ~= 50.
 		producer2.PushBytesToSend(MediumPacket); // MayMakeActive(); vft ~ 0 + 50*50 = 2500
-		producer2.PushProduce(createChunk(3, 2, 200, MediumPacket));
+		producer2.PushProduce(CreateChunk(3, 2, 200, MediumPacket));
 		producer2.PushBytesToSend(LargePacket); // vft ~ 2500 + 70*50 = 6000
-		producer2.PushProduce(createChunk(4, 2, 201, LargePacket));
+		producer2.PushProduce(CreateChunk(4, 2, 201, LargePacket));
 		producer2.PushBytesToSend(SmallPacket); // vft ~ 6000 + 20*50 = 7000
-		producer2.PushProduce(createChunk(5, 2, 202, SmallPacket));
+		producer2.PushProduce(CreateChunk(5, 2, 202, SmallPacket));
 		producer2.PushBytesToSend(0);
 
 		auto stream2 = scheduler.CreateStream(std::addressof(producer2), 2, 200);
@@ -632,11 +631,11 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		// Stream with priority = 500 -> inverse weight ~= 20
 		producer3.PushBytesToSend(SmallPacket); // MayMakeActive; vft ~ 0 + 20*20 = 400
-		producer3.PushProduce(createChunk(6, 3, 300, SmallPacket));
+		producer3.PushProduce(CreateChunk(6, 3, 300, SmallPacket));
 		producer3.PushBytesToSend(MediumPacket); // vft ~ 400 + 50*20 = 1400
-		producer3.PushProduce(createChunk(7, 3, 301, MediumPacket));
+		producer3.PushProduce(CreateChunk(7, 3, 301, MediumPacket));
 		producer3.PushBytesToSend(LargePacket); // vft ~ 1400 + 70*20 = 2800
-		producer3.PushProduce(createChunk(8, 3, 302, LargePacket));
+		producer3.PushProduce(CreateChunk(8, 3, 302, LargePacket));
 		producer3.PushBytesToSend(0);
 
 		auto stream3 = scheduler.CreateStream(std::addressof(producer3), 3, 500);
@@ -757,9 +756,9 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer1;
 
 		producer1.PushBytesToSend(200); // MayMakeActive().
-		producer1.PushProduce(createChunk(0, 1, 0, 100));
+		producer1.PushProduce(CreateChunk(0, 1, 0, 100));
 		producer1.PushBytesToSend(100);
-		producer1.PushProduce(createChunk(1, 1, 0, 100));
+		producer1.PushProduce(CreateChunk(1, 1, 0, 100));
 		producer1.PushBytesToSend(0);
 
 		const auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 1);
@@ -769,9 +768,9 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer2;
 
 		producer2.PushBytesToSend(150); // MayMakeActive().
-		producer2.PushProduce(createChunk(2, 2, 1, 100));
+		producer2.PushProduce(CreateChunk(2, 2, 1, 100));
 		producer2.PushBytesToSend(50);
-		producer2.PushProduce(createChunk(3, 2, 1, 50));
+		producer2.PushProduce(CreateChunk(3, 2, 1, 50));
 		producer2.PushBytesToSend(0);
 
 		const auto stream2 = scheduler.CreateStream(std::addressof(producer2), 2, 1);
@@ -799,7 +798,7 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer1;
 
 		producer1.PushBytesToSend(200); // MayMakeActive().
-		producer1.PushProduce(createChunk(0, 1, 0, 200));
+		producer1.PushProduce(CreateChunk(0, 1, 0, 200));
 		producer1.PushBytesToSend(0);
 
 		const auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 1);
@@ -809,7 +808,7 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		MockStreamProducer producer2;
 
 		producer2.PushBytesToSend(150); // MayMakeActive().
-		producer2.PushProduce(createChunk(1, 2, 1, 150));
+		producer2.PushProduce(CreateChunk(1, 2, 1, 150));
 		producer2.PushBytesToSend(0);
 
 		const auto stream2 = scheduler.CreateStream(std::addressof(producer2), 2, 1);

@@ -135,9 +135,8 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 		{
 			listener.Reset(input);
 
-			auto* tpdh = new TestPayloadDescriptorHandler(input.isKeyFrame);
-
-			packet->SetPayloadDescriptorHandler(tpdh);
+			packet->SetPayloadDescriptorHandler(
+			  std::make_unique<TestPayloadDescriptorHandler>(input.isKeyFrame));
 			packet->SetSequenceNumber(input.seq);
 			nackGenerator.ReceivePacket(packet.get(), /*isRecovered*/ false);
 

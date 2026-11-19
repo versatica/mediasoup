@@ -2,6 +2,7 @@
 #include "RTC/SCTP/association/Association.hpp"
 #include "RTC/SCTP/association/Capabilities.hpp"
 #include "RTC/SCTP/association/StateCookie.hpp"
+#include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
@@ -15,9 +16,6 @@
 #include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
 #include "RTC/SCTP/packet/chunks/OperationErrorChunk.hpp"
-#include "RTC/SCTP/packet/chunks/SackChunk.hpp"
-#include "RTC/SCTP/packet/chunks/ShutdownAckChunk.hpp"
-#include "RTC/SCTP/packet/chunks/ShutdownChunk.hpp"
 #include "RTC/SCTP/packet/errorCauses/StaleCookieErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
@@ -37,24 +35,26 @@
 #include <string_view>
 #include <vector>
 
-namespace
+SCENARIO("SCTP Association", "[sctp][association]")
 {
-	// Initial value of the simulated clock (us).
-	constexpr int64_t InitialNowUs{ 1000000 * 1000 };
+	// Initial value of the simulated clock (us). It's `static` because the local
+	// class below uses it.
+	static constexpr int64_t InitialNowUs{ 1000000 * 1000 };
 	constexpr size_t SmallMessageSize{ 10 };
 
 	// All backoff timer labels an SCTP association may create. Used by `runTimers()`
-	// to fire whichever timers have expired after advancing time.
-	constexpr std::array<std::string_view, 8> SctpTimerLabels{
+	// to fire whichever timers have expired after advancing time. It's `static`
+	// because the lambdas below use it without capturing it.
+	static constexpr std::array<std::string_view, 8> SctpTimerLabels{
 		"sctp-t1-init",     "sctp-t1-cookie",          "sctp-t2-shutdown",       "sctp-t3-rtx",
 		"sctp-delayed-ack", "sctp-heartbeat-interval", "sctp-heartbeat-timeout", "sctp-re-config"
 	};
 
 	/**
 	 * Builds the default SctpOptions used in tests. Tweaked to make timers
-	 * predictable.
+	 * predictable. It's `static` because the local class below uses it.
 	 */
-	RTC::SCTP::SctpOptions makeSctpOptions()
+	static const auto MakeSctpOptions = []() -> RTC::SCTP::SctpOptions
 	{
 		RTC::SCTP::SctpOptions sctpOptions;
 
@@ -63,7 +63,7 @@ namespace
 		sctpOptions.maxBurst                    = 4;
 
 		return sctpOptions;
-	}
+	};
 
 	/**
 	 * An SCTP Association under test, together with its simulated clock and
@@ -72,6 +72,10 @@ namespace
 	class AssociationUnderTest
 	{
 	public:
+		AssociationUnderTest() : AssociationUnderTest(MakeSctpOptions())
+		{
+		}
+
 		/**
 		 * `mayConnectOnReceivedSctpData` defaults to false so that, just like
 		 * dcsctp, the connection is only initiated by explicitly calling `Connect()`.
@@ -81,8 +85,7 @@ namespace
 		 * packet sequences and counts match.
 		 */
 		explicit AssociationUnderTest(
-		  RTC::SCTP::SctpOptions sctpOptions = makeSctpOptions(),
-		  bool mayConnectOnReceivedSctpData  = false)
+		  RTC::SCTP::SctpOptions sctpOptions, bool mayConnectOnReceivedSctpData = false)
 		  // NOTE: The order in which these members are initialized is **critical**.
 		  : sctpOptions(sctpOptions),
 		    shared(/*getTimeUs*/
@@ -122,51 +125,50 @@ namespace
 	/**
 	 * Parses a previously consumed sent packet buffer into a `SCTP::Packet`.
 	 */
-	std::unique_ptr<RTC::SCTP::Packet> parsePacket(const std::vector<uint8_t>& buffer)
+	const auto parsePacket = [](const std::vector<uint8_t>& buffer) -> std::unique_ptr<RTC::SCTP::Packet>
 	{
 		return std::unique_ptr<RTC::SCTP::Packet>(RTC::SCTP::Packet::Parse(buffer.data(), buffer.size()));
-	}
+	};
 
 	/**
 	 * Returns true if the packet contains a single chunk of the given type.
 	 */
-	template<typename ChunkType>
-	bool packetHasSingleChunkOfType(const std::vector<uint8_t>& buffer)
+	const auto packetHasSingleChunkOfType =
+	  [&parsePacket](RTC::SCTP::Chunk::ChunkType chunkType, const std::vector<uint8_t>& buffer) -> bool
 	{
 		const auto packet = parsePacket(buffer);
 
-		return packet && packet->GetChunksCount() == 1 &&
-		       packet->GetFirstChunkOfType<ChunkType>() != nullptr;
-	}
+		return packet && packet->GetChunksCount() == 1 && packet->GetChunkAt(0)->GetType() == chunkType;
+	};
 
 	/**
 	 * Returns true if the packet contains a DATA or I-DATA chunk.
 	 */
-	bool packetHasDataChunk(const std::vector<uint8_t>& buffer)
+	const auto packetHasDataChunk = [&parsePacket](const std::vector<uint8_t>& buffer) -> bool
 	{
 		const auto packet = parsePacket(buffer);
 
 		return packet && (packet->GetFirstChunkOfType<RTC::SCTP::DataChunk>() != nullptr ||
 		                  packet->GetFirstChunkOfType<RTC::SCTP::IDataChunk>() != nullptr);
-	}
+	};
 
 	/**
 	 * Delivers a single sent packet from `from` to `to`. The packet must exist.
 	 */
-	void deliverFirstSentPacket(AssociationUnderTest& from, AssociationUnderTest& to)
+	const auto deliverFirstSentPacket = [](AssociationUnderTest& from, AssociationUnderTest& to) -> void
 	{
 		const auto buffer = from.listener.ConsumeFirstSentPacket();
 
 		REQUIRE(!buffer.empty());
 
 		to.association.ReceiveSctpData(buffer.data(), buffer.size(), to.shared.GetTimeUs());
-	}
+	};
 
 	/**
 	 * Delivers all currently queued packets between `a` and `z` back and forth
 	 * until neither has anything more to send.
 	 */
-	void exchangeMessages(AssociationUnderTest& a, AssociationUnderTest& z)
+	const auto exchangeMessages = [](AssociationUnderTest& a, AssociationUnderTest& z) -> void
 	{
 		bool deliveredPacket{ false };
 
@@ -190,13 +192,13 @@ namespace
 				a.association.ReceiveSctpData(bufferFromZ.data(), bufferFromZ.size(), a.shared.GetTimeUs());
 			}
 		} while (deliveredPacket);
-	}
+	};
 
 	/**
 	 * Fires every Association backoff timer that has expired, looping until none
 	 * remain expired.
 	 */
-	void runTimers(const AssociationUnderTest& s)
+	const auto runTimers = [](const AssociationUnderTest& s) -> void
 	{
 		bool fired{ false };
 
@@ -217,26 +219,27 @@ namespace
 				}
 			}
 		} while (fired);
-	}
+	};
 
 	/**
 	 * Advances the simulated clock of both associations by `durationMs` and fires
 	 * any timer that has expired.
 	 */
-	void advanceNowMs(AssociationUnderTest& a, AssociationUnderTest& z, int64_t incrementMs)
+	const auto advanceNowMs =
+	  [&runTimers](AssociationUnderTest& a, AssociationUnderTest& z, int64_t incrementMs) -> void
 	{
 		a.AdvanceNowMs(incrementMs);
 		z.AdvanceNowMs(incrementMs);
 
 		runTimers(a);
 		runTimers(z);
-	}
+	};
 
 	/**
 	 * Returns the milliseconds left until the next running backoff timer of `s`
 	 * expires, or `std::nullopt` if `s` has no running timer.
 	 */
-	std::optional<int64_t> getTimeToNextTimeoutMs(AssociationUnderTest& s)
+	const auto getTimeToNextTimeoutMs = [](AssociationUnderTest& s) -> std::optional<int64_t>
 	{
 		std::optional<int64_t> timeToNextTimeoutMs;
 
@@ -257,22 +260,23 @@ namespace
 				continue;
 			}
 
-			if (!timeToNextTimeoutMs.has_value() || timeToTimeoutMs < *timeToNextTimeoutMs)
+			if (!timeToNextTimeoutMs.has_value() || timeToTimeoutMs < timeToNextTimeoutMs.value())
 			{
 				timeToNextTimeoutMs = timeToTimeoutMs;
 			}
 		}
 
 		return timeToNextTimeoutMs;
-	}
+	};
 
 	/**
 	 * Delivers all queued packets between `a` and `z`, then advances the simulated
 	 * clock to the next timer expiry, and repeats. Returns once neither has a
 	 * running timer or once `maxTimeoutMs` of simulated time has elapsed.
 	 */
-	void exchangeMessagesAndAdvanceTime(
-	  AssociationUnderTest& a, AssociationUnderTest& z, int64_t maxTimeoutMs = 10000)
+	const auto exchangeMessagesAndAdvanceTime =
+	  [&exchangeMessages, &getTimeToNextTimeoutMs, &advanceNowMs](
+	    AssociationUnderTest& a, AssociationUnderTest& z, int64_t maxTimeoutMs = 10000) -> void
 	{
 		const int64_t startedAtMs = a.shared.GetTimeMs();
 
@@ -293,26 +297,27 @@ namespace
 
 			if (!timeToNextTimeoutMsA.has_value())
 			{
-				timeToNextTimeoutMs = *timeToNextTimeoutMsZ;
+				timeToNextTimeoutMs = timeToNextTimeoutMsZ.value();
 			}
 			else if (!timeToNextTimeoutMsZ.has_value())
 			{
-				timeToNextTimeoutMs = *timeToNextTimeoutMsA;
+				timeToNextTimeoutMs = timeToNextTimeoutMsA.value();
 			}
 			else
 			{
-				timeToNextTimeoutMs = std::min(*timeToNextTimeoutMsA, *timeToNextTimeoutMsZ);
+				timeToNextTimeoutMs = std::min(timeToNextTimeoutMsA.value(), timeToNextTimeoutMsZ.value());
 			}
 
 			advanceNowMs(a, z, timeToNextTimeoutMs);
 		}
-	}
+	};
 
 	/**
 	 * Calls `Connect()` on `a` (the active peer) and drives the handshake to
 	 * completion against `z` (the passive peer).
 	 */
-	void connectAssociations(AssociationUnderTest& a, AssociationUnderTest& z)
+	const auto connectAssociations = [&exchangeMessages](
+	                                   AssociationUnderTest& a, AssociationUnderTest& z) -> void
 	{
 		a.association.Connect();
 		exchangeMessages(a, z);
@@ -321,7 +326,7 @@ namespace
 		REQUIRE(z.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
 		REQUIRE(a.listener.CountOnAssociationConnectedCalls() == 1);
 		REQUIRE(z.listener.CountOnAssociationConnectedCalls() == 1);
-	}
+	};
 
 	/**
 	 * Connects `a` (active) against `z` (passive) and returns `a`'s local
@@ -329,7 +334,9 @@ namespace
 	 * `a`. It's captured from the COOKIE-ACK that `z` sends to `a`, and is needed
 	 * to craft raw packets to be injected into `a`.
 	 */
-	uint32_t connectAndGetVerificationTag(AssociationUnderTest& a, AssociationUnderTest& z)
+	const auto connectAndGetVerificationTag = [&deliverFirstSentPacket, &parsePacket](
+	                                            AssociationUnderTest& a,
+	                                            AssociationUnderTest& z) -> uint32_t
 	{
 		a.association.Connect();
 		// Z reads INIT, produces INIT-ACK.
@@ -354,14 +361,15 @@ namespace
 		REQUIRE(z.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
 
 		return verificationTag;
-	}
+	};
 
 	/**
 	 * Creates an empty SCTP packet addressed to a peer, carrying the given
 	 * verification tag. `buffer` must outlive the returned packet, as the packet
 	 * is built in place on it.
 	 */
-	std::unique_ptr<RTC::SCTP::Packet> buildPacket(std::vector<uint8_t>& buffer, uint32_t verificationTag)
+	const auto buildPacket =
+	  [](std::vector<uint8_t>& buffer, uint32_t verificationTag) -> std::unique_ptr<RTC::SCTP::Packet>
 	{
 		std::unique_ptr<RTC::SCTP::Packet> packet(
 		  RTC::SCTP::Packet::Factory(buffer.data(), buffer.size()));
@@ -371,38 +379,39 @@ namespace
 		packet->SetVerificationTag(verificationTag);
 
 		return packet;
-	}
+	};
 
 	/**
 	 * Writes the packet checksum and injects it into the given association.
 	 */
-	void injectPacket(AssociationUnderTest& target, RTC::SCTP::Packet* packet)
+	const auto injectPacket = [](AssociationUnderTest& target, RTC::SCTP::Packet* packet) -> void
 	{
 		packet->WriteCRC32cChecksum();
 
 		target.association.ReceiveSctpData(
 		  packet->GetBuffer(), packet->GetLength(), target.shared.GetTimeUs());
-	}
+	};
 
 	/**
 	 * Enqueues a message to be sent on the given association.
 	 */
-	RTC::SCTP::Types::SendMessageStatus sendMessage(
-	  AssociationUnderTest& s,
-	  uint16_t streamId,
-	  uint32_t ppid,
-	  std::vector<uint8_t> payload,
-	  const RTC::SCTP::SendMessageOptions& sendMessageOptions = {})
+	const auto sendMessage =
+	  [](
+	    AssociationUnderTest& s,
+	    uint16_t streamId,
+	    uint32_t ppid,
+	    std::vector<uint8_t> payload,
+	    const RTC::SCTP::SendMessageOptions& sendMessageOptions = {}) -> RTC::SCTP::Types::SendMessageStatus
 	{
 		return s.association.SendMessage(
 		  RTC::SCTP::Message(streamId, ppid, std::move(payload)), sendMessageOptions);
-	}
+	};
 
 	/**
 	 * Consumes every received message on the given association and returns their
 	 * payload protocol identifiers, in the order they were received.
 	 */
-	std::vector<uint32_t> getReceivedMessagePpids(AssociationUnderTest& s)
+	const auto getReceivedMessagePpids = [](AssociationUnderTest& s) -> std::vector<uint32_t>
 	{
 		std::vector<uint32_t> ppids;
 
@@ -415,15 +424,55 @@ namespace
 				break;
 			}
 
-			ppids.push_back(message->GetPayloadProtocolId());
+			ppids.push_back(message.value().GetPayloadProtocolId());
 		}
 
 		return ppids;
-	}
-} // namespace
+	};
 
-SCENARIO("SCTP Association", "[sctp][association]")
-{
+	// Has A connect and replies to its INIT with an INIT-ACK carrying a cookie of
+	// given length. Returns the verification tag of A, which packets sent to it
+	// must carry.
+	const auto replyToInit = [&parsePacket, &buildPacket, &injectPacket](
+	                           AssociationUnderTest& a, uint16_t cookieLength) -> uint32_t
+	{
+		a.association.Connect();
+
+		const auto initBuffer = a.listener.ConsumeFirstSentPacket();
+		const auto initPacket = parsePacket(initBuffer);
+
+		REQUIRE(initPacket);
+
+		const auto* initChunk = initPacket->GetFirstChunkOfType<RTC::SCTP::InitChunk>();
+
+		REQUIRE(initChunk);
+
+		const uint32_t verificationTag = initChunk->GetInitiateTag();
+
+		std::vector<uint8_t> buffer(2048);
+
+		const auto packet        = buildPacket(buffer, verificationTag);
+		auto* const initAckChunk = packet->BuildChunkInPlace<RTC::SCTP::InitAckChunk>();
+		const std::vector<uint8_t> cookie(cookieLength, 0xAA);
+
+		initAckChunk->SetInitiateTag(12345678);
+		initAckChunk->SetAdvertisedReceiverWindowCredit(1000000);
+		initAckChunk->SetNumberOfOutboundStreams(1);
+		initAckChunk->SetNumberOfInboundStreams(1);
+		initAckChunk->SetInitialTsn(1);
+
+		auto* const stateCookieParameter =
+		  initAckChunk->BuildParameterInPlace<RTC::SCTP::StateCookieParameter>();
+
+		stateCookieParameter->SetCookie(cookie.data(), cookieLength);
+		stateCookieParameter->Consolidate();
+		initAckChunk->Consolidate();
+
+		injectPacket(a, packet.get());
+
+		return verificationTag;
+	};
+
 	SECTION("establishes connection")
 	{
 		AssociationUnderTest a;
@@ -568,7 +617,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		// INIT is never received by Z.
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::InitChunk>(a.listener.ConsumeFirstSentPacket()) == true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::INIT, a.listener.ConsumeFirstSentPacket()) == true);
 
 		advanceNowMs(a, z, a.sctpOptions.t1InitTimeoutMs);
 
@@ -594,7 +644,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		// INIT is never received by Z.
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::InitChunk>(a.listener.ConsumeFirstSentPacket()) == true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::INIT, a.listener.ConsumeFirstSentPacket()) == true);
 
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		const auto maxInitRetransmissions = a.sctpOptions.maxInitRetransmissions.value();
@@ -605,7 +656,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 			// INIT is resent.
 			REQUIRE(
-			  packetHasSingleChunkOfType<RTC::SCTP::InitChunk>(a.listener.ConsumeFirstSentPacket()) == true);
+			  packetHasSingleChunkOfType(
+			    RTC::SCTP::Chunk::ChunkType::INIT, a.listener.ConsumeFirstSentPacket()) == true);
 		}
 
 		// Another timeout, after the max init retransmits.
@@ -630,8 +682,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		// COOKIE-ECHO is never received by Z.
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::CookieEchoChunk>(a.listener.ConsumeFirstSentPacket()) ==
-		  true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO, a.listener.ConsumeFirstSentPacket()) == true);
 
 		advanceNowMs(a, z, a.sctpOptions.t1CookieTimeoutMs);
 
@@ -658,8 +710,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		// COOKIE-ECHO is never received by Z.
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::CookieEchoChunk>(a.listener.ConsumeFirstSentPacket()) ==
-		  true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO, a.listener.ConsumeFirstSentPacket()) == true);
 
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		const auto maxInitRetransmissions = a.sctpOptions.maxInitRetransmissions.value();
@@ -670,8 +722,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 			// COOKIE-ECHO is resent.
 			REQUIRE(
-			  packetHasSingleChunkOfType<RTC::SCTP::CookieEchoChunk>(a.listener.ConsumeFirstSentPacket()) ==
-			  true);
+			  packetHasSingleChunkOfType(
+			    RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO, a.listener.ConsumeFirstSentPacket()) == true);
 		}
 
 		// Another timeout, after the max init retransmits.
@@ -771,8 +823,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 			// SHUTDOWN is resent (and dropped).
 			REQUIRE(
-			  packetHasSingleChunkOfType<RTC::SCTP::ShutdownChunk>(a.listener.ConsumeFirstSentPacket()) ==
-			  true);
+			  packetHasSingleChunkOfType(
+			    RTC::SCTP::Chunk::ChunkType::SHUTDOWN, a.listener.ConsumeFirstSentPacket()) == true);
 			REQUIRE(a.listener.ConsumeFirstSentPacket().empty() == true);
 		}
 
@@ -784,8 +836,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(a.listener.GetClosedErrorKind() == RTC::SCTP::Types::ErrorKind::TOO_MANY_RETRIES);
 		// An ABORT chunk is sent.
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::AbortAssociationChunk>(
-		    a.listener.ConsumeFirstSentPacket()) == true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::ABORT, a.listener.ConsumeFirstSentPacket()) == true);
 		REQUIRE(a.listener.ConsumeFirstSentPacket().empty() == true);
 	}
 
@@ -804,8 +856,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		// Consume the SHUTDOWN-ACK sent by A (drop it).
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::ShutdownAckChunk>(a.listener.ConsumeFirstSentPacket()) ==
-		  true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::SHUTDOWN_ACK, a.listener.ConsumeFirstSentPacket()) == true);
 
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
 		REQUIRE(z.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
@@ -819,8 +871,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 			advanceNowMs(a, z, a.sctpOptions.initialRtoMs * (1 << i));
 
 			REQUIRE(
-			  packetHasSingleChunkOfType<RTC::SCTP::ShutdownAckChunk>(a.listener.ConsumeFirstSentPacket()) ==
-			  true);
+			  packetHasSingleChunkOfType(
+			    RTC::SCTP::Chunk::ChunkType::SHUTDOWN_ACK, a.listener.ConsumeFirstSentPacket()) == true);
 			REQUIRE(a.listener.ConsumeFirstSentPacket().empty() == true);
 		}
 
@@ -832,8 +884,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
 
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::AbortAssociationChunk>(
-		    a.listener.ConsumeFirstSentPacket()) == true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::ABORT, a.listener.ConsumeFirstSentPacket()) == true);
 		REQUIRE(a.listener.ConsumeFirstSentPacket().empty() == true);
 	}
 
@@ -850,8 +902,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		deliverFirstSentPacket(z, a);
 
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::ShutdownAckChunk>(a.listener.ConsumeFirstSentPacket()) ==
-		  true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::SHUTDOWN_ACK, a.listener.ConsumeFirstSentPacket()) == true);
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
 
 		// Second shutdown while already shutting down, must be ignored.
@@ -1112,7 +1164,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		const std::vector<uint8_t> payload(SmallMessageSize);
 
 		// Sends an unreliable message and returns the packet carrying it.
-		const auto sendUnreliable = [&a, &payload](uint32_t ppid) -> std::vector<uint8_t>
+		const auto sendUnreliable = [&sendMessage, &a, &payload](uint32_t ppid) -> std::vector<uint8_t>
 		{
 			sendMessage(a, 1, ppid, payload, { .maxRetransmissions = 0 });
 
@@ -1132,7 +1184,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		};
 
 		// Returns the TSN of the I-DATA chunk carried by `buffer`.
-		const auto getIDataChunkTsn = [](const std::vector<uint8_t>& buffer) -> uint32_t
+		const auto getIDataChunkTsn = [&parsePacket](const std::vector<uint8_t>& buffer) -> uint32_t
 		{
 			const auto packet = parsePacket(buffer);
 
@@ -1147,7 +1199,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		// Returns the new cumulative TSN of the I-FORWARD-TSN chunk carried by
 		// `buffer`, or `std::nullopt` if it carries no such chunk.
-		const auto getIForwardTsn = [](const std::vector<uint8_t>& buffer) -> std::optional<uint32_t>
+		const auto getIForwardTsn =
+		  [&parsePacket](const std::vector<uint8_t>& buffer) -> std::optional<uint32_t>
 		{
 			const auto packet = parsePacket(buffer);
 
@@ -1183,7 +1236,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto forwardTsn1 = a.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::IForwardTsnChunk>(forwardTsn1) == true);
+		REQUIRE(
+		  packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::I_FORWARD_TSN, forwardTsn1) == true);
 		REQUIRE(getIForwardTsn(forwardTsn1) == lostTsn1);
 
 		z.association.ReceiveSctpData(forwardTsn1.data(), forwardTsn1.size(), z.shared.GetTimeUs());
@@ -1200,7 +1254,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto forwardTsn2 = a.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::IForwardTsnChunk>(forwardTsn2) == true);
+		REQUIRE(
+		  packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::I_FORWARD_TSN, forwardTsn2) == true);
 		REQUIRE(getIForwardTsn(forwardTsn2) == lostTsn2);
 
 		// That FORWARD-TSN was lost. A duplicate is not sent until the rate
@@ -1245,7 +1300,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto buffer = a.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(buffer) == true);
+		REQUIRE(
+		  packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::HEARTBEAT_REQUEST, buffer) == true);
 
 		const auto packet = parsePacket(buffer);
 		const auto* heartbeatRequestChunk =
@@ -1326,11 +1382,11 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		{
 			for (const bool zEnable : { false, true })
 			{
-				auto aSctpOptions = makeSctpOptions();
+				auto aSctpOptions = MakeSctpOptions();
 
 				aSctpOptions.enableMessageInterleaving = aEnable;
 
-				auto zSctpOptions = makeSctpOptions();
+				auto zSctpOptions = MakeSctpOptions();
 
 				zSctpOptions.enableMessageInterleaving = zEnable;
 
@@ -1451,7 +1507,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("streams have initial priority")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.defaultStreamPriority = 42;
 
@@ -1466,7 +1522,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("can change stream priority")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.defaultStreamPriority = 42;
 
@@ -1485,7 +1541,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("respects the per-stream queue limit")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.maxSendBufferSize       = 4000;
 		sctpOptions.perStreamSendQueueLimit = 1000;
@@ -1562,7 +1618,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("applies the configured default buffered amount low threshold to new streams")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.defaultStreamBufferedAmountLowThreshold = 1024;
 
@@ -1577,7 +1633,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("does not trigger buffered amount low until crossing a non-zero default threshold")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.defaultStreamBufferedAmountLowThreshold = 1024;
 
@@ -1638,12 +1694,12 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("exposes the number of negotiated streams")
 	{
-		auto aSctpOptions = makeSctpOptions();
+		auto aSctpOptions = MakeSctpOptions();
 
 		aSctpOptions.announcedMaxInboundStreams  = 12;
 		aSctpOptions.announcedMaxOutboundStreams = 45;
 
-		auto zSctpOptions = makeSctpOptions();
+		auto zSctpOptions = MakeSctpOptions();
 
 		zSctpOptions.announcedMaxInboundStreams  = 23;
 		zSctpOptions.announcedMaxOutboundStreams = 34;
@@ -1676,7 +1732,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("always sends INIT with non-zero checksum")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
@@ -1687,13 +1743,13 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto buffer = a.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::InitChunk>(buffer) == true);
+		REQUIRE(packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::INIT, buffer) == true);
 		REQUIRE(parsePacket(buffer)->GetChecksum() != 0);
 	}
 
 	SECTION("may send INIT-ACK with zero checksum")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
@@ -1707,13 +1763,13 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto buffer = z.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::InitAckChunk>(buffer) == true);
+		REQUIRE(packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::INIT_ACK, buffer) == true);
 		REQUIRE(parsePacket(buffer)->GetChecksum() == 0);
 	}
 
 	SECTION("always sends COOKIE-ECHO with non-zero checksum")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
@@ -1729,13 +1785,13 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto buffer = a.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::CookieEchoChunk>(buffer) == true);
+		REQUIRE(packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO, buffer) == true);
 		REQUIRE(parsePacket(buffer)->GetChecksum() != 0);
 	}
 
 	SECTION("sends COOKIE-ACK with zero checksum")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
@@ -1753,13 +1809,13 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto buffer = z.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::CookieAckChunk>(buffer) == true);
+		REQUIRE(packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::COOKIE_ACK, buffer) == true);
 		REQUIRE(parsePacket(buffer)->GetChecksum() == 0);
 	}
 
 	SECTION("sends DATA with zero checksum")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
@@ -1779,7 +1835,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("both sides send DATA with zero checksum with TRUSTED_NETWORK")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK;
@@ -1823,11 +1879,11 @@ SCENARIO("SCTP Association", "[sctp][association]")
 	{
 		// Make them have slightly different heartbeat intervals, to validate that
 		// sending an ack by Z doesn't restart its heartbeat timer.
-		auto aSctpOptions = makeSctpOptions();
+		auto aSctpOptions = MakeSctpOptions();
 
 		aSctpOptions.heartbeatIntervalMs = 1000;
 
-		auto zSctpOptions = makeSctpOptions();
+		auto zSctpOptions = MakeSctpOptions();
 
 		zSctpOptions.heartbeatIntervalMs = 1100;
 
@@ -1840,7 +1896,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto bufferA = a.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(bufferA) == true);
+		REQUIRE(
+		  packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::HEARTBEAT_REQUEST, bufferA) == true);
 
 		// Z receives the heartbeat and sends an ACK that is propagated back to A.
 		z.association.ReceiveSctpData(bufferA.data(), bufferA.size(), z.shared.GetTimeUs());
@@ -1851,7 +1908,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto bufferZ = z.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(bufferZ) == true);
+		REQUIRE(
+		  packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::HEARTBEAT_REQUEST, bufferZ) == true);
 
 		// A receives the heartbeat and sends an ACK that is propagated back to Z.
 		a.association.ReceiveSctpData(bufferZ.data(), bufferZ.size(), a.shared.GetTimeUs());
@@ -1862,7 +1920,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 	{
 		AssociationUnderTest a;
 		// Disable Z's heartbeats so that it doesn't interfere.
-		auto zSctpOptions = makeSctpOptions();
+		auto zSctpOptions = MakeSctpOptions();
 
 		zSctpOptions.heartbeatIntervalMs = 0;
 
@@ -1884,8 +1942,9 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 			// Drop every heartbeat.
 			REQUIRE(
-			  packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(
-			    a.listener.ConsumeFirstSentPacket()) == true);
+			  packetHasSingleChunkOfType(
+			    RTC::SCTP::Chunk::ChunkType::HEARTBEAT_REQUEST, a.listener.ConsumeFirstSentPacket()) ==
+			  true);
 
 			// Let the heartbeat timeout expire.
 			advanceNowMs(a, z, 1000);
@@ -1913,7 +1972,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 	{
 		AssociationUnderTest a;
 		// Disable Z's heartbeats so that it doesn't interfere.
-		auto zSctpOptions = makeSctpOptions();
+		auto zSctpOptions = MakeSctpOptions();
 
 		zSctpOptions.heartbeatIntervalMs = 0;
 
@@ -1946,7 +2005,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto buffer = a.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(buffer) == true);
+		REQUIRE(
+		  packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::HEARTBEAT_REQUEST, buffer) == true);
 
 		z.association.ReceiveSctpData(buffer.data(), buffer.size(), z.shared.GetTimeUs());
 		// A reads the HEARTBEAT-ACK, which clears the error counter.
@@ -1965,8 +2025,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		advanceNowMs(a, z, timeToNextHeartbeatMs);
 
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(
-		    a.listener.ConsumeFirstSentPacket()) == true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::HEARTBEAT_REQUEST, a.listener.ConsumeFirstSentPacket()) == true);
 	}
 
 	SECTION("resets a stream")
@@ -2172,7 +2232,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		// request the receiver to skip it and report an error. It is built as a
 		// HEARTBEAT-REQUEST chunk carrying a Heartbeat Info parameter with given
 		// info length, and then its type is patched.
-		const auto injectUnknownChunk = [&a, verificationTag](uint16_t infoLength) -> void
+		const auto injectUnknownChunk =
+		  [&buildPacket, &injectPacket, &a, verificationTag](uint16_t infoLength) -> void
 		{
 			std::vector<uint8_t> buffer(a.sctpOptions.mtu);
 
@@ -2201,7 +2262,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto buffer = a.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::OperationErrorChunk>(buffer) == true);
+		REQUIRE(packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::OPERATION_ERROR, buffer) == true);
 		REQUIRE(buffer.size() == 1188);
 
 		// With 1161 bytes of info the reply would take 1192 bytes, so it is not
@@ -2244,8 +2305,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		// The HEARTBEAT-REQUEST chunk after the unknown chunk is processed, so A
 		// replies with a HEARTBEAT-ACK chunk.
-		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::HeartbeatAckChunk>(a.listener.ConsumeFirstSentPacket()));
+		REQUIRE(packetHasSingleChunkOfType(
+		  RTC::SCTP::Chunk::ChunkType::HEARTBEAT_ACK, a.listener.ConsumeFirstSentPacket()));
 	}
 
 	SECTION("stops processing the packet at an unknown chunk whose type says to stop")
@@ -2284,48 +2345,6 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(a.listener.HasSentPackets() == false);
 	}
 
-	// Has A connect and replies to its INIT with an INIT-ACK carrying a cookie of
-	// given length. Returns the verification tag of A, which packets sent to it
-	// must carry.
-	const auto replyToInit = [](AssociationUnderTest& a, uint16_t cookieLength) -> uint32_t
-	{
-		a.association.Connect();
-
-		const auto initBuffer = a.listener.ConsumeFirstSentPacket();
-		const auto initPacket = parsePacket(initBuffer);
-
-		REQUIRE(initPacket);
-
-		const auto* initChunk = initPacket->GetFirstChunkOfType<RTC::SCTP::InitChunk>();
-
-		REQUIRE(initChunk);
-
-		const uint32_t verificationTag = initChunk->GetInitiateTag();
-
-		std::vector<uint8_t> buffer(2048);
-
-		const auto packet        = buildPacket(buffer, verificationTag);
-		auto* const initAckChunk = packet->BuildChunkInPlace<RTC::SCTP::InitAckChunk>();
-		const std::vector<uint8_t> cookie(cookieLength, 0xAA);
-
-		initAckChunk->SetInitiateTag(12345678);
-		initAckChunk->SetAdvertisedReceiverWindowCredit(1000000);
-		initAckChunk->SetNumberOfOutboundStreams(1);
-		initAckChunk->SetNumberOfInboundStreams(1);
-		initAckChunk->SetInitialTsn(1);
-
-		auto* const stateCookieParameter =
-		  initAckChunk->BuildParameterInPlace<RTC::SCTP::StateCookieParameter>();
-
-		stateCookieParameter->SetCookie(cookie.data(), cookieLength);
-		stateCookieParameter->Consolidate();
-		initAckChunk->Consolidate();
-
-		injectPacket(a, packet.get());
-
-		return verificationTag;
-	};
-
 	SECTION("aborts on an INIT-ACK whose cookie is too large to be echoed")
 	{
 		// The COOKIE-ECHO takes 12 bytes of common header, 4 of chunk header and
@@ -2338,7 +2357,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 			const auto buffer = a.listener.ConsumeFirstSentPacket();
 
-			REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::CookieEchoChunk>(buffer) == true);
+			REQUIRE(packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO, buffer) == true);
 			REQUIRE(buffer.size() == 1188);
 			REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTING);
 		}
@@ -2352,7 +2371,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 			const auto buffer = a.listener.ConsumeFirstSentPacket();
 
-			REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::AbortAssociationChunk>(buffer) == true);
+			REQUIRE(packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::ABORT, buffer) == true);
 			REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
 			REQUIRE(a.listener.HasFailed() == true);
 			REQUIRE(a.listener.GetFailedErrorKind() == RTC::SCTP::Types::ErrorKind::PROTOCOL_VIOLATION);
@@ -2368,11 +2387,11 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		const uint32_t verificationTag = replyToInit(a, 1172);
 
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::CookieEchoChunk>(a.listener.ConsumeFirstSentPacket()) ==
-		  true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO, a.listener.ConsumeFirstSentPacket()) == true);
 
 		// Injects into A a DATA chunk with given TSN.
-		const auto injectDataChunk = [&a, verificationTag](uint32_t tsn) -> void
+		const auto injectDataChunk = [&buildPacket, &injectPacket, &a, verificationTag](uint32_t tsn) -> void
 		{
 			std::vector<uint8_t> buffer(a.sctpOptions.mtu);
 
@@ -2395,7 +2414,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		injectDataChunk(1);
 
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::SackChunk>(a.listener.ConsumeFirstSentPacket()) == true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::SACK, a.listener.ConsumeFirstSentPacket()) == true);
 
 		// The second one leaves a delayed SACK pending.
 		injectDataChunk(2);
@@ -2413,7 +2433,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto buffer = a.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::CookieEchoChunk>(buffer) == true);
+		REQUIRE(packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO, buffer) == true);
 		REQUIRE(buffer.size() == 1188);
 
 		// The SACK is still pending, so it is sent once the delayed ack timer
@@ -2423,7 +2443,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(delayedAckTimer);
 		REQUIRE(delayedAckTimer->EvaluateHasExpired() == true);
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::SackChunk>(a.listener.ConsumeFirstSentPacket()) == true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::SACK, a.listener.ConsumeFirstSentPacket()) == true);
 	}
 
 	SECTION("reports a received error chunk as a callback")
@@ -2500,7 +2521,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 	{
 		// Disable message interleaving so that ordered DATA chunks (with SSN) are
 		// used.
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.enableMessageInterleaving = false;
 
@@ -2545,7 +2566,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("lifecycle events for fail on max retransmissions")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.enableMessageInterleaving = false;
 
@@ -2593,7 +2614,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("lifecycle events for an expired message with a retransmit limit")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.enableMessageInterleaving = false;
 
@@ -2625,7 +2646,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("establishes connection with State Cookie authentication enabled")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.requireAuthenticatedCookie = true;
 
@@ -2688,7 +2709,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		// With authentication required, the forged COOKIE-ECHO fails MAC
 		// verification and is silently discarded.
 		{
-			auto sctpOptions = makeSctpOptions();
+			auto sctpOptions = MakeSctpOptions();
 
 			sctpOptions.requireAuthenticatedCookie = true;
 
@@ -2708,7 +2729,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("rejects a stale COOKIE-ECHO when authentication is required")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.requireAuthenticatedCookie = true;
 
@@ -2733,7 +2754,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		// Z responds with an ERROR chunk (carrying a Stale Cookie error cause).
 		const auto errorBuffer = z.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::OperationErrorChunk>(errorBuffer) == true);
+		REQUIRE(
+		  packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::OPERATION_ERROR, errorBuffer) == true);
 
 		const auto errorPacket = parsePacket(errorBuffer);
 		const auto* operationErrorChunk =
@@ -2752,7 +2774,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("delivers the messages received after a too large one")
 	{
-		auto sctpOptions = makeSctpOptions();
+		auto sctpOptions = MakeSctpOptions();
 
 		sctpOptions.maxReceiveMessageSize = 100;
 
@@ -2796,7 +2818,9 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto shutdownAckBuffer = a.listener.ConsumeFirstSentPacket();
 
-		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::ShutdownAckChunk>(shutdownAckBuffer) == true);
+		REQUIRE(
+		  packetHasSingleChunkOfType(RTC::SCTP::Chunk::ChunkType::SHUTDOWN_ACK, shutdownAckBuffer) ==
+		  true);
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
 
 		// The SHUTDOWN-ACK sent to Z carries Z's verification tag, which is A's
@@ -2961,8 +2985,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		deliverFirstSentPacket(z, a);
 
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::ShutdownAckChunk>(a.listener.ConsumeFirstSentPacket()) ==
-		  true);
+		  packetHasSingleChunkOfType(
+		    RTC::SCTP::Chunk::ChunkType::SHUTDOWN_ACK, a.listener.ConsumeFirstSentPacket()) == true);
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
 
 		// A COOKIE-ECHO whose packet carries A's local verification tag but whose

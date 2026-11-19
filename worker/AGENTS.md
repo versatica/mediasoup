@@ -153,7 +153,10 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 
 ## Tests (Catch2)
 
-- Helpers are lambdas defined inside the `SCENARIO` body, never file-level `static` functions.
+- Everything a test needs is defined inside the `SCENARIO` body, never at file level, neither `static` nor inside an anonymous `namespace`: helpers are lambdas, mock listeners and other helper types are local classes, and constants are local `constexpr`. Something goes at file level only if several `SCENARIO`s in the same file share it.
+- Inside the `SCENARIO` body, the local `constexpr` constants go first, then the local classes, then the objects and the helper lambdas, the same order as in a class body.
+- A constant or a helper lambda that a local class uses is declared `static` and goes with the constants, before the classes: a local class cannot odr-use the automatic variables of the enclosing function. A constant is `static constexpr`, a lambda is `static const`. The same goes for a constant that a lambda without captures uses by reference (calling a method on it, passing it to a `const T&` parameter): that odr-uses it, which a lambda can only do with a variable it captures or one that is `static`. A default argument cannot call a local lambda, not even a `static` one, so a constructor that needs one gets a default constructor that delegates instead.
+- A lambda is never declared `constexpr`, anywhere in the worker: it is a function, not a compile-time value, and a lambda without captures is constant-initialized anyway. The only exception is a lambda that really is called in a constant expression (a `static_assert`, a template argument, the initializer of another `constexpr`).
 - Never `using namespace RTC;`: fully qualify names.
 - A `SCENARIO` or `SECTION` name is a single string literal, never split into adjacent literals.
 - Accessing a `std::optional` after `REQUIRE(opt.has_value())` needs `// NOLINTNEXTLINE(bugprone-unchecked-optional-access)`. The check flags all three forms, `*opt`, `opt->field` and `opt.value()`: using `.value()` does not avoid it, and the `REQUIRE()` above does not help because the checker does not see through the Catch2 macro.

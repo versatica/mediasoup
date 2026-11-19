@@ -23,14 +23,16 @@
 #include <span>
 #include <vector>
 
-namespace
+SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 {
-	constexpr uint32_t Arwnd{ 131072 };
-	constexpr uint32_t LocalInitialTsn{ 0 };
-	constexpr uint32_t RemoteInitialTsn{ 0 };
-	constexpr int64_t InitialNowUs{ 10000 * 1000 };
-	constexpr int64_t RtoMs{ 250 };
-	constexpr std::array<uint8_t, 4> ShortPayload{ 1, 2, 3, 4 };
+	// NOTE: These are `static` because the local class and the lambdas below use
+	// them without capturing them.
+	static constexpr uint32_t Arwnd{ 131072 };
+	static constexpr uint32_t LocalInitialTsn{ 0 };
+	static constexpr uint32_t RemoteInitialTsn{ 0 };
+	static constexpr int64_t InitialNowUs{ 10000 * 1000 };
+	static constexpr int64_t RtoMs{ 250 };
+	static constexpr std::array<uint8_t, 4> ShortPayload{ 1, 2, 3, 4 };
 
 	/**
 	 * A RTC::SCTP::StreamResetHandler under test, together with all the (real)
@@ -166,10 +168,7 @@ namespace
 		RTC::SCTP::RetransmissionQueue retransmissionQueue;
 		RTC::SCTP::StreamResetHandler streamResetHandler;
 	};
-} // namespace
 
-SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
-{
 	SECTION("a chunk with no parameters returns an error")
 	{
 		TestStreamResetHandler test;

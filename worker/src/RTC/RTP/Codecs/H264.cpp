@@ -126,7 +126,8 @@ namespace RTC
 					temporalLayer = dependencyDescriptorPayloadDescriptor->temporalLayer;
 
 					packet->SetDependencyDescriptorPayloadDescriptorHandler(
-					  new DependencyDescriptorPayloadDescriptorHandler(dependencyDescriptorPayloadDescriptor));
+					  std::make_unique<DependencyDescriptorPayloadDescriptorHandler>(
+					    dependencyDescriptorPayloadDescriptor));
 				}
 
 				auto* data = packet->GetPayload();
@@ -141,9 +142,8 @@ namespace RTC
 
 				payloadDescriptor->temporalLayer = temporalLayer;
 
-				auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
-
-				packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+				packet->SetPayloadDescriptorHandler(
+				  std::make_unique<PayloadDescriptorHandler>(payloadDescriptor));
 			}
 
 			/* Instance methods. */

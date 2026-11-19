@@ -8,11 +8,13 @@
 #include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-namespace
+SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 {
-	using RtpPacketProcessResult = RTC::ProducerStreamManager::RtpPacketProcessResult;
-
 	constexpr uint32_t MappedSsrc = 1234567890;
+	// Milliseconds between the packets fed by feedRtpStreamRecv() below.
+	constexpr int64_t PacketSpacingMs{ 1 };
+
+	using RtpPacketProcessResult = RTC::ProducerStreamManager::RtpPacketProcessResult;
 
 	class MockListener : public RTC::ProducerStreamManager::Listener
 	{
@@ -87,16 +89,11 @@ namespace
 	public:
 		MockEncodingContext()
 		  : RTC::RTP::Codecs::EncodingContext(
-		      MockEncodingContext::params, RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength)
+		      RTC::RTP::Codecs::EncodingContext::Params{},
+		      RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength)
 		{
 		}
-
-	private:
-		static RTC::RTP::Codecs::EncodingContext::Params params;
 	};
-
-	// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-	RTC::RTP::Codecs::EncodingContext::Params MockEncodingContext::params;
 
 	class MockPayloadDescriptorHandler : public RTC::RTP::Codecs::PayloadDescriptorHandler
 	{
@@ -139,28 +136,24 @@ namespace
 	};
 
 	// RtpStreamRecvListener must outlive the RtpStreamRecv.
-	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
-
-	// Milliseconds between the packets fed by feedRtpStreamRecv() below.
-	constexpr int64_t PacketSpacingMs{ 1 };
+	RtpStreamRecvListener streamRecvListener;
 
 	// Current time, which the helpers below move so that traffic spans a period
 	// instead of happening all at once.
-	// NOLINTNEXTLINE(readability-identifier-naming)
 	int64_t nowUs{ 1000000000000 };
 
-	// NOLINTNEXTLINE(readability-identifier-naming)
 	mocks::MockShared shared(/*getTimeUs*/
-	                         []() -> int64_t
+	                         [&nowUs]() -> int64_t
 	                         {
 		                         return nowUs;
 	                         });
 
-	std::unique_ptr<RTC::SimpleProducerStreamManager> createManager(
-	  MockListener* listener,
-	  bool keyFrameSupported                                             = true,
-	  RTC::Media::Kind kind                                              = RTC::Media::Kind::VIDEO,
-	  std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext = nullptr)
+	const auto createManager = [&shared](
+	                             MockListener* listener,
+	                             bool keyFrameSupported = true,
+	                             RTC::Media::Kind kind  = RTC::Media::Kind::VIDEO,
+	                             std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext =
+	                               nullptr) -> std::unique_ptr<RTC::SimpleProducerStreamManager>
 	{
 		RTC::RtpEncodingParameters encoding;
 		encoding.ssrc = MappedSsrc;
@@ -176,9 +169,10 @@ namespace
 		  keyFrameSupported,
 		  listener,
 		  std::addressof(shared));
-	}
+	};
 
-	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv()
+	const auto createRtpStreamRecv = [&streamRecvListener,
+	                                  &shared]() -> std::unique_ptr<RTC::RTP::RtpStreamRecv>
 	{
 		RTC::RTP::RtpStream::Params params;
 
@@ -187,12 +181,14 @@ namespace
 
 		return std::make_unique<RTC::RTP::RtpStreamRecv>(
 		  std::addressof(streamRecvListener), std::addressof(shared), params, 0, false);
-	}
+	};
 
 	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero. They
 	// are spread in time because a bitrate is measured over the period its samples
 	// span, and samples taken all at once span none.
-	void feedRtpStreamRecv(RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTP::Packet* packet, uint16_t count)
+	const auto feedRtpStreamRecv =
+	  [&nowUs,
+		 &shared](RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTP::Packet* packet, uint16_t count) -> void
 	{
 		auto firstSeq = static_cast<uint16_t>(packet->GetSequenceNumber() + 1);
 		auto lastSeq  = static_cast<uint16_t>(firstSeq + count);
@@ -220,11 +216,8 @@ namespace
 		  0.5));
 
 		REQUIRE(rtpStream->GetBitrate(shared.GetTimeMs()) == expectedBitrate);
-	}
-} // namespace
+	};
 
-SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
-{
 	std::unique_ptr<RTC::RTP::Packet> packet(
 	  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
 
@@ -259,10 +252,9 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 
 		packet->SetSequenceNumber(seq);
 
-		// packet->SetPayloadDescriptorHandler() will take the ownership.
-		auto* payloadDescriptorHandler       = new MockPayloadDescriptorHandler();
+		auto payloadDescriptorHandler        = std::make_unique<MockPayloadDescriptorHandler>();
 		payloadDescriptorHandler->isKeyFrame = true;
-		packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+		packet->SetPayloadDescriptorHandler(std::move(payloadDescriptorHandler));
 
 		auto result = manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 0, /*maxPacketTs*/ 0);
@@ -307,9 +299,9 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		packet->SetSequenceNumber(1);
 
 		// Set a handler whose Process() returns false.
-		auto* handler          = new MockPayloadDescriptorHandler();
+		auto handler           = std::make_unique<MockPayloadDescriptorHandler>();
 		handler->processResult = false;
-		packet->SetPayloadDescriptorHandler(handler);
+		packet->SetPayloadDescriptorHandler(std::move(handler));
 
 		auto result = manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 0, /*maxPacketTs*/ 0);

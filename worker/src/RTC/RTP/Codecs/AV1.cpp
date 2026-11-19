@@ -39,7 +39,7 @@ namespace RTC
 				// filtering them here is what keeps its video decodable. See
 				// https://issues.webrtc.org/issues/560293075.
 				packet->SetPayloadDescriptorHandler(
-				  new DependencyDescriptorPayloadDescriptorHandler(payloadDescriptor));
+				  std::make_unique<DependencyDescriptorPayloadDescriptorHandler>(payloadDescriptor));
 			}
 		} // namespace Codecs
 	} // namespace RTP

@@ -6,13 +6,13 @@
 #include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-namespace
+SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 {
-	using RtpPacketProcessResult = RTC::ProducerStreamManager::RtpPacketProcessResult;
-
 	constexpr uint32_t MappedSsrc0 = 1000;
 	constexpr uint32_t MappedSsrc1 = 2000;
 	constexpr uint32_t MappedSsrc2 = 3000;
+
+	using RtpPacketProcessResult = RTC::ProducerStreamManager::RtpPacketProcessResult;
 
 	class MockListener : public RTC::ProducerStreamManager::Listener
 	{
@@ -89,18 +89,19 @@ namespace
 		bool isKeyFrame{ false };
 	};
 
-	// NOLINTNEXTLINE(readability-identifier-naming)
 	mocks::MockShared shared(/*getTimeUs*/
 	                         []() -> int64_t
 	                         {
 		                         return DepLibUV::GetTimeUs();
 	                         });
 
-	std::unique_ptr<RTC::PipeProducerStreamManager> createManager(
-	  MockListener* listener,
-	  const std::vector<uint32_t>& ssrcs = { MappedSsrc0, MappedSsrc1, MappedSsrc2 },
-	  bool keyFrameSupported             = true,
-	  RTC::Media::Kind kind              = RTC::Media::Kind::VIDEO)
+	const auto createManager =
+	  [&shared](
+	    MockListener* listener,
+	    const std::vector<uint32_t>& ssrcs = { MappedSsrc0, MappedSsrc1, MappedSsrc2 },
+	    bool keyFrameSupported             = true,
+	    RTC::Media::Kind kind =
+	      RTC::Media::Kind::VIDEO) -> std::unique_ptr<RTC::PipeProducerStreamManager>
 	{
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
 
@@ -121,11 +122,8 @@ namespace
 		  keyFrameSupported,
 		  listener,
 		  std::addressof(shared));
-	}
-} // namespace
+	};
 
-SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
-{
 	std::unique_ptr<RTC::RTP::Packet> packet(
 	  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
 
@@ -238,9 +236,9 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(50);
 
-		auto* handler       = new MockPayloadDescriptorHandler();
+		auto handler        = std::make_unique<MockPayloadDescriptorHandler>();
 		handler->isKeyFrame = true;
-		packet->SetPayloadDescriptorHandler(handler);
+		packet->SetPayloadDescriptorHandler(std::move(handler));
 
 		auto result = manager->ProcessRtpPacket(packet.get(), false, 0, 0);
 
