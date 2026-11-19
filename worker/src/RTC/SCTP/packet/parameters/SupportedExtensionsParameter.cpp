@@ -95,7 +95,7 @@ namespace RTC
 			{
 				MS_DUMP_CLEAN(
 				  indentation,
-				  "  - idx: %" PRIu16 ", chunk type: %" PRIu8 " (%s)",
+				  "  - idx: %" PRIu32 ", chunk type: %" PRIu8 " (%s)",
 				  idx,
 				  static_cast<uint8_t>(GetChunkTypeAt(idx)),
 				  Chunk::ChunkTypeToString(GetChunkTypeAt(idx)).c_str());
@@ -121,7 +121,7 @@ namespace RTC
 
 			// We must save previous count since SetVariableLengthValueLength() will
 			// make GetNumberOfChunkTypes() return a different value.
-			auto previousNumberOfChunkTypes = GetNumberOfChunkTypes();
+			const auto previousNumberOfChunkTypes = GetNumberOfChunkTypes();
 
 			// NOTE: This may throw.
 			SetVariableLengthValueLength(GetVariableLengthValueLength() + 1);

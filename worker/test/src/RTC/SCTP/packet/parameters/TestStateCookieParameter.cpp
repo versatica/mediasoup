@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/association/Capabilities.hpp"
 #include "RTC/SCTP/association/StateCookie.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
@@ -27,10 +28,12 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 		};
 		// clang-format on
 
-		auto* parameter = RTC::SCTP::StateCookieParameter::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::StateCookieParameter> parameter{
+			RTC::SCTP::StateCookieParameter::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
@@ -53,7 +56,7 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 8,
@@ -71,15 +74,12 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 
 		/* Clone it. */
 
-		auto* clonedParameter =
-		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		parameter.reset(parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete parameter;
-
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ clonedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 8,
@@ -87,24 +87,22 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
-		REQUIRE(clonedParameter->HasCookie() == true);
-		REQUIRE(clonedParameter->GetCookieLength() == 3);
-		REQUIRE(clonedParameter->GetCookie()[0] == 0xDD);
-		REQUIRE(clonedParameter->GetCookie()[1] == 0xCC);
-		REQUIRE(clonedParameter->GetCookie()[2] == 0xEE);
+		REQUIRE(parameter->HasCookie() == true);
+		REQUIRE(parameter->GetCookieLength() == 3);
+		REQUIRE(parameter->GetCookie()[0] == 0xDD);
+		REQUIRE(parameter->GetCookie()[1] == 0xCC);
+		REQUIRE(parameter->GetCookie()[2] == 0xEE);
 		// This should be padding.
-		REQUIRE(clonedParameter->GetCookie()[3] == 0x00);
-
-		delete clonedParameter;
+		REQUIRE(parameter->GetCookie()[3] == 0x00);
 	}
 
 	SECTION("StateCookieParameter::Factory() succeeds (1)")
 	{
-		auto* parameter = RTC::SCTP::StateCookieParameter::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::StateCookieParameter> parameter{ RTC::SCTP::StateCookieParameter::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -141,13 +139,11 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedParameter =
-		  RTC::SCTP::StateCookieParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
-
-		delete parameter;
+		parameter.reset(
+		  RTC::SCTP::StateCookieParameter::Parse(parameter->GetBuffer(), parameter->GetLength()));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parsedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
@@ -155,24 +151,22 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
-		REQUIRE(parsedParameter->HasCookie() == true);
-		REQUIRE(parsedParameter->GetCookieLength() == 1);
-		REQUIRE(parsedParameter->GetCookie()[0] == 0x0A);
+		REQUIRE(parameter->HasCookie() == true);
+		REQUIRE(parameter->GetCookieLength() == 1);
+		REQUIRE(parameter->GetCookie()[0] == 0x0A);
 		// These should be padding.
-		REQUIRE(parsedParameter->GetCookie()[1] == 0x00);
-		REQUIRE(parsedParameter->GetCookie()[2] == 0x00);
-		REQUIRE(parsedParameter->GetCookie()[3] == 0x00);
-
-		delete parsedParameter;
+		REQUIRE(parameter->GetCookie()[1] == 0x00);
+		REQUIRE(parameter->GetCookie()[2] == 0x00);
+		REQUIRE(parameter->GetCookie()[3] == 0x00);
 	}
 
 	SECTION("StateCookieParameter::Factory() succeeds (2)")
 	{
-		auto* parameter = RTC::SCTP::StateCookieParameter::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::StateCookieParameter> parameter{ RTC::SCTP::StateCookieParameter::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -208,13 +202,11 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedParameter =
-		  RTC::SCTP::StateCookieParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
-
-		delete parameter;
+		parameter.reset(
+		  RTC::SCTP::StateCookieParameter::Parse(parameter->GetBuffer(), parameter->GetLength()));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parsedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 4 + RTC::SCTP::StateCookie::StateCookieLength,
 		  /*length*/ 4 + RTC::SCTP::StateCookie::StateCookieLength,
@@ -222,9 +214,51 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
-		REQUIRE(parsedParameter->HasCookie() == true);
-		REQUIRE(parsedParameter->GetCookieLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(parameter->HasCookie() == true);
+		REQUIRE(parameter->GetCookieLength() == RTC::SCTP::StateCookie::StateCookieLength);
+	}
 
-		delete parsedParameter;
+	SECTION("StateCookieParameter::SetCookie() throws if cookieLength is too big")
+	{
+		const std::unique_ptr<RTC::SCTP::StateCookieParameter> parameter{
+			RTC::SCTP::StateCookieParameter::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
+
+		CHECK_SCTP_PARAMETER(
+		  /*parameter*/ parameter.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+		  /*length*/ 4,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::STATE_COOKIE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
+
+		REQUIRE_THROWS_AS(parameter->SetCookie(sctpCommon::DataBuffer, 65535), MediaSoupError);
+
+		CHECK_SCTP_PARAMETER(
+		  /*parameter*/ parameter.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+		  /*length*/ 4,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::STATE_COOKIE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
+
+		REQUIRE(parameter->HasCookie() == false);
+
+		// A length that does not fit in 16 bits must throw too, not be truncated.
+		REQUIRE_THROWS_AS(parameter->SetCookie(sctpCommon::DataBuffer, 65539), MediaSoupError);
+
+		CHECK_SCTP_PARAMETER(
+		  /*parameter*/ parameter.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+		  /*length*/ 4,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::STATE_COOKIE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
+
+		REQUIRE(parameter->HasCookie() == false);
 	}
 }

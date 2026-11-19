@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/errorCauses/MissingMandatoryParameterErrorCause.hpp"
@@ -31,10 +30,12 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 		};
 		// clang-format on
 
-		auto* errorCause = RTC::SCTP::MissingMandatoryParameterErrorCause::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::MissingMandatoryParameterErrorCause> errorCause{
+			RTC::SCTP::MissingMandatoryParameterErrorCause::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 16,
@@ -60,7 +61,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 16,
@@ -81,36 +82,29 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 
 		// /* Clone it. */
 
-		auto* clonedErrorCause =
-		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		errorCause.reset(errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete errorCause;
-
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ clonedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 16,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
-		REQUIRE(clonedErrorCause->GetNumberOfMissingParameters() == 3);
+		REQUIRE(errorCause->GetNumberOfMissingParameters() == 3);
 		REQUIRE(
-		  clonedErrorCause->GetMissingParameterTypeAt(0) ==
-		  RTC::SCTP::Parameter::ParameterType::IPV4_ADDRESS);
+		  errorCause->GetMissingParameterTypeAt(0) == RTC::SCTP::Parameter::ParameterType::IPV4_ADDRESS);
 		REQUIRE(
-		  clonedErrorCause->GetMissingParameterTypeAt(1) ==
-		  RTC::SCTP::Parameter::ParameterType::IPV6_ADDRESS);
+		  errorCause->GetMissingParameterTypeAt(1) == RTC::SCTP::Parameter::ParameterType::IPV6_ADDRESS);
 		REQUIRE(
-		  clonedErrorCause->GetMissingParameterTypeAt(2) ==
+		  errorCause->GetMissingParameterTypeAt(2) ==
 		  RTC::SCTP::Parameter::ParameterType::COOKIE_PRESERVATIVE);
 		// These should be padding.
-		REQUIRE(clonedErrorCause->GetBuffer()[14] == 0);
-		REQUIRE(clonedErrorCause->GetBuffer()[15] == 0);
-
-		delete clonedErrorCause;
+		REQUIRE(errorCause->GetBuffer()[14] == 0);
+		REQUIRE(errorCause->GetBuffer()[15] == 0);
 	}
 
 	SECTION("MissingMandatoryParameterErrorCause::Parse() fails")
@@ -192,11 +186,13 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 
 	SECTION("MissingMandatoryParameterErrorCause::Factory() succeeds")
 	{
-		auto* errorCause = RTC::SCTP::MissingMandatoryParameterErrorCause::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::MissingMandatoryParameterErrorCause> errorCause{
+			RTC::SCTP::MissingMandatoryParameterErrorCause::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
@@ -212,7 +208,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 		errorCause->AddMissingParameterType(RTC::SCTP::Parameter::ParameterType::COOKIE_PRESERVATIVE);
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16,
@@ -233,33 +229,28 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause = RTC::SCTP::MissingMandatoryParameterErrorCause::Parse(
-		  errorCause->GetBuffer(), errorCause->GetLength());
-
-		delete errorCause;
+		errorCause.reset(
+		  RTC::SCTP::MissingMandatoryParameterErrorCause::Parse(
+		    errorCause->GetBuffer(), errorCause->GetLength()));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ parsedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 16,
 		  /*length*/ 16,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
-		REQUIRE(parsedErrorCause->GetNumberOfMissingParameters() == 3);
+		REQUIRE(errorCause->GetNumberOfMissingParameters() == 3);
 		REQUIRE(
-		  parsedErrorCause->GetMissingParameterTypeAt(0) ==
-		  RTC::SCTP::Parameter::ParameterType::IPV4_ADDRESS);
+		  errorCause->GetMissingParameterTypeAt(0) == RTC::SCTP::Parameter::ParameterType::IPV4_ADDRESS);
 		REQUIRE(
-		  parsedErrorCause->GetMissingParameterTypeAt(1) ==
-		  RTC::SCTP::Parameter::ParameterType::IPV6_ADDRESS);
+		  errorCause->GetMissingParameterTypeAt(1) == RTC::SCTP::Parameter::ParameterType::IPV6_ADDRESS);
 		REQUIRE(
-		  parsedErrorCause->GetMissingParameterTypeAt(2) ==
+		  errorCause->GetMissingParameterTypeAt(2) ==
 		  RTC::SCTP::Parameter::ParameterType::COOKIE_PRESERVATIVE);
 		// These should be padding.
-		REQUIRE(parsedErrorCause->GetBuffer()[14] == 0);
-		REQUIRE(parsedErrorCause->GetBuffer()[15] == 0);
-
-		delete parsedErrorCause;
+		REQUIRE(errorCause->GetBuffer()[14] == 0);
+		REQUIRE(errorCause->GetBuffer()[15] == 0);
 	}
 }

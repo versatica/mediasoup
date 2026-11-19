@@ -105,7 +105,7 @@ namespace RTC
 			for (uint32_t idx{ 0 }; idx < GetNumberOfAddressTypes(); ++idx)
 			{
 				MS_DUMP_CLEAN(
-				  indentation, "  - idx: %" PRIu16 ", address type: %" PRIu16, idx, GetAddressTypeAt(idx));
+				  indentation, "  - idx: %" PRIu32 ", address type: %" PRIu16, idx, GetAddressTypeAt(idx));
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::SupportedAddressTypesParameter>");
 		}
@@ -128,7 +128,7 @@ namespace RTC
 
 			// We must save previous count since SetVariableLengthValueLength() will
 			// make GetNumberOfAddressTypes() return a different value.
-			auto previousNumberOfAddressTypes = GetNumberOfAddressTypes();
+			const auto previousNumberOfAddressTypes = GetNumberOfAddressTypes();
 
 			// NOTE: This may throw.
 			SetVariableLengthValueLength(GetVariableLengthValueLength() + 2);

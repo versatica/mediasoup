@@ -185,10 +185,9 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		auto* const payloadDescriptor =
 		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(std::move(dependencyDescriptor));
-		auto* const payloadDescriptorHandler =
-		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler(payloadDescriptor);
-
-		packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+		packet->SetPayloadDescriptorHandler(
+		  std::make_unique<RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler>(
+		    payloadDescriptor));
 	};
 
 	// Instant reported by the mocked clock, which sections move to let timers
@@ -664,10 +663,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		REQUIRE(payloadDescriptor1->pictureId == 1);
 
-		auto* const payloadDescriptorHandler1 =
-		  new RTC::RTP::Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor1);
+		auto ownedPayloadDescriptorHandler1 =
+		  std::make_unique<RTC::RTP::Codecs::VP8::PayloadDescriptorHandler>(payloadDescriptor1);
+		auto* const payloadDescriptorHandler1 = ownedPayloadDescriptorHandler1.get();
 
-		packet1->SetPayloadDescriptorHandler(payloadDescriptorHandler1);
+		packet1->SetPayloadDescriptorHandler(std::move(ownedPayloadDescriptorHandler1));
 
 		bool marker = false;
 
@@ -683,10 +683,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		REQUIRE(payloadDescriptor2->pictureId == 2);
 
-		auto* const payloadDescriptorHandler2 =
-		  new RTC::RTP::Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor2);
+		auto ownedPayloadDescriptorHandler2 =
+		  std::make_unique<RTC::RTP::Codecs::VP8::PayloadDescriptorHandler>(payloadDescriptor2);
+		auto* const payloadDescriptorHandler2 = ownedPayloadDescriptorHandler2.get();
 
-		packet2->SetPayloadDescriptorHandler(payloadDescriptorHandler2);
+		packet2->SetPayloadDescriptorHandler(std::move(ownedPayloadDescriptorHandler2));
 
 		// Process the second packet with context1.
 		forwarded = payloadDescriptorHandler2->Process(std::addressof(context1), packet2.get(), marker);
@@ -705,10 +706,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		REQUIRE(payloadDescriptor3->pictureId == 3);
 
-		auto* const payloadDescriptorHandler3 =
-		  new RTC::RTP::Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor3);
+		auto ownedPayloadDescriptorHandler3 =
+		  std::make_unique<RTC::RTP::Codecs::VP8::PayloadDescriptorHandler>(payloadDescriptor3);
+		auto* const payloadDescriptorHandler3 = ownedPayloadDescriptorHandler3.get();
 
-		packet3->SetPayloadDescriptorHandler(payloadDescriptorHandler3);
+		packet3->SetPayloadDescriptorHandler(std::move(ownedPayloadDescriptorHandler3));
 
 		// Process the third packet for context1.
 		forwarded = payloadDescriptorHandler3->Process(std::addressof(context1), packet3.get(), marker);

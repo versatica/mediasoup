@@ -195,19 +195,25 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<RTCP::RembPacket>");
+
 			DumpCommon(indentation);
+
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  message type: %" PRIu8 " (%s)",
 			  static_cast<uint8_t>(GetMessageType()),
 			  AnyPayloadSpecificFeedbackPacket::MessageTypeToString(GetMessageType()).c_str());
+
 			DumpFeedbackCommon(indentation);
+
 			MS_DUMP_CLEAN(indentation, "  bitrate: %" PRIi64 " bps", GetBitrate());
 			MS_DUMP_CLEAN(indentation, "  ssrcs: %" PRIu8, GetNumberOfSsrcs());
+
 			for (const auto ssrc : GetSsrcs())
 			{
 				MS_DUMP_CLEAN(indentation, "  - ssrc: %" PRIu32, ssrc);
 			}
+
 			MS_DUMP_CLEAN(indentation, "</RTCP::RembPacket>");
 		}
 
@@ -255,7 +261,8 @@ namespace RTC
 
 			auto* const buffer = const_cast<uint8_t*>(GetBuffer());
 
-			Utils::Byte::Set1Byte(buffer, 17, static_cast<uint8_t>((exponent << 2) | (mantissa >> 16)));
+			Utils::Byte::Set1Byte(
+			  buffer, 17, static_cast<uint8_t>((uint64_t{ exponent } << 2) | (mantissa >> 16)));
 			Utils::Byte::Set2Bytes(buffer, 18, static_cast<uint16_t>(mantissa & 0xFFFF));
 		}
 

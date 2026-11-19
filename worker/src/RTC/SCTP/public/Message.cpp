@@ -35,7 +35,19 @@ namespace RTC
 			MS_TRACE();
 
 			this->streamId = streamId;
-			;
+		}
+
+		void Message::RemovePayloadFront(size_t len)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(
+			  len <= this->payload.size(),
+			  "len (%zu) is greater than payload length (%zu)",
+			  len,
+			  this->payload.size());
+
+			this->payload.erase(this->payload.begin(), this->payload.begin() + len);
 		}
 	} // namespace SCTP
 } // namespace RTC

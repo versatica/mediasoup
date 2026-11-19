@@ -22,7 +22,8 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 	constexpr std::array<uint8_t, 16> LongPayload    = { 1, 2,  3,  4,  5,  6,  7,  8,
 	                                                     9, 10, 11, 12, 13, 14, 15, 16 };
 
-	const auto flushMessages = [](RTC::SCTP::ReassemblyQueue& reassemblyQueue)
+	const auto flushMessages =
+	  [](RTC::SCTP::ReassemblyQueue& reassemblyQueue) -> std::vector<RTC::SCTP::Message>
 	{
 		std::vector<RTC::SCTP::Message> messages;
 
@@ -66,9 +67,12 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		const auto& messages = flushMessages(reassemblyQueue);
 
 		REQUIRE(messages.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(messages[0].GetStreamId() == 1);
 		REQUIRE(messages[0].GetPayloadProtocolId() == 53);
 		REQUIRE_THAT(messages[0].GetPayload(), Catch::Matchers::RangeEquals(ShortPayload));
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("large unordered chunk all permutations")
@@ -83,11 +87,14 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 
 			for (size_t i{ 0 }; i < tsns.size(); ++i)
 			{
+				// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				const auto span        = payload.subspan((tsns[i] - 10) * 4, 4);
 				const bool isBeginning = (tsns[i] == 10);
 				const bool isEnd       = (tsns[i] == 13);
+				// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 				reassemblyQueue.AddData(
+				  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				  tsns[i],
 				  RTC::SCTP::UserData(
 				    /*streamId*/ 1,
@@ -111,9 +118,12 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 					const auto& messages = flushMessages(reassemblyQueue);
 
 					REQUIRE(messages.size() == 1);
+
+					// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					REQUIRE(messages[0].GetStreamId() == 1);
 					REQUIRE(messages[0].GetPayloadProtocolId() == 53);
 					REQUIRE_THAT(messages[0].GetPayload(), Catch::Matchers::RangeEquals(LongPayload));
+					// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				}
 			}
 		} while (std::ranges::next_permutation(tsns).found);
@@ -142,9 +152,12 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		const auto& messages = flushMessages(reassemblyQueue);
 
 		REQUIRE(messages.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(messages[0].GetStreamId() == 1);
 		REQUIRE(messages[0].GetPayloadProtocolId() == 53);
 		REQUIRE_THAT(messages[0].GetPayload(), Catch::Matchers::RangeEquals(ShortPayload));
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("many small ordered messages")
@@ -159,12 +172,15 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 
 			for (size_t i{ 0 }; i < tsns.size(); ++i)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				const auto span = payload.subspan((tsns[i] - 10) * 4, 4);
 				const bool isBeginning{ true };
 				const bool isEnd{ true };
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				const auto ssn = static_cast<uint16_t>(tsns[i] - 10);
 
 				reassemblyQueue.AddData(
+				  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				  tsns[i],
 				  RTC::SCTP::UserData(
 				    /*streamId*/ 1,
@@ -183,6 +199,8 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 			const auto& messages = flushMessages(reassemblyQueue);
 
 			REQUIRE(messages.size() == 4);
+
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(messages[0].GetStreamId() == 1);
 			REQUIRE(messages[0].GetPayloadProtocolId() == 53);
 			REQUIRE_THAT(messages[0].GetPayload(), Catch::Matchers::RangeEquals(payload.subspan(0, 4)));
@@ -195,6 +213,7 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 			REQUIRE(messages[3].GetStreamId() == 1);
 			REQUIRE(messages[3].GetPayloadProtocolId() == 53);
 			REQUIRE_THAT(messages[3].GetPayload(), Catch::Matchers::RangeEquals(payload.subspan(12, 4)));
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		} while (std::ranges::next_permutation(tsns).found);
 	}
 
@@ -241,9 +260,12 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		const auto& messages = flushMessages(reassemblyQueue);
 
 		REQUIRE(messages.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(messages[0].GetStreamId() == 1);
 		REQUIRE(messages[0].GetPayloadProtocolId() == 53);
 		REQUIRE_THAT(messages[0].GetPayload(), Catch::Matchers::RangeEquals(LongPayload));
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("Forward-TSN remove unordered")
@@ -327,9 +349,12 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		const auto& messages = flushMessages(reassemblyQueue);
 
 		REQUIRE(messages.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(messages[0].GetStreamId() == 1);
 		REQUIRE(messages[0].GetPayloadProtocolId() == 53);
 		REQUIRE_THAT(messages[0].GetPayload(), Catch::Matchers::RangeEquals(Message2Payload));
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("Forward-TSN remove a lot ordered")
@@ -351,10 +376,10 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		reassemblyQueue.AddData(12, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 3 }, false, false, false));
 		reassemblyQueue.AddData(13, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 4 }, false, true, false));
 
-		reassemblyQueue.AddData(14, RTC::SCTP::UserData(1, 1, 0, 0, 53, { 5 }, true, false, false));
-		reassemblyQueue.AddData(15, RTC::SCTP::UserData(1, 1, 0, 0, 53, { 6 }, false, false, false));
-		reassemblyQueue.AddData(16, RTC::SCTP::UserData(1, 1, 0, 0, 53, { 7 }, false, false, false));
-		reassemblyQueue.AddData(17, RTC::SCTP::UserData(1, 1, 0, 0, 53, { 8 }, false, true, false));
+		reassemblyQueue.AddData(15, RTC::SCTP::UserData(1, 1, 0, 0, 53, { 5 }, true, false, false));
+		reassemblyQueue.AddData(16, RTC::SCTP::UserData(1, 1, 0, 0, 53, { 6 }, false, false, false));
+		reassemblyQueue.AddData(17, RTC::SCTP::UserData(1, 1, 0, 0, 53, { 7 }, false, false, false));
+		reassemblyQueue.AddData(18, RTC::SCTP::UserData(1, 1, 0, 0, 53, { 8 }, false, true, false));
 
 		REQUIRE(reassemblyQueue.GetQueuedBytes() == 7);
 		REQUIRE(reassemblyQueue.HasMessages() == false);
@@ -374,9 +399,12 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		const auto& messages = flushMessages(reassemblyQueue);
 
 		REQUIRE(messages.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(messages[0].GetStreamId() == 1);
 		REQUIRE(messages[0].GetPayloadProtocolId() == 53);
 		REQUIRE_THAT(messages[0].GetPayload(), Catch::Matchers::RangeEquals(Message2Payload));
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("single unordered chunk message in RFC 8260")
@@ -402,9 +430,12 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		const auto& messages = flushMessages(reassemblyQueue);
 
 		REQUIRE(messages.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(messages[0].GetStreamId() == 1);
 		REQUIRE(messages[0].GetPayloadProtocolId() == 53);
 		REQUIRE_THAT(messages[0].GetPayload(), Catch::Matchers::RangeEquals(ShortPayload));
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("two interleaved chunks")
@@ -447,12 +478,15 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		const auto& messages = flushMessages(reassemblyQueue);
 
 		REQUIRE(messages.size() == 2);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(messages[0].GetStreamId() == 1);
 		REQUIRE(messages[0].GetPayloadProtocolId() == 53);
 		REQUIRE_THAT(messages[0].GetPayload(), Catch::Matchers::RangeEquals(MediumPayload1));
 		REQUIRE(messages[1].GetStreamId() == 2);
 		REQUIRE(messages[1].GetPayloadProtocolId() == 53);
 		REQUIRE_THAT(messages[1].GetPayload(), Catch::Matchers::RangeEquals(MediumPayload2));
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("unordered interleaved messages all permutations")
@@ -468,18 +502,23 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		{
 			RTC::SCTP::ReassemblyQueue reassemblyQueue(BufferLength, /*useMessageInterleaving*/ true);
 
-			for (auto i : idxs)
+			for (const auto i : idxs)
 			{
+				// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				const auto span        = payload.subspan(fsns[i] * 2, 2);
 				const bool isBeginning = (fsns[i] == 0);
 				const bool isEnd       = (fsns[i] == 2);
+				// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 				reassemblyQueue.AddData(
+				  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				  tsns[i],
 				  RTC::SCTP::UserData(
+				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				    /*streamId*/ streamIds[i],
 				    /*ssn*/ 0,
 				    /*mid*/ 0,
+				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				    /*fsn*/ fsns[i],
 				    /*ppid*/ 53,
 				    /*payload*/ std::vector<uint8_t>(span.begin(), span.end()),
@@ -548,9 +587,12 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		const auto& messages = flushMessages(reassemblyQueue);
 
 		REQUIRE(messages.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(messages[0].GetStreamId() == 1);
 		REQUIRE(messages[0].GetPayloadProtocolId() == 53);
 		REQUIRE_THAT(messages[0].GetPayload(), Catch::Matchers::RangeEquals(Message2Payload));
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("account Forward-TSN size in deferred reset")

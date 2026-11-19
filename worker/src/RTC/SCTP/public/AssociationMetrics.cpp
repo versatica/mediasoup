@@ -14,7 +14,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto peerImplementationStringView = Types::SctpImplementationToString(this->peerImplementation);
+			const auto peerImplementationStringView =
+			  Types::SctpImplementationToString(this->peerImplementation);
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::AssociationMetrics>");
 			MS_DUMP_CLEAN(indentation, "  tx packets count: %" PRIu64, this->txPacketsCount);
@@ -33,6 +34,10 @@ namespace RTC
 			  "  peer implementation: %.*s",
 			  static_cast<int>(peerImplementationStringView.size()),
 			  peerImplementationStringView.data());
+			MS_DUMP_CLEAN(
+			  indentation, "  negotiated max outbound streams: %" PRIu16, this->negotiatedMaxOutboundStreams);
+			MS_DUMP_CLEAN(
+			  indentation, "  negotiated max inbound streams: %" PRIu16, this->negotiatedMaxInboundStreams);
 			MS_DUMP_CLEAN(
 			  indentation, "  uses partial reliability: %s", this->usesPartialReliability ? "yes" : "no");
 			MS_DUMP_CLEAN(

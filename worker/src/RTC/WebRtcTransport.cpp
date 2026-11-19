@@ -831,7 +831,7 @@ namespace RTC
 
 		if (!IsConnected())
 		{
-			MS_WARN_TAG(sctp, "DTLS not connected, cannot send SCTP data");
+			MS_WARN_TAG(sctp, "not connected, cannot send SCTP data");
 
 			return false;
 		}

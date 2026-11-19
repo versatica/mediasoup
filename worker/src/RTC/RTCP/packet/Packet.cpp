@@ -14,6 +14,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
+		// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 		const ankerl::unordered_dense::map<Packet::PacketType, std::string> Packet::PacketType2String =
 		{
 			{ Packet::PacketType::SR,    "SR"    },
@@ -94,7 +95,7 @@ namespace RTC
 			}
 
 			// Padding bit not set.
-			if (((buffer[0] >> 5) & 0x01) == 0)
+			if ((buffer[0] & 0x20) == 0)
 			{
 				padding = 0;
 

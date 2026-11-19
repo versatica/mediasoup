@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/chunks/AnyForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
@@ -31,10 +30,11 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 		};
 		// clang-format on
 
-		auto* chunk = RTC::SCTP::ForwardTsnChunk::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::ForwardTsnChunk> chunk{ RTC::SCTP::ForwardTsnChunk::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 16,
@@ -62,7 +62,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 16,
@@ -85,14 +85,12 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		chunk.reset(chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete chunk;
-
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ clonedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 16,
@@ -105,15 +103,13 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(clonedChunk->GetNewCumulativeTsn() == 287454020);
-		REQUIRE(clonedChunk->GetNumberOfSkippedStreams() == 2);
+		REQUIRE(chunk->GetNewCumulativeTsn() == 287454020);
+		REQUIRE(chunk->GetNumberOfSkippedStreams() == 2);
 		REQUIRE(
-		  clonedChunk->GetSkippedStreams() == std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		                                        { 4660,  17185 },
-                                            { 22136, 34661 }
+		  chunk->GetSkippedStreams() == std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
+		                                  { 4660,  17185 },
+                                      { 22136, 34661 }
     });
-
-		delete clonedChunk;
 	}
 
 	SECTION("ForwardTsnChunk::Parse() fails")
@@ -138,11 +134,11 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 
 	SECTION("ForwardTsnChunk::Factory() succeeds")
 	{
-		auto* chunk = RTC::SCTP::ForwardTsnChunk::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::ForwardTsnChunk> chunk{ RTC::SCTP::ForwardTsnChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
@@ -170,7 +166,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 		  RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 3333, /*ssn*/ 33330 });
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 20,
@@ -188,18 +184,16 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 		REQUIRE(
 		  chunk->GetSkippedStreams() == std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
 		                                  { 1111, 11110 },
-		                                  { 2222, 22220 },
-		                                  { 3333, 33330 },
-		});
+                                      { 2222, 22220 },
+                                      { 3333, 33330 }
+    });
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = RTC::SCTP::ForwardTsnChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
-
-		delete chunk;
+		chunk.reset(RTC::SCTP::ForwardTsnChunk::Parse(chunk->GetBuffer(), chunk->GetLength()));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ parsedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
@@ -212,24 +206,22 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(parsedChunk->GetNewCumulativeTsn() == 1234);
-		REQUIRE(parsedChunk->GetNumberOfSkippedStreams() == 3);
+		REQUIRE(chunk->GetNewCumulativeTsn() == 1234);
+		REQUIRE(chunk->GetNumberOfSkippedStreams() == 3);
 		REQUIRE(
-		  parsedChunk->GetSkippedStreams() == std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		                                        { 1111, 11110 },
-		                                        { 2222, 22220 },
-		                                        { 3333, 33330 },
-		});
-
-		delete parsedChunk;
+		  chunk->GetSkippedStreams() == std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
+		                                  { 1111, 11110 },
+                                      { 2222, 22220 },
+                                      { 3333, 33330 }
+    });
 	}
 
 	SECTION("ForwardTsnChunk::ComputeLengthFor() succeeds")
 	{
 		REQUIRE(RTC::SCTP::ForwardTsnChunk::ComputeLengthFor(0) == 8);
 
-		auto* const chunk = RTC::SCTP::ForwardTsnChunk::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::ForwardTsnChunk> chunk{ RTC::SCTP::ForwardTsnChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		chunk->AddSkippedStream(
 		  RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 1111, /*ssn*/ 11110 });
@@ -240,7 +232,5 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 
 		REQUIRE(RTC::SCTP::ForwardTsnChunk::ComputeLengthFor(3) == 20);
 		REQUIRE(chunk->GetLength() == RTC::SCTP::ForwardTsnChunk::ComputeLengthFor(3));
-
-		delete chunk;
 	}
 }

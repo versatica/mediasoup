@@ -101,9 +101,8 @@ namespace RTC
 					return;
 				}
 
-				auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
-
-				packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+				packet->SetPayloadDescriptorHandler(
+				  std::make_unique<PayloadDescriptorHandler>(payloadDescriptor));
 			}
 
 			/* Instance methods. */

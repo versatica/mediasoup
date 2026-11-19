@@ -101,6 +101,7 @@ namespace RTC
 				MS_WARN_TAG(rtcp, "report blocks exceed the packet length");
 
 				delete packet;
+
 				return nullptr;
 			}
 
@@ -127,9 +128,13 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<RTCP::ReceiverReportPacket>");
+
 			DumpCommon(indentation);
+
 			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, GetSsrc());
+
 			DumpReportBlocks(indentation);
+
 			MS_DUMP_CLEAN(indentation, "</RTCP::ReceiverReportPacket>");
 		}
 

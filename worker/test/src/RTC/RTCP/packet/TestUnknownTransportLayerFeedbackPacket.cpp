@@ -1,4 +1,6 @@
 #include "common.hpp"
+#include "RTC/RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/UnknownTransportLayerFeedbackPacket.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -97,7 +99,7 @@ SCENARIO("RTCP Unknown Transport Layer Feedback Packet (205)", "[serializable][r
 	SECTION("UnknownTransportLayerFeedbackPacket::Parse() with padding succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=1, FMT=15, PT:205, Length: 3
 			0b10101111, 0xCD, 0x00, 0x03,
@@ -135,7 +137,7 @@ SCENARIO("RTCP Unknown Transport Layer Feedback Packet (205)", "[serializable][r
 	SECTION("UnknownTransportLayerFeedbackPacket::Parse() without value succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=0, FMT=3, PT:205, Length: 2
 			0b10000011, 0xCD, 0x00, 0x02,

@@ -12,6 +12,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
+		// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 		const ankerl::unordered_dense::map<ErrorCause::ErrorCauseCode, std::string> ErrorCause::ErrorCauseCode2String =
 		{
 			{ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,                    "INVALID-STREAM-IDENTIFIER"                    },

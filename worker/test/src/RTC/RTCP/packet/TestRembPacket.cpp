@@ -1,6 +1,10 @@
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
+#include "RTC/RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/RembPacket.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
+#include "test/include/testHelpers.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 #include <vector>
@@ -541,7 +545,7 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 		checkBitrate(122754);
 		checkBitrate(522022);
 		// A bitrate that needs more than 32 bits.
-		checkBitrate(int64_t{ 0x3FB93 } << 30);
+		checkBitrate(static_cast<int64_t>(uint64_t{ 0x3FB93 } << 30));
 	}
 
 	SECTION("RembPacket::AddSsrc() and RembPacket::SetBitrate() throw")

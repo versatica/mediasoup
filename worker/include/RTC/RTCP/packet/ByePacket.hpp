@@ -38,7 +38,6 @@ namespace RTC
 		 *   the BYE packet MUST be padded with null octets to the next 32-bit
 		 *   boundary.
 		 */
-
 		class ByePacket : public Packet
 		{
 			// We need that compound packet calls protected and private methods in
@@ -102,7 +101,7 @@ namespace RTC
 				}
 
 				const uint8_t reasonLength = GetReasonLength();
-				const auto* reason         = GetReasonPointer();
+				const auto* const reason   = GetReasonPointer();
 
 				// NOTE: Validation of the Reason length field is done outside this
 				// method.

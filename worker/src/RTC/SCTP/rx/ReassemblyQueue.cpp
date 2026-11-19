@@ -77,10 +77,10 @@ namespace RTC
 				// fail to compile because `std::function` doesn't accept move-only
 				// callables and `UserData` has its copy constructor deleted, so the
 				// resulting lambda is not copyable and `std::function` will reject it.
-				auto sharedData = std::make_shared<UserData>(std::move(data));
+				const auto sharedData = std::make_shared<UserData>(std::move(data));
 
 				this->deferredResetStreams->deferredActions.emplace_back(
-				  [this, tsn, sharedData]() mutable
+				  [this, tsn, sharedData]() mutable -> void
 				  {
 					  this->queuedBytes -= sharedData->GetPayloadLength();
 
@@ -206,11 +206,11 @@ namespace RTC
 				//
 				// "Any queued TSNs (queued at step E2) MUST now be released and
 				// processed normally."
-				auto deferredActions = std::move(this->deferredResetStreams->deferredActions);
+				const auto deferredActions = std::move(this->deferredResetStreams->deferredActions);
 
 				this->deferredResetStreams = std::nullopt;
 
-				for (auto& action : deferredActions)
+				for (const auto& action : deferredActions)
 				{
 					action();
 				}

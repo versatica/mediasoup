@@ -64,7 +64,7 @@ namespace RTC
 			 * Closes the association non-gracefully. Will send ABORT if the connection
 			 * is not already closed. No callbacks will be made after Close() has
 			 * returned. However, before Close() returns, it may have called
-			 * `OnAssociationClosed()` or `OnAssociationAborted()` callbacks.
+			 * `OnAssociationClosed()` or `OnAssociationFailed()` callbacks.
 			 */
 			virtual void Close() = 0;
 

@@ -13,6 +13,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
+		// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 		const ankerl::unordered_dense::map<ExtendedReport::BlockType, std::string> ExtendedReport::BlockType2String =
 		{
 			{ ExtendedReport::BlockType::RRT,  "RRT"  },

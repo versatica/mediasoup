@@ -114,6 +114,7 @@ namespace RTC
 					MS_WARN_TAG(rtcp, "not an Extended Report block");
 
 					delete packet;
+
 					return nullptr;
 				}
 
@@ -147,6 +148,7 @@ namespace RTC
 				if (!extendedReport)
 				{
 					delete packet;
+
 					return nullptr;
 				}
 
@@ -182,17 +184,21 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<RTCP::XrPacket>");
+
 			DumpCommon(indentation);
+
 			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, GetSsrc());
 			MS_DUMP_CLEAN(indentation, "  extended reports count: %zu", GetExtendedReportsCount());
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  needs consolidation of extended reports: %s",
 			  NeedsConsolidation() ? "yes" : "no");
+
 			for (const auto* extendedReport : this->extendedReports)
 			{
 				extendedReport->Dump(indentation + 1);
 			}
+
 			MS_DUMP_CLEAN(indentation, "</RTCP::XrPacket>");
 		}
 
@@ -287,7 +293,7 @@ namespace RTC
 			auto* const xrPacket = static_cast<XrPacket*>(packet);
 
 			// Soft clone Extended Report blocks into the given packet.
-			for (auto* extendedReport : this->extendedReports)
+			for (const auto* extendedReport : this->extendedReports)
 			{
 				const size_t offset = extendedReport->GetBuffer() - GetBuffer();
 

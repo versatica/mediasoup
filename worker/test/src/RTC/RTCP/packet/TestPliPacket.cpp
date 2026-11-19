@@ -1,6 +1,10 @@
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
+#include "RTC/RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/PliPacket.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
+#include "test/include/testHelpers.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -85,7 +89,7 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 	SECTION("PliPacket::Parse() with padding succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=1, FMT=1, PT:206, Length: 3
 			0b10100001, 0xCE, 0x00, 0x03,

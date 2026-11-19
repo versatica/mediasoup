@@ -118,7 +118,7 @@ namespace RTC
 			return clonedChunk;
 		}
 
-		void CookieEchoChunk::SetCookie(const uint8_t* cookie, uint16_t cookieLength)
+		void CookieEchoChunk::SetCookie(const uint8_t* cookie, size_t cookieLength)
 		{
 			MS_TRACE();
 

@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RTCP/packet/ExtendedReport.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/XrPacket.hpp"
 #include "RTC/RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
 #include "RTC/RTCP/packet/extendedReports/RrtExtendedReport.hpp"
@@ -47,9 +48,12 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			const auto subBlocks = extendedReport2->GetSubBlocks();
 
 			REQUIRE(subBlocks.size() == 1);
+
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(subBlocks[0].ssrc == 0x11121314);
 			REQUIRE(subBlocks[0].lastReceiverReport == 0x00110011);
 			REQUIRE(subBlocks[0].delaySinceLastReceiverReport == 0x11001100);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 			const auto* const extendedReport3 =
 			  static_cast<const RTC::RTCP::UnknownExtendedReport*>(packet->GetExtendedReportAt(2));
@@ -150,7 +154,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 	SECTION("XrPacket::Parse() without Extended Report blocks succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=0, Reserved=0, PT:207, Length: 1
 			0b10000000, 0xCF, 0x00, 0x01,
@@ -182,6 +186,14 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 	SECTION("XrPacket::Parse() with padding succeeds")
 	{
 		// clang-format off
+		alignas(4) const uint8_t extendedReportBuffer[] =
+		{
+			// BT: 99, Type-specific: 0, Block length: 0
+			0x63, 0x00, 0x00, 0x00
+		};
+		// clang-format on
+
+		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
 			// V=2, P=1, Reserved=0, PT:207, Length: 4
@@ -197,14 +209,6 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			0x00, 0x00, 0x00, 0x04,
 			// Extra space in the buffer
 			0x00, 0x00, 0x00, 0x00
-		};
-		// clang-format on
-
-		// clang-format off
-		alignas(4) const uint8_t extendedReportBuffer[] =
-		{
-			// BT: 99, Type-specific: 0, Block length: 0
-			0x63, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -256,7 +260,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 	SECTION("XrPacket::Parse() with padding and a DLRR block succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=1, Reserved=0, PT:207, Length: 9
 			0xA0, 0xCF, 0x00, 0x09,
@@ -307,12 +311,16 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		const auto subBlocks = extendedReport->GetSubBlocks();
 
 		REQUIRE(subBlocks.size() == 2);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(subBlocks[0].ssrc == 0x11121314);
 		REQUIRE(subBlocks[0].lastReceiverReport == 0x00110011);
 		REQUIRE(subBlocks[0].delaySinceLastReceiverReport == 0x11001100);
+
 		REQUIRE(subBlocks[1].ssrc == 0x21222324);
 		REQUIRE(subBlocks[1].lastReceiverReport == 0x00220022);
 		REQUIRE(subBlocks[1].delaySinceLastReceiverReport == 0x22002200);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("XrPacket::Parse() fails")
@@ -630,12 +638,16 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 			const auto subBlocks = dlrrExtendedReport->GetSubBlocks();
 
 			REQUIRE(subBlocks.size() == NumberOfSubBlocks);
+
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(subBlocks[0].ssrc == 1);
 			REQUIRE(subBlocks[0].lastReceiverReport == 1001);
 			REQUIRE(subBlocks[0].delaySinceLastReceiverReport == 2001);
+
 			REQUIRE(subBlocks[49].ssrc == 50);
 			REQUIRE(subBlocks[49].lastReceiverReport == 1050);
 			REQUIRE(subBlocks[49].delaySinceLastReceiverReport == 2050);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Factory(
@@ -645,7 +657,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 
 		// An Extended Report block built in place and discarded leaves the packet
 		// as it was.
-		auto* const discardedExtendedReport =
+		const auto* const discardedExtendedReport =
 		  packet->BuildExtendedReportInPlace<RTC::RTCP::RrtExtendedReport>();
 
 		REQUIRE(packet->NeedsConsolidation() == true);

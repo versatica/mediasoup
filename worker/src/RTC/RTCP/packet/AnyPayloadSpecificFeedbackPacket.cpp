@@ -11,6 +11,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
+		// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 		const ankerl::unordered_dense::map<AnyPayloadSpecificFeedbackPacket::MessageType, std::string> AnyPayloadSpecificFeedbackPacket::MessageType2String =
 		{
 			{ AnyPayloadSpecificFeedbackPacket::MessageType::PLI, "PLI" },

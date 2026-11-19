@@ -232,18 +232,24 @@ namespace RTC
 			std::ranges::sort(gapAckBlocks, {}, &SackChunk::GapAckBlock::start);
 
 			// Merge overlapping ranges.
+			// NOTE: `writeIdx` is always lower than `readIdx`, since both grow by one
+			// at most per iteration and `writeIdx` starts one behind.
 			size_t writeIdx{ 0 };
 
 			for (size_t readIdx{ 1 }; readIdx < gapAckBlocks.size(); ++readIdx)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				if (gapAckBlocks[writeIdx].end + 1 >= gapAckBlocks[readIdx].start)
 				{
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					gapAckBlocks[writeIdx].end =
+					  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					  std::max(gapAckBlocks[writeIdx].end, gapAckBlocks[readIdx].end);
 				}
 				else
 				{
 					++writeIdx;
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					gapAckBlocks[writeIdx] = gapAckBlocks[readIdx];
 				}
 			}

@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/RestartOfAnAssociationWithNewAddressesErrorCause.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -27,11 +26,12 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 		};
 		// clang-format on
 
-		auto* errorCause =
-		  RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause> errorCause{
+			RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -57,7 +57,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
@@ -78,34 +78,29 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 
 		/* Clone it. */
 
-		auto* clonedErrorCause =
-		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		errorCause.reset(errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete errorCause;
-
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ clonedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
-		REQUIRE(clonedErrorCause->HasNewAddressTlvs() == true);
-		REQUIRE(clonedErrorCause->GetNewAddressTlvsLength() == 7);
-		REQUIRE(clonedErrorCause->GetNewAddressTlvs()[0] == 0x12);
-		REQUIRE(clonedErrorCause->GetNewAddressTlvs()[1] == 0x34);
-		REQUIRE(clonedErrorCause->GetNewAddressTlvs()[2] == 0x56);
-		REQUIRE(clonedErrorCause->GetNewAddressTlvs()[3] == 0x78);
-		REQUIRE(clonedErrorCause->GetNewAddressTlvs()[4] == 0x90);
-		REQUIRE(clonedErrorCause->GetNewAddressTlvs()[5] == 0xAB);
-		REQUIRE(clonedErrorCause->GetNewAddressTlvs()[6] == 0xCD);
+		REQUIRE(errorCause->HasNewAddressTlvs() == true);
+		REQUIRE(errorCause->GetNewAddressTlvsLength() == 7);
+		REQUIRE(errorCause->GetNewAddressTlvs()[0] == 0x12);
+		REQUIRE(errorCause->GetNewAddressTlvs()[1] == 0x34);
+		REQUIRE(errorCause->GetNewAddressTlvs()[2] == 0x56);
+		REQUIRE(errorCause->GetNewAddressTlvs()[3] == 0x78);
+		REQUIRE(errorCause->GetNewAddressTlvs()[4] == 0x90);
+		REQUIRE(errorCause->GetNewAddressTlvs()[5] == 0xAB);
+		REQUIRE(errorCause->GetNewAddressTlvs()[6] == 0xCD);
 		// This should be padding.
-		REQUIRE(clonedErrorCause->GetNewAddressTlvs()[7] == 0x00);
-
-		delete clonedErrorCause;
+		REQUIRE(errorCause->GetNewAddressTlvs()[7] == 0x00);
 	}
 
 	SECTION("RestartOfAnAssociationWithNewAddressesErrorCause::Parse() fails")
@@ -141,11 +136,13 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 
 	SECTION("RestartOfAnAssociationWithNewAddressesErrorCause::Factory() succeeds")
 	{
-		auto* errorCause = RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause> errorCause{
+			RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -174,7 +171,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 		errorCause->SetNewAddressTlvs(sctpCommon::DataBuffer, 6);
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
@@ -195,31 +192,28 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause = RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause::Parse(
-		  errorCause->GetBuffer(), errorCause->GetLength());
-
-		delete errorCause;
+		errorCause.reset(
+		  RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause::Parse(
+		    errorCause->GetBuffer(), errorCause->GetLength()));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ parsedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
-		REQUIRE(parsedErrorCause->HasNewAddressTlvs() == true);
-		REQUIRE(parsedErrorCause->GetNewAddressTlvsLength() == 6);
-		REQUIRE(parsedErrorCause->GetNewAddressTlvs()[0] == 0x00);
-		REQUIRE(parsedErrorCause->GetNewAddressTlvs()[1] == 0x01);
-		REQUIRE(parsedErrorCause->GetNewAddressTlvs()[2] == 0x02);
-		REQUIRE(parsedErrorCause->GetNewAddressTlvs()[3] == 0x03);
-		REQUIRE(parsedErrorCause->GetNewAddressTlvs()[4] == 0x04);
-		REQUIRE(parsedErrorCause->GetNewAddressTlvs()[5] == 0x05);
+		REQUIRE(errorCause->HasNewAddressTlvs() == true);
+		REQUIRE(errorCause->GetNewAddressTlvsLength() == 6);
+		REQUIRE(errorCause->GetNewAddressTlvs()[0] == 0x00);
+		REQUIRE(errorCause->GetNewAddressTlvs()[1] == 0x01);
+		REQUIRE(errorCause->GetNewAddressTlvs()[2] == 0x02);
+		REQUIRE(errorCause->GetNewAddressTlvs()[3] == 0x03);
+		REQUIRE(errorCause->GetNewAddressTlvs()[4] == 0x04);
+		REQUIRE(errorCause->GetNewAddressTlvs()[5] == 0x05);
 		// These should be padding.
-		REQUIRE(parsedErrorCause->GetNewAddressTlvs()[6] == 0x00);
-		REQUIRE(parsedErrorCause->GetNewAddressTlvs()[7] == 0x00);
-
-		delete parsedErrorCause;
+		REQUIRE(errorCause->GetNewAddressTlvs()[6] == 0x00);
+		REQUIRE(errorCause->GetNewAddressTlvs()[7] == 0x00);
 	}
 }

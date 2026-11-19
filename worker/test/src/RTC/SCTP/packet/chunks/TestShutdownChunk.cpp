@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownChunk.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -30,10 +29,11 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[serializable][sctp][chunk]")
 		};
 		// clang-format on
 
-		auto* chunk = RTC::SCTP::ShutdownChunk::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::ShutdownChunk> chunk{ RTC::SCTP::ShutdownChunk::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
@@ -55,7 +55,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[serializable][sctp][chunk]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 8,
@@ -72,14 +72,12 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[serializable][sctp][chunk]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		chunk.reset(chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete chunk;
-
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ clonedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 8,
@@ -92,18 +90,16 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(clonedChunk->GetCumulativeTsnAck() == 0x11223344);
-
-		delete clonedChunk;
+		REQUIRE(chunk->GetCumulativeTsnAck() == 0x11223344);
 	}
 
 	SECTION("ShutdownChunk::Factory() succeeds")
 	{
-		auto* chunk = RTC::SCTP::ShutdownChunk::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::ShutdownChunk> chunk{ RTC::SCTP::ShutdownChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
@@ -123,7 +119,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[serializable][sctp][chunk]")
 		chunk->SetCumulativeTsnAck(99887766);
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
@@ -140,12 +136,10 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[serializable][sctp][chunk]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = RTC::SCTP::ShutdownChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
-
-		delete chunk;
+		chunk.reset(RTC::SCTP::ShutdownChunk::Parse(chunk->GetBuffer(), chunk->GetLength()));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ parsedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
@@ -158,8 +152,6 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(parsedChunk->GetCumulativeTsnAck() == 99887766);
-
-		delete parsedChunk;
+		REQUIRE(chunk->GetCumulativeTsnAck() == 99887766);
 	}
 }

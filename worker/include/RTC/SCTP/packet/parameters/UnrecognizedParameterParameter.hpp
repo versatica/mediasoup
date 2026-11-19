@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Unrecognized Parameter Parameter (UNRECOGNIZED-PARAMETER) (7).
+		 * SCTP Unrecognized Parameter Parameter (UNRECOGNIZED-PARAMETER) (8).
 		 *
 		 * @see RFC 9260.
 		 *

@@ -20,6 +20,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 			REQUIRE(extendedReport->GetNumberOfSubBlocks() == 2);
 			REQUIRE(subBlocks.size() == 2);
 
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			REQUIRE(subBlocks[0].ssrc == 0x11121314);
 			REQUIRE(subBlocks[0].lastReceiverReport == 0x00110011);
 			REQUIRE(subBlocks[0].delaySinceLastReceiverReport == 0x11001100);
@@ -27,6 +28,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 			REQUIRE(subBlocks[1].ssrc == 0x21222324);
 			REQUIRE(subBlocks[1].lastReceiverReport == 0x00220022);
 			REQUIRE(subBlocks[1].delaySinceLastReceiverReport == 0x22002200);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		};
 
 		// clang-format off
@@ -108,7 +110,7 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 	SECTION("DlrrExtendedReport::Parse() with one sub-block succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// BT: 5 (DLRR), Reserved: 0, Block length: 3
 			0x05, 0x00, 0x00, 0x03,
@@ -137,15 +139,18 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 
 		REQUIRE(extendedReport->GetNumberOfSubBlocks() == 1);
 		REQUIRE(subBlocks.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(subBlocks[0].ssrc == 0x12345678);
 		REQUIRE(subBlocks[0].lastReceiverReport == 0x23344556);
 		REQUIRE(subBlocks[0].delaySinceLastReceiverReport == 0x33343536);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("DlrrExtendedReport::Parse() without sub-blocks succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// BT: 5 (DLRR), Reserved: 0, Block length: 0
 			0x05, 0x00, 0x00, 0x00
@@ -273,9 +278,12 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 
 		REQUIRE(extendedReport->GetNumberOfSubBlocks() == 1);
 		REQUIRE(subBlocks.size() == 1);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(subBlocks[0].ssrc == 0x12345678);
 		REQUIRE(subBlocks[0].lastReceiverReport == 0x23344556);
 		REQUIRE(subBlocks[0].delaySinceLastReceiverReport == 0x33343536);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("DlrrExtendedReport with many sub-blocks")
@@ -316,10 +324,14 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 		const auto subBlocks = parsedExtendedReport->GetSubBlocks();
 
 		REQUIRE(subBlocks.size() == NumberOfSubBlocks);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(subBlocks[0].ssrc == 0x12345679);
+
 		REQUIRE(subBlocks[49].ssrc == 0x123456AA);
 		REQUIRE(subBlocks[49].lastReceiverReport == 0x23344588);
 		REQUIRE(subBlocks[49].delaySinceLastReceiverReport == 0x33343568);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 	}
 
 	SECTION("DlrrExtendedReport::Factory() throws if the buffer is too small")

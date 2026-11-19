@@ -137,14 +137,19 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<RTCP::FirPacket>");
+
 			DumpCommon(indentation);
+
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  message type: %" PRIu8 " (%s)",
 			  static_cast<uint8_t>(GetMessageType()),
 			  AnyPayloadSpecificFeedbackPacket::MessageTypeToString(GetMessageType()).c_str());
+
 			DumpFeedbackCommon(indentation);
+
 			MS_DUMP_CLEAN(indentation, "  items: %zu", GetNumberOfItems());
+
 			for (const auto& item : GetItems())
 			{
 				MS_DUMP_CLEAN(
@@ -153,6 +158,7 @@ namespace RTC
 				  item.ssrc,
 				  item.sequenceNumber);
 			}
+
 			MS_DUMP_CLEAN(indentation, "</RTCP::FirPacket>");
 		}
 

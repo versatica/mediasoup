@@ -7,7 +7,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
-namespace
+SCENARIO("SCTP PacketSender", "[sctp][packetsender]")
 {
 	constexpr uint32_t VerificationTag{ 123 };
 
@@ -30,28 +30,24 @@ namespace
 		bool lastSent{ false };
 	};
 
-	/**
-	 * Builds an SCTP packet carrying a single COOKIE-ACK chunk into `buffer`
-	 * (which must outlive the returned packet).
-	 */
-	std::unique_ptr<RTC::SCTP::Packet> buildPacketWithCookieAck(std::vector<uint8_t>& buffer)
+	const RTC::SCTP::SctpOptions sctpOptions;
+
+	// Builds an SCTP packet carrying a single COOKIE-ACK chunk into `buffer`
+	// (which must outlive the returned packet).
+	const auto buildPacketWithCookieAck =
+	  [](std::vector<uint8_t>& buffer) -> std::unique_ptr<RTC::SCTP::Packet>
 	{
 		std::unique_ptr<RTC::SCTP::Packet> packet(
 		  RTC::SCTP::Packet::Factory(buffer.data(), buffer.size()));
 
 		packet->SetVerificationTag(VerificationTag);
 
-		auto* cookieAckChunk = packet->BuildChunkInPlace<RTC::SCTP::CookieAckChunk>();
+		const auto* cookieAckChunk = packet->BuildChunkInPlace<RTC::SCTP::CookieAckChunk>();
 
 		cookieAckChunk->Consolidate();
 
 		return packet;
-	}
-} // namespace
-
-SCENARIO("SCTP PacketSender", "[sctp][packetsender]")
-{
-	const RTC::SCTP::SctpOptions sctpOptions;
+	};
 
 	MockPacketSenderListener listener;
 	mocks::RTC::SCTP::MockAssociationListener associationListener;

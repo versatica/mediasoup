@@ -67,7 +67,7 @@ SCENARIO("SCTP Capabilities", "[sctp][capabilities]")
 		remoteSupportedExtensionsParameter->AddChunkType(RTC::SCTP::Chunk::ChunkType::I_DATA);
 		remoteSupportedExtensionsParameter->Consolidate();
 
-		auto* remoteForwardTsnSupportedParameter =
+		const auto* remoteForwardTsnSupportedParameter =
 		  remoteChunk->BuildParameterInPlace<RTC::SCTP::ForwardTsnSupportedParameter>();
 
 		remoteForwardTsnSupportedParameter->Consolidate();

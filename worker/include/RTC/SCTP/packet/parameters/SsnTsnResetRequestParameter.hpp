@@ -10,8 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Zero Checksum Acceptable Parameter (SSN-TSN-RESET-REQUEST)
-		 * (15).
+		 * SCTP SSN/TSN Reset Request Parameter (SSN-TSN-RESET-REQUEST) (15).
 		 *
 		 * @see RFC 6525.
 		 *

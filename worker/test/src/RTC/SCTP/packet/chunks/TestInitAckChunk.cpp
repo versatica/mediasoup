@@ -37,10 +37,11 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 		};
 		// clang-format on
 
-		auto* chunk = RTC::SCTP::InitAckChunk::Parse(buffer, sizeof(buffer));
+		const std::unique_ptr<RTC::SCTP::InitAckChunk> chunk{ RTC::SCTP::InitAckChunk::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 28,
@@ -60,7 +61,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetInitialTsn() == 2882339074);
 
 		const auto* parameter1 =
-		  reinterpret_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -75,17 +76,15 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter1->GetIPv4Address()[1] == 0x03);
 		REQUIRE(parameter1->GetIPv4Address()[2] == 0x04);
 		REQUIRE(parameter1->GetIPv4Address()[3] == 0x05);
-
-		delete chunk;
 	}
 
 	SECTION("InitAckChunk::Factory() succeeds")
 	{
-		auto* chunk =
-		  RTC::SCTP::InitAckChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::InitAckChunk> chunk{ RTC::SCTP::InitAckChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 20,
@@ -121,7 +120,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 		parameter1->Consolidate();
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 28,
@@ -141,7 +140,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetInitialTsn() == 3333333330);
 
 		const auto* addedParameter1 =
-		  reinterpret_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ addedParameter1,
@@ -156,7 +155,5 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 		REQUIRE(addedParameter1->GetIPv4Address()[1] == 0x16);
 		REQUIRE(addedParameter1->GetIPv4Address()[2] == 0x21);
 		REQUIRE(addedParameter1->GetIPv4Address()[3] == 0x2C);
-
-		delete chunk;
 	}
 }

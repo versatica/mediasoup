@@ -81,7 +81,7 @@ namespace RTC
 
 				/**
 				 * Returns the current request sequence number, if this request has been
-				 * sent (check `HasBeenFirst()` first). Will return 0 if the request is
+				 * sent (check `HasBeenSent()` first). Will return 0 if the request is
 				 * just prepared (or scheduled for retransmission) but not yet sent.
 				 */
 				uint32_t GetReqSeqNbr() const
@@ -223,7 +223,7 @@ namespace RTC
 			 *   instead and the listener is told that it failed.
 			 *
 			 * @remarks
-			 * - The caller must check `ShouldCreateStreamResetRequest()` first and
+			 * - The caller must check `ShouldSendStreamResetRequest()` first and
 			 *   only invoke this method if the former returns `true`.
 			 */
 			[[nodiscard]] bool AddStreamResetRequest(Packet* packet);

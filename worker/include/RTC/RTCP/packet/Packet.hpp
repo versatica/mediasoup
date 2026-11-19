@@ -57,6 +57,12 @@ namespace RTC
 
 		public:
 			/**
+			 * Length (in bytes) of the RTCP Common Header.
+			 */
+			static constexpr size_t CommonHeaderLength{ 4 };
+
+		public:
+			/**
 			 * RTCP Packet Type.
 			 */
 			enum class PacketType : uint8_t
@@ -99,7 +105,7 @@ namespace RTC
 			 */
 			struct CommonHeader
 			{
-#if defined(MS_LITTLE_ENDIAN)
+#ifdef MS_LITTLE_ENDIAN
 				uint8_t count : 5;
 				uint8_t padding : 1;
 				uint8_t version : 2;
@@ -113,11 +119,6 @@ namespace RTC
 			};
 
 		public:
-			/**
-			 * Length (in bytes) of the RTCP Common Header.
-			 */
-			static constexpr size_t CommonHeaderLength{ 4 };
-
 			/**
 			 * Whether given buffer could be a valid RTCP packet.
 			 */

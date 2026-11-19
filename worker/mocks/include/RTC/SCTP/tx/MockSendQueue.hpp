@@ -212,13 +212,20 @@ namespace mocks
 				{
 					if (
 					  this->expectedMessageInterleavingCalledWith.has_value() &&
-					  this->messageInterleavingCalledWith != this->expectedMessageInterleavingCalledWith.value())
+					  this->messageInterleavingCalledWith != this->expectedMessageInterleavingCalledWith)
 					{
+						const char* got{ "not called" };
+
+						if (this->messageInterleavingCalledWith.has_value())
+						{
+							got = this->messageInterleavingCalledWith.value() ? "true" : "false";
+						}
+
 						return { .ok = false,
 						         .errorMessage =
 						           std::string("EnableMessageInterleaving() call mismatch [expected:") +
 						           (this->expectedMessageInterleavingCalledWith.value() ? "true" : "false") +
-						           ", got:" + (this->messageInterleavingCalledWith ? "true" : "false") + "]" };
+						           ", got:" + got + "]" };
 					}
 
 					if (
@@ -254,7 +261,7 @@ namespace mocks
 
 			private:
 				// EnableMessageInterleaving().
-				bool messageInterleavingCalledWith{ false };
+				std::optional<bool> messageInterleavingCalledWith;
 				std::optional<bool> expectedMessageInterleavingCalledWith;
 
 				// Produce().

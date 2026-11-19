@@ -29,10 +29,11 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 		};
 		// clang-format on
 
-		auto* chunk = RTC::SCTP::CookieEchoChunk::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::CookieEchoChunk> chunk{ RTC::SCTP::CookieEchoChunk::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -64,7 +65,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
@@ -91,14 +92,12 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		chunk.reset(chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete chunk;
-
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ clonedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
@@ -111,28 +110,26 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(clonedChunk->HasCookie() == true);
-		REQUIRE(clonedChunk->GetCookieLength() == 5);
-		REQUIRE(clonedChunk->GetCookie()[0] == 0x11);
-		REQUIRE(clonedChunk->GetCookie()[1] == 0x22);
-		REQUIRE(clonedChunk->GetCookie()[2] == 0x33);
-		REQUIRE(clonedChunk->GetCookie()[3] == 0x44);
-		REQUIRE(clonedChunk->GetCookie()[4] == 0x55);
+		REQUIRE(chunk->HasCookie() == true);
+		REQUIRE(chunk->GetCookieLength() == 5);
+		REQUIRE(chunk->GetCookie()[0] == 0x11);
+		REQUIRE(chunk->GetCookie()[1] == 0x22);
+		REQUIRE(chunk->GetCookie()[2] == 0x33);
+		REQUIRE(chunk->GetCookie()[3] == 0x44);
+		REQUIRE(chunk->GetCookie()[4] == 0x55);
 		// This should be padding.
-		REQUIRE(clonedChunk->GetCookie()[5] == 0x00);
-		REQUIRE(clonedChunk->GetCookie()[6] == 0x00);
-		REQUIRE(clonedChunk->GetCookie()[7] == 0x00);
-
-		delete clonedChunk;
+		REQUIRE(chunk->GetCookie()[5] == 0x00);
+		REQUIRE(chunk->GetCookie()[6] == 0x00);
+		REQUIRE(chunk->GetCookie()[7] == 0x00);
 	}
 
 	SECTION("CookieEchoChunk::Factory() succeeds")
 	{
-		auto* chunk = RTC::SCTP::CookieEchoChunk::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::CookieEchoChunk> chunk{ RTC::SCTP::CookieEchoChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -167,7 +164,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 		chunk->SetCookie(sctpCommon::DataBuffer, 3);
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
@@ -190,12 +187,10 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = RTC::SCTP::CookieEchoChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
-
-		delete chunk;
+		chunk.reset(RTC::SCTP::CookieEchoChunk::Parse(chunk->GetBuffer(), chunk->GetLength()));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ parsedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
@@ -208,24 +203,22 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(parsedChunk->HasCookie() == true);
-		REQUIRE(parsedChunk->GetCookieLength() == 3);
-		REQUIRE(parsedChunk->GetCookie()[0] == 0x00);
-		REQUIRE(parsedChunk->GetCookie()[1] == 0x01);
-		REQUIRE(parsedChunk->GetCookie()[2] == 0x02);
+		REQUIRE(chunk->HasCookie() == true);
+		REQUIRE(chunk->GetCookieLength() == 3);
+		REQUIRE(chunk->GetCookie()[0] == 0x00);
+		REQUIRE(chunk->GetCookie()[1] == 0x01);
+		REQUIRE(chunk->GetCookie()[2] == 0x02);
 		// This should be padding.
-		REQUIRE(parsedChunk->GetCookie()[3] == 0x00);
-
-		delete parsedChunk;
+		REQUIRE(chunk->GetCookie()[3] == 0x00);
 	}
 
 	SECTION("CookieEchoChunk::SetCookie() throws if userDataLength is too big")
 	{
-		auto* chunk =
-		  RTC::SCTP::CookieEchoChunk::Factory(sctpCommon::ThrowBuffer, sizeof(sctpCommon::ThrowBuffer));
+		const std::unique_ptr<RTC::SCTP::CookieEchoChunk> chunk{ RTC::SCTP::CookieEchoChunk::Factory(
+			sctpCommon::ThrowBuffer, sizeof(sctpCommon::ThrowBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::ThrowBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
 		  /*length*/ 4,
@@ -241,7 +234,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 		REQUIRE_THROWS_AS(chunk->SetCookie(sctpCommon::ThrowBuffer, 65535), MediaSoupError);
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::ThrowBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
 		  /*length*/ 4,
@@ -254,22 +247,35 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		delete chunk;
+		// A length that does not fit in 16 bits must throw too, not be truncated.
+		REQUIRE_THROWS_AS(chunk->SetCookie(sctpCommon::ThrowBuffer, 65539), MediaSoupError);
+
+		CHECK_SCTP_CHUNK(
+		  /*chunk*/ chunk.get(),
+		  /*buffer*/ sctpCommon::ThrowBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
+		  /*length*/ 4,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 	}
 
 	SECTION("CookieEchoChunk::ComputeLengthFor() succeeds")
 	{
 		REQUIRE(RTC::SCTP::CookieEchoChunk::ComputeLengthFor(0) == 4);
 
-		auto* const chunk = RTC::SCTP::CookieEchoChunk::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::CookieEchoChunk> chunk{ RTC::SCTP::CookieEchoChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		// A cookie whose length is not a multiple of 4, so the chunk needs padding.
 		chunk->SetCookie(sctpCommon::DataBuffer, 3);
 
 		REQUIRE(RTC::SCTP::CookieEchoChunk::ComputeLengthFor(3) == 8);
 		REQUIRE(chunk->GetLength() == RTC::SCTP::CookieEchoChunk::ComputeLengthFor(3));
-
-		delete chunk;
 	}
 }

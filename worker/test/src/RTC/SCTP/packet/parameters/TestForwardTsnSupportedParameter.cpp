@@ -22,10 +22,12 @@ SCENARIO("Forward-TSN-Supported Parameter (32769)", "[serializable][sctp][parame
 		};
 		// clang-format on
 
-		auto* parameter = RTC::SCTP::ForwardTsnSupportedParameter::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::ForwardTsnSupportedParameter> parameter{
+			RTC::SCTP::ForwardTsnSupportedParameter::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 4,
@@ -40,7 +42,7 @@ SCENARIO("Forward-TSN-Supported Parameter (32769)", "[serializable][sctp][parame
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 4,
@@ -50,32 +52,29 @@ SCENARIO("Forward-TSN-Supported Parameter (32769)", "[serializable][sctp][parame
 
 		/* Clone it. */
 
-		auto* clonedParameter =
-		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		parameter.reset(parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete parameter;
-
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ clonedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 4,
 		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::FORWARD_TSN_SUPPORTED,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
-
-		delete clonedParameter;
 	}
 
 	SECTION("ForwardTsnSupportedParameter::Factory() succeeds")
 	{
-		auto* parameter = RTC::SCTP::ForwardTsnSupportedParameter::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::ForwardTsnSupportedParameter> parameter{
+			RTC::SCTP::ForwardTsnSupportedParameter::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -85,20 +84,16 @@ SCENARIO("Forward-TSN-Supported Parameter (32769)", "[serializable][sctp][parame
 
 		/* Parse itself and compare. */
 
-		auto* parsedParameter =
-		  RTC::SCTP::ForwardTsnSupportedParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
-
-		delete parameter;
+		parameter.reset(
+		  RTC::SCTP::ForwardTsnSupportedParameter::Parse(parameter->GetBuffer(), parameter->GetLength()));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parsedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
 		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::FORWARD_TSN_SUPPORTED,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
-
-		delete parsedParameter;
 	}
 }

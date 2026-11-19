@@ -220,13 +220,13 @@ namespace RTC
 
 			if (GetB())
 			{
-				MS_THROW_ERROR("cannot set payload protocol id (PPID) if bit B is set");
+				MS_THROW_ERROR("cannot set fragment sequence number (FSN) if bit B is set");
 			}
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 16, value);
 		}
 
-		void IDataChunk::SetUserDataPayload(const uint8_t* userDataPayload, uint16_t userDataPayloadLength)
+		void IDataChunk::SetUserDataPayload(const uint8_t* userDataPayload, size_t userDataPayloadLength)
 		{
 			MS_TRACE();
 

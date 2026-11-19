@@ -196,10 +196,11 @@ namespace RTC
 				/**
 				 * Nacks an item. If it has been nacked enough times, or if
 				 * `retransmitNow` is set, it might be marked for retransmission. If
-				 * the item has reached its max retransmission value, it will instead
-				 * be abandoned. The action performed is indicated as return value.
+				 * the item has reached its max retransmission value or has expired, it
+				 * will instead be abandoned. The action performed is indicated as return
+				 * value.
 				 */
-				NackAction Nack(bool retransmitNow);
+				NackAction Nack(int64_t nowUs, bool retransmitNow);
 
 				/**
 				 * Prepares the item to be retransmitted. Sets it as outstanding and
@@ -329,23 +330,29 @@ namespace RTC
 
 		public:
 			AckInfo HandleSack(
+			  int64_t nowUs,
 			  Types::UnwrappedTsn cumulativeTsnAck,
 			  std::span<const SackChunk::GapAckBlock> gapAckBlocks,
 			  bool isInFastRecovery);
 
 			/**
 			 * Returns as many of the chunks that are eligible for fast retransmissions
-			 * and that would fit in a single packet of `maxLength`. The eligible
-			 * chunks that didn't fit will be marked for (normal) retransmission and
-			 * will not be returned if this method is called again.
+			 * and that would fit in a single packet of `maxLength`. Any chunks
+			 * encountered that have expired at `nowUs` are abandoned instead of being
+			 * returned. The eligible chunks that didn't fit will be marked for
+			 * (normal) retransmission and will not be returned if this method is
+			 * called again.
 			 */
-			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksToBeFastRetransmitted(size_t maxLength);
+			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksToBeFastRetransmitted(
+			  int64_t nowUs, size_t maxLength);
 
 			/**
-			 * Given `maxLength` of space left in a packet, which chunks can be added
-			 * to it?
+			 * Given `maxLength` of space left in a packet, returns the chunks that can
+			 * be added to it. Any chunks encountered that have expired at `nowUs` are
+			 * abandoned (along with all other fragments of the same message).
 			 */
-			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksToBeRetransmitted(size_t maxLength);
+			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksToBeRetransmitted(
+			  int64_t nowUs, size_t maxLength);
 
 			/**
 			 * How many inflight bytes there are, as sent on the wire as packets.
@@ -421,7 +428,7 @@ namespace RTC
 			/**
 			 * Nacks all outstanding data.
 			 */
-			void NackAll();
+			void NackAll(int64_t nowUs);
 
 			/**
 			 * Adds a FORWARD-TSN chunk to the given packet and returns it, or returns
@@ -509,6 +516,7 @@ namespace RTC
 			 * nacked/retransmitted. The method will set `ackInfo.hasPacketLoss`.
 			 */
 			void NackBetweenAckBlocks(
+			  int64_t nowUs,
 			  Types::UnwrappedTsn cumulativeTsnAck,
 			  std::span<const SackChunk::GapAckBlock> gapAckBlocks,
 			  bool isInFastRecovery,
@@ -537,7 +545,7 @@ namespace RTC
 			 *   which in turn could alter `this->outstandingData`, any iterators are
 			 *   invalidated after having called this method.
 			 */
-			bool NackItem(Types::UnwrappedTsn tsn, bool retransmitNow, bool doFastRetransmit);
+			bool NackItem(int64_t nowUs, Types::UnwrappedTsn tsn, bool retransmitNow, bool doFastRetransmit);
 
 			/**
 			 * Given that a message fragment, `item` has been abandoned, abandon all
@@ -546,8 +554,13 @@ namespace RTC
 			 */
 			void AbandonAllFor(const OutstandingData::Item& item);
 
+			/**
+			 * Extracts chunks from `chunks` that can fit within `maxLength` bytes.
+			 * Any chunk encountered that has expired at `nowUs` is abandoned along
+			 * with all other fragments of its message.
+			 */
 			std::vector<std::pair<uint32_t /*tsn*/, UserData>> ExtractChunksThatCanFit(
-			  std::set<Types::UnwrappedTsn>& chunks, size_t maxLength);
+			  int64_t nowUs, std::set<Types::UnwrappedTsn>& chunks, size_t maxLength);
 
 			void AssertIsConsistent() const;
 

@@ -124,8 +124,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetVariableLengthValue(
-			  reinterpret_cast<const uint8_t*>(reason.data()), static_cast<uint16_t>(reason.size()));
+			SetVariableLengthValue(reinterpret_cast<const uint8_t*>(reason.data()), reason.size());
 		}
 
 		UserInitiatedAbortErrorCause* UserInitiatedAbortErrorCause::SoftClone(const uint8_t* buffer) const

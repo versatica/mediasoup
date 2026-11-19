@@ -302,7 +302,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		const int64_t rtoMs{ 105 };
 
 		test.tcbContext.WillGetCurrentRtoUsOnce(
-		  []()
+		  []() -> int64_t
 		  {
 			  return static_cast<int64_t>(rtoMs * 1000);
 		  });
@@ -332,7 +332,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 	{
 		TestHeartbeatHandler test(0);
 
-		test.AdvanceNowMs(test.sctpOptions.heartbeatIntervalMs);
+		test.AdvanceNowMs(HeartbeatIntervalMs);
 
 		auto* heartbeatIntervalTimer = test.shared.GetBackoffTimer("sctp-heartbeat-interval");
 

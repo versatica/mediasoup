@@ -15,6 +15,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
+		// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 		const ankerl::unordered_dense::map<SdesPacket::ItemType, std::string> SdesPacket::ItemType2String =
 		{
 			{ SdesPacket::ItemType::CNAME, "CNAME" },
@@ -142,6 +143,7 @@ namespace RTC
 					MS_WARN_TAG(rtcp, "no space for SSRC/CSRC of chunk %" PRIu8, chunkIdx);
 
 					delete packet;
+
 					return nullptr;
 				}
 
@@ -155,6 +157,7 @@ namespace RTC
 						MS_WARN_TAG(rtcp, "missing null octet terminating the items of chunk %" PRIu8, chunkIdx);
 
 						delete packet;
+
 						return nullptr;
 					}
 
@@ -168,6 +171,7 @@ namespace RTC
 						MS_WARN_TAG(rtcp, "no space for item header in chunk %" PRIu8, chunkIdx);
 
 						delete packet;
+
 						return nullptr;
 					}
 
@@ -182,6 +186,7 @@ namespace RTC
 						  chunkIdx);
 
 						delete packet;
+
 						return nullptr;
 					}
 
@@ -196,6 +201,7 @@ namespace RTC
 					MS_WARN_TAG(rtcp, "no space for padding of chunk %" PRIu8, chunkIdx);
 
 					delete packet;
+
 					return nullptr;
 				}
 
@@ -206,6 +212,7 @@ namespace RTC
 						MS_WARN_TAG(rtcp, "non null octet in padding of chunk %" PRIu8, chunkIdx);
 
 						delete packet;
+
 						return nullptr;
 					}
 				}
@@ -223,6 +230,7 @@ namespace RTC
 				  offset);
 
 				delete packet;
+
 				return nullptr;
 			}
 
@@ -248,9 +256,12 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<RTCP::SdesPacket>");
+
 			DumpCommon(indentation);
+
 			MS_DUMP_CLEAN(indentation, "  chunks: %" PRIu8, GetNumberOfChunks());
 			MS_DUMP_CLEAN(indentation, "  items:");
+
 			for (const auto& item : GetItems())
 			{
 				MS_DUMP_CLEAN(
@@ -262,6 +273,7 @@ namespace RTC
 				  static_cast<int>(item.value.size()),
 				  item.value.data());
 			}
+
 			MS_DUMP_CLEAN(indentation, "</RTCP::SdesPacket>");
 		}
 

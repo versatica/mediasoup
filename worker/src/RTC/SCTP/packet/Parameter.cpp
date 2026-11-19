@@ -12,6 +12,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
+		// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
 		const ankerl::unordered_dense::map<Parameter::ParameterType, std::string> Parameter::ParameterType2String =
 		{
 			{ Parameter::ParameterType::HEARTBEAT_INFO,               "HEARTBEAT-INFO"               },

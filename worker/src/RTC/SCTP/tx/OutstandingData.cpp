@@ -54,7 +54,7 @@ namespace RTC
 			this->ackState = AckState::ACKED;
 		}
 
-		OutstandingData::Item::NackAction OutstandingData::Item::Nack(bool retransmitNow)
+		OutstandingData::Item::NackAction OutstandingData::Item::Nack(int64_t nowUs, bool retransmitNow)
 		{
 			MS_TRACE();
 
@@ -64,7 +64,7 @@ namespace RTC
 			if (!ShouldBeRetransmitted() && !IsAbandoned() && (retransmitNow || this->nackCount >= NumberOfNacksForRetransmission))
 			{
 				// Nacked enough times, it's considered lost.
-				if (this->numRetransmissions < this->maxRetransmissions)
+				if (this->numRetransmissions < this->maxRetransmissions && !HasExpired(nowUs))
 				{
 					this->lifecycle = Lifecycle::TO_BE_RETRANSMITTED;
 
@@ -117,6 +117,7 @@ namespace RTC
 		}
 
 		OutstandingData::AckInfo OutstandingData::HandleSack(
+		  int64_t nowUs,
 		  Types::UnwrappedTsn cumulativeTsnAck,
 		  std::span<const SackChunk::GapAckBlock> gapAckBlocks,
 		  bool isInFastRecovery)
@@ -135,7 +136,7 @@ namespace RTC
 
 			// NACK and possibly mark for retransmit chunks that weren't acked.
 			NackBetweenAckBlocks(
-			  cumulativeTsnAck, gapAckBlocks, isInFastRecovery, cumulativeTsnAckAdvanced, ackInfo);
+			  nowUs, cumulativeTsnAck, gapAckBlocks, isInFastRecovery, cumulativeTsnAckAdvanced, ackInfo);
 
 			AssertIsConsistent();
 
@@ -143,12 +144,12 @@ namespace RTC
 		}
 
 		std::vector<std::pair<uint32_t /*tsn*/, UserData>> OutstandingData::GetChunksToBeFastRetransmitted(
-		  size_t maxLength)
+		  int64_t nowUs, size_t maxLength)
 		{
 			MS_TRACE();
 
 			std::vector<std::pair<uint32_t /*tsn*/, UserData>> result =
-			  ExtractChunksThatCanFit(this->toBeFastRetransmitted, maxLength);
+			  ExtractChunksThatCanFit(nowUs, this->toBeFastRetransmitted, maxLength);
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-7.2.4
 			//
@@ -171,14 +172,19 @@ namespace RTC
 		}
 
 		std::vector<std::pair<uint32_t /*tsn*/, UserData>> OutstandingData::GetChunksToBeRetransmitted(
-		  size_t maxLength)
+		  int64_t nowUs, size_t maxLength)
 		{
 			MS_TRACE();
 
 			// Chunks scheduled for fast retransmission must be sent first.
 			MS_ASSERT(this->toBeFastRetransmitted.empty(), "this->toBeFastRetransmitted is not empty");
 
-			return ExtractChunksThatCanFit(this->toBeRetransmitted, maxLength);
+			std::vector<std::pair<uint32_t /*tsn*/, UserData>> result =
+			  ExtractChunksThatCanFit(nowUs, this->toBeRetransmitted, maxLength);
+
+			AssertIsConsistent();
+
+			return result;
 		}
 
 		void OutstandingData::ExpireOutstandingChunks(int64_t nowUs)
@@ -206,7 +212,8 @@ namespace RTC
 				}
 				else
 				{
-					// A non-expired chunk. No need to iterate any further.
+					// A non-expired chunk means there's no need to continue as no
+					// FORWARD-TSN can be sent past this point anyway.
 					break;
 				}
 			}
@@ -218,13 +225,16 @@ namespace RTC
 				// loop.
 				const Item& item = GetItem(tsnToExpire);
 
-				MS_WARN_TAG(
-				  sctp,
-				  "marking nacked chunk %" PRIu32 " and message %" PRIu32 " as expired",
-				  tsnToExpire.Wrap(),
-				  item.GetData().GetMessageId());
+				if (!item.IsAbandoned())
+				{
+					MS_DEBUG_TAG(
+					  sctp,
+					  "marking nacked chunk %" PRIu32 " and message %" PRIu32 " as expired",
+					  tsnToExpire.Wrap(),
+					  item.GetData().GetMessageId());
 
-				AbandonAllFor(item);
+					AbandonAllFor(item);
+				}
 			}
 
 			AssertIsConsistent();
@@ -279,7 +289,7 @@ namespace RTC
 			return tsn;
 		}
 
-		void OutstandingData::NackAll()
+		void OutstandingData::NackAll(int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -301,6 +311,7 @@ namespace RTC
 			for (const Types::UnwrappedTsn tsnToNack : tsnsToNack)
 			{
 				NackItem(
+				  nowUs,
 				  tsnToNack,
 				  /*retransmitNow*/ true,
 				  /*doFastRetransmit*/ false);
@@ -331,9 +342,10 @@ namespace RTC
 
 				newCumulativeAck = tsn;
 
-				if (
-				  !item.GetData().IsUnordered() && item.GetData().GetStreamSequenceNumber() >
-				                                     skippedPerOrderedStream[item.GetData().GetStreamId()])
+				// Items are walked in TSN order, and within an ordered stream the SSN
+				// advances in that same order, so the last SSN seen is the highest one,
+				// also when it wraps around.
+				if (!item.GetData().IsUnordered())
 				{
 					skippedPerOrderedStream[item.GetData().GetStreamId()] =
 					  item.GetData().GetStreamSequenceNumber();
@@ -391,7 +403,10 @@ namespace RTC
 				const std::pair<bool /*unordered*/, uint16_t /*streamId*/> stream =
 				  std::make_pair(item.GetData().IsUnordered(), item.GetData().GetStreamId());
 
-				skippedPerStream[stream] = std::max(item.GetData().GetMessageId(), skippedPerStream[stream]);
+				// Items are walked in TSN order, and within a stream the MID advances in
+				// that same order, so the last MID seen is the highest one, also when it
+				// wraps around.
+				skippedPerStream[stream] = item.GetData().GetMessageId();
 			}
 
 			// An I-FORWARD-TSN that does not advance the cumulative TSN is a
@@ -540,6 +555,7 @@ namespace RTC
 			  index < this->outstandingData.size(),
 			  "index must be lower than this->outstandingData.size()");
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			return this->outstandingData[index];
 		}
 
@@ -558,6 +574,7 @@ namespace RTC
 			  index < this->outstandingData.size(),
 			  "index must be lower than this->outstandingData.size()");
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			return this->outstandingData[index];
 		}
 
@@ -626,6 +643,7 @@ namespace RTC
 		}
 
 		void OutstandingData::NackBetweenAckBlocks(
+		  int64_t nowUs,
 		  Types::UnwrappedTsn cumulativeTsnAck,
 		  std::span<const SackChunk::GapAckBlock> gapAckBlocks,
 		  bool isInFastRecovery,
@@ -699,6 +717,7 @@ namespace RTC
 					// recovery or not. Only the cwnd/ssthresh adjustment (step 2) is
 					// skipped while in fast recovery.
 					ackInfo.hasPacketLoss |= NackItem(
+					  nowUs,
 					  tsn,
 					  /*retransmitNow*/ false,
 					  /*doFastRetransmit*/ true);
@@ -745,7 +764,8 @@ namespace RTC
 			}
 		}
 
-		bool OutstandingData::NackItem(Types::UnwrappedTsn tsn, bool retransmitNow, bool doFastRetransmit)
+		bool OutstandingData::NackItem(
+		  int64_t nowUs, Types::UnwrappedTsn tsn, bool retransmitNow, bool doFastRetransmit)
 		{
 			MS_TRACE();
 
@@ -758,7 +778,7 @@ namespace RTC
 			}
 
 			const bool wasOutstanding     = item.IsOutstanding();
-			const Item::NackAction action = item.Nack(retransmitNow);
+			const Item::NackAction action = item.Nack(nowUs, retransmitNow);
 
 			if (wasOutstanding && !item.IsOutstanding())
 			{
@@ -792,7 +812,11 @@ namespace RTC
 
 				case Item::NackAction::ABANDON:
 				{
-					MS_DEBUG_TAG(sctp, "tsn %" PRIu32 " nacked, resulted in abandoning", tsn.Wrap());
+					MS_DEBUG_TAG(
+					  sctp,
+					  "tsn %" PRIu32 " nacked, resulted in abandoning (%s)",
+					  tsn.Wrap(),
+					  item.HasExpired(nowUs) ? "expired" : "max retransmissions");
 
 					AbandonAllFor(item);
 
@@ -880,13 +904,13 @@ namespace RTC
 		}
 
 		std::vector<std::pair<uint32_t /*tsn*/, UserData>> OutstandingData::ExtractChunksThatCanFit(
-		  std::set<Types::UnwrappedTsn>& chunks, size_t maxLength)
+		  int64_t nowUs, std::set<Types::UnwrappedTsn>& chunks, size_t maxLength)
 		{
 			MS_TRACE();
 
 			std::vector<std::pair<uint32_t /*tsn*/, UserData>> result;
 
-			for (auto it = chunks.begin(); it != chunks.end();)
+			for (auto it = chunks.begin(); it != chunks.end() && maxLength > this->dataChunkHeaderLength;)
 			{
 				const Types::UnwrappedTsn tsn = *it;
 
@@ -896,6 +920,21 @@ namespace RTC
 				MS_ASSERT(!item.IsOutstanding(), "item should not be outstanding");
 				MS_ASSERT(!item.IsAbandoned(), "item should not be abandoned");
 				MS_ASSERT(!item.IsAcked(), "item should not be acked");
+
+				if (item.HasExpired(nowUs))
+				{
+					MS_DEBUG_TAG(
+					  sctp,
+					  "marking chunk %" PRIu32 " and message %" PRIu32 " as expired",
+					  tsn.Wrap(),
+					  item.GetData().GetMessageId());
+
+					AbandonAllFor(item);
+
+					it = chunks.upper_bound(tsn);
+
+					continue;
+				}
 
 				const size_t serializedLength = GetSerializedChunkLength(item.GetData());
 
@@ -915,12 +954,6 @@ namespace RTC
 				{
 					++it;
 				}
-
-				// No point in continuing if the packet is full.
-				if (maxLength <= this->dataChunkHeaderLength)
-				{
-					break;
-				}
 			}
 
 			return result;
@@ -930,6 +963,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// NOTE: This check walks every outstanding item, so it only runs in tests.
+#ifdef MS_TEST
 			size_t actualUnackedPayloadBytes{ 0 };
 			size_t actualUnackedPacketBytes{ 0 };
 			size_t actualUnackedItems{ 0 };
@@ -970,6 +1005,7 @@ namespace RTC
 			MS_ASSERT(
 			  actualCombinedToBeRetransmitted == combinedToBeRetransmitted,
 			  "actualCombinedToBeRetransmitted != combinedToBeRetransmitted");
+#endif
 		}
 	} // namespace SCTP
 } // namespace RTC

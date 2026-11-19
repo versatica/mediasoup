@@ -78,11 +78,14 @@ namespace RTC
 
 			/**
 			 * Remove the first `len` bytes from the beginning of the payload.
+			 *
+			 * @param len - Number of bytes to remove.
+			 *
+			 * @remarks
+			 * - `len` must not be greater than the payload length. The caller must
+			 *   guarantee it, otherwise the worker aborts.
 			 */
-			void RemovePayloadFront(size_t len)
-			{
-				this->payload.erase(this->payload.begin(), this->payload.begin() + len);
-			}
+			void RemovePayloadFront(size_t len);
 
 			/**
 			 * Useful to extract the payload and its ownership when destructing the

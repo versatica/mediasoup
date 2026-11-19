@@ -91,7 +91,7 @@ namespace RTC
 			MayExitFastRecovery(cumulativeTsnAck);
 
 			const OutstandingData::AckInfo ackInfo = this->outstandingData.HandleSack(
-			  cumulativeTsnAck, receivedSackChunk->GetValidatedGapAckBlocks(), IsInFastRecovery());
+			  nowUs, cumulativeTsnAck, receivedSackChunk->GetValidatedGapAckBlocks(), IsInFastRecovery());
 
 			// Add lifecycle events for delivered messages.
 			for (const uint64_t lifecycleId : ackInfo.ackedLifecycleIds)
@@ -165,7 +165,7 @@ namespace RTC
 			return true;
 		}
 
-		void RetransmissionQueue::HandleT3RtxTimerExpiry()
+		void RetransmissionQueue::HandleT3RtxTimerExpiry(int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -204,7 +204,7 @@ namespace RTC
 			// T3-rtx timer expired but did not fit in one MTU (rule E3 above) should
 			// be marked for retransmission and sent as soon as cwnd allows (normally,
 			// when a SACK arrives)."
-			this->outstandingData.NackAll();
+			this->outstandingData.NackAll(nowUs);
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-6.3.3
 			//
@@ -225,7 +225,7 @@ namespace RTC
 		}
 
 		std::vector<std::pair<uint32_t /*tsn*/, UserData>> RetransmissionQueue::GetChunksForFastRetransmit(
-		  size_t maxLength)
+		  int64_t nowUs, size_t maxLength)
 		{
 			MS_TRACE();
 
@@ -242,7 +242,7 @@ namespace RTC
 			const size_t oldUnackedPacketBytes = GetUnackedPacketBytes();
 #endif
 
-			toBeSent = this->outstandingData.GetChunksToBeFastRetransmitted(maxLength);
+			toBeSent = this->outstandingData.GetChunksToBeFastRetransmitted(nowUs, maxLength);
 
 			MS_ASSERT(!toBeSent.empty(), "toBeSent cannot be empty");
 
@@ -250,6 +250,8 @@ namespace RTC
 			//
 			// "4)  Restart the T3-rtx timer only if ... the endpoint is retransmitting
 			// the first outstanding DATA chunk sent to that address."
+			//
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			if (toBeSent[0].first == this->outstandingData.GetLastCumulativeTsnAck().GetNextValue().Wrap())
 			{
 				MS_DEBUG_DEV("first outstanding data to be retransmitted, restarting T3-rtx timer");
@@ -341,7 +343,7 @@ namespace RTC
 			size_t maxBytes = Utils::Byte::PadDownTo4Bytes(
 			  std::min({ maxPacketBytesAllowedByCwnd, maxPacketBytesAllowedByRwnd, maxLength }));
 
-			toBeSent = this->outstandingData.GetChunksToBeRetransmitted(maxBytes);
+			toBeSent = this->outstandingData.GetChunksToBeRetransmitted(nowUs, maxBytes);
 
 			const size_t bytesRetransmitted = std::accumulate(
 			  toBeSent.begin(),
@@ -379,7 +381,9 @@ namespace RTC
 
 				maxBytes -= chunkSize;
 
-				this->rwnd -= dataToSend->data.GetPayloadLength();
+				// NOTE: With nothing in flight, one packet can be sent even if it does
+				// not fit in rwnd, so rwnd must not go below 0.
+				this->rwnd -= std::min(this->rwnd, dataToSend->data.GetPayloadLength());
 
 				const std::optional<Types::UnwrappedTsn> tsn = this->outstandingData.Insert(
 				  dataToSend->outgoingMessageId,
@@ -409,6 +413,11 @@ namespace RTC
 			// "Every time a DATA chunk is sent to any address (including a
 			// retransmission), if the T3-rtx timer of that address is not running,
 			// start it running so that it will expire after the RTO of that address."
+			//
+			// NOTE: The outer block also holds the MS_LOG_DEV_LEVEL 3 log below, so
+			// both conditions cannot be merged.
+			//
+			// NOLINTNEXTLINE(readability-redundant-nested-if)
 			if (!toBeSent.empty())
 			{
 				if (!this->t3RtxTimer->IsRunning())

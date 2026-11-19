@@ -26,10 +26,11 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 		};
 		// clang-format on
 
-		auto* errorCause = RTC::SCTP::UnknownErrorCause::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::UnknownErrorCause> errorCause{ RTC::SCTP::UnknownErrorCause::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -57,7 +58,7 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
@@ -80,15 +81,12 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 
 		/* Clone it. */
 
-		auto* clonedErrorCause =
-		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		errorCause.reset(errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete errorCause;
-
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ clonedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
@@ -96,20 +94,18 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 		  /*causeCode*/ static_cast<RTC::SCTP::ErrorCause::ErrorCauseCode>(999),
 		  /*unknownCode*/ true);
 
-		REQUIRE(clonedErrorCause->HasUnknownValue() == true);
-		REQUIRE(clonedErrorCause->GetUnknownValueLength() == 7);
-		REQUIRE(clonedErrorCause->GetUnknownValue()[1] == 0x23);
-		REQUIRE(clonedErrorCause->GetUnknownValue()[0] == 0x01);
-		REQUIRE(clonedErrorCause->GetUnknownValue()[1] == 0x23);
-		REQUIRE(clonedErrorCause->GetUnknownValue()[2] == 0x45);
-		REQUIRE(clonedErrorCause->GetUnknownValue()[3] == 0x67);
-		REQUIRE(clonedErrorCause->GetUnknownValue()[4] == 0x89);
-		REQUIRE(clonedErrorCause->GetUnknownValue()[5] == 0xAB);
-		REQUIRE(clonedErrorCause->GetUnknownValue()[6] == 0xCD);
+		REQUIRE(errorCause->HasUnknownValue() == true);
+		REQUIRE(errorCause->GetUnknownValueLength() == 7);
+		REQUIRE(errorCause->GetUnknownValue()[1] == 0x23);
+		REQUIRE(errorCause->GetUnknownValue()[0] == 0x01);
+		REQUIRE(errorCause->GetUnknownValue()[1] == 0x23);
+		REQUIRE(errorCause->GetUnknownValue()[2] == 0x45);
+		REQUIRE(errorCause->GetUnknownValue()[3] == 0x67);
+		REQUIRE(errorCause->GetUnknownValue()[4] == 0x89);
+		REQUIRE(errorCause->GetUnknownValue()[5] == 0xAB);
+		REQUIRE(errorCause->GetUnknownValue()[6] == 0xCD);
 		// This should be padding.
-		REQUIRE(clonedErrorCause->GetUnknownValue()[7] == 0x00);
-
-		delete clonedErrorCause;
+		REQUIRE(errorCause->GetUnknownValue()[7] == 0x00);
 	}
 
 	SECTION("UnknownErrorCause::Parse() fails")

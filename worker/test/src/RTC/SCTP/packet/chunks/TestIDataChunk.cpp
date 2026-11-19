@@ -379,12 +379,29 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		  /*parametersCount*/ 0,
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
+
+		// A length that does not fit in 16 bits must throw too, not be truncated.
+		REQUIRE_THROWS_AS(chunk->SetUserDataPayload(sctpCommon::DataBuffer, 65539), MediaSoupError);
+
+		CHECK_SCTP_CHUNK(
+		  /*chunk*/ chunk.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+		  /*length*/ 20,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::I_DATA,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP_AND_REPORT,
+		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 	}
 
 	SECTION("IDataChunk::SetUserData() succeeds")
 	{
-		auto* chunk =
-		  RTC::SCTP::IDataChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::IDataChunk> chunk{ RTC::SCTP::IDataChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		RTC::SCTP::UserData userData(
 		  /*streamId*/ 123,
@@ -403,10 +420,14 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(userData.GetFragmentSequenceNumber() == 6666);
 		REQUIRE(userData.GetPayloadProtocolId() == 56789);
 		REQUIRE(userData.GetPayloadLength() == 4);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(userData.GetPayload()[0] == 1);
 		REQUIRE(userData.GetPayload()[1] == 2);
 		REQUIRE(userData.GetPayload()[2] == 3);
 		REQUIRE(userData.GetPayload()[3] == 4);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+
 		REQUIRE(userData.IsBeginning() == true);
 		REQUIRE(userData.IsEnd() == true);
 		REQUIRE(userData.IsUnordered() == true);
@@ -414,7 +435,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		chunk->SetUserData(std::move(userData));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 20 + 4,
@@ -438,25 +459,27 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(gotUserData.GetFragmentSequenceNumber() == 0);
 		REQUIRE(gotUserData.GetPayloadProtocolId() == 56789);
 		REQUIRE(gotUserData.GetPayloadLength() == 4);
+
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(gotUserData.GetPayload()[0] == 1);
 		REQUIRE(gotUserData.GetPayload()[1] == 2);
 		REQUIRE(gotUserData.GetPayload()[2] == 3);
 		REQUIRE(gotUserData.GetPayload()[3] == 4);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+
 		REQUIRE(gotUserData.IsBeginning() == true);
 		REQUIRE(gotUserData.IsEnd() == true);
 		REQUIRE(gotUserData.IsUnordered() == true);
 		// NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(std::move(gotUserData).ReleasePayload() == expectedPayload);
-
-		delete chunk;
 	}
 
 	SECTION("IDataChunk::ComputeLengthFor() succeeds")
 	{
 		REQUIRE(RTC::SCTP::IDataChunk::ComputeLengthFor(0) == 20);
 
-		auto* const chunk =
-		  RTC::SCTP::IDataChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::IDataChunk> chunk{ RTC::SCTP::IDataChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		// A payload whose length is not a multiple of 4, so the chunk needs padding.
 		chunk->SetUserDataPayload(sctpCommon::DataBuffer, 5);
@@ -466,7 +489,5 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(
 		  RTC::SCTP::AnyDataChunk::ComputeLengthFor(/*useMessageInterleaving*/ true, 5) ==
 		  RTC::SCTP::IDataChunk::ComputeLengthFor(5));
-
-		delete chunk;
 	}
 }

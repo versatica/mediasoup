@@ -30,6 +30,7 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 ## Ownership
 
 - New code avoids manual memory management: no `new`/`delete` on raw pointers. Whatever is allocated, or returned as an owning raw pointer by a factory (`Parse()`, `Clone()`, `Factory()`...), goes straight into a `std::unique_ptr` (`const` unless it is later `reset()`), created with `std::make_unique()` when it is our own allocation. This applies everywhere: classes, functions, tests and fuzzers.
+- A `Xxx::Parse()` or `Xxx::Factory()` call that is expected to fail and return `nullptr` is checked directly, never stored in a `std::unique_ptr`, since nothing was allocated: `REQUIRE(!RTC::SCTP::SackChunk::Parse(buffer, sizeof(buffer)));`.
 - An object owned by a class is held in a `std::unique_ptr`, never as a raw pointer with `new`/`delete`.
 - If it is created once in the constructor and never replaced, the `std::unique_ptr` is `const` and is created in the initializer list (a ternary is fine when it is optional and the condition is known at construction).
 - If it is created lazily, conditionally with complex logic, or replaced during the object's life, the `std::unique_ptr` is not `const` and is set with `reset()` or `std::make_unique()`.
@@ -101,9 +102,21 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 - Use a structured binding whenever both members of a pair or tuple are used: `for (const auto& [key, portRange] : mapPortRanges)`, never `const auto& key = kv.first;` plus `const auto& portRange = kv.second;`.
 - A loop over every element of a container is range-based: `for (const auto& codec : this->codecs)`. An index or an iterator stays only when the loop needs it: to index another container in parallel, to erase while iterating, to cover part of the range, or to use the position itself.
 - Aggregates are built with designated initializers: `{ .ssrc = ssrc, .lastSeq = seq }`, never `{ ssrc, seq }` (clang-tidy `modernize-use-designated-initializers`).
+- Never a trailing comma after the last element of a braced list (initializer lists, designated initializers, enums...): `{ 1, 2, 3 }`, never `{ 1, 2, 3, }`.
 - Never write the `struct` keyword before a variable, parameter or return type: `RttBackoff rttBackoff;`, never `struct RttBackoff rttBackoff;`. The only exception is where a function with the same name hides the type, as with `struct stat` and `struct sigaction` (POSIX declares the `stat()` and `sigaction()` functions, and without the keyword it does not compile). There it stays, with a one-line comment saying why, so that it is not "fixed" in a later pass.
 - Every lambda states its return type explicitly, `-> void` included. Hence a lambda never takes `auto` parameters (clang-tidy `fuchsia-trailing-return` rejects a trailing return type on a generic lambda): spell out the parameter type, e.g. `const std::pair<const uint16_t, OutgoingStream>& entry` for a `std::map` entry.
 - Integer literals have no unsigned suffix (`0`, not `0u`), unless the suffix is needed: the value does not fit in an `int`, or the literal must not be an `int` (e.g. so that a template argument is deduced as an unsigned type). When needed, the suffix is uppercase: `4711U`, never `4711u`.
+- Bitwise operations (`<<`, `>>`, `&`, `|`, `^`, `~`) work on unsigned operands, including operands that only become signed through integer promotion (a `uint8_t` or `uint16_t` shifted becomes an `int`). Make the operand unsigned at no runtime cost: `uint32_t{ byte } << 8`, `(uint32_t{ chunk } >> 13) & 0x03`, or test a bit with a mask instead of shifting it down (`(buffer[0] & 0x20) == 0`, not `((buffer[0] >> 5) & 0x01) == 0`). If the result must be signed, shift unsigned and convert the result: `static_cast<int64_t>(uint64_t{ 0x3FB93 } << 30)`. This applies even when the value is provably non-negative and there is no real bug: it is fixed this way, never silenced with `NOLINT(bugprone-signed-bitwise)`. The only exception is an operation that needs signed semantics on purpose (an arithmetic right shift of a possibly negative value), which keeps its `NOLINTNEXTLINE` with a comment saying why.
+- A `NOLINT` only goes on code that is already correct, and that is proven before adding it. For `cppcoreguidelines-pro-bounds-avoid-unchecked-container-access`, find what bounds each index: a size check, an `MS_ASSERT`, a `REQUIRE()`, the loop condition, a `std::min()`. If nothing does (for example a test helper doing `items[0]` or `items.front()` without checking that `items` is not empty), the guard is missing and gets added (a `REQUIRE()` in tests; in production code, ask first), it is not silenced.
+- `NOLINTNEXTLINE(<check>)` goes right above each physical line that is flagged, also inside a statement split across several lines. `NOLINTBEGIN(<check>)` / `NOLINTEND(<check>)` is only for a run of consecutive lines that all make the flagged access, such as a group of `REQUIRE()`s on `items[0]`, `items[1]`..., placed after the `REQUIRE(items.size() == N)` that guarantees them, with a blank line in between. It never wraps a loop, a whole block or lines that do something else.
+- A `NOLINTNEXTLINE(<check>)` that goes right after a comment is separated from it by an empty `//` line:
+
+  ```cpp
+  // the first outstanding DATA chunk sent to that address."
+  //
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+  if (toBeSent[0].first == ...)
+  ```
 - Write `Utils::Foo`, never `::Utils::Foo`.
 - Access `std::optional` with `.value()`, not `*opt`.
 - In production code, before touching a `.value()`, read upwards until finding what guarantees the value. If anything earlier in the code path guarantees it (an `if`, an `else`, an early `return`, an earlier assignment or anything else), it is left exactly as it is: no `NOLINT`, no local variable pulled out, no restructuring of the `if`, and no mention of it. Only accesses that are really unguarded are acted upon. The `NOLINT` rule for optionals is a test rule (see "Tests (Catch2)").
@@ -140,7 +153,10 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 
 ## Tests (Catch2)
 
-- Helpers are lambdas defined inside the `SCENARIO` body, never file-level `static` functions.
+- Everything a test needs is defined inside the `SCENARIO` body, never at file level, neither `static` nor inside an anonymous `namespace`: helpers are lambdas, mock listeners and other helper types are local classes, and constants are local `constexpr`. Something goes at file level only if several `SCENARIO`s in the same file share it.
+- Inside the `SCENARIO` body, the local `constexpr` constants go first, then the local classes, then the objects and the helper lambdas, the same order as in a class body.
+- A constant or a helper lambda that a local class uses is declared `static` and goes with the constants, before the classes: a local class cannot odr-use the automatic variables of the enclosing function. A constant is `static constexpr`, a lambda is `static const`. The same goes for a constant that a lambda without captures uses by reference (calling a method on it, passing it to a `const T&` parameter): that odr-uses it, which a lambda can only do with a variable it captures or one that is `static`. A default argument cannot call a local lambda, not even a `static` one, so a constructor that needs one gets a default constructor that delegates instead.
+- A lambda is never declared `constexpr`, anywhere in the worker: it is a function, not a compile-time value, and a lambda without captures is constant-initialized anyway. The only exception is a lambda that really is called in a constant expression (a `static_assert`, a template argument, the initializer of another `constexpr`).
 - Never `using namespace RTC;`: fully qualify names.
 - A `SCENARIO` or `SECTION` name is a single string literal, never split into adjacent literals.
 - Accessing a `std::optional` after `REQUIRE(opt.has_value())` needs `// NOLINTNEXTLINE(bugprone-unchecked-optional-access)`. The check flags all three forms, `*opt`, `opt->field` and `opt.value()`: using `.value()` does not avoid it, and the `REQUIRE()` above does not help because the checker does not see through the Catch2 macro.
@@ -155,6 +171,14 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
   REQUIRE(lossValue.expectedPackets == 100);
   ```
 
+- The check diagnoses the access itself, whatever is done with the result, and only a `has_value()` check with an early exit in the same function counts as a guard. So an access with no such guard always gets the `NOLINT`, even when the value is guaranteed by other means (a default member initializer, a `REQUIRE()`, the caller) and even when it is stored in a `const auto`:
+
+  ```cpp
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  const auto maxInitRetransmissions = a.sctpOptions.maxInitRetransmissions.value();
+  ```
+
+- A clean `make tidy` run does not prove that an access needs no `NOLINT`: in very large functions (such as the `SCENARIO` of `TestAssociation.cpp`) the analysis gives up silently and reports nothing, and the warning appears as soon as the function shrinks. The only exception is an access inside a lambda, which the check never reports, so it takes no `NOLINT`.
 - Before calling a test file done, search it for `.value()`, `->` and `*` on optionals and check one by one that each access has its `NOLINT` or comes from an already bound value.
 - Use the existing mocks (`mocks::MockShared`, `mocks::MockTimerHandle`, `mocks::MockBackoffTimerHandle`) instead of writing new ones.
 - A test expectation states what the code must do. Never change an expected value, widen a tolerance or loosen an assertion just because the code now produces something else.

@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -30,10 +29,12 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		};
 		// clang-format on
 
-		auto* parameter = RTC::SCTP::ReconfigurationResponseParameter::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::ReconfigurationResponseParameter> parameter{
+			RTC::SCTP::ReconfigurationResponseParameter::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 20,
@@ -57,7 +58,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 20,
@@ -75,15 +76,12 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 
 		/* Clone it. */
 
-		auto* clonedParameter =
-		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		parameter.reset(parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete parameter;
-
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ clonedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 20,
@@ -91,15 +89,13 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
-		REQUIRE(clonedParameter->GetReconfigurationResponseSequenceNumber() == 287454020);
+		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 287454020);
 		REQUIRE(
-		  clonedParameter->GetResult() ==
+		  parameter->GetResult() ==
 		  RTC::SCTP::ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED);
-		REQUIRE(clonedParameter->HasNextTsns() == true);
-		REQUIRE(clonedParameter->GetSenderNextTsn() == 1111111111);
-		REQUIRE(clonedParameter->GetReceiverNextTsn() == 2222222222);
-
-		delete clonedParameter;
+		REQUIRE(parameter->HasNextTsns() == true);
+		REQUIRE(parameter->GetSenderNextTsn() == 1111111111);
+		REQUIRE(parameter->GetReceiverNextTsn() == 2222222222);
 	}
 
 	SECTION("ReconfigurationResponseParameter::Parse() without Sender's and Receiver's Next TSN succeeds")
@@ -120,10 +116,12 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		};
 		// clang-format on
 
-		auto* parameter = RTC::SCTP::ReconfigurationResponseParameter::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::ReconfigurationResponseParameter> parameter{
+			RTC::SCTP::ReconfigurationResponseParameter::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -144,7 +142,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
@@ -160,15 +158,12 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 
 		/* Clone it. */
 
-		auto* clonedParameter =
-		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		parameter.reset(parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete parameter;
-
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ clonedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
@@ -176,13 +171,11 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
-		REQUIRE(clonedParameter->GetReconfigurationResponseSequenceNumber() == 3333333333);
+		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 3333333333);
 		REQUIRE(
-		  clonedParameter->GetResult() ==
+		  parameter->GetResult() ==
 		  RTC::SCTP::ReconfigurationResponseParameter::Result::ERROR_REQUEST_ALREADY_IN_PROGRESS);
-		REQUIRE(clonedParameter->HasNextTsns() == false);
-
-		delete clonedParameter;
+		REQUIRE(parameter->HasNextTsns() == false);
 	}
 
 	SECTION("ReconfigurationResponseParameter::Parse() with unknown result succeeds")
@@ -199,10 +192,12 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		};
 		// clang-format on
 
-		auto* parameter = RTC::SCTP::ReconfigurationResponseParameter::Parse(buffer, sizeof(buffer));
+		const std::unique_ptr<RTC::SCTP::ReconfigurationResponseParameter> parameter{
+			RTC::SCTP::ReconfigurationResponseParameter::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -216,8 +211,6 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  static_cast<RTC::SCTP::ReconfigurationResponseParameter::Result>(7));
 		REQUIRE(parameter->HasUnknownResult() == true);
-
-		delete parameter;
 	}
 
 	SECTION("ReconfigurationResponseParameter::Parse() fails")
@@ -262,11 +255,13 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 
 	SECTION("ReconfigurationResponseParameter::Factory() succeeds")
 	{
-		auto* parameter = RTC::SCTP::ReconfigurationResponseParameter::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::ReconfigurationResponseParameter> parameter{
+			RTC::SCTP::ReconfigurationResponseParameter::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
@@ -286,7 +281,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		parameter->SetNextTsns(100000000, 200000000);
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 20,
@@ -304,13 +299,12 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 
 		/* Parse itself and compare. */
 
-		auto* parsedParameter = RTC::SCTP::ReconfigurationResponseParameter::Parse(
-		  parameter->GetBuffer(), parameter->GetLength());
-
-		delete parameter;
+		parameter.reset(
+		  RTC::SCTP::ReconfigurationResponseParameter::Parse(
+		    parameter->GetBuffer(), parameter->GetLength()));
 
 		CHECK_SCTP_PARAMETER(
-		  /*parameter*/ parsedParameter,
+		  /*parameter*/ parameter.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
@@ -318,14 +312,11 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
-		REQUIRE(parsedParameter->GetReconfigurationResponseSequenceNumber() == 111000);
+		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 111000);
 		REQUIRE(
-		  parsedParameter->GetResult() ==
-		  RTC::SCTP::ReconfigurationResponseParameter::Result::IN_PROGRESS);
-		REQUIRE(parsedParameter->HasNextTsns() == true);
-		REQUIRE(parsedParameter->GetSenderNextTsn() == 100000000);
-		REQUIRE(parsedParameter->GetReceiverNextTsn() == 200000000);
-
-		delete parsedParameter;
+		  parameter->GetResult() == RTC::SCTP::ReconfigurationResponseParameter::Result::IN_PROGRESS);
+		REQUIRE(parameter->HasNextTsns() == true);
+		REQUIRE(parameter->GetSenderNextTsn() == 100000000);
+		REQUIRE(parameter->GetReceiverNextTsn() == 200000000);
 	}
 }

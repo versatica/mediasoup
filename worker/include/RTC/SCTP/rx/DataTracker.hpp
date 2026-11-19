@@ -47,8 +47,13 @@ namespace RTC
 			 * TSN, and any received data. Data received beyond this limit will be
 			 * dropped, which will force the transmitter to send data that actually
 			 * increases the last cumulative acked TSN.
+			 *
+			 * @remarks
+			 * - It cannot be greater than 65535 since gap-ack-block offsets (relative
+			 *   to the cumulative ack TSN) have 16 bits, so a TSN farther than that
+			 *   could not be reported in a SACK.
 			 */
-			static constexpr uint32_t MaxAcceptedOutstandingFragments{ 100000 };
+			static constexpr uint32_t MaxAcceptedOutstandingFragments{ 65535 };
 
 		private:
 			enum class AckState : uint8_t
@@ -221,7 +226,7 @@ namespace RTC
 			bool ShouldSendAck(bool alsoIfDelayed = false);
 
 			/**
-			 * Forces `ShouldSendSack()` to return `true`.
+			 * Forces `ShouldSendAck()` to return `true`.
 			 */
 			void ForceImmediateSack();
 

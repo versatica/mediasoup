@@ -86,7 +86,7 @@ namespace RTC
 			// Here we must validate that length is multiple of 8.
 			if (chunkLength % 8 != 0)
 			{
-				MS_WARN_TAG(sctp, "wrong length (not multiple of 4)");
+				MS_WARN_TAG(sctp, "wrong length (not multiple of 8)");
 
 				return nullptr;
 			}
@@ -124,7 +124,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  new cumulative tsn: %" PRIu32, GetNewCumulativeTsn());
 			MS_DUMP_CLEAN(indentation, "  number of skipped streams: %" PRIu16, GetNumberOfSkippedStreams());
 			MS_DUMP_CLEAN(indentation, "  skipped streams:");
-			for (auto& skippedStream : GetSkippedStreams())
+			for (const auto& skippedStream : GetSkippedStreams())
 			{
 				MS_DUMP_CLEAN(
 				  indentation,
@@ -177,7 +177,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto previousVariableLengthValueLength = GetVariableLengthValueLength();
+			const auto previousVariableLengthValueLength = GetVariableLengthValueLength();
 
 			// NOTE: This may throw.
 			SetVariableLengthValueLength(previousVariableLengthValueLength + 8);

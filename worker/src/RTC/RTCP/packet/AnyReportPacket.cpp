@@ -98,6 +98,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "  report blocks: %" PRIu8, GetNumberOfReportBlocks());
+
 			for (const auto& reportBlock : GetReportBlocks())
 			{
 				MS_DUMP_CLEAN(

@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
@@ -47,10 +46,11 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		};
 		// clang-format on
 
-		auto* chunk = RTC::SCTP::ReConfigChunk::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::ReConfigChunk> chunk{ RTC::SCTP::ReConfigChunk::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 40,
@@ -64,7 +64,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		  /*errorCausesCount*/ 0);
 
 		const auto* parameter1 =
-		  reinterpret_cast<const RTC::SCTP::OutgoingSsnResetRequestParameter*>(chunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::OutgoingSsnResetRequestParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -80,13 +80,13 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter1->GetSenderLastAssignedTsn() == 0xAABBCCDD);
 
 		const std::vector<uint16_t> expectedStreamIds1{
-			{ 0x5001, 0x5002, 0x5003 },
+			{ 0x5001, 0x5002, 0x5003 }
 		};
 
 		REQUIRE(parameter1->GetStreamIds() == expectedStreamIds1);
 
 		const auto* parameter2 =
-		  reinterpret_cast<const RTC::SCTP::IncomingSsnResetRequestParameter*>(chunk->GetParameterAt(1));
+		  static_cast<const RTC::SCTP::IncomingSsnResetRequestParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -111,7 +111,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 40,
@@ -125,7 +125,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		  /*errorCausesCount*/ 0);
 
 		parameter1 =
-		  reinterpret_cast<const RTC::SCTP::OutgoingSsnResetRequestParameter*>(chunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::OutgoingSsnResetRequestParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -142,7 +142,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter1->GetStreamIds() == expectedStreamIds1);
 
 		parameter2 =
-		  reinterpret_cast<const RTC::SCTP::IncomingSsnResetRequestParameter*>(chunk->GetParameterAt(1));
+		  static_cast<const RTC::SCTP::IncomingSsnResetRequestParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -159,14 +159,12 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		chunk.reset(chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete chunk;
-
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ clonedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 40,
@@ -179,8 +177,8 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		parameter1 = reinterpret_cast<const RTC::SCTP::OutgoingSsnResetRequestParameter*>(
-		  clonedChunk->GetParameterAt(0));
+		parameter1 =
+		  static_cast<const RTC::SCTP::OutgoingSsnResetRequestParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -196,8 +194,8 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter1->GetSenderLastAssignedTsn() == 0xAABBCCDD);
 		REQUIRE(parameter1->GetStreamIds() == expectedStreamIds1);
 
-		parameter2 = reinterpret_cast<const RTC::SCTP::IncomingSsnResetRequestParameter*>(
-		  clonedChunk->GetParameterAt(1));
+		parameter2 =
+		  static_cast<const RTC::SCTP::IncomingSsnResetRequestParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -211,17 +209,15 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 
 		REQUIRE(parameter2->GetReconfigurationRequestSequenceNumber() == 0x44332211);
 		REQUIRE(parameter2->GetStreamIds() == expectedStreamIds2);
-
-		delete clonedChunk;
 	}
 
 	SECTION("ReConfigChunk::Factory() succeeds")
 	{
-		auto* chunk = RTC::SCTP::ReConfigChunk::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::ReConfigChunk> chunk{ RTC::SCTP::ReConfigChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -245,7 +241,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		parameter1->Consolidate();
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4 + 20,
@@ -259,7 +255,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		  /*errorCausesCount*/ 0);
 
 		const auto* addedParameter1 =
-		  reinterpret_cast<const RTC::SCTP::ReconfigurationResponseParameter*>(chunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::ReconfigurationResponseParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ addedParameter1,
@@ -280,12 +276,10 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = RTC::SCTP::ReConfigChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
-
-		delete chunk;
+		chunk.reset(RTC::SCTP::ReConfigChunk::Parse(chunk->GetBuffer(), chunk->GetLength()));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ parsedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 4 + 20,
 		  /*length*/ 4 + 20,
@@ -299,8 +293,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		  /*errorCausesCount*/ 0);
 
 		const auto* parsedParameter1 =
-		  reinterpret_cast<const RTC::SCTP::ReconfigurationResponseParameter*>(
-		    parsedChunk->GetParameterAt(0));
+		  static_cast<const RTC::SCTP::ReconfigurationResponseParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter1,
@@ -318,16 +311,14 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedParameter1->HasNextTsns() == true);
 		REQUIRE(parsedParameter1->GetSenderNextTsn() == 100000001);
 		REQUIRE(parsedParameter1->GetReceiverNextTsn() == 200000002);
-
-		delete parsedChunk;
 	}
 
 	SECTION("ReConfigChunk::ComputeLengthFor() succeeds")
 	{
 		REQUIRE(RTC::SCTP::ReConfigChunk::ComputeLengthFor(0) == 4);
 
-		auto* const chunk = RTC::SCTP::ReConfigChunk::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::ReConfigChunk> chunk{ RTC::SCTP::ReConfigChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		auto* const parameter =
 		  chunk->BuildParameterInPlace<RTC::SCTP::OutgoingSsnResetRequestParameter>();
@@ -342,7 +333,5 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 
 		REQUIRE(length == 28);
 		REQUIRE(chunk->GetLength() == length);
-
-		delete chunk;
 	}
 }

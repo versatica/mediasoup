@@ -2,6 +2,7 @@
 #include "RTC/SCTP/packet/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
+#include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/SCTP/tx/OutstandingData.hpp"
@@ -33,7 +34,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		{
 			if (!this->prepared)
 			{
-				return false;
+				FAIL("discardFromSendQueue called unexpectedly");
 			}
 
 			this->callCount++;
@@ -77,8 +78,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	RTC::SCTP::Types::UnwrappedTsn::Unwrapper unwrapper;
 	DiscardFromSendQueueTester discardFromSendQueueTester;
 
-	const auto discardFromSendQueue =
-	  [&discardFromSendQueueTester](uint16_t streamId, uint32_t outgoingMessageId)
+	const auto discardFromSendQueue = [&discardFromSendQueueTester](
+	                                    uint16_t streamId, uint32_t outgoingMessageId) -> bool
 	{
 		return discardFromSendQueueTester.Called(streamId, outgoingMessageId);
 	};
@@ -87,6 +88,21 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	  /*useMessageInterleaving*/ false,
 	  /*lastCumulativeTsnAck*/ unwrapper.Unwrap(9),
 	  discardFromSendQueue);
+
+	const auto getTsns = [](const std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::UserData>>& chunks)
+	  -> std::vector<uint32_t>
+	{
+		std::vector<uint32_t> tsns;
+
+		tsns.reserve(chunks.size());
+
+		for (const auto& [tsn, data] : chunks)
+		{
+			tsns.push_back(tsn);
+		}
+
+		return tsns;
+	};
 
 	SECTION("has initial state")
 	{
@@ -135,7 +151,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		buffer.Insert(
 		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowUs);
 
-		const auto ackInfo = buffer.HandleSack(unwrapper.Unwrap(10), {}, false);
+		const auto ackInfo = buffer.HandleSack(NowUs, unwrapper.Unwrap(10), {}, false);
 
 		REQUIRE(
 		  ackInfo.bytesAcked ==
@@ -163,6 +179,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		buffer.Insert(
 		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowUs);
 
+		buffer.HandleSack(NowUs, unwrapper.Unwrap(9), {}, false);
+
 		REQUIRE(buffer.IsEmpty() == false);
 		REQUIRE(buffer.GetUnackedPayloadBytes() == 1);
 		REQUIRE(buffer.GetUnackedItems() == 1);
@@ -186,6 +204,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false), NowUs);
 
 		const auto ackInfo = buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 2 }
@@ -226,13 +245,13 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 			{ 2, 2 }
 		};
 
-		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
+		REQUIRE(buffer.HandleSack(NowUs, unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
-		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
+		REQUIRE(buffer.HandleSack(NowUs, unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
-		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
+		REQUIRE(buffer.HandleSack(NowUs, unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		REQUIRE(
@@ -261,6 +280,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 2 }
@@ -271,6 +291,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 3 }
@@ -280,6 +301,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const auto ackInfo = buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 4 }
@@ -309,8 +331,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		expectedChunksToBeFastRetransmitted.emplace_back(
 		  10, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false));
 
-		REQUIRE(buffer.GetChunksToBeFastRetransmitted(1000) == expectedChunksToBeFastRetransmitted);
-		REQUIRE(buffer.GetChunksToBeRetransmitted(1000).empty() == true);
+		REQUIRE(buffer.GetChunksToBeFastRetransmitted(NowUs, 1000) == expectedChunksToBeFastRetransmitted);
+		REQUIRE(buffer.GetChunksToBeRetransmitted(NowUs, 1000).empty() == true);
 	}
 
 	SECTION("nacks three times results in abandoning")
@@ -342,6 +364,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 2 }
@@ -352,6 +375,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 3 }
@@ -363,6 +387,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
 
 		const auto ackInfo = buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 4 }
@@ -421,6 +446,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 2 }
@@ -432,6 +458,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 3 }
@@ -443,6 +470,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		discardFromSendQueueTester.Prepare(/*returnValue*/ true);
 
 		const auto ackInfo = buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 4 }
@@ -547,7 +575,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
 
-		buffer.NackAll();
+		buffer.NackAll(NowUs);
 
 		discardFromSendQueueTester.Test(
 		  /*expectedCallCount*/ 1,
@@ -585,7 +613,12 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
 
-		buffer.NackAll();
+		buffer.NackAll(NowUs);
+
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 1,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ OutgoingMessageId);
 
 		REQUIRE(buffer.ShouldSendForwardTsn() == true);
 
@@ -635,6 +668,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		});
 
 		buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(12),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 3 },
@@ -693,6 +727,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 2 }
@@ -704,6 +739,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 3 }
@@ -713,6 +749,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const auto ackInfo = buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 4 }
@@ -728,6 +765,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 5 }
@@ -739,6 +777,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 6 }
@@ -748,6 +787,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(buffer.HasDataToBeRetransmitted() == true);
 
 		const auto ackInfo2 = buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 7 }
@@ -758,11 +798,15 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(buffer.HasDataToBeRetransmitted() == true);
 
 		// Now retransmit.
-		const auto fastRetransmit = buffer.GetChunksToBeFastRetransmitted(1000);
+		const auto fastRetransmit = buffer.GetChunksToBeFastRetransmitted(NowUs, 1000);
 
 		REQUIRE(fastRetransmit.size() == 1);
-		REQUIRE(fastRetransmit[0].first == 10);
-		REQUIRE(buffer.GetChunksToBeRetransmitted(1000).empty() == true);
+
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+		const uint32_t fastRetransmitTsn = fastRetransmit[0].first;
+
+		REQUIRE(fastRetransmitTsn == 10);
+		REQUIRE(buffer.GetChunksToBeRetransmitted(NowUs, 1000).empty() == true);
 
 		// SACKs that only newly ack chunks sent before the retransmission don't
 		// count as miss indications, see the section about SACKs predating a
@@ -780,6 +824,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 12 }
@@ -791,6 +836,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 13 }
@@ -799,12 +845,20 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    .hasPacketLoss == false);
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
 		const auto ackInfo3 = buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 14 }
     },
 		  false);
+
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 1,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ OutgoingMessageId);
 
 		REQUIRE(ackInfo3.hasPacketLoss == true);
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
@@ -826,6 +880,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 			REQUIRE(
 			  buffer
 			    .HandleSack(
+			      NowUs,
 			      unwrapper.Unwrap(9),
 			      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 			        { 2, end }
@@ -837,6 +892,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 4 }
@@ -844,10 +900,14 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		      false)
 		    .hasPacketLoss == true);
 
-		const auto fastRetransmit = buffer.GetChunksToBeFastRetransmitted(1000);
+		const auto fastRetransmit = buffer.GetChunksToBeFastRetransmitted(NowUs, 1000);
 
 		REQUIRE(fastRetransmit.size() == 1);
-		REQUIRE(fastRetransmit[0].first == 10);
+
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+		const uint32_t fastRetransmitTsn = fastRetransmit[0].first;
+
+		REQUIRE(fastRetransmitTsn == 10);
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		// The receiver will continue to receive TSN 14..30, which were all sent
@@ -861,6 +921,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 			REQUIRE(
 			  buffer
 			    .HandleSack(
+			      NowUs,
 			      unwrapper.Unwrap(9),
 			      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 			        { 2, end }
@@ -885,6 +946,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 			REQUIRE(
 			  buffer
 			    .HandleSack(
+			      NowUs,
 			      unwrapper.Unwrap(9),
 			      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 			        { 2, end }
@@ -897,6 +959,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  buffer
 		    .HandleSack(
+		      NowUs,
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		        { 2, 24 }
@@ -905,10 +968,14 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    .hasPacketLoss == true);
 
 		// It is fast retransmitted again, even though in fast recovery.
-		const auto retransmit = buffer.GetChunksToBeFastRetransmitted(1000);
+		const auto retransmit = buffer.GetChunksToBeFastRetransmitted(NowUs, 1000);
 
 		REQUIRE(retransmit.size() == 1);
-		REQUIRE(retransmit[0].first == 10);
+
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+		const uint32_t retransmitTsn = retransmit[0].first;
+
+		REQUIRE(retransmitTsn == 10);
 	}
 
 	SECTION("lifecyle returns acked items in ack-info")
@@ -937,13 +1004,13 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  RTC::SCTP::Types::ExpiresAtUsInfinite,
 		  /*lifecycleId*/ 44);
 
-		const auto ackInfo1 = buffer.HandleSack(unwrapper.Unwrap(11), {}, false);
+		const auto ackInfo1 = buffer.HandleSack(NowUs, unwrapper.Unwrap(11), {}, false);
 
 		std::vector<uint64_t> expectedAckedLifecycleIds = { 42, 43 };
 
 		REQUIRE(ackInfo1.ackedLifecycleIds == expectedAckedLifecycleIds);
 
-		const auto ackInfo2 = buffer.HandleSack(unwrapper.Unwrap(12), {}, false);
+		const auto ackInfo2 = buffer.HandleSack(NowUs, unwrapper.Unwrap(12), {}, false);
 
 		expectedAckedLifecycleIds = { 44 };
 
@@ -974,9 +1041,12 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false),
 		  NowUs,
-		  /*maxRetransmits*/ 0);
+		  /*maxRetransmits*/ 0,
+		  /*expiresAtUs*/ RTC::SCTP::Types::ExpiresAtUsInfinite,
+		  /*lifecycleId*/ 42);
 
 		const auto ackInfo1 = buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 2 }
@@ -987,6 +1057,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const auto ackInfo2 = buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 3 }
@@ -999,6 +1070,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
 
 		const auto ackInfo3 = buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 4 }
@@ -1012,6 +1084,22 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		REQUIRE(ackInfo3.hasPacketLoss == true);
 		REQUIRE(ackInfo3.abandonedLifecycleIds.empty() == true);
+
+		// This will generate a FORWARD-TSN, which is acked.
+		REQUIRE(buffer.ShouldSendForwardTsn() == true);
+
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
+
+		const auto* forwardTsnChunk = buffer.AddForwardTsn(packet.get());
+
+		REQUIRE(forwardTsnChunk);
+		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 13);
+
+		const auto ackInfo4 = buffer.HandleSack(NowUs, unwrapper.Unwrap(13), {}, false);
+
+		REQUIRE(ackInfo4.hasPacketLoss == false);
+		REQUIRE(ackInfo4.abandonedLifecycleIds == std::vector<uint64_t>{ 42 });
 	}
 
 	SECTION("lifecyle returns abandoned after T3 RTX timer expired")
@@ -1053,6 +1141,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		});
 
 		const auto ackInfo1 = buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 4 }
@@ -1074,7 +1163,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
 
-		buffer.NackAll();
+		buffer.NackAll(NowUs);
 
 		discardFromSendQueueTester.Test(
 		  /*expectedCallCount*/ 1,
@@ -1101,7 +1190,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 13);
 
-		const auto ackInfo2 = buffer.HandleSack(unwrapper.Unwrap(13), {}, false);
+		const auto ackInfo2 = buffer.HandleSack(NowUs, unwrapper.Unwrap(13), {}, false);
 
 		REQUIRE(ackInfo2.hasPacketLoss == false);
 		REQUIRE(ackInfo2.abandonedLifecycleIds == std::vector<uint64_t>{ 42 });
@@ -1165,8 +1254,17 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		REQUIRE(buffer.ShouldSendForwardTsn() == false);
 
-		buffer.HandleSack(unwrapper.Unwrap(11), {}, false);
-		buffer.NackAll();
+		buffer.HandleSack(NowUs, unwrapper.Unwrap(11), {}, false);
+
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
+		buffer.NackAll(NowUs);
+
+		// TSN 12 to 15 are abandoned, one message each.
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 4,
+		  /*expectedLastStreamId*/ 3,
+		  /*expectedLastOutgoingMessageId*/ 5);
 
 		REQUIRE(
 		  buffer.GetChunkStatesForTesting() ==
@@ -1194,7 +1292,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		});
 
 		// Ack 12, allowing a FORWARD-TSN that spans to TSN=14 to be created.
-		buffer.HandleSack(unwrapper.Unwrap(12), {}, false);
+		buffer.HandleSack(NowUs, unwrapper.Unwrap(12), {}, false);
 
 		REQUIRE(buffer.ShouldSendForwardTsn() == true);
 
@@ -1212,7 +1310,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		});
 
 		// Ack 13, allowing a FORWARD-TSN that spans to TSN=14 to be created.
-		buffer.HandleSack(unwrapper.Unwrap(13), {}, false);
+		buffer.HandleSack(NowUs, unwrapper.Unwrap(13), {}, false);
 
 		REQUIRE(buffer.ShouldSendForwardTsn() == true);
 
@@ -1230,7 +1328,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		});
 
 		// Ack 14, allowing a FORWARD-TSN that spans to TSN=15 to be created.
-		buffer.HandleSack(unwrapper.Unwrap(14), {}, false);
+		buffer.HandleSack(NowUs, unwrapper.Unwrap(14), {}, false);
 
 		REQUIRE(buffer.ShouldSendForwardTsn() == true);
 
@@ -1247,9 +1345,130 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		                                            { 3, 47 },
 		});
 
-		buffer.HandleSack(unwrapper.Unwrap(15), {}, false);
+		buffer.HandleSack(NowUs, unwrapper.Unwrap(15), {}, false);
 
 		REQUIRE(buffer.ShouldSendForwardTsn() == false);
+	}
+
+	SECTION("generates Forward-TSN with the last skipped SSN when SSN wraps around")
+	{
+		// TSN 10-13, ordered messages in stream 1 whose SSN wraps around.
+		buffer.Insert(
+		  0,
+		  RTC::SCTP::UserData(1, /*ssn*/ 65534, 0, 0, 53, { 0x00 }, true, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ 0);
+		buffer.Insert(
+		  1,
+		  RTC::SCTP::UserData(1, /*ssn*/ 65535, 0, 0, 53, { 0x00 }, true, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ 0);
+		buffer.Insert(
+		  2,
+		  RTC::SCTP::UserData(1, /*ssn*/ 0, 0, 0, 53, { 0x00 }, true, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ 0);
+		buffer.Insert(
+		  3,
+		  RTC::SCTP::UserData(1, /*ssn*/ 1, 0, 0, 53, { 0x00 }, true, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ 0);
+
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
+		buffer.NackAll(NowUs);
+
+		// The four messages are abandoned.
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 4,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ 3);
+
+		REQUIRE(
+		  buffer.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 10, RTC::SCTP::OutstandingData::State::ABANDONED },
+		    { 11, RTC::SCTP::OutstandingData::State::ABANDONED },
+		    { 12, RTC::SCTP::OutstandingData::State::ABANDONED },
+		    { 13, RTC::SCTP::OutstandingData::State::ABANDONED },
+		});
+		REQUIRE(buffer.ShouldSendForwardTsn() == true);
+
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
+
+		const auto* forwardTsnChunk = buffer.AddForwardTsn(packet.get());
+
+		REQUIRE(forwardTsnChunk);
+		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 13);
+		REQUIRE(
+		  forwardTsnChunk->GetSkippedStreams() == std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
+		                                            { 1, 1 },
+		});
+	}
+
+	SECTION("generates I-Forward-TSN with the last skipped MID when MID wraps around")
+	{
+		RTC::SCTP::OutstandingData interleavingBuffer(
+		  /*useMessageInterleaving*/ true,
+		  /*lastCumulativeTsnAck*/ unwrapper.Unwrap(9),
+		  discardFromSendQueue);
+
+		// TSN 10-13, ordered messages in stream 1 whose MID wraps around.
+		interleavingBuffer.Insert(
+		  0,
+		  RTC::SCTP::UserData(1, 0, /*mid*/ 4294967294, 0, 53, { 0x00 }, true, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ 0);
+		interleavingBuffer.Insert(
+		  1,
+		  RTC::SCTP::UserData(1, 0, /*mid*/ 4294967295, 0, 53, { 0x00 }, true, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ 0);
+		interleavingBuffer.Insert(
+		  2,
+		  RTC::SCTP::UserData(1, 0, /*mid*/ 0, 0, 53, { 0x00 }, true, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ 0);
+		interleavingBuffer.Insert(
+		  3,
+		  RTC::SCTP::UserData(1, 0, /*mid*/ 1, 0, 53, { 0x00 }, true, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ 0);
+
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
+		interleavingBuffer.NackAll(NowUs);
+
+		// The four messages are abandoned.
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 4,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ 3);
+
+		REQUIRE(
+		  interleavingBuffer.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 10, RTC::SCTP::OutstandingData::State::ABANDONED },
+		    { 11, RTC::SCTP::OutstandingData::State::ABANDONED },
+		    { 12, RTC::SCTP::OutstandingData::State::ABANDONED },
+		    { 13, RTC::SCTP::OutstandingData::State::ABANDONED },
+		});
+		REQUIRE(interleavingBuffer.ShouldSendForwardTsn() == true);
+
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
+
+		const auto* iForwardTsnChunk = interleavingBuffer.AddIForwardTsn(packet.get());
+
+		REQUIRE(iForwardTsnChunk);
+		REQUIRE(iForwardTsnChunk->GetNewCumulativeTsn() == 13);
+		REQUIRE(
+		  iForwardTsnChunk->GetSkippedStreams() == std::vector<RTC::SCTP::IForwardTsnChunk::SkippedStream>{
+		                                             { /*unordered*/ false, 1, /*mid*/ 1 },
+		});
 	}
 
 	SECTION("treats unacked payload bytes different from packet bytes")
@@ -1292,6 +1511,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		// This marks 12, 14, 16 as Acked.
 		// TSNs 11, 13, 15 get their 1st miss indication each.
 		buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(10),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 2 }, // TSN 12
@@ -1305,6 +1525,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		// Cumulative TSN Ack Point advanced from 10 to 11, 13 and 15 should get their
 		// 2nd miss indication.
 		buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(11),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 1, 1 }, // TSN 12
@@ -1318,6 +1539,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		// Cumulative Ack. 13 and 15 should get their 3rd miss indication and trigger
 		// retransmission.
 		buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(12),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 2 }, // TSN 14
@@ -1350,7 +1572,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 			{ 1, 40000 }
 		};
 
-		buffer.HandleSack(unwrapper.Unwrap(10), malformedBlocks, /*isInFastRecovery*/ false);
+		buffer.HandleSack(NowUs, unwrapper.Unwrap(10), malformedBlocks, /*isInFastRecovery*/ false);
 
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 	}
@@ -1366,6 +1588,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		// This NACKs TSN 11, 13, 15 (1st miss indication).
 		buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(10),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 2 }, // TSN 12
@@ -1379,6 +1602,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		// The gap between block1-end (12) and block2-start (1011) causes
 		// NackBetweenAckBlocks to loop TSN 13..1010, but only TSN 13..16 are valid.
 		buffer.HandleSack(
+		  NowUs,
 		  unwrapper.Unwrap(11),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 1,    1     }, // TSN 12
@@ -1388,5 +1612,392 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		// Packet 11 has been acknowledged.
 		REQUIRE(buffer.GetUnackedItems() == 2);
+	}
+
+	SECTION("expires chunk before retransmitting when behind non-expired chunk")
+	{
+		constexpr int64_t ExpiresAtUs = NowUs + 50000;
+
+		// TSN 10 is reliable (never expires).
+		buffer.Insert(
+		  /*outgoingMessageId*/ 1, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x01 }, true, true, false), NowUs);
+
+		// TSN 11 and 12 have a limited lifetime and expire at `ExpiresAtUs`.
+		buffer.Insert(
+		  /*outgoingMessageId*/ 2,
+		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02 }, true, false, false),
+		  NowUs,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  ExpiresAtUs);
+
+		buffer.Insert(
+		  /*outgoingMessageId*/ 2,
+		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x03 }, false, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  ExpiresAtUs);
+
+		buffer.NackAll(NowUs);
+
+		// ExpireOutstandingChunks() stops at the first non-expired chunk (TSN 10).
+		buffer.ExpireOutstandingChunks(ExpiresAtUs);
+
+		REQUIRE(
+		  buffer.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED               },
+		    { 10, RTC::SCTP::OutstandingData::State::TO_BE_RETRANSMITTED },
+		    { 11, RTC::SCTP::OutstandingData::State::TO_BE_RETRANSMITTED },
+		    { 12, RTC::SCTP::OutstandingData::State::TO_BE_RETRANSMITTED },
+		});
+
+		// When extracting chunks for retransmission, TSN 11 and 12 are expired and
+		// abandoned instead of being retransmitted.
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
+		REQUIRE(
+		  getTsns(buffer.GetChunksToBeRetransmitted(ExpiresAtUs, 1000)) == std::vector<uint32_t>{ 10 });
+
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 1,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ 2);
+
+		REQUIRE(
+		  buffer.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 10, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		    { 11, RTC::SCTP::OutstandingData::State::ABANDONED },
+		    { 12, RTC::SCTP::OutstandingData::State::ABANDONED },
+		});
+		REQUIRE(buffer.ShouldSendForwardTsn() == false);
+
+		// Once TSN 10 is acknowledged, FORWARD-TSN can be sent for TSN 11 and 12.
+		buffer.HandleSack(ExpiresAtUs, unwrapper.Unwrap(10), {}, false);
+
+		REQUIRE(buffer.ShouldSendForwardTsn() == true);
+
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
+
+		const auto* forwardTsnChunk = buffer.AddForwardTsn(packet.get());
+
+		REQUIRE(forwardTsnChunk);
+		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 12);
+	}
+
+	SECTION("expires chunk on NackAll()")
+	{
+		constexpr int64_t ExpiresAtUs = NowUs + 50000;
+
+		// TSN 10 is reliable (never expires).
+		buffer.Insert(
+		  /*outgoingMessageId*/ 1, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x01 }, true, true, false), NowUs);
+
+		// TSN 11 and 12 have a limited lifetime and expire at `ExpiresAtUs`.
+		buffer.Insert(
+		  /*outgoingMessageId*/ 2,
+		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02 }, true, false, false),
+		  NowUs,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  ExpiresAtUs);
+
+		buffer.Insert(
+		  /*outgoingMessageId*/ 2,
+		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x03 }, false, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  ExpiresAtUs);
+
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
+		buffer.NackAll(ExpiresAtUs);
+
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 1,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ 2);
+
+		REQUIRE(
+		  buffer.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED               },
+		    { 10, RTC::SCTP::OutstandingData::State::TO_BE_RETRANSMITTED },
+		    { 11, RTC::SCTP::OutstandingData::State::ABANDONED           },
+		    { 12, RTC::SCTP::OutstandingData::State::ABANDONED           },
+		});
+	}
+
+	SECTION("expires chunk when nacked three times")
+	{
+		constexpr int64_t ExpiresAtUs = NowUs + 50000;
+
+		// TSN 10 is reliable (never expires).
+		buffer.Insert(
+		  /*outgoingMessageId*/ 1, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x01 }, true, true, false), NowUs);
+
+		// TSN 11 has a limited lifetime and expires at `ExpiresAtUs`.
+		buffer.Insert(
+		  /*outgoingMessageId*/ 2,
+		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02 }, true, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  ExpiresAtUs);
+
+		// TSN 12, 13 and 14 are used to trigger 3 miss indications.
+		buffer.Insert(
+		  /*outgoingMessageId*/ 3, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x03 }, true, true, false), NowUs);
+
+		buffer.Insert(
+		  /*outgoingMessageId*/ 4, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x04 }, true, true, false), NowUs);
+
+		buffer.Insert(
+		  /*outgoingMessageId*/ 5, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x05 }, true, true, false), NowUs);
+
+		buffer.HandleSack(
+		  NowUs + 10000,
+		  unwrapper.Unwrap(9),
+		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		    { 3, 3 }
+    },
+		  false);
+
+		buffer.HandleSack(
+		  NowUs + 20000,
+		  unwrapper.Unwrap(9),
+		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		    { 3, 4 }
+    },
+		  false);
+
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
+		buffer.HandleSack(
+		  ExpiresAtUs,
+		  unwrapper.Unwrap(9),
+		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		    { 3, 5 }
+    },
+		  false);
+
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 1,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ 2);
+
+		REQUIRE(
+		  buffer.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED               },
+		    { 10, RTC::SCTP::OutstandingData::State::TO_BE_RETRANSMITTED },
+		    { 11, RTC::SCTP::OutstandingData::State::ABANDONED           },
+		    { 12, RTC::SCTP::OutstandingData::State::ACKED               },
+		    { 13, RTC::SCTP::OutstandingData::State::ACKED               },
+		    { 14, RTC::SCTP::OutstandingData::State::ACKED               },
+		});
+		REQUIRE(
+		  getTsns(buffer.GetChunksToBeFastRetransmitted(ExpiresAtUs, 1000)) ==
+		  std::vector<uint32_t>{ 10 });
+	}
+
+	SECTION("expired chunk does not consume retransmission budget")
+	{
+		constexpr int64_t ExpiresAtUs = NowUs + 50000;
+
+		const std::vector<uint8_t> payload(100);
+
+		// TSN 10 has a limited lifetime and expires at `ExpiresAtUs`.
+		buffer.Insert(
+		  /*outgoingMessageId*/ 1,
+		  RTC::SCTP::UserData(1, 0, 0, 0, 53, payload, true, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  ExpiresAtUs);
+
+		// TSN 11 is reliable (never expires).
+		buffer.Insert(
+		  /*outgoingMessageId*/ 2, RTC::SCTP::UserData(1, 0, 0, 0, 53, payload, true, true, false), NowUs);
+
+		buffer.NackAll(NowUs);
+
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
+		// Budget fits exactly one chunk. TSN 10 should be expired without
+		// consuming budget, allowing TSN 11 to be returned.
+		const size_t oneChunkBudget = RTC::SCTP::DataChunk::DataChunkHeaderLength + payload.size();
+
+		REQUIRE(
+		  getTsns(buffer.GetChunksToBeRetransmitted(ExpiresAtUs, oneChunkBudget)) ==
+		  std::vector<uint32_t>{ 11 });
+
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 1,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ 1);
+
+		REQUIRE(
+		  buffer.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 10, RTC::SCTP::OutstandingData::State::ABANDONED },
+		    { 11, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		});
+	}
+
+	SECTION("does not expire chunk before expiry timestamp")
+	{
+		constexpr int64_t ExpiresAtUs = NowUs + 50000;
+
+		// TSN 10 is reliable (never expires).
+		buffer.Insert(
+		  /*outgoingMessageId*/ 1, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x01 }, true, true, false), NowUs);
+
+		// TSN 11 and 12 expire at `ExpiresAtUs`.
+		buffer.Insert(
+		  /*outgoingMessageId*/ 2,
+		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02 }, true, false, false),
+		  NowUs,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  ExpiresAtUs);
+
+		buffer.Insert(
+		  /*outgoingMessageId*/ 2,
+		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x03 }, false, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  ExpiresAtUs);
+
+		buffer.NackAll(NowUs);
+
+		// At 1 ms before expiry, all three chunks are still valid and returned.
+		REQUIRE(
+		  getTsns(buffer.GetChunksToBeRetransmitted(ExpiresAtUs - 1000, 1000)) ==
+		  std::vector<uint32_t>{ 10, 11, 12 });
+	}
+
+	SECTION("expires fast retransmit leftover chunk on normal retransmit")
+	{
+		constexpr int64_t ExpiresAtUs = NowUs + 50000;
+
+		const std::vector<uint8_t> payload(100);
+
+		// TSN 10 is reliable (never expires).
+		buffer.Insert(
+		  /*outgoingMessageId*/ 1, RTC::SCTP::UserData(1, 0, 0, 0, 53, payload, true, true, false), NowUs);
+
+		// TSN 11 expires at `ExpiresAtUs`.
+		buffer.Insert(
+		  /*outgoingMessageId*/ 2,
+		  RTC::SCTP::UserData(1, 0, 0, 0, 53, payload, true, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  ExpiresAtUs);
+
+		// TSN 12, 13 and 14 are used to trigger 3 miss indications.
+		buffer.Insert(
+		  /*outgoingMessageId*/ 3, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x03 }, true, true, false), NowUs);
+
+		buffer.Insert(
+		  /*outgoingMessageId*/ 4, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x04 }, true, true, false), NowUs);
+
+		buffer.Insert(
+		  /*outgoingMessageId*/ 5, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x05 }, true, true, false), NowUs);
+
+		buffer.HandleSack(
+		  NowUs + 10000,
+		  unwrapper.Unwrap(9),
+		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		    { 3, 3 }
+    },
+		  false);
+
+		buffer.HandleSack(
+		  NowUs + 20000,
+		  unwrapper.Unwrap(9),
+		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		    { 3, 4 }
+    },
+		  false);
+
+		// 3rd SACK arrives before TSN 11 expires.
+		buffer.HandleSack(
+		  NowUs + 30000,
+		  unwrapper.Unwrap(9),
+		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		    { 3, 5 }
+    },
+		  false);
+
+		// Only TSN 10 fits in the fast retransmit packet. TSN 11 is moved to the
+		// chunks to be retransmitted.
+		const size_t oneChunkBudget = RTC::SCTP::DataChunk::DataChunkHeaderLength + payload.size();
+
+		REQUIRE(
+		  getTsns(buffer.GetChunksToBeFastRetransmitted(NowUs + 30000, oneChunkBudget)) ==
+		  std::vector<uint32_t>{ 10 });
+
+		// Later, at `ExpiresAtUs`, TSN 11 has expired and is abandoned when
+		// extracted.
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
+		REQUIRE(buffer.GetChunksToBeRetransmitted(ExpiresAtUs, 1000).empty() == true);
+
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 1,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ 2);
+
+		REQUIRE(
+		  buffer.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 10, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		    { 11, RTC::SCTP::OutstandingData::State::ABANDONED },
+		    { 12, RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 13, RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 14, RTC::SCTP::OutstandingData::State::ACKED     },
+		});
+	}
+
+	SECTION("expires chunk before retransmitting with placeholder")
+	{
+		constexpr int64_t ExpiresAtUs = NowUs + 50000;
+
+		// TSN 10 is reliable (never expires).
+		buffer.Insert(
+		  /*outgoingMessageId*/ 1, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x01 }, true, true, false), NowUs);
+
+		// TSN 11 is the beginning of a multi-fragment message that expires at
+		// `ExpiresAtUs`, with remaining unsent fragments still in the send queue.
+		buffer.Insert(
+		  /*outgoingMessageId*/ 2,
+		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02 }, true, false, false),
+		  NowUs,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  ExpiresAtUs);
+
+		buffer.NackAll(NowUs);
+
+		discardFromSendQueueTester.Prepare(/*returnValue*/ true);
+
+		REQUIRE(
+		  getTsns(buffer.GetChunksToBeRetransmitted(ExpiresAtUs, 1000)) == std::vector<uint32_t>{ 10 });
+
+		discardFromSendQueueTester.Test(
+		  /*expectedCallCount*/ 1,
+		  /*expectedLastStreamId*/ 1,
+		  /*expectedLastOutgoingMessageId*/ 2);
+
+		// An unsent end placeholder was appended at TSN 12 and marked abandoned.
+		REQUIRE(buffer.GetNextTsn().Wrap() == 13);
+		REQUIRE(
+		  buffer.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 10, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		    { 11, RTC::SCTP::OutstandingData::State::ABANDONED },
+		    { 12, RTC::SCTP::OutstandingData::State::ABANDONED },
+		});
 	}
 }

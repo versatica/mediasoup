@@ -60,6 +60,7 @@ namespace RTC
 					MS_WARN_TAG(rtcp, "not an RTCP packet");
 
 					delete compoundPacket;
+
 					return nullptr;
 				}
 
@@ -196,6 +197,7 @@ namespace RTC
 				if (!packet)
 				{
 					delete compoundPacket;
+
 					return nullptr;
 				}
 
@@ -216,6 +218,7 @@ namespace RTC
 				  bufferLength);
 
 				delete compoundPacket;
+
 				return nullptr;
 			}
 
@@ -264,14 +267,17 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<RTCP::CompoundPacket>");
+
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP_CLEAN(indentation, "  packets count: %zu", GetPacketsCount());
 			MS_DUMP_CLEAN(
 			  indentation, "  needs consolidation of packets: %s", NeedsConsolidation() ? "yes" : "no");
+
 			for (const auto* packet : this->packets)
 			{
 				packet->Dump(indentation + 1);
 			}
+
 			MS_DUMP_CLEAN(indentation, "</RTCP::CompoundPacket>");
 		}
 
@@ -301,7 +307,7 @@ namespace RTC
 			Serializable::CloneInto(clonedCompoundPacket);
 
 			// Soft clone packets into the given cloned compound packet.
-			for (auto* packet : this->packets)
+			for (const auto* packet : this->packets)
 			{
 				const size_t offset = packet->GetBuffer() - GetBuffer();
 

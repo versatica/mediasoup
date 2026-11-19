@@ -86,6 +86,16 @@ namespace RTC
 				return std::string_view(reinterpret_cast<const char*>(value), GetVariableLengthValueLength());
 			}
 
+			/**
+			 * @param reason - Upper layer abort reason to copy into the error cause.
+			 *
+			 * @remarks
+			 * - The maximum length of `reason` is 65531, that is, 65535 (the maximum
+			 *   value of the 16 bits Length field) minus
+			 *   `ErrorCause::ErrorCauseHeaderLength`.
+			 * - Throws `MediaSoupError` if `reason` is longer than that or if the
+			 *   buffer has no room for it, and leaves the error cause untouched.
+			 */
 			void SetUpperLayerAbortReason(const std::string_view& reason);
 
 		private:

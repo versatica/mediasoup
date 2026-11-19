@@ -3,7 +3,6 @@
 
 #include "RTC/SCTP/tx/StreamScheduler.hpp"
 #include "Logger.hpp"
-#include <ranges>
 
 namespace RTC
 {
@@ -46,6 +45,8 @@ namespace RTC
 					MS_DEBUG_DEV(
 					  "producing from previous streamId %" PRIu16, this->currentStream->GetStreamId());
 
+					// NOTE: This check walks every active stream, so it only runs in tests.
+#ifdef MS_TEST
 					MS_ASSERT(
 					  std::ranges::any_of(
 					    this->activeStreams,
@@ -54,6 +55,7 @@ namespace RTC
 						    return stream == this->currentStream;
 					    }),
 					  "current stream should be in active streams");
+#endif
 				}
 
 				dataToSend = this->currentStream->Produce(nowUs, maxLength);
@@ -121,6 +123,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// NOTE: This check walks every active stream, so it only runs in tests.
+#ifdef MS_TEST
 			for (const Stream* stream : this->activeStreams)
 			{
 				if (stream->GetNextFinishTime() == 0)
@@ -131,6 +135,7 @@ namespace RTC
 					  stream->GetStreamId());
 				}
 			}
+#endif
 		}
 
 		void StreamScheduler::Stream::SetPriority(uint16_t priority)
@@ -177,6 +182,8 @@ namespace RTC
 
 			this->nextFinishTime = nextFinishTime;
 
+			// NOTE: This check walks every active stream, so it only runs in tests.
+#ifdef MS_TEST
 			MS_ASSERT(
 			  !std::ranges::any_of(
 			    this->parent.activeStreams,
@@ -185,6 +192,7 @@ namespace RTC
 				    return stream == this;
 			    }),
 			  "this stream must not be in active streams");
+#endif
 
 			this->parent.activeStreams.emplace(this);
 		}

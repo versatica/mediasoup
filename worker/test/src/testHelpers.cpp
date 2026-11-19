@@ -8,6 +8,16 @@
 
 namespace helpers
 {
+	void FillBuffer(uint8_t* buffer, size_t bufferLength, uint8_t firstByte)
+	{
+		MS_TRACE();
+
+		for (size_t i{ 0 }; i < bufferLength; ++i)
+		{
+			buffer[i] = static_cast<uint8_t>(firstByte + i);
+		}
+	}
+
 	bool ReadBinaryFile(const char* file, uint8_t* buffer, size_t* len)
 	{
 		MS_TRACE();

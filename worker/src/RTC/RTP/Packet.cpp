@@ -1623,19 +1623,20 @@ namespace RTC
 			return true;
 		}
 
-		void Packet::SetPayloadDescriptorHandler(Codecs::PayloadDescriptorHandler* payloadDescriptorHandler)
+		void Packet::SetPayloadDescriptorHandler(
+		  std::unique_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler)
 		{
 			MS_TRACE();
 
-			this->payloadDescriptorHandler.reset(payloadDescriptorHandler);
+			this->payloadDescriptorHandler = std::move(payloadDescriptorHandler);
 		}
 
 		void Packet::SetDependencyDescriptorPayloadDescriptorHandler(
-		  Codecs::PayloadDescriptorHandler* payloadDescriptorHandler)
+		  std::unique_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler)
 		{
 			MS_TRACE();
 
-			this->dependencyDescriptorPayloadDescriptorHandler.reset(payloadDescriptorHandler);
+			this->dependencyDescriptorPayloadDescriptorHandler = std::move(payloadDescriptorHandler);
 		}
 
 		/**

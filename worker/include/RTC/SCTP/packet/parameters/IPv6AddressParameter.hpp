@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP IPv6 Adress Parameter (IPV6-ADDRESS) (6).
+		 * SCTP IPv6 Address Parameter (IPV6-ADDRESS) (6).
 		 *
 		 * @see RFC 9260.
 		 *

@@ -140,9 +140,8 @@ namespace RTC
 					return;
 				}
 
-				auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
-
-				packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+				packet->SetPayloadDescriptorHandler(
+				  std::make_unique<PayloadDescriptorHandler>(payloadDescriptor));
 
 				// Modify the RtpPacket payload in order to always have two byte pictureId.
 				if (payloadDescriptor->hasOneBytePictureId)

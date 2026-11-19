@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -27,10 +26,12 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 		};
 		// clang-format on
 
-		auto* errorCause = RTC::SCTP::UnrecognizedChunkTypeErrorCause::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::UnrecognizedChunkTypeErrorCause> errorCause{
+			RTC::SCTP::UnrecognizedChunkTypeErrorCause::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -56,7 +57,7 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
@@ -77,34 +78,29 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 
 		/* Clone it. */
 
-		auto* clonedErrorCause =
-		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		errorCause.reset(errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete errorCause;
-
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ clonedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,
 		  /*unknownCode*/ false);
 
-		REQUIRE(clonedErrorCause->HasUnrecognizedChunk() == true);
-		REQUIRE(clonedErrorCause->GetUnrecognizedChunkLength() == 6);
-		REQUIRE(clonedErrorCause->GetUnrecognizedChunk()[0] == 0x12);
-		REQUIRE(clonedErrorCause->GetUnrecognizedChunk()[1] == 0x34);
-		REQUIRE(clonedErrorCause->GetUnrecognizedChunk()[2] == 0x56);
-		REQUIRE(clonedErrorCause->GetUnrecognizedChunk()[3] == 0x78);
-		REQUIRE(clonedErrorCause->GetUnrecognizedChunk()[4] == 0x90);
-		REQUIRE(clonedErrorCause->GetUnrecognizedChunk()[5] == 0xAB);
+		REQUIRE(errorCause->HasUnrecognizedChunk() == true);
+		REQUIRE(errorCause->GetUnrecognizedChunkLength() == 6);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[0] == 0x12);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[1] == 0x34);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[2] == 0x56);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[3] == 0x78);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[4] == 0x90);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[5] == 0xAB);
 		// These should be padding.
-		REQUIRE(clonedErrorCause->GetUnrecognizedChunk()[6] == 0x00);
-		REQUIRE(clonedErrorCause->GetUnrecognizedChunk()[7] == 0x00);
-
-		delete clonedErrorCause;
+		REQUIRE(errorCause->GetUnrecognizedChunk()[6] == 0x00);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[7] == 0x00);
 	}
 
 	SECTION("UnrecognizedChunkTypeErrorCause::Parse() fails")
@@ -138,11 +134,13 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 
 	SECTION("UnrecognizedChunkTypeErrorCause::Factory() succeeds")
 	{
-		auto* errorCause = RTC::SCTP::UnrecognizedChunkTypeErrorCause::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::UnrecognizedChunkTypeErrorCause> errorCause{
+			RTC::SCTP::UnrecognizedChunkTypeErrorCause::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -171,7 +169,7 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 		errorCause->SetUnrecognizedChunk(sctpCommon::DataBuffer, 6);
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
@@ -192,40 +190,39 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause = RTC::SCTP::UnrecognizedChunkTypeErrorCause::Parse(
-		  errorCause->GetBuffer(), errorCause->GetLength());
-
-		delete errorCause;
+		errorCause.reset(
+		  RTC::SCTP::UnrecognizedChunkTypeErrorCause::Parse(
+		    errorCause->GetBuffer(), errorCause->GetLength()));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ parsedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,
 		  /*unknownCode*/ false);
 
-		REQUIRE(parsedErrorCause->HasUnrecognizedChunk() == true);
-		REQUIRE(parsedErrorCause->GetUnrecognizedChunkLength() == 6);
-		REQUIRE(parsedErrorCause->GetUnrecognizedChunk()[0] == 0x00);
-		REQUIRE(parsedErrorCause->GetUnrecognizedChunk()[1] == 0x01);
-		REQUIRE(parsedErrorCause->GetUnrecognizedChunk()[2] == 0x02);
-		REQUIRE(parsedErrorCause->GetUnrecognizedChunk()[3] == 0x03);
-		REQUIRE(parsedErrorCause->GetUnrecognizedChunk()[4] == 0x04);
-		REQUIRE(parsedErrorCause->GetUnrecognizedChunk()[5] == 0x05);
+		REQUIRE(errorCause->HasUnrecognizedChunk() == true);
+		REQUIRE(errorCause->GetUnrecognizedChunkLength() == 6);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[0] == 0x00);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[1] == 0x01);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[2] == 0x02);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[3] == 0x03);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[4] == 0x04);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[5] == 0x05);
 		// These should be padding.
-		REQUIRE(parsedErrorCause->GetUnrecognizedChunk()[6] == 0x00);
-		REQUIRE(parsedErrorCause->GetUnrecognizedChunk()[7] == 0x00);
-
-		delete parsedErrorCause;
+		REQUIRE(errorCause->GetUnrecognizedChunk()[6] == 0x00);
+		REQUIRE(errorCause->GetUnrecognizedChunk()[7] == 0x00);
 	}
 
 	SECTION("UnrecognizedChunkTypeErrorCause::ComputeLengthFor() succeeds")
 	{
 		REQUIRE(RTC::SCTP::UnrecognizedChunkTypeErrorCause::ComputeLengthFor(0) == 4);
 
-		auto* const errorCause = RTC::SCTP::UnrecognizedChunkTypeErrorCause::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::UnrecognizedChunkTypeErrorCause> errorCause{
+			RTC::SCTP::UnrecognizedChunkTypeErrorCause::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
 
 		// A chunk whose length is not a multiple of 4, so the error cause needs
 		// padding.
@@ -234,7 +231,5 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 		REQUIRE(RTC::SCTP::UnrecognizedChunkTypeErrorCause::ComputeLengthFor(6) == 12);
 		REQUIRE(
 		  errorCause->GetLength() == RTC::SCTP::UnrecognizedChunkTypeErrorCause::ComputeLengthFor(6));
-
-		delete errorCause;
 	}
 }

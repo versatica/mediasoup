@@ -46,13 +46,14 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 
 	RTC::SCTP::DataTracker dataTracker(delayedAckTimer, InitialTsn);
 
-	const auto createPacket = []()
+	const auto createPacket = []() -> std::unique_ptr<RTC::SCTP::Packet>
 	{
 		return std::unique_ptr<RTC::SCTP::Packet>{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, Mtu) };
 	};
 
-	const auto addSackChunk = [&dataTracker](RTC::SCTP::Packet* packet, size_t aRwnd)
+	const auto addSackChunk = [&dataTracker](
+	                            RTC::SCTP::Packet* packet, size_t aRwnd) -> const RTC::SCTP::SackChunk*
 	{
 		dataTracker.AddSackSelectiveAck(packet, aRwnd);
 
@@ -62,7 +63,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 	};
 
 	const auto observe =
-	  [&dataTracker](std::initializer_list<uint32_t> tsns, bool expectAsDuplicate = false)
+	  [&dataTracker](std::initializer_list<uint32_t> tsns, bool expectAsDuplicate = false) -> void
 	{
 		for (const uint32_t tsn : tsns)
 		{
@@ -771,7 +772,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 
 	SECTION("gap-ack-block merges many blocks into one")
 	{
-		const auto getGapAckBlocks = [&]()
+		const auto getGapAckBlocks = [&]() -> std::vector<RTC::SCTP::SackChunk::GapAckBlock>
 		{
 			const auto packet     = createPacket();
 			const auto* sackChunk = addSackChunk(packet.get(), Arwnd);
@@ -1138,5 +1139,29 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 
 		REQUIRE(dataTracker.Observe(12, /*immediateAck*/ false) == true);
 		REQUIRE(dataTracker.Observe(12, /*immediateAck*/ false) == false);
+	}
+
+	SECTION("only accepts TSNs that fit in a gap-ack-block")
+	{
+		// The offsets of a gap-ack-block are 16 bits, relative to the cumulative
+		// TSN ack. A TSN farther than that could not be reported, and reporting it
+		// truncated would ack a TSN that was never received.
+		const uint32_t lastTsn = InitialTsn - 1;
+
+		REQUIRE(dataTracker.IsTsnValid(lastTsn + 65536) == false);
+		REQUIRE(dataTracker.IsTsnValid(lastTsn + 70001) == false);
+		REQUIRE(dataTracker.IsTsnValid(lastTsn + 65535) == true);
+
+		observe({ lastTsn + 65535 });
+
+		const auto packet     = createPacket();
+		const auto* sackChunk = addSackChunk(packet.get(), Arwnd);
+
+		REQUIRE(sackChunk);
+		REQUIRE(sackChunk->GetCumulativeTsnAck() == lastTsn);
+		REQUIRE(
+		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                    { 65535, 65535 }
+    });
 	}
 }

@@ -14,7 +14,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 	constexpr int64_t MinRttVarianceMs{ 220 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	const auto makeSctpOptions = []()
+	const auto makeSctpOptions = []() -> RTC::SCTP::SctpOptions
 	{
 		RTC::SCTP::SctpOptions sctpOptions{ .maxRttMs         = MaxRttMs,
 		                                    .initialRtoMs     = InitialRtoMs,
@@ -30,6 +30,13 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 		const RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
 		REQUIRE(rto.GetRtoUs() == InitialRtoMs * 1000);
+	}
+
+	SECTION("has valid initial SRTT")
+	{
+		const RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
+
+		REQUIRE(rto.GetSrttUs() == InitialRtoMs * 1000);
 	}
 
 	SECTION("too large values don't affect RTO")
@@ -63,17 +70,23 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 		REQUIRE(rto.GetSrttUs() == 500);
 	}
 
-	SECTION("zero and negative values don't affect RTO")
+	SECTION("negative values don't affect RTO")
 	{
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		rto.ObserveRttUs(0);
+		// Initial negative value.
+		rto.ObserveRttUs(-10 * 1000);
 
 		REQUIRE(rto.GetRtoUs() == InitialRtoMs * 1000);
 
-		rto.ObserveRttUs(-1);
+		rto.ObserveRttUs(124 * 1000);
 
-		REQUIRE(rto.GetRtoUs() == InitialRtoMs * 1000);
+		REQUIRE(rto.GetRtoUs() == 372000);
+
+		// Subsequent negative value.
+		rto.ObserveRttUs(-10 * 1000);
+
+		REQUIRE(rto.GetRtoUs() == 372000);
 	}
 
 	SECTION("will never go below minimum RTO")
@@ -85,7 +98,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 			rto.ObserveRttUs(1 * 1000);
 		}
 
-		REQUIRE(rto.GetRtoUs() <= MinRtoMs * 1000);
+		REQUIRE(rto.GetRtoUs() >= MinRtoMs * 1000);
 	}
 
 	SECTION("will never go above maximum RTO")
@@ -99,7 +112,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 			rto.ObserveRttUs((MaxRttMs - 100) * 1000);
 		}
 
-		REQUIRE(rto.GetRtoUs() >= MaxRtoMs * 1000);
+		REQUIRE(rto.GetRtoUs() <= MaxRtoMs * 1000);
 	}
 
 	SECTION("calculates RTO for stable RTT")

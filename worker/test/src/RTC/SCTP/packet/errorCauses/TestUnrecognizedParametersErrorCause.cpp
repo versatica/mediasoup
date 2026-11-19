@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedParametersErrorCause.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -27,10 +26,12 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[serializable][sctp][errorc
 		};
 		// clang-format on
 
-		auto* errorCause = RTC::SCTP::UnrecognizedParametersErrorCause::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::UnrecognizedParametersErrorCause> errorCause{
+			RTC::SCTP::UnrecognizedParametersErrorCause::Parse(buffer, sizeof(buffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -56,7 +57,7 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[serializable][sctp][errorc
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
@@ -77,43 +78,40 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[serializable][sctp][errorc
 
 		/* Clone it. */
 
-		auto* clonedErrorCause =
-		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		errorCause.reset(errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete errorCause;
-
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ clonedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
 		  /*unknownCode*/ false);
 
-		REQUIRE(clonedErrorCause->HasUnrecognizedParameters() == true);
-		REQUIRE(clonedErrorCause->GetUnrecognizedParametersLength() == 7);
-		REQUIRE(clonedErrorCause->GetUnrecognizedParameters()[0] == 0x12);
-		REQUIRE(clonedErrorCause->GetUnrecognizedParameters()[1] == 0x34);
-		REQUIRE(clonedErrorCause->GetUnrecognizedParameters()[2] == 0x56);
-		REQUIRE(clonedErrorCause->GetUnrecognizedParameters()[3] == 0x78);
-		REQUIRE(clonedErrorCause->GetUnrecognizedParameters()[4] == 0x90);
-		REQUIRE(clonedErrorCause->GetUnrecognizedParameters()[5] == 0xAB);
-		REQUIRE(clonedErrorCause->GetUnrecognizedParameters()[6] == 0xCD);
+		REQUIRE(errorCause->HasUnrecognizedParameters() == true);
+		REQUIRE(errorCause->GetUnrecognizedParametersLength() == 7);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[0] == 0x12);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[1] == 0x34);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[2] == 0x56);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[3] == 0x78);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[4] == 0x90);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[5] == 0xAB);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[6] == 0xCD);
 		// This should be padding.
-		REQUIRE(clonedErrorCause->GetUnrecognizedParameters()[7] == 0x00);
-
-		delete clonedErrorCause;
+		REQUIRE(errorCause->GetUnrecognizedParameters()[7] == 0x00);
 	}
 
 	SECTION("UnrecognizedParametersErrorCause::Factory() succeeds")
 	{
-		auto* errorCause = RTC::SCTP::UnrecognizedParametersErrorCause::Factory(
-		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::UnrecognizedParametersErrorCause> errorCause{
+			RTC::SCTP::UnrecognizedParametersErrorCause::Factory(
+			  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+		};
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
@@ -142,7 +140,7 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[serializable][sctp][errorc
 		errorCause->SetUnrecognizedParameters(sctpCommon::DataBuffer, 6);
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ errorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
@@ -163,31 +161,28 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[serializable][sctp][errorc
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause = RTC::SCTP::UnrecognizedParametersErrorCause::Parse(
-		  errorCause->GetBuffer(), errorCause->GetLength());
-
-		delete errorCause;
+		errorCause.reset(
+		  RTC::SCTP::UnrecognizedParametersErrorCause::Parse(
+		    errorCause->GetBuffer(), errorCause->GetLength()));
 
 		CHECK_SCTP_ERROR_CAUSE(
-		  /*errorCause*/ parsedErrorCause,
+		  /*errorCause*/ errorCause.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
 		  /*unknownCode*/ false);
 
-		REQUIRE(parsedErrorCause->HasUnrecognizedParameters() == true);
-		REQUIRE(parsedErrorCause->GetUnrecognizedParametersLength() == 6);
-		REQUIRE(parsedErrorCause->GetUnrecognizedParameters()[0] == 0x00);
-		REQUIRE(parsedErrorCause->GetUnrecognizedParameters()[1] == 0x01);
-		REQUIRE(parsedErrorCause->GetUnrecognizedParameters()[2] == 0x02);
-		REQUIRE(parsedErrorCause->GetUnrecognizedParameters()[3] == 0x03);
-		REQUIRE(parsedErrorCause->GetUnrecognizedParameters()[4] == 0x04);
-		REQUIRE(parsedErrorCause->GetUnrecognizedParameters()[5] == 0x05);
+		REQUIRE(errorCause->HasUnrecognizedParameters() == true);
+		REQUIRE(errorCause->GetUnrecognizedParametersLength() == 6);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[0] == 0x00);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[1] == 0x01);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[2] == 0x02);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[3] == 0x03);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[4] == 0x04);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[5] == 0x05);
 		// These should be padding.
-		REQUIRE(parsedErrorCause->GetUnrecognizedParameters()[6] == 0x00);
-		REQUIRE(parsedErrorCause->GetUnrecognizedParameters()[7] == 0x00);
-
-		delete parsedErrorCause;
+		REQUIRE(errorCause->GetUnrecognizedParameters()[6] == 0x00);
+		REQUIRE(errorCause->GetUnrecognizedParameters()[7] == 0x00);
 	}
 }

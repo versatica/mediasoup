@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/UnknownPacket.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -91,7 +92,7 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 	SECTION("UnknownPacket::Parse() with padding succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=1, Count=5, PT:222, Length: 2
 			0b10100101, 0xDE, 0x00, 0x02,
@@ -126,7 +127,7 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 	SECTION("UnknownPacket::Parse() with only padding succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=1, Count=5, PT:222, Length: 1
 			0b10100101, 0xDE, 0x00, 0x01,
@@ -157,7 +158,7 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 	SECTION("UnknownPacket::Parse() without value succeeds")
 	{
 		// clang-format off
-		alignas(4) uint8_t buffer[] =
+		alignas(4) const uint8_t buffer[] =
 		{
 			// V=2, P=0, Count=0, PT:222, Length: 0
 			0b10000000, 0xDE, 0x00, 0x00

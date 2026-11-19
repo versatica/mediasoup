@@ -6,6 +6,29 @@
 
 SCENARIO("SCTP RetransmissionErrorCounter", "[sctp][retransmissionerrorcounter]")
 {
+	SECTION("has initial value")
+	{
+		const RTC::SCTP::SctpOptions sctpOptions;
+
+		const RTC::SCTP::RetransmissionErrorCounter counter(sctpOptions);
+
+		REQUIRE(counter.GetCounter() == 0);
+	}
+
+	SECTION("returns false at maximum value")
+	{
+		const RTC::SCTP::SctpOptions sctpOptions{ .maxRetransmissions = 5 };
+
+		RTC::SCTP::RetransmissionErrorCounter counter(sctpOptions);
+
+		REQUIRE(counter.Increment("test") == true);  // 1
+		REQUIRE(counter.Increment("test") == true);  // 2
+		REQUIRE(counter.Increment("test") == true);  // 3
+		REQUIRE(counter.Increment("test") == true);  // 4
+		REQUIRE(counter.Increment("test") == true);  // 5
+		REQUIRE(counter.Increment("test") == false); // Too many retransmissions.
+	}
+
 	SECTION("can handle zero retransmission")
 	{
 		const RTC::SCTP::SctpOptions sctpOptions{ .maxRetransmissions = 0 };

@@ -70,21 +70,25 @@ namespace RTC
 			 * Receive deltas are expressed in multiples of this (in microseconds).
 			 */
 			static constexpr int64_t DeltaTickUs{ 250 };
+
 			/**
 			 * Maximum number of RTP packets a feedback packet can contain status
 			 * for.
 			 */
 			static constexpr size_t MaxReportedRtpPackets{ 0xFFFF };
+
 			/**
 			 * Length (in bytes) of the fixed header that precedes the packet
 			 * chunks, RTCP Common Header included.
 			 */
 			static constexpr size_t TransportWideCcHeaderLength{ 20 };
+
 			/**
 			 * The reference time is expressed in multiples of this (in
 			 * microseconds).
 			 */
 			static constexpr int64_t BaseTimeTickUs{ TransportWideCcPacket::DeltaTickUs * (1 << 8) };
+
 			/**
 			 * Period (in microseconds) after which the reference time wraps around.
 			 */
@@ -95,6 +99,7 @@ namespace RTC
 			 * Length (in bytes) of a packet chunk.
 			 */
 			static constexpr size_t ChunkLength{ 2 };
+
 			/**
 			 * Maximum length (in bytes) of the packet.
 			 */
@@ -144,15 +149,18 @@ namespace RTC
 				 * Chunk.
 				 */
 				static constexpr size_t MaxOneBitCapacity{ 14 };
+
 				/**
 				 * Maximum number of RTP packet statuses in a Two Bit Status Vector
 				 * Chunk.
 				 */
 				static constexpr size_t MaxTwoBitCapacity{ 7 };
+
 				/**
 				 * Maximum number of RTP packet statuses in a Status Vector Chunk.
 				 */
 				static constexpr size_t MaxVectorCapacity{ LastChunk::MaxOneBitCapacity };
+
 				/**
 				 * Delta size of an RTP packet received with a large or negative delta.
 				 */

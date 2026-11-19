@@ -23,13 +23,14 @@ SCENARIO("SCTP Unknown Chunk", "[serializable][sctp][chunk]")
 		};
 		// clang-format on
 
-		auto* chunk = RTC::SCTP::UnknownChunk::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::UnknownChunk> chunk{ RTC::SCTP::UnknownChunk::Parse(
+			buffer, sizeof(buffer)) };
 
 		// NOTE: Chunk type is 0xEE (0b11101110) so first 2 bits are 11, meaning
 		// that the action to take if we receive this chunk type is SKIP_AND_REPORT.
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
@@ -56,7 +57,7 @@ SCENARIO("SCTP Unknown Chunk", "[serializable][sctp][chunk]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 8,
@@ -78,14 +79,12 @@ SCENARIO("SCTP Unknown Chunk", "[serializable][sctp][chunk]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		chunk.reset(chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete chunk;
-
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ clonedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 8,
@@ -99,12 +98,10 @@ SCENARIO("SCTP Unknown Chunk", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(clonedChunk->HasUnknownValue() == true);
-		REQUIRE(clonedChunk->GetUnknownValueLength() == 3);
-		REQUIRE(clonedChunk->GetUnknownValue()[0] == 0xAA);
-		REQUIRE(clonedChunk->GetUnknownValue()[1] == 0xBB);
-		REQUIRE(clonedChunk->GetUnknownValue()[2] == 0xCC);
-
-		delete clonedChunk;
+		REQUIRE(chunk->HasUnknownValue() == true);
+		REQUIRE(chunk->GetUnknownValueLength() == 3);
+		REQUIRE(chunk->GetUnknownValue()[0] == 0xAA);
+		REQUIRE(chunk->GetUnknownValue()[1] == 0xBB);
+		REQUIRE(chunk->GetUnknownValue()[2] == 0xCC);
 	}
 }
