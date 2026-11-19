@@ -903,6 +903,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		const auto message = z.listener.ConsumeFirstReceivedMessage();
 
 		REQUIRE(message.has_value() == true);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(message->GetStreamId() == 1);
 	}
 
@@ -920,8 +921,12 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		const auto message = z.listener.ConsumeFirstReceivedMessage();
 
 		REQUIRE(message.has_value() == true);
-		REQUIRE(message->GetStreamId() == 1);
-		REQUIRE(message->GetPayloadProtocolId() == 53);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& messageValue = message.value();
+
+		REQUIRE(messageValue.GetStreamId() == 1);
+		REQUIRE(messageValue.GetPayloadProtocolId() == 53);
 	}
 
 	SECTION("resends a packet when the T3-RTX timer expires")
@@ -944,6 +949,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		const auto message = z.listener.ConsumeFirstReceivedMessage();
 
 		REQUIRE(message.has_value() == true);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(message->GetStreamId() == 1);
 	}
 
@@ -1080,6 +1086,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		const auto message = z.listener.ConsumeFirstReceivedMessage();
 
 		REQUIRE(message.has_value() == true);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(message->GetPayloadLength() == payload.size());
 
 		const auto metrics = a.association.MakeMetrics();
@@ -1648,13 +1655,23 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto metricsA = a.association.MakeMetrics();
 
-		REQUIRE(metricsA->negotiatedMaxInboundStreams == 12);
-		REQUIRE(metricsA->negotiatedMaxOutboundStreams == 23);
+		REQUIRE(metricsA.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& metricsAValue = metricsA.value();
+
+		REQUIRE(metricsAValue.negotiatedMaxInboundStreams == 12);
+		REQUIRE(metricsAValue.negotiatedMaxOutboundStreams == 23);
 
 		const auto metricsZ = z.association.MakeMetrics();
 
-		REQUIRE(metricsZ->negotiatedMaxInboundStreams == 23);
-		REQUIRE(metricsZ->negotiatedMaxOutboundStreams == 12);
+		REQUIRE(metricsZ.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& metricsZValue = metricsZ.value();
+
+		REQUIRE(metricsZValue.negotiatedMaxInboundStreams == 23);
+		REQUIRE(metricsZValue.negotiatedMaxOutboundStreams == 12);
 	}
 
 	SECTION("always sends INIT with non-zero checksum")

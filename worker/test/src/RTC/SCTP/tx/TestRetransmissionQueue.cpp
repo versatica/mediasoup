@@ -154,7 +154,9 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		for (const auto& elem : queue.GetChunksForFastRetransmit(nowUs, 10000))
 		{
-			tsns.push_back(elem.first);
+			const uint32_t tsn = elem.first;
+
+			tsns.push_back(tsn);
 		}
 
 		return tsns;
@@ -167,7 +169,9 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		for (const auto& elem : queue.GetChunksToSend(nowUs, maxLength))
 		{
-			tsns.push_back(elem.first);
+			const uint32_t tsn = elem.first;
+
+			tsns.push_back(tsn);
 		}
 
 		return tsns;

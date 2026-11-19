@@ -801,8 +801,11 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto fastRetransmit = buffer.GetChunksToBeFastRetransmitted(NowUs, 1000);
 
 		REQUIRE(fastRetransmit.size() == 1);
+
 		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
-		REQUIRE(fastRetransmit[0].first == 10);
+		const uint32_t fastRetransmitTsn = fastRetransmit[0].first;
+
+		REQUIRE(fastRetransmitTsn == 10);
 		REQUIRE(buffer.GetChunksToBeRetransmitted(NowUs, 1000).empty() == true);
 
 		// SACKs that only newly ack chunks sent before the retransmission don't
@@ -900,8 +903,11 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto fastRetransmit = buffer.GetChunksToBeFastRetransmitted(NowUs, 1000);
 
 		REQUIRE(fastRetransmit.size() == 1);
+
 		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
-		REQUIRE(fastRetransmit[0].first == 10);
+		const uint32_t fastRetransmitTsn = fastRetransmit[0].first;
+
+		REQUIRE(fastRetransmitTsn == 10);
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		// The receiver will continue to receive TSN 14..30, which were all sent
@@ -965,8 +971,11 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto retransmit = buffer.GetChunksToBeFastRetransmitted(NowUs, 1000);
 
 		REQUIRE(retransmit.size() == 1);
+
 		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
-		REQUIRE(retransmit[0].first == 10);
+		const uint32_t retransmitTsn = retransmit[0].first;
+
+		REQUIRE(retransmitTsn == 10);
 	}
 
 	SECTION("lifecyle returns acked items in ack-info")
