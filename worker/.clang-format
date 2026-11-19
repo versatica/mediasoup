@@ -51,7 +51,7 @@ FixNamespaceComments: true
 IncludeCategories:
   - Regex: '"common.hpp"'
     Priority: 1
-  - Regex: '^"(Channel|PayloadChannel|Utils|handles)/'
+  - Regex: '^"(Channel|Utils|handles)/'
     Priority: 2
   - Regex: '^"(test|fuzzer)/'
     Priority: 4
