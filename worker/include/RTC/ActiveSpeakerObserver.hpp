@@ -52,7 +52,7 @@ namespace RTC
 
 			void EvalLongActivityScore();
 
-			void UpdateMinLevel(int8_t level);
+			void UpdateMinLevel(uint8_t level);
 
 		public:
 			bool paused{ false };

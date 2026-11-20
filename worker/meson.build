@@ -43,6 +43,12 @@ if get_option('ms_log_file_line')
   ]
 endif
 
+if get_option('ms_log_dev_level') > 0
+  cpp_args += [
+    '-DMS_LOG_DEV_LEVEL_DEFAULT=@0@'.format(get_option('ms_log_dev_level')),
+  ]
+endif
+
 if get_option('ms_rtc_logger_rtp')
   cpp_args += [
     '-DMS_RTC_LOGGER_RTP',

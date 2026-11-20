@@ -31,7 +31,7 @@ namespace RTC
 		// Microseconds a single tick of those shifted timestamps is worth.
 		static constexpr double TimestampToUs{ 1000000.0 / static_cast<double>(1 << InterArrivalShift) };
 		// Fewest probes a run must hold to be taken as a burst.
-		static constexpr int MinClusterSize{ 4 };
+		static constexpr int64_t MinClusterSize{ 4 };
 		// Most probes kept while looking for a burst.
 		static constexpr size_t MaxProbePackets{ 15 };
 		// How many runs are enough to give up on the probes seen so far.
@@ -384,7 +384,7 @@ namespace RTC
 				{
 					MS_DEBUG_DEV(
 					  "burst failed [sendBitrate:%" PRIi64 " bps, receiveBitrate:%" PRIi64
-					  " bps, sendMean:%" PRIi64 " us, receiveMean:%" PRIi64 " us, numProbes:%d]",
+					  " bps, sendMean:%" PRIi64 " us, receiveMean:%" PRIi64 " us, numProbes:%" PRIi64 "]",
 					  cluster.GetSendBitrate(),
 					  cluster.GetReceiveBitrate(),
 					  cluster.sendMeanUs,
@@ -429,7 +429,7 @@ namespace RTC
 				{
 					MS_DEBUG_DEV(
 					  "burst successful [sendBitrate:%" PRIi64 " bps, receiveBitrate:%" PRIi64
-					  " bps, sendMean:%" PRIi64 " us, receiveMean:%" PRIi64 " us, numProbes:%d]",
+					  " bps, sendMean:%" PRIi64 " us, receiveMean:%" PRIi64 " us, numProbes:%" PRIi64 "]",
 					  best->GetSendBitrate(),
 					  best->GetReceiveBitrate(),
 					  best->sendMeanUs,

@@ -115,12 +115,12 @@ namespace RTC
 				/**
 				 * Number of probes in the run.
 				 */
-				int count{ 0 };
+				int64_t count{ 0 };
 				/**
 				 * How many of those probes came far enough apart from the previous one
 				 * for the gap to be measurable.
 				 */
-				int numAboveMinDelta{ 0 };
+				int64_t numAboveMinDelta{ 0 };
 			};
 
 			enum class ProbeResult : uint8_t

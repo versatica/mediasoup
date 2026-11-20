@@ -14,7 +14,7 @@ namespace RTC
 	{
 		/* Static. */
 
-		static constexpr int HeartbeatInfoLength{ 8 };
+		static constexpr uint16_t HeartbeatInfoLength{ 8 };
 
 		/* Instance methods. */
 

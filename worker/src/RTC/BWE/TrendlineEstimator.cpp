@@ -16,9 +16,9 @@ namespace RTC
 		// Gain applied to the slope before comparing it against the threshold.
 		static constexpr double ThresholdGain{ 4.0 };
 		// Number of deltas at which the modified trend stops being scaled down.
-		static constexpr int MinNumDeltas{ 60 };
+		static constexpr uint64_t MinNumDeltas{ 60 };
 		// Maximum value of the delta counter.
-		static constexpr int DeltaCounterMax{ 1000 };
+		static constexpr uint64_t DeltaCounterMax{ 1000 };
 		// Time the trend must stay above the threshold before declaring overuse.
 		static constexpr double OverusingTimeThresholdMs{ 10 };
 		// Rates at which the threshold adapts upwards and downwards, per millisecond.
