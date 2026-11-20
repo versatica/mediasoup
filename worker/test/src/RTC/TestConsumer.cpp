@@ -344,4 +344,45 @@ SCENARIO("Consumer with SimpleProducerStreamManager", "[rtp][consumer]")
 
 		delete packet;
 	}
+
+	SECTION("a packet whose sequence number was already dropped is not forwarded")
+	{
+		Fixture fixture;
+
+		// Indicate that the transport is connected in order to activate the consumer.
+		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
+
+		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
+
+		uint16_t seq{ 1 };
+
+		for (; seq <= 3; ++seq)
+		{
+			packet->SetSequenceNumber(seq);
+			packet->SetPayloadType(payloadType);
+			sharedPacket.reset();
+
+			fixture.consumer->SendRtpPacket(packet, sharedPacket);
+		}
+
+		// This sequence number is dropped, its payload type is not supported.
+		packet->SetSequenceNumber(seq);
+		packet->SetPayloadType(payloadType + 1);
+		sharedPacket.reset();
+
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
+
+		// A duplicate of it arrives, now with a supported payload type. `Input()`
+		// generates no output for an already dropped sequence number, so the packet
+		// must not be forwarded with an unset one.
+		packet->SetPayloadType(payloadType);
+		sharedPacket.reset();
+
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
+
+		fixture.listener->Verify(3);
+
+		delete packet;
+	}
 }

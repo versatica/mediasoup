@@ -38,6 +38,11 @@
   - SCTP: Fix "connecting" SCTP state being notified twice when the association is opened by mediasoup.
   - SCTP: Fix OUTGOING-SSN-RESET-REQUEST and INCOMING-SSN-RESET-REQUEST parameters with odd length being accepted.
   - SCTP: Performance: Run expensive internal consistency checks only in test builds, since they walk every outstanding chunk, stream and queued message on each send and SACK.
+- Worker: `SeqManager` fixes ([PR #2068](https://github.com/versatica/mediasoup/pull/2068)):
+  - `maxForwarded` was not updated when the forwarded input was lower than a dropped one, so a later drop lower than it was accounted and the next outputs repeated or went back, credits to @mstyura.
+  - `Sync()` did not reset `maxForwarded`, so a drop lower than the sync point was accounted (repeating an already emitted output) while an out of order drop above it was not (leaving an unnecessary gap).
+- Consumer: Drop RTP packet if `SeqManager.Input()` returns `false` ([PR #2068](https://github.com/versatica/mediasoup/pull/2068)).
+  
 
 ### 3.32.2
 
