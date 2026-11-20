@@ -114,9 +114,17 @@
 	(Settings::configuration.logTags.tag1 || Settings::configuration.logTags.tag2)
 // NOLINTEND
 
+// A source file that doesn't define MS_LOG_DEV_LEVEL gets the one given to the
+// whole build with the `ms_log_dev_level` Meson option, if any.
 #ifndef MS_LOG_DEV_LEVEL
+#ifdef MS_LOG_DEV_LEVEL_DEFAULT
+#define MS_LOG_DEV_LEVEL MS_LOG_DEV_LEVEL_DEFAULT
+#else
 #define MS_LOG_DEV_LEVEL 0
-#elif MS_LOG_DEV_LEVEL < 0 || MS_LOG_DEV_LEVEL > 3
+#endif
+#endif
+
+#if MS_LOG_DEV_LEVEL < 0 || MS_LOG_DEV_LEVEL > 3
 #error "invalid MS_LOG_DEV_LEVEL macro value"
 #endif
 

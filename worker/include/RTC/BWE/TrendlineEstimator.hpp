@@ -140,7 +140,7 @@ namespace RTC
 
 		private:
 			const TrendlineEstimatorOptions options;
-			int numOfDeltas{ 0 };
+			uint64_t numOfDeltas{ 0 };
 			std::optional<int64_t> firstArrivalTimeUs;
 			double accumulatedDelayUs{ 0 };
 			double smoothedDelayUs{ 0 };
@@ -148,7 +148,7 @@ namespace RTC
 			double threshold{ 12.5 };
 			double prevTrend{ 0 };
 			std::optional<double> timeOverUsingUs;
-			int overuseCounter{ 0 };
+			uint64_t overuseCounter{ 0 };
 			std::optional<int64_t> lastSampleArrivalTimeUs;
 			Types::BandwidthUsage state{ Types::BandwidthUsage::NORMAL };
 		};

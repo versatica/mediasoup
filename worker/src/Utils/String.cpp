@@ -106,7 +106,7 @@ namespace Utils
 		uint8_t tmp;
 		size_t i;
 		size_t count;
-		int pad{ 0 };
+		size_t pad{ 0 };
 
 		// NOTE: This is not really accurate but anyway.
 		if (len > BufferOutSize - 1)
