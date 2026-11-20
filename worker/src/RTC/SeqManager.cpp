@@ -54,8 +54,9 @@ namespace RTC
 		// Update base.
 		this->base = static_cast<T>(this->maxOutput - input) & SeqManager::MaxValue;
 
-		// Update maxInput.
-		this->maxInput = input;
+		// Reset maxInput and maxForwarded to the new reference point.
+		this->maxInput     = input;
+		this->maxForwarded = input;
 
 		// Clear dropped set.
 		this->dropped.clear();
@@ -67,20 +68,24 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Mark as dropped if 'input' is higher than anyone already processed.
+		// 'input' is higher than any input seen, hence also higher than the highest
+		// forwarded one: make it the highest input and add it to 'dropped'.
 		if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 		{
-			this->maxInput   = input;
-			this->maxDropped = input;
+			this->maxInput = input;
 
 			// NOTE: Must clear before inserting, see 'ClearDropped()'.
 			ClearDropped();
 			AddDropped(input);
 		}
-		// Mark as dropped if no input was forwarded after the last dropped one and
-		// 'input' is higher than the last forwarded input 'this->maxForwarded'.
-		// Allows for properly accounting for out of order drops until an input is forwarded.
-		else if (this->maxInput == this->maxDropped && SeqManager<T, N>::IsSeqHigherThan(input, this->maxForwarded))
+		// An out of order drop, account it only if it is higher than the highest
+		// forwarded input. Accounting a drop lower than an already forwarded input
+		// would move the output of the next inputs back, since every dropped input
+		// lowers the output of the inputs above it.
+		// NOTE: This check cannot replace the one above. 'maxForwarded' may lag
+		// 'maxInput' by more than half a cycle, and 'IsSeqHigherThan()' would then
+		// not see 'input' above it.
+		else if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxForwarded))
 		{
 			// NOTE: Must clear before inserting, see 'ClearDropped()'.
 			ClearDropped();
@@ -103,7 +108,7 @@ namespace RTC
 		// Dropped inputs present, cleanup and update base.
 		else
 		{
-			// Set 'maxInput' here if needed before calling ClearDropped().
+			// Set 'maxInput' and 'maxForwarded' before clearing dropped inputs.
 			if (this->started && SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 			{
 				this->maxInput     = input;
@@ -156,6 +161,11 @@ namespace RTC
 			if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 			{
 				this->maxInput     = input;
+				this->maxForwarded = input;
+			}
+			// New input is the highest forwarded one.
+			else if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxForwarded))
+			{
 				this->maxForwarded = input;
 			}
 

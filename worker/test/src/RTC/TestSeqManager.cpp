@@ -9,12 +9,6 @@ namespace
 	template<typename T>
 	struct TestSeqManagerInput
 	{
-		TestSeqManagerInput(
-		  T input, std::optional<T> output, bool sync = false, bool drop = false, int64_t maxInput = -1)
-		  : input(input), output(output), sync(sync), drop(drop), maxInput(maxInput)
-		{
-		}
-
 		T input{ 0 };
 		// No value means 'Input()' is expected to return false.
 		std::optional<T> output;
@@ -23,6 +17,17 @@ namespace
 		int64_t maxInput{ -1 };
 	};
 
+	/*
+	 * Feeds every element to 'seqManager' in order: 'Sync(input - 1)' first when
+	 * the element asks for it, then 'Drop()' or 'Input()'.
+	 *
+	 * Returns the first mismatch found as an { actual, expected } pair, or
+	 * { 0, 0 } when everything matched, so a single 'REQUIRE(actual == expected)'
+	 * in the caller reports both values on failure.
+	 *
+	 * An element with no 'output' expects 'Input()' to return false. An element
+	 * leaving 'maxInput' at -1 does not check 'GetMaxInput()'.
+	 */
 	template<typename T, uint8_t N>
 	std::pair<T, T> validate(
 	  RTC::SeqManager<T, N> seqManager, const std::vector<TestSeqManagerInput<T>>& inputs)
@@ -54,18 +59,18 @@ namespace
 				{
 					return std::make_pair(output, element.output.value());
 				}
+			}
 
-				if (element.maxInput != -1)
+			// Checked for dropped inputs too, 'Drop()' also moves 'maxInput' forward.
+			if (element.maxInput != -1)
+			{
+				if (element.maxInput != seqManager.GetMaxInput())
 				{
-					if (element.maxInput != seqManager.GetMaxInput())
-					{
-						return std::make_pair(seqManager.GetMaxInput(), static_cast<T>(element.maxInput));
-					}
+					return std::make_pair(seqManager.GetMaxInput(), static_cast<T>(element.maxInput));
 				}
 			}
 		}
 
-		// Success, return a pair of zeros for successful comparison.
 		return std::make_pair(0, 0);
 	}
 } // namespace
@@ -89,18 +94,18 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{  0,  0, false, false },
-			{  1,  1, false, false },
-			{  2,  2, false, false },
-			{  3,  3, false, false },
-			{  4,  4, false, false },
-			{  5,  5, false, false },
-			{  6,  6, false, false },
-			{  7,  7, false, false },
-			{  8,  8, false, false },
-			{  9,  9, false, false },
-			{ 10, 10, false, false },
-			{ 11, 11, false, false }
+			{ .input =  0, .output =  0 },
+			{ .input =  1, .output =  1 },
+			{ .input =  2, .output =  2 },
+			{ .input =  3, .output =  3 },
+			{ .input =  4, .output =  4 },
+			{ .input =  5, .output =  5 },
+			{ .input =  6, .output =  6 },
+			{ .input =  7, .output =  7 },
+			{ .input =  8, .output =  8 },
+			{ .input =  9, .output =  9 },
+			{ .input = 10, .output = 10 },
+			{ .input = 11, .output = 11 }
 		};
 		// clang-format on
 
@@ -118,14 +123,14 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{  0, 0, false, false },
-			{  1, 1, false, false },
-			{  2, 2, false, false },
-			{ 80, 3,  true, false },
-			{ 81, 4, false, false },
-			{ 82, 5, false, false },
-			{ 83, 6, false, false },
-			{ 84, 7, false, false }
+			{ .input =  0, .output = 0               },
+			{ .input =  1, .output = 1               },
+			{ .input =  2, .output = 2               },
+			{ .input = 80, .output = 3, .sync = true },
+			{ .input = 81, .output = 4               },
+			{ .input = 82, .output = 5               },
+			{ .input = 83, .output = 6               },
+			{ .input = 84, .output = 7               }
 		};
 		// clang-format on
 
@@ -143,19 +148,19 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{  0,  0, false, false },
-			{  1,  1, false, false },
-			{  2,  2, false, false },
-			{  3,  3, false, false },
-			{  4,  4,  true, false }, // sync.
-			{  5,  5, false, false },
-			{  6,  6, false, false },
-			{  7,  7,  true, false }, // sync.
-			{  8,  0, false,  true }, // drop.
-			{  9,  8, false, false },
-			{ 11,  0, false,  true }, // drop.
-			{ 10,  9, false, false },
-			{ 12, 10, false, false }
+			{ .input =  0, .output =    0               },
+			{ .input =  1, .output =    1               },
+			{ .input =  2, .output =    2               },
+			{ .input =  3, .output =    3               },
+			{ .input =  4, .output =    4, .sync = true },
+			{ .input =  5, .output =    5               },
+			{ .input =  6, .output =    6               },
+			{ .input =  7, .output =    7, .sync = true },
+			{ .input =  8, .drop   = true               },
+			{ .input =  9, .output =    8               },
+			{ .input = 11, .drop   = true               },
+			{ .input = 10, .output =    9               },
+			{ .input = 12, .output =   10               }
 		};
 		// clang-format on
 
@@ -173,11 +178,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 65533, 65533, false, false },
-			{ 65534, 65534, false, false },
-			{ 65535, 65535, false, false },
-			{     0,     0, false, false },
-			{     1,     1, false, false }
+			{ .input = 65533, .output = 65533 },
+			{ .input = 65534, .output = 65534 },
+			{ .input = 65535, .output = 65535 },
+			{ .input =     0, .output =     0 },
+			{ .input =     1, .output =     1 }
 		};
 		// clang-format on
 
@@ -191,10 +196,10 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{    0,    0, false, false },
-			{    1,    1, false, false },
-			{ 1000, 1000, false, false },
-			{ 1001, 1001, false, false }
+			{ .input =    0, .output =    0 },
+			{ .input =    1, .output =    1 },
+			{ .input = 1000, .output = 1000 },
+			{ .input = 1001, .output = 1001 }
 		};
 		// clang-format on
 
@@ -212,9 +217,9 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{      4,     4, false, false },
-			{      3,     3, false, false },
-			{  65535, 65535, false, false }
+			{ .input =     4, .output =     4 },
+			{ .input =     3, .output =     3 },
+			{ .input = 65535, .output = 65535 }
 		};
 		// clang-format on
 
@@ -228,12 +233,12 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{   0,   0, false, false },
-			{   1,   0, false,  true }, // drop.
-			{ 100,  99, false, false },
-			{ 100,  99, false, false },
-			{ 103,   0, false,  true }, // drop.
-			{ 101, 100, false, false }
+			{ .input =   0, .output =    0 },
+			{ .input =   1, .drop   = true },
+			{ .input = 100, .output =   99 },
+			{ .input = 100, .output =   99 },
+			{ .input = 103, .drop   = true },
+			{ .input = 101, .output =  100 }
 		};
 		// clang-format on
 
@@ -251,11 +256,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{   0,   0, false, false },
-			{   1,   1, false, false },
-			{ 100,   0, false,  true }, // drop.
-			{ 103,   0, false,  true }, // drop.
-			{ 101, 100, false, false }
+			{ .input =   0, .output =    0 },
+			{ .input =   1, .output =    1 },
+			{ .input = 100, .drop   = true },
+			{ .input = 103, .drop   = true },
+			{ .input = 101, .output =  100 }
 		};
 		// clang-format on
 
@@ -273,11 +278,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 0, false, false },
-			{ 2, 0, false,  true }, // drop.
-			{ 3, 2, false, false },
-			{ 4, 3, false, false },
-			{ 1, 1, false, false }
+			{ .input = 0, .output =    0 },
+			{ .input = 2, .drop   = true },
+			{ .input = 3, .output =    2 },
+			{ .input = 4, .output =    3 },
+			{ .input = 1, .output =    1 }
 		};
 		// clang-format on
 
@@ -295,52 +300,52 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{     0,  0, false, false },
-			{     1,  1, false, false },
-			{     2,  2, false, false },
-			{     3,  3, false, false },
-			{     7,  7, false, false },
-			{     6,  0, false,  true }, // drop.
-			{     8,  8, false, false },
-			{    10, 10, false, false },
-			{     9,  9, false, false },
-			{    11, 11, false, false },
-			{     0, 12,  true, false }, // sync.
-			{     2, 14, false, false },
-			{     3, 15, false, false },
-			{     4, 16, false, false },
-			{     5, 17, false, false },
-			{     6, 18, false, false },
-			{     7, 19, false, false },
-			{     8, 20, false, false },
-			{     9, 21, false, false },
-			{    10, 22, false, false },
-			{     9,  0, false,  true }, // drop.
-			{    61, 23,  true, false }, // sync.
-			{    62, 24, false, false },
-			{    63, 25, false, false },
-			{    64, 26, false, false },
-			{    65, 27, false, false },
-			{    11, 28,  true, false }, // sync.
-			{    12, 29, false, false },
-			{    13, 30, false, false },
-			{    14, 31, false, false },
-			{    15, 32, false, false },
-			{     1, 33,  true, false }, // sync.
-			{     2, 34, false, false },
-			{     3, 35, false, false },
-			{     4, 36, false, false },
-			{     5, 37, false, false },
-			{ 65533, 38,  true, false }, // sync.
-			{ 65534, 39, false, false },
-			{ 65535, 40, false, false },
-			{     0, 41,  true, false }, // sync.
-			{     1, 42, false, false },
-			{     3,  0, false,  true }, // drop.
-			{     4, 44, false, false },
-			{     5, 45, false, false },
-			{     6, 46, false, false },
-			{     7, 47, false, false }
+			{ .input =     0, .output =    0               },
+			{ .input =     1, .output =    1               },
+			{ .input =     2, .output =    2               },
+			{ .input =     3, .output =    3               },
+			{ .input =     7, .output =    7               },
+			{ .input =     6, .drop   = true               },
+			{ .input =     8, .output =    8               },
+			{ .input =    10, .output =   10               },
+			{ .input =     9, .output =    9               },
+			{ .input =    11, .output =   11               },
+			{ .input =     0, .output =   12, .sync = true },
+			{ .input =     2, .output =   14               },
+			{ .input =     3, .output =   15               },
+			{ .input =     4, .output =   16               },
+			{ .input =     5, .output =   17               },
+			{ .input =     6, .output =   18               },
+			{ .input =     7, .output =   19               },
+			{ .input =     8, .output =   20               },
+			{ .input =     9, .output =   21               },
+			{ .input =    10, .output =   22               },
+			{ .input =     9, .drop   = true               },
+			{ .input =    61, .output =   23, .sync = true },
+			{ .input =    62, .output =   24               },
+			{ .input =    63, .output =   25               },
+			{ .input =    64, .output =   26               },
+			{ .input =    65, .output =   27               },
+			{ .input =    11, .output =   28, .sync = true },
+			{ .input =    12, .output =   29               },
+			{ .input =    13, .output =   30               },
+			{ .input =    14, .output =   31               },
+			{ .input =    15, .output =   32               },
+			{ .input =     1, .output =   33, .sync = true },
+			{ .input =     2, .output =   34               },
+			{ .input =     3, .output =   35               },
+			{ .input =     4, .output =   36               },
+			{ .input =     5, .output =   37               },
+			{ .input = 65533, .output =   38, .sync = true },
+			{ .input = 65534, .output =   39               },
+			{ .input = 65535, .output =   40               },
+			{ .input =     0, .output =   41, .sync = true },
+			{ .input =     1, .output =   42               },
+			{ .input =     3, .drop   = true               },
+			{ .input =     4, .output =   44               },
+			{ .input =     5, .output =   45               },
+			{ .input =     6, .output =   46               },
+			{ .input =     7, .output =   47               }
 		};
 		// clang-format on
 
@@ -354,14 +359,14 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{  0,  0, false, false },
-			{  1,  1, false, false },
-			{  2,  2, false, false },
-			{ 80,  3,  true, false },
-			{ 81,  4, false, false },
-			{ 82,  5, false, false },
-			{ 83,  6, false, false },
-			{ 84,  7, false, false }
+			{ .input =  0, .output = 0               },
+			{ .input =  1, .output = 1               },
+			{ .input =  2, .output = 2               },
+			{ .input = 80, .output = 3, .sync = true },
+			{ .input = 81, .output = 4               },
+			{ .input = 82, .output = 5               },
+			{ .input = 83, .output = 6               },
+			{ .input = 84, .output = 7               }
 		};
 		// clang-format on
 
@@ -379,35 +384,35 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{   1,   1, false, false },
-			{   2,   0, false,  true }, // drop.
-			{   3,   0, false,  true }, // drop.
-			{   4,   0, false,  true }, // drop.
-			{   5,   0, false,  true }, // drop.
-			{   6,   0, false,  true }, // drop.
-			{   7,   0, false,  true }, // drop.
-			{   8,   0, false,  true }, // drop.
-			{   9,   0, false,  true }, // drop.
-			{ 120, 112, false, false },
-			{ 121, 113, false, false },
-			{ 122, 114, false, false },
-			{ 123, 115, false, false },
-			{ 124, 116, false, false },
-			{ 125, 117, false, false },
-			{ 126, 118, false, false },
-			{ 127, 119, false, false },
-			{ 128, 120, false, false },
-			{ 129, 121, false, false },
-			{ 130, 122, false, false },
-			{ 131, 123, false, false },
-			{ 132, 124, false, false },
-			{ 133, 125, false, false },
-			{ 134, 126, false, false },
-			{ 135, 127, false, false },
-			{ 136, 128, false, false },
-			{ 137, 129, false, false },
-			{ 138, 130, false, false },
-			{ 139, 131, false, false }
+			{ .input =   1, .output =    1 },
+			{ .input =   2, .drop   = true },
+			{ .input =   3, .drop   = true },
+			{ .input =   4, .drop   = true },
+			{ .input =   5, .drop   = true },
+			{ .input =   6, .drop   = true },
+			{ .input =   7, .drop   = true },
+			{ .input =   8, .drop   = true },
+			{ .input =   9, .drop   = true },
+			{ .input = 120, .output =  112 },
+			{ .input = 121, .output =  113 },
+			{ .input = 122, .output =  114 },
+			{ .input = 123, .output =  115 },
+			{ .input = 124, .output =  116 },
+			{ .input = 125, .output =  117 },
+			{ .input = 126, .output =  118 },
+			{ .input = 127, .output =  119 },
+			{ .input = 128, .output =  120 },
+			{ .input = 129, .output =  121 },
+			{ .input = 130, .output =  122 },
+			{ .input = 131, .output =  123 },
+			{ .input = 132, .output =  124 },
+			{ .input = 133, .output =  125 },
+			{ .input = 134, .output =  126 },
+			{ .input = 135, .output =  127 },
+			{ .input = 136, .output =  128 },
+			{ .input = 137, .output =  129 },
+			{ .input = 138, .output =  130 },
+			{ .input = 139, .output =  131 }
 		};
 		// clang-format on
 
@@ -425,35 +430,35 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint8_t>> inputs =
 		{
-			{   1,   1, false, false },
-			{   2,   0, false,  true }, // drop.
-			{   3,   0, false,  true }, // drop.
-			{   4,   0, false,  true }, // drop.
-			{   5,   0, false,  true }, // drop.
-			{   6,   0, false,  true }, // drop.
-			{   7,   0, false,  true }, // drop.
-			{   8,   0, false,  true }, // drop.
-			{   9,   0, false,  true }, // drop.
-			{ 120, 112, false, false },
-			{ 121, 113, false, false },
-			{ 122, 114, false, false },
-			{ 123, 115, false, false },
-			{ 124, 116, false, false },
-			{ 125, 117, false, false },
-			{ 126, 118, false, false },
-			{ 127, 119, false, false },
-			{ 128, 120, false, false },
-			{ 129, 121, false, false },
-			{ 130, 122, false, false },
-			{ 131, 123, false, false },
-			{ 132, 124, false, false },
-			{ 133, 125, false, false },
-			{ 134, 126, false, false },
-			{ 135, 127, false, false },
-			{ 136, 128, false, false },
-			{ 137, 129, false, false },
-			{ 138, 130, false, false },
-			{ 139, 131, false, false }
+			{ .input =   1, .output =    1 },
+			{ .input =   2, .drop   = true },
+			{ .input =   3, .drop   = true },
+			{ .input =   4, .drop   = true },
+			{ .input =   5, .drop   = true },
+			{ .input =   6, .drop   = true },
+			{ .input =   7, .drop   = true },
+			{ .input =   8, .drop   = true },
+			{ .input =   9, .drop   = true },
+			{ .input = 120, .output =  112 },
+			{ .input = 121, .output =  113 },
+			{ .input = 122, .output =  114 },
+			{ .input = 123, .output =  115 },
+			{ .input = 124, .output =  116 },
+			{ .input = 125, .output =  117 },
+			{ .input = 126, .output =  118 },
+			{ .input = 127, .output =  119 },
+			{ .input = 128, .output =  120 },
+			{ .input = 129, .output =  121 },
+			{ .input = 130, .output =  122 },
+			{ .input = 131, .output =  123 },
+			{ .input = 132, .output =  124 },
+			{ .input = 133, .output =  125 },
+			{ .input = 134, .output =  126 },
+			{ .input = 135, .output =  127 },
+			{ .input = 136, .output =  128 },
+			{ .input = 137, .output =  129 },
+			{ .input = 138, .output =  130 },
+			{ .input = 139, .output =  131 }
 		};
 		// clang-format on
 
@@ -467,52 +472,52 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{     0,  0, false, false },
-			{     1,  1, false, false },
-			{     2,  2, false, false },
-			{     3,  3, false, false },
-			{     7,  7, false, false },
-			{     6,  0, false,  true }, // drop.
-			{     8,  8, false, false },
-			{    10, 10, false, false },
-			{     9,  9, false, false },
-			{    11, 11, false, false },
-			{     0, 12,  true, false }, // sync.
-			{     2, 14, false, false },
-			{     3, 15, false, false },
-			{     4, 16, false, false },
-			{     5, 17, false, false },
-			{     6, 18, false, false },
-			{     7, 19, false, false },
-			{     8, 20, false, false },
-			{     9, 21, false, false },
-			{    10, 22, false, false },
-			{     9,  0, false,  true }, // drop.
-			{    61, 23,  true, false }, // sync.
-			{    62, 24, false, false },
-			{    63, 25, false, false },
-			{    64, 26, false, false },
-			{    65, 27, false, false },
-			{    11, 28,  true, false }, // sync.
-			{    12, 29, false, false },
-			{    13, 30, false, false },
-			{    14, 31, false, false },
-			{    15, 32, false, false },
-			{     1, 33,  true, false }, // sync.
-			{     2, 34, false, false },
-			{     3, 35, false, false },
-			{     4, 36, false, false },
-			{     5, 37, false, false },
-			{ 32767, 38,  true, false }, // sync.
-			{ 32768, 39, false, false },
-			{ 32769, 40, false, false },
-			{     0, 41,  true, false }, // sync.
-			{     1, 42, false, false },
-			{     3,  0, false,  true }, // drop.
-			{     4, 44, false, false },
-			{     5, 45, false, false },
-			{     6, 46, false, false },
-			{     7, 47, false, false }
+			{ .input =     0, .output =    0               },
+			{ .input =     1, .output =    1               },
+			{ .input =     2, .output =    2               },
+			{ .input =     3, .output =    3               },
+			{ .input =     7, .output =    7               },
+			{ .input =     6, .drop   = true               },
+			{ .input =     8, .output =    8               },
+			{ .input =    10, .output =   10               },
+			{ .input =     9, .output =    9               },
+			{ .input =    11, .output =   11               },
+			{ .input =     0, .output =   12, .sync = true },
+			{ .input =     2, .output =   14               },
+			{ .input =     3, .output =   15               },
+			{ .input =     4, .output =   16               },
+			{ .input =     5, .output =   17               },
+			{ .input =     6, .output =   18               },
+			{ .input =     7, .output =   19               },
+			{ .input =     8, .output =   20               },
+			{ .input =     9, .output =   21               },
+			{ .input =    10, .output =   22               },
+			{ .input =     9, .drop   = true               },
+			{ .input =    61, .output =   23, .sync = true },
+			{ .input =    62, .output =   24               },
+			{ .input =    63, .output =   25               },
+			{ .input =    64, .output =   26               },
+			{ .input =    65, .output =   27               },
+			{ .input =    11, .output =   28, .sync = true },
+			{ .input =    12, .output =   29               },
+			{ .input =    13, .output =   30               },
+			{ .input =    14, .output =   31               },
+			{ .input =    15, .output =   32               },
+			{ .input =     1, .output =   33, .sync = true },
+			{ .input =     2, .output =   34               },
+			{ .input =     3, .output =   35               },
+			{ .input =     4, .output =   36               },
+			{ .input =     5, .output =   37               },
+			{ .input = 32767, .output =   38, .sync = true },
+			{ .input = 32768, .output =   39               },
+			{ .input = 32769, .output =   40               },
+			{ .input =     0, .output =   41, .sync = true },
+			{ .input =     1, .output =   42               },
+			{ .input =     3, .drop   = true               },
+			{ .input =     4, .output =   44               },
+			{ .input =     5, .output =   45               },
+			{ .input =     6, .output =   46               },
+			{ .input =     7, .output =   47               }
 		};
 		// clang-format on
 
@@ -526,28 +531,28 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{     1,     1, false, false },
-			{     2,     0, false,  true }, // drop.
-			{     3,     0, false,  true }, // drop.
-			{     4,     0, false,  true }, // drop.
-			{     5,     0, false,  true }, // drop.
-			{     6,     0, false,  true }, // drop.
-			{     7,     0, false,  true }, // drop.
-			{     8,     0, false,  true }, // drop.
-			{     9,     0, false,  true }, // drop.
-			{ 32768, 32760, false, false },
-			{ 32769, 32761, false, false },
-			{ 32770, 32762, false, false },
-			{ 32771, 32763, false, false },
-			{ 32772, 32764, false, false },
-			{ 32773, 32765, false, false },
-			{ 32774, 32766, false, false },
-			{ 32775, 32767, false, false },
-			{ 32776, 32768, false, false },
-			{ 32777, 32769, false, false },
-			{ 32778, 32770, false, false },
-			{ 32779, 32771, false, false },
-			{ 32780, 32772, false, false }
+			{ .input =     1, .output =     1 },
+			{ .input =     2, .drop   =  true },
+			{ .input =     3, .drop   =  true },
+			{ .input =     4, .drop   =  true },
+			{ .input =     5, .drop   =  true },
+			{ .input =     6, .drop   =  true },
+			{ .input =     7, .drop   =  true },
+			{ .input =     8, .drop   =  true },
+			{ .input =     9, .drop   =  true },
+			{ .input = 32768, .output = 32760 },
+			{ .input = 32769, .output = 32761 },
+			{ .input = 32770, .output = 32762 },
+			{ .input = 32771, .output = 32763 },
+			{ .input = 32772, .output = 32764 },
+			{ .input = 32773, .output = 32765 },
+			{ .input = 32774, .output = 32766 },
+			{ .input = 32775, .output = 32767 },
+			{ .input = 32776, .output = 32768 },
+			{ .input = 32777, .output = 32769 },
+			{ .input = 32778, .output = 32770 },
+			{ .input = 32779, .output = 32771 },
+			{ .input = 32780, .output = 32772 }
 		};
 		// clang-format on
 
@@ -561,16 +566,16 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 65530,  1,  true, false },
-			{ 65531,  2, false, false },
-			{ 65532,  3, false, false },
-			{ 65533,  0, false, true  },
-			{ 65534,  0, false, true  },
-			{ 65535,  4, false, false },
-			{     0,  5, false, false },
-			{     1,  6, false, false },
-			{     2,  7, false, false },
-			{     3,  8, false, false }
+			{ .input = 65530, .output =    1, .sync = true },
+			{ .input = 65531, .output =    2               },
+			{ .input = 65532, .output =    3               },
+			{ .input = 65533, .drop   = true               },
+			{ .input = 65534, .drop   = true               },
+			{ .input = 65535, .output =    4               },
+			{ .input =     0, .output =    5               },
+			{ .input =     1, .output =    6               },
+			{ .input =     2, .output =    7               },
+			{ .input =     3, .output =    8               }
 		};
 		// clang-format on
 
@@ -584,28 +589,28 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{     1,     1, false, false },
-			{     2,     0, false,  true }, // drop.
-			{     3,     0, false,  true }, // drop.
-			{     4,     0, false,  true }, // drop.
-			{     5,     0, false,  true }, // drop.
-			{     6,     0, false,  true }, // drop.
-			{     7,     0, false,  true }, // drop.
-			{     8,     0, false,  true }, // drop.
-			{     9,     0, false,  true }, // drop.
-			{ 16384, 16376, false, false },
-			{ 16385, 16377, false, false },
-			{ 16386, 16378, false, false },
-			{ 16387, 16379, false, false },
-			{ 16388, 16380, false, false },
-			{ 16389, 16381, false, false },
-			{ 16390, 16382, false, false },
-			{ 16391, 16383, false, false },
-			{ 16392, 16384, false, false },
-			{ 16393, 16385, false, false },
-			{ 16394, 16386, false, false },
-			{ 16395, 16387, false, false },
-			{ 16396, 16388, false, false }
+			{ .input =     1, .output =     1 },
+			{ .input =     2, .drop   =  true },
+			{ .input =     3, .drop   =  true },
+			{ .input =     4, .drop   =  true },
+			{ .input =     5, .drop   =  true },
+			{ .input =     6, .drop   =  true },
+			{ .input =     7, .drop   =  true },
+			{ .input =     8, .drop   =  true },
+			{ .input =     9, .drop   =  true },
+			{ .input = 16384, .output = 16376 },
+			{ .input = 16385, .output = 16377 },
+			{ .input = 16386, .output = 16378 },
+			{ .input = 16387, .output = 16379 },
+			{ .input = 16388, .output = 16380 },
+			{ .input = 16389, .output = 16381 },
+			{ .input = 16390, .output = 16382 },
+			{ .input = 16391, .output = 16383 },
+			{ .input = 16392, .output = 16384 },
+			{ .input = 16393, .output = 16385 },
+			{ .input = 16394, .output = 16386 },
+			{ .input = 16395, .output = 16387 },
+			{ .input = 16396, .output = 16388 }
 		};
 		// clang-format on
 
@@ -619,16 +624,16 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 32762,  1,  true, false, 32762 },
-			{ 32763,  2, false, false, 32763 },
-			{ 32764,  3, false, false, 32764 },
-			{ 32765,  0, false, true,  32765 },
-			{ 32766,  0, false, true,  32766 },
-			{ 32767,  4, false, false, 32767 },
-			{     0,  5, false, false,     0 },
-			{     1,  6, false, false,     1 },
-			{     2,  7, false, false,     2 },
-			{     3,  8, false, false,     3 }
+			{ .input = 32762, .output =    1, .sync     =  true, .maxInput = 32762 },
+			{ .input = 32763, .output =    2, .maxInput = 32763                    },
+			{ .input = 32764, .output =    3, .maxInput = 32764                    },
+			{ .input = 32765, .drop   = true, .maxInput = 32765                    },
+			{ .input = 32766, .drop   = true, .maxInput = 32766                    },
+			{ .input = 32767, .output =    4, .maxInput = 32767                    },
+			{ .input =     0, .output =    5, .maxInput =     0                    },
+			{ .input =     1, .output =    6, .maxInput =     1                    },
+			{ .input =     2, .output =    7, .maxInput =     2                    },
+			{ .input =     3, .output =    8, .maxInput =     3                    }
 		};
 		// clang-format on
 
@@ -642,12 +647,12 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 1, true, false, 0 }
+			{ .input = 0, .output = 1, .sync = true, .maxInput = 0 }
 		};
 		for (uint16_t j = 0; j < 3; ++j) {
 			for (uint16_t i = 1; i < std::numeric_limits<uint16_t>::max(); ++i) {
 				const uint16_t output = i + 1;
-				inputs.emplace_back( i, output, false, false, i );
+				inputs.push_back({ .input = i, .output = output, .maxInput = i });
 			}
 		}
 		// clang-format on
@@ -662,12 +667,12 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 1, true, false, 0 }
+			{ .input = 0, .output = 1, .sync = true, .maxInput = 0 }
 		};
 		for (uint16_t j = 0; j < 3; ++j) {
 			for (uint16_t i = 1; i < MaxNumberFor15Bits; ++i) {
 				const uint16_t output = i + 1;
-				inputs.emplace_back( i, output, false, false, i );
+				inputs.push_back({ .input = i, .output = output, .maxInput = i });
 			}
 		}
 		// clang-format on
@@ -682,13 +687,13 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 10,  1, true,  false }, // sync.
-			{ 11,  2, false, false },
-			{ 12,  3, false, false },
-			{ 13,  4, false, false },
-			{ 14,  0, false, true  }, // drop.
-			{ 15,  5, false, false },
-			{ 12,  3, false, false }
+			{ .input = 10, .output =    1, .sync = true },
+			{ .input = 11, .output =    2               },
+			{ .input = 12, .output =    3               },
+			{ .input = 13, .output =    4               },
+			{ .input = 14, .drop   = true               },
+			{ .input = 15, .output =    5               },
+			{ .input = 12, .output =    3               }
 		};
 		// clang-format on
 
@@ -702,17 +707,17 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint8_t>> inputs =
 		{
-			{ 1, 1, false, false },
-			{ 2, 0, false, true  }, // Drop.
-			{ 3, 2, false, false },
-			{ 4, 3, false, false },
-			{ 5, 4, false, false },
-			{ 6, 5, false, false },
-			{ 7, 6, false, false },
-			{ 0, 7, false, false },
-			{ 1, 0, false, false },
-			{ 2, 1, false, false },
-			{ 3, 2, false, false }
+			{ .input = 1, .output =    1 },
+			{ .input = 2, .drop   = true },
+			{ .input = 3, .output =    2 },
+			{ .input = 4, .output =    3 },
+			{ .input = 5, .output =    4 },
+			{ .input = 6, .output =    5 },
+			{ .input = 7, .output =    6 },
+			{ .input = 0, .output =    7 },
+			{ .input = 1, .output =    0 },
+			{ .input = 2, .output =    1 },
+			{ .input = 3, .output =    2 }
 		};
 		// clang-format on
 
@@ -726,33 +731,33 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 36964, 36964, false, false },
-			{ 25923,     0, false, true  }, // Drop.
-			{ 25701, 25701, false, false },
-			{ 17170,     0, false, true  }, // Drop.
-			{ 25923, 25923, false, false },
-			{  4728,     0, false, true  }, // Drop.
-			{ 17170, 17170, false, false },
-			{ 30738,     0, false, true  }, // Drop.
-			{  4728,  4728, false, false },
-			{  4806,     0, false, true  }, // Drop.
-			{ 30738, 30738, false, false },
-			{ 50886,     0, false, true  }, // Drop.
-			{  4806,  4805, false, false },
-			{ 50774,     0, false, true  }, // Drop.
-			{ 50886, std::nullopt, false, false }, // Previously dropped.
-			{ 22136,     0, false, true  }, // Drop.
-			{ 50774, 50772, false, false },
-			{ 30910,     0, false, true  }, // Drop.
-			{ 22136, std::nullopt, false, false }, // Previously dropped.
-			{ 48862,     0, false, true  }, // Drop.
-			{ 30910, 30908, false, false },
-			{ 56832,     0, false, true  }, // Drop.
-			{ 48862, 48860, false, false },
-			{     2,     0, false, true  }, // Drop.
-			{ 56832, std::nullopt, false, false }, // Previously dropped.
-			{   530,     0, false, true  }, // Drop.
-			{     2, std::nullopt, false, false } // Previously dropped.
+			{ .input = 36964, .output =        36964 },
+			{ .input = 25923, .drop   =         true },
+			{ .input = 25701, .output =        25701 },
+			{ .input = 17170, .drop   =         true },
+			{ .input = 25923, .output =        25923 },
+			{ .input =  4728, .drop   =         true },
+			{ .input = 17170, .output =        17170 },
+			{ .input = 30738, .drop   =         true },
+			{ .input =  4728, .output =         4728 },
+			{ .input =  4806, .drop   =         true },
+			{ .input = 30738, .output =        30738 },
+			{ .input = 50886, .drop   =         true },
+			{ .input =  4806, .output =         4805 },
+			{ .input = 50774, .drop   =         true },
+			{ .input = 50886, .output = std::nullopt }, // Previously dropped.
+			{ .input = 22136, .drop   =         true },
+			{ .input = 50774, .output =        50772 },
+			{ .input = 30910, .drop   =         true },
+			{ .input = 22136, .output = std::nullopt }, // Previously dropped.
+			{ .input = 48862, .drop   =         true },
+			{ .input = 30910, .output =        30908 },
+			{ .input = 56832, .drop   =         true },
+			{ .input = 48862, .output =        48860 },
+			{ .input =     2, .drop   =         true },
+			{ .input = 56832, .output = std::nullopt }, // Previously dropped.
+			{ .input =   530, .drop   =         true },
+			{ .input =     2, .output = std::nullopt } // Previously dropped.
 		};
 		// clang-format on
 
@@ -766,13 +771,13 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 36960, 36960, false, false },
-			{  3328,     0, false, true  }, // Drop.
-			{ 24589, 24588, false, false },
-			{   120,     0, false, true  }, // Drop.
-			{  3328, std::nullopt, false, false }, // Previously dropped.
-			{ 30848,     0, false, true  }, // Drop.
-			{   120,   120, false, false }
+			{ .input = 36960, .output =        36960 },
+			{ .input =  3328, .drop   =         true },
+			{ .input = 24589, .output =        24588 },
+			{ .input =   120, .drop   =         true },
+			{ .input =  3328, .output = std::nullopt }, // Previously dropped.
+			{ .input = 30848, .drop   =         true },
+			{ .input =   120, .output =          120 }
 		};
 		// clang-format on
 
@@ -786,9 +791,9 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 36964, 36964, false, false },
-			{ 65396 ,    0, false, true  }, // Drop.
-			{ 25855, 25854, false, false }
+			{ .input = 36964, .output = 36964 },
+			{ .input = 65396, .drop   =  true },
+			{ .input = 25855, .output = 25854 }
 		};
 		// clang-format on
 
@@ -812,11 +817,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint8_t>> inputs =
 		{
-			{ 190, 190, false, false },
-			{ 200,   0, false, true  }, // Drop.
-			{  40,  39, false, false }, // 296 unwrapped, one drop below it.
-			{  86,   0, false, true  }, // Drop. 200 belongs to the previous cycle now.
-			{ 198, 196, false, false } // 454 unwrapped, two drops below it.
+			{ .input = 190, .output =  190 },
+			{ .input = 200, .drop   = true },
+			{ .input =  40, .output =   39 }, // 296 unwrapped, one drop below it.
+			{ .input =  86, .drop   = true }, // 200 belongs to the previous cycle now.
+			{ .input = 198, .output =  196 } // 454 unwrapped, two drops below it.
 		};
 		// clang-format on
 
@@ -836,11 +841,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 48640, 48640, false, false },
-			{ 51200,     0, false, true  }, // Drop.
-			{ 10240, 10239, false, false }, // 75776 unwrapped, one drop below it.
-			{ 22016,     0, false, true  }, // Drop. 51200 belongs to the previous cycle now.
-			{ 50688, 50686, false, false } // 116224 unwrapped, two drops below it.
+			{ .input = 48640, .output = 48640 },
+			{ .input = 51200, .drop   =  true },
+			{ .input = 10240, .output = 10239 }, // 75776 unwrapped, one drop below it.
+			{ .input = 22016, .drop   =  true }, // 51200 belongs to the previous cycle now.
+			{ .input = 50688, .output = 50686 } // 116224 unwrapped, two drops below it.
 		};
 		// clang-format on
 
@@ -854,18 +859,18 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{  0, 1000, false, false },
-			{  1, 1001, false, false },
-			{  2, 1002, false, false },
-			{  3, 1003, false, false },
-			{  4, 1004, false, false },
-			{  5, 1005, false, false },
-			{  6, 1006, false, false },
-			{  7, 1007, false, false },
-			{  8, 1008, false, false },
-			{  9, 1009, false, false },
-			{ 10, 1010, false, false },
-			{ 11, 1011, false, false }
+			{ .input =  0, .output = 1000 },
+			{ .input =  1, .output = 1001 },
+			{ .input =  2, .output = 1002 },
+			{ .input =  3, .output = 1003 },
+			{ .input =  4, .output = 1004 },
+			{ .input =  5, .output = 1005 },
+			{ .input =  6, .output = 1006 },
+			{ .input =  7, .output = 1007 },
+			{ .input =  8, .output = 1008 },
+			{ .input =  9, .output = 1009 },
+			{ .input = 10, .output = 1010 },
+			{ .input = 11, .output = 1011 }
 		};
 		// clang-format on
 
@@ -885,14 +890,14 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{  0, 2000, false, false },
-			{  1, 2001, false, false },
-			{  2, 2002, false, false },
-			{ 80, 2003,  true, false },
-			{ 81, 2004, false, false },
-			{ 82, 2005, false, false },
-			{ 83, 2006, false, false },
-			{ 84, 2007, false, false }
+			{ .input =  0, .output = 2000               },
+			{ .input =  1, .output = 2001               },
+			{ .input =  2, .output = 2002               },
+			{ .input = 80, .output = 2003, .sync = true },
+			{ .input = 81, .output = 2004               },
+			{ .input = 82, .output = 2005               },
+			{ .input = 83, .output = 2006               },
+			{ .input = 84, .output = 2007               }
 		};
 		// clang-format on
 
@@ -912,19 +917,19 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{  0, 3000, false, false },
-			{  1, 3001, false, false },
-			{  2, 3002, false, false },
-			{  3, 3003, false, false },
-			{  4, 3004,  true, false }, // sync.
-			{  5, 3005, false, false },
-			{  6, 3006, false, false },
-			{  7, 3007,  true, false }, // sync.
-			{  8, 3000, false,  true }, // drop.
-			{  9, 3008, false, false },
-			{ 11, 3000, false,  true }, // drop.
-			{ 10, 3009, false, false },
-			{ 12, 3010, false, false }
+			{ .input =  0, .output = 3000               },
+			{ .input =  1, .output = 3001               },
+			{ .input =  2, .output = 3002               },
+			{ .input =  3, .output = 3003               },
+			{ .input =  4, .output = 3004, .sync = true },
+			{ .input =  5, .output = 3005               },
+			{ .input =  6, .output = 3006               },
+			{ .input =  7, .output = 3007, .sync = true },
+			{ .input =  8, .drop   = true               },
+			{ .input =  9, .output = 3008               },
+			{ .input = 11, .drop   = true               },
+			{ .input = 10, .output = 3009               },
+			{ .input = 12, .output = 3010               }
 		};
 		// clang-format on
 
@@ -944,11 +949,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 65533,  997, false, false },
-			{ 65534,  998, false, false },
-			{ 65535,  999, false, false },
-			{     0, 1000, false, false },
-			{     1, 1001, false, false }
+			{ .input = 65533, .output =  997 },
+			{ .input = 65534, .output =  998 },
+			{ .input = 65535, .output =  999 },
+			{ .input =     0, .output = 1000 },
+			{ .input =     1, .output = 1001 }
 		};
 		// clang-format on
 
@@ -963,10 +968,10 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs1 =
 		{
-			{    0, 32000, false, false },
-			{    1, 32001, false, false },
-			{ 1000, 33000, false, false },
-			{ 1001, 33001, false, false }
+			{ .input =    0, .output = 32000 },
+			{ .input =    1, .output = 32001 },
+			{ .input = 1000, .output = 33000 },
+			{ .input = 1001, .output = 33001 }
 		};
 		// clang-format on
 
@@ -978,10 +983,10 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs2 =
 		{
-			{    0, 32000, false, false },
-			{    1, 32001, false, false },
-			{ 1000,   232, false, false },
-			{ 1001,   233, false, false }
+			{ .input =    0, .output = 32000 },
+			{ .input =    1, .output = 32001 },
+			{ .input = 1000, .output =   232 },
+			{ .input = 1001, .output =   233 }
 		};
 		// clang-format on
 
@@ -996,9 +1001,9 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{      4, 1004, false, false },
-			{      3, 1003, false, false },
-			{  65535,  999, false, false }
+			{ .input =     4, .output = 1004 },
+			{ .input =     3, .output = 1003 },
+			{ .input = 65535, .output =  999 }
 		};
 		// clang-format on
 
@@ -1013,12 +1018,12 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{   0, 1000, false, false },
-			{   1, 1000, false,  true }, // drop.
-			{ 100, 1099, false, false },
-			{ 100, 1099, false, false },
-			{ 103, 1000, false,  true }, // drop.
-			{ 101, 1100, false, false }
+			{ .input =   0, .output = 1000 },
+			{ .input =   1, .drop   = true },
+			{ .input = 100, .output = 1099 },
+			{ .input = 100, .output = 1099 },
+			{ .input = 103, .drop   = true },
+			{ .input = 101, .output = 1100 }
 		};
 		// clang-format on
 
@@ -1038,11 +1043,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{   0, 2000, false, false },
-			{   1, 2001, false, false },
-			{ 100, 2000, false,  true }, // drop.
-			{ 103, 2000, false,  true }, // drop.
-			{ 101, 2100, false, false }
+			{ .input =   0, .output = 2000 },
+			{ .input =   1, .output = 2001 },
+			{ .input = 100, .drop   = true },
+			{ .input = 103, .drop   = true },
+			{ .input = 101, .output = 2100 }
 		};
 		// clang-format on
 
@@ -1062,11 +1067,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 2000, false, false },
-			{ 2, 2000, false,  true }, // drop.
-			{ 3, 2002, false, false },
-			{ 4, 2003, false, false },
-			{ 1, 2001, false, false }
+			{ .input = 0, .output = 2000 },
+			{ .input = 2, .drop   = true },
+			{ .input = 3, .output = 2002 },
+			{ .input = 4, .output = 2003 },
+			{ .input = 1, .output = 2001 }
 		};
 		// clang-format on
 
@@ -1086,52 +1091,52 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{     0, 10000, false, false },
-			{     1, 10001, false, false },
-			{     2, 10002, false, false },
-			{     3, 10003, false, false },
-			{     7, 10007, false, false },
-			{     6, 10000, false,  true }, // drop.
-			{     8, 10008, false, false },
-			{    10, 10010, false, false },
-			{     9, 10009, false, false },
-			{    11, 10011, false, false },
-			{     0, 10012,  true, false }, // sync.
-			{     2, 10014, false, false },
-			{     3, 10015, false, false },
-			{     4, 10016, false, false },
-			{     5, 10017, false, false },
-			{     6, 10018, false, false },
-			{     7, 10019, false, false },
-			{     8, 10020, false, false },
-			{     9, 10021, false, false },
-			{    10, 10022, false, false },
-			{     9, 10000, false,  true }, // drop.
-			{    61, 10023,  true, false }, // sync.
-			{    62, 10024, false, false },
-			{    63, 10025, false, false },
-			{    64, 10026, false, false },
-			{    65, 10027, false, false },
-			{    11, 10028,  true, false }, // sync.
-			{    12, 10029, false, false },
-			{    13, 10030, false, false },
-			{    14, 10031, false, false },
-			{    15, 10032, false, false },
-			{     1, 10033,  true, false }, // sync.
-			{     2, 10034, false, false },
-			{     3, 10035, false, false },
-			{     4, 10036, false, false },
-			{     5, 10037, false, false },
-			{ 65533, 10038,  true, false }, // sync.
-			{ 65534, 10039, false, false },
-			{ 65535, 10040, false, false },
-			{     0, 10041,  true, false }, // sync.
-			{     1, 10042, false, false },
-			{     3, 10000, false,  true }, // drop.
-			{     4, 10044, false, false },
-			{     5, 10045, false, false },
-			{     6, 10046, false, false },
-			{     7, 10047, false, false }
+			{ .input =     0, .output = 10000               },
+			{ .input =     1, .output = 10001               },
+			{ .input =     2, .output = 10002               },
+			{ .input =     3, .output = 10003               },
+			{ .input =     7, .output = 10007               },
+			{ .input =     6, .drop   =  true               },
+			{ .input =     8, .output = 10008               },
+			{ .input =    10, .output = 10010               },
+			{ .input =     9, .output = 10009               },
+			{ .input =    11, .output = 10011               },
+			{ .input =     0, .output = 10012, .sync = true },
+			{ .input =     2, .output = 10014               },
+			{ .input =     3, .output = 10015               },
+			{ .input =     4, .output = 10016               },
+			{ .input =     5, .output = 10017               },
+			{ .input =     6, .output = 10018               },
+			{ .input =     7, .output = 10019               },
+			{ .input =     8, .output = 10020               },
+			{ .input =     9, .output = 10021               },
+			{ .input =    10, .output = 10022               },
+			{ .input =     9, .drop   =  true               },
+			{ .input =    61, .output = 10023, .sync = true },
+			{ .input =    62, .output = 10024               },
+			{ .input =    63, .output = 10025               },
+			{ .input =    64, .output = 10026               },
+			{ .input =    65, .output = 10027               },
+			{ .input =    11, .output = 10028, .sync = true },
+			{ .input =    12, .output = 10029               },
+			{ .input =    13, .output = 10030               },
+			{ .input =    14, .output = 10031               },
+			{ .input =    15, .output = 10032               },
+			{ .input =     1, .output = 10033, .sync = true },
+			{ .input =     2, .output = 10034               },
+			{ .input =     3, .output = 10035               },
+			{ .input =     4, .output = 10036               },
+			{ .input =     5, .output = 10037               },
+			{ .input = 65533, .output = 10038, .sync = true },
+			{ .input = 65534, .output = 10039               },
+			{ .input = 65535, .output = 10040               },
+			{ .input =     0, .output = 10041, .sync = true },
+			{ .input =     1, .output = 10042               },
+			{ .input =     3, .drop   =  true               },
+			{ .input =     4, .output = 10044               },
+			{ .input =     5, .output = 10045               },
+			{ .input =     6, .output = 10046               },
+			{ .input =     7, .output = 10047               }
 		};
 		// clang-format on
 
@@ -1146,14 +1151,14 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{  0,  1, false, false },
-			{  1,  2, false, false },
-			{  2,  3, false, false },
-			{ 80,  4,  true, false },
-			{ 81,  5, false, false },
-			{ 82,  6, false, false },
-			{ 83,  7, false, false },
-			{ 84,  8, false, false }
+			{ .input =  0, .output = 1               },
+			{ .input =  1, .output = 2               },
+			{ .input =  2, .output = 3               },
+			{ .input = 80, .output = 4, .sync = true },
+			{ .input = 81, .output = 5               },
+			{ .input = 82, .output = 6               },
+			{ .input = 83, .output = 7               },
+			{ .input = 84, .output = 8               }
 		};
 		// clang-format on
 
@@ -1173,35 +1178,35 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{   1, 1001, false, false },
-			{   2, 1000, false,  true }, // drop.
-			{   3, 1000, false,  true }, // drop.
-			{   4, 1000, false,  true }, // drop.
-			{   5, 1000, false,  true }, // drop.
-			{   6, 1000, false,  true }, // drop.
-			{   7, 1000, false,  true }, // drop.
-			{   8, 1000, false,  true }, // drop.
-			{   9, 1000, false,  true }, // drop.
-			{ 120, 1112, false, false },
-			{ 121, 1113, false, false },
-			{ 122, 1114, false, false },
-			{ 123, 1115, false, false },
-			{ 124, 1116, false, false },
-			{ 125, 1117, false, false },
-			{ 126, 1118, false, false },
-			{ 127, 1119, false, false },
-			{ 128, 1120, false, false },
-			{ 129, 1121, false, false },
-			{ 130, 1122, false, false },
-			{ 131, 1123, false, false },
-			{ 132, 1124, false, false },
-			{ 133, 1125, false, false },
-			{ 134, 1126, false, false },
-			{ 135, 1127, false, false },
-			{ 136, 1128, false, false },
-			{ 137, 1129, false, false },
-			{ 138, 1130, false, false },
-			{ 139, 1131, false, false }
+			{ .input =   1, .output = 1001 },
+			{ .input =   2, .drop   = true },
+			{ .input =   3, .drop   = true },
+			{ .input =   4, .drop   = true },
+			{ .input =   5, .drop   = true },
+			{ .input =   6, .drop   = true },
+			{ .input =   7, .drop   = true },
+			{ .input =   8, .drop   = true },
+			{ .input =   9, .drop   = true },
+			{ .input = 120, .output = 1112 },
+			{ .input = 121, .output = 1113 },
+			{ .input = 122, .output = 1114 },
+			{ .input = 123, .output = 1115 },
+			{ .input = 124, .output = 1116 },
+			{ .input = 125, .output = 1117 },
+			{ .input = 126, .output = 1118 },
+			{ .input = 127, .output = 1119 },
+			{ .input = 128, .output = 1120 },
+			{ .input = 129, .output = 1121 },
+			{ .input = 130, .output = 1122 },
+			{ .input = 131, .output = 1123 },
+			{ .input = 132, .output = 1124 },
+			{ .input = 133, .output = 1125 },
+			{ .input = 134, .output = 1126 },
+			{ .input = 135, .output = 1127 },
+			{ .input = 136, .output = 1128 },
+			{ .input = 137, .output = 1129 },
+			{ .input = 138, .output = 1130 },
+			{ .input = 139, .output = 1131 }
 		};
 		// clang-format on
 
@@ -1221,35 +1226,35 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint8_t>> inputs =
 		{
-			{   1, 201, false, false },
-			{   2, 200, false,  true }, // drop.
-			{   3, 200, false,  true }, // drop.
-			{   4, 200, false,  true }, // drop.
-			{   5, 200, false,  true }, // drop.
-			{   6, 200, false,  true }, // drop.
-			{   7, 200, false,  true }, // drop.
-			{   8, 200, false,  true }, // drop.
-			{   9, 200, false,  true }, // drop.
-			{ 120,  56, false, false },
-			{ 121,  57, false, false },
-			{ 122,  58, false, false },
-			{ 123,  59, false, false },
-			{ 124,  60, false, false },
-			{ 125,  61, false, false },
-			{ 126,  62, false, false },
-			{ 127,  63, false, false },
-			{ 128,  64, false, false },
-			{ 129,  65, false, false },
-			{ 130,  66, false, false },
-			{ 131,  67, false, false },
-			{ 132,  68, false, false },
-			{ 133,  69, false, false },
-			{ 134,  70, false, false },
-			{ 135,  71, false, false },
-			{ 136,  72, false, false },
-			{ 137,  73, false, false },
-			{ 138,  74, false, false },
-			{ 139,  75, false, false }
+			{ .input =   1, .output =  201 },
+			{ .input =   2, .drop   = true },
+			{ .input =   3, .drop   = true },
+			{ .input =   4, .drop   = true },
+			{ .input =   5, .drop   = true },
+			{ .input =   6, .drop   = true },
+			{ .input =   7, .drop   = true },
+			{ .input =   8, .drop   = true },
+			{ .input =   9, .drop   = true },
+			{ .input = 120, .output =   56 },
+			{ .input = 121, .output =   57 },
+			{ .input = 122, .output =   58 },
+			{ .input = 123, .output =   59 },
+			{ .input = 124, .output =   60 },
+			{ .input = 125, .output =   61 },
+			{ .input = 126, .output =   62 },
+			{ .input = 127, .output =   63 },
+			{ .input = 128, .output =   64 },
+			{ .input = 129, .output =   65 },
+			{ .input = 130, .output =   66 },
+			{ .input = 131, .output =   67 },
+			{ .input = 132, .output =   68 },
+			{ .input = 133, .output =   69 },
+			{ .input = 134, .output =   70 },
+			{ .input = 135, .output =   71 },
+			{ .input = 136, .output =   72 },
+			{ .input = 137, .output =   73 },
+			{ .input = 138, .output =   74 },
+			{ .input = 139, .output =   75 }
 		};
 		// clang-format on
 
@@ -1264,52 +1269,52 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{     0, 100, false, false },
-			{     1, 101, false, false },
-			{     2, 102, false, false },
-			{     3, 103, false, false },
-			{     7, 107, false, false },
-			{     6, 100, false,  true }, // drop.
-			{     8, 108, false, false },
-			{    10, 110, false, false },
-			{     9, 109, false, false },
-			{    11, 111, false, false },
-			{     0, 112,  true, false }, // sync.
-			{     2, 114, false, false },
-			{     3, 115, false, false },
-			{     4, 116, false, false },
-			{     5, 117, false, false },
-			{     6, 118, false, false },
-			{     7, 119, false, false },
-			{     8, 120, false, false },
-			{     9, 121, false, false },
-			{    10, 122, false, false },
-			{     9, 100, false,  true }, // drop.
-			{    61, 123,  true, false }, // sync.
-			{    62, 124, false, false },
-			{    63, 125, false, false },
-			{    64, 126, false, false },
-			{    65, 127, false, false },
-			{    11, 128,  true, false }, // sync.
-			{    12, 129, false, false },
-			{    13, 130, false, false },
-			{    14, 131, false, false },
-			{    15, 132, false, false },
-			{     1, 133,  true, false }, // sync.
-			{     2, 134, false, false },
-			{     3, 135, false, false },
-			{     4, 136, false, false },
-			{     5, 137, false, false },
-			{ 32767, 138,  true, false }, // sync.
-			{ 32768, 139, false, false },
-			{ 32769, 140, false, false },
-			{     0, 141,  true, false }, // sync.
-			{     1, 142, false, false },
-			{     3, 100, false,  true }, // drop.
-			{     4, 144, false, false },
-			{     5, 145, false, false },
-			{     6, 146, false, false },
-			{     7, 147, false, false }
+			{ .input =     0, .output =  100               },
+			{ .input =     1, .output =  101               },
+			{ .input =     2, .output =  102               },
+			{ .input =     3, .output =  103               },
+			{ .input =     7, .output =  107               },
+			{ .input =     6, .drop   = true               },
+			{ .input =     8, .output =  108               },
+			{ .input =    10, .output =  110               },
+			{ .input =     9, .output =  109               },
+			{ .input =    11, .output =  111               },
+			{ .input =     0, .output =  112, .sync = true },
+			{ .input =     2, .output =  114               },
+			{ .input =     3, .output =  115               },
+			{ .input =     4, .output =  116               },
+			{ .input =     5, .output =  117               },
+			{ .input =     6, .output =  118               },
+			{ .input =     7, .output =  119               },
+			{ .input =     8, .output =  120               },
+			{ .input =     9, .output =  121               },
+			{ .input =    10, .output =  122               },
+			{ .input =     9, .drop   = true               },
+			{ .input =    61, .output =  123, .sync = true },
+			{ .input =    62, .output =  124               },
+			{ .input =    63, .output =  125               },
+			{ .input =    64, .output =  126               },
+			{ .input =    65, .output =  127               },
+			{ .input =    11, .output =  128, .sync = true },
+			{ .input =    12, .output =  129               },
+			{ .input =    13, .output =  130               },
+			{ .input =    14, .output =  131               },
+			{ .input =    15, .output =  132               },
+			{ .input =     1, .output =  133, .sync = true },
+			{ .input =     2, .output =  134               },
+			{ .input =     3, .output =  135               },
+			{ .input =     4, .output =  136               },
+			{ .input =     5, .output =  137               },
+			{ .input = 32767, .output =  138, .sync = true },
+			{ .input = 32768, .output =  139               },
+			{ .input = 32769, .output =  140               },
+			{ .input =     0, .output =  141, .sync = true },
+			{ .input =     1, .output =  142               },
+			{ .input =     3, .drop   = true               },
+			{ .input =     4, .output =  144               },
+			{ .input =     5, .output =  145               },
+			{ .input =     6, .output =  146               },
+			{ .input =     7, .output =  147               }
 		};
 		// clang-format on
 
@@ -1324,28 +1329,28 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{     1,   201, false, false },
-			{     2,   200, false,  true }, // drop.
-			{     3,   200, false,  true }, // drop.
-			{     4,   200, false,  true }, // drop.
-			{     5,   200, false,  true }, // drop.
-			{     6,   200, false,  true }, // drop.
-			{     7,   200, false,  true }, // drop.
-			{     8,   200, false,  true }, // drop.
-			{     9,   200, false,  true }, // drop.
-			{ 32768, 32960, false, false },
-			{ 32769, 32961, false, false },
-			{ 32770, 32962, false, false },
-			{ 32771, 32963, false, false },
-			{ 32772, 32964, false, false },
-			{ 32773, 32965, false, false },
-			{ 32774, 32966, false, false },
-			{ 32775, 32967, false, false },
-			{ 32776, 32968, false, false },
-			{ 32777, 32969, false, false },
-			{ 32778, 32970, false, false },
-			{ 32779, 32971, false, false },
-			{ 32780, 32972, false, false }
+			{ .input =     1, .output =   201 },
+			{ .input =     2, .drop   =  true },
+			{ .input =     3, .drop   =  true },
+			{ .input =     4, .drop   =  true },
+			{ .input =     5, .drop   =  true },
+			{ .input =     6, .drop   =  true },
+			{ .input =     7, .drop   =  true },
+			{ .input =     8, .drop   =  true },
+			{ .input =     9, .drop   =  true },
+			{ .input = 32768, .output = 32960 },
+			{ .input = 32769, .output = 32961 },
+			{ .input = 32770, .output = 32962 },
+			{ .input = 32771, .output = 32963 },
+			{ .input = 32772, .output = 32964 },
+			{ .input = 32773, .output = 32965 },
+			{ .input = 32774, .output = 32966 },
+			{ .input = 32775, .output = 32967 },
+			{ .input = 32776, .output = 32968 },
+			{ .input = 32777, .output = 32969 },
+			{ .input = 32778, .output = 32970 },
+			{ .input = 32779, .output = 32971 },
+			{ .input = 32780, .output = 32972 }
 		};
 		// clang-format on
 
@@ -1360,16 +1365,16 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 65530, 201,  true, false },
-			{ 65531, 202, false, false },
-			{ 65532, 203, false, false },
-			{ 65533, 200, false, true  },
-			{ 65534, 200, false, true  },
-			{ 65535, 204, false, false },
-			{     0, 205, false, false },
-			{     1, 206, false, false },
-			{     2, 207, false, false },
-			{     3, 208, false, false }
+			{ .input = 65530, .output =  201, .sync = true },
+			{ .input = 65531, .output =  202               },
+			{ .input = 65532, .output =  203               },
+			{ .input = 65533, .drop   = true               },
+			{ .input = 65534, .drop   = true               },
+			{ .input = 65535, .output =  204               },
+			{ .input =     0, .output =  205               },
+			{ .input =     1, .output =  206               },
+			{ .input =     2, .output =  207               },
+			{ .input =     3, .output =  208               }
 		};
 		// clang-format on
 
@@ -1385,28 +1390,28 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{     1,   101, false, false },
-			{     2,   100, false,  true }, // drop.
-			{     3,   100, false,  true }, // drop.
-			{     4,   100, false,  true }, // drop.
-			{     5,   100, false,  true }, // drop.
-			{     6,   100, false,  true }, // drop.
-			{     7,   100, false,  true }, // drop.
-			{     8,   100, false,  true }, // drop.
-			{     9,   100, false,  true }, // drop.
-			{ 16384, 16476, false, false },
-			{ 16385, 16477, false, false },
-			{ 16386, 16478, false, false },
-			{ 16387, 16479, false, false },
-			{ 16388, 16480, false, false },
-			{ 16389, 16481, false, false },
-			{ 16390, 16482, false, false },
-			{ 16391, 16483, false, false },
-			{ 16392, 16484, false, false },
-			{ 16393, 16485, false, false },
-			{ 16394, 16486, false, false },
-			{ 16395, 16487, false, false },
-			{ 16396, 16488, false, false }
+			{ .input =     1, .output =   101 },
+			{ .input =     2, .drop   =  true },
+			{ .input =     3, .drop   =  true },
+			{ .input =     4, .drop   =  true },
+			{ .input =     5, .drop   =  true },
+			{ .input =     6, .drop   =  true },
+			{ .input =     7, .drop   =  true },
+			{ .input =     8, .drop   =  true },
+			{ .input =     9, .drop   =  true },
+			{ .input = 16384, .output = 16476 },
+			{ .input = 16385, .output = 16477 },
+			{ .input = 16386, .output = 16478 },
+			{ .input = 16387, .output = 16479 },
+			{ .input = 16388, .output = 16480 },
+			{ .input = 16389, .output = 16481 },
+			{ .input = 16390, .output = 16482 },
+			{ .input = 16391, .output = 16483 },
+			{ .input = 16392, .output = 16484 },
+			{ .input = 16393, .output = 16485 },
+			{ .input = 16394, .output = 16486 },
+			{ .input = 16395, .output = 16487 },
+			{ .input = 16396, .output = 16488 }
 		};
 		// clang-format on
 
@@ -1421,16 +1426,16 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 32762, 101,  true, false, 32762 },
-			{ 32763, 102, false, false, 32763 },
-			{ 32764, 103, false, false, 32764 },
-			{ 32765, 100, false, true,  32765 },
-			{ 32766, 100, false, true,  32766 },
-			{ 32767, 104, false, false, 32767 },
-			{     0, 105, false, false,     0 },
-			{     1, 106, false, false,     1 },
-			{     2, 107, false, false,     2 },
-			{     3, 108, false, false,     3 }
+			{ .input = 32762, .output =  101, .sync     =  true, .maxInput = 32762 },
+			{ .input = 32763, .output =  102, .maxInput = 32763                    },
+			{ .input = 32764, .output =  103, .maxInput = 32764                    },
+			{ .input = 32765, .drop   = true, .maxInput = 32765                    },
+			{ .input = 32766, .drop   = true, .maxInput = 32766                    },
+			{ .input = 32767, .output =  104, .maxInput = 32767                    },
+			{ .input =     0, .output =  105, .maxInput =     0                    },
+			{ .input =     1, .output =  106, .maxInput =     1                    },
+			{ .input =     2, .output =  107, .maxInput =     2                    },
+			{ .input =     3, .output =  108, .maxInput =     3                    }
 		};
 		// clang-format on
 
@@ -1445,7 +1450,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 101, true, false, 0 }
+			{ .input = 0, .output = 101, .sync = true, .maxInput = 0 }
 		};
 		// clang-format on
 
@@ -1454,7 +1459,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			for (uint16_t i = 1; i < std::numeric_limits<uint16_t>::max(); ++i)
 			{
 				const uint16_t output = (i + 1 + 100) & std::numeric_limits<uint16_t>::max();
-				inputs.emplace_back(i, output, false, false, i);
+				inputs.push_back({ .input = i, .output = output, .maxInput = i });
 			}
 		}
 
@@ -1469,7 +1474,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 101, true, false, 0 }
+			{ .input = 0, .output = 101, .sync = true, .maxInput = 0 }
 		};
 		// clang-format on
 
@@ -1479,7 +1484,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{
 				const uint16_t output = (i + 1 + 100) & MaxNumberFor15Bits;
 
-				inputs.emplace_back(i, output, false, false, i);
+				inputs.push_back({ .input = i, .output = output, .maxInput = i });
 			}
 		}
 
@@ -1495,13 +1500,13 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 10, 10001, true,  false }, // sync.
-			{ 11, 10002, false, false },
-			{ 12, 10003, false, false },
-			{ 13, 10004, false, false },
-			{ 14, 10000, false, true  }, // drop.
-			{ 15, 10005, false, false },
-			{ 12, 10003, false, false }
+			{ .input = 10, .output = 10001, .sync = true },
+			{ .input = 11, .output = 10002               },
+			{ .input = 12, .output = 10003               },
+			{ .input = 13, .output = 10004               },
+			{ .input = 14, .drop   =  true               },
+			{ .input = 15, .output = 10005               },
+			{ .input = 12, .output = 10003               }
 		};
 		// clang-format on
 
@@ -1516,17 +1521,17 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint8_t>> inputs =
 		{
-			{ 1, 3, false, false },
-			{ 2, 2, false, true  }, // Drop.
-			{ 3, 4, false, false },
-			{ 4, 5, false, false },
-			{ 5, 6, false, false },
-			{ 6, 7, false, false },
-			{ 7, 0, false, false },
-			{ 0, 1, false, false },
-			{ 1, 2, false, false },
-			{ 2, 3, false, false },
-			{ 3, 4, false, false }
+			{ .input = 1, .output =    3 },
+			{ .input = 2, .drop   = true },
+			{ .input = 3, .output =    4 },
+			{ .input = 4, .output =    5 },
+			{ .input = 5, .output =    6 },
+			{ .input = 6, .output =    7 },
+			{ .input = 7, .output =    0 },
+			{ .input = 0, .output =    1 },
+			{ .input = 1, .output =    2 },
+			{ .input = 2, .output =    3 },
+			{ .input = 3, .output =    4 }
 		};
 		// clang-format on
 
@@ -1541,33 +1546,33 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 36964, 46964, false, false },
-			{ 25923, 10000, false, true  }, // Drop.
-			{ 25701, 35701, false, false },
-			{ 17170, 10000, false, true  }, // Drop.
-			{ 25923, 35923, false, false },
-			{  4728, 10000, false, true  }, // Drop.
-			{ 17170, 27170, false, false },
-			{ 30738, 10000, false, true  }, // Drop.
-			{  4728, 14728, false, false },
-			{  4806, 10000, false, true  }, // Drop.
-			{ 30738, 40738, false, false },
-			{ 50886, 10000, false, true  }, // Drop.
-			{  4806, 14805, false, false },
-			{ 50774, 10000, false, true  }, // Drop.
-			{ 50886, std::nullopt, false, false }, // Previously dropped.
-			{ 22136, 10000, false, true  }, // Drop.
-			{ 50774, 60772, false, false },
-			{ 30910, 10000, false, true  }, // Drop.
-			{ 22136, std::nullopt, false, false }, // Previously dropped.
-			{ 48862, 10000, false, true  }, // Drop.
-			{ 30910, 40908, false, false },
-			{ 56832, 10000, false, true  }, // Drop.
-			{ 48862, 58860, false, false },
-			{     2, 10000, false, true  }, // Drop.
-			{ 56832, std::nullopt, false, false }, // Previously dropped.
-			{   530, 10000, false, true  }, // Drop.
-			{     2, std::nullopt, false, false } // Previously dropped.
+			{ .input = 36964, .output =        46964 },
+			{ .input = 25923, .drop   =         true },
+			{ .input = 25701, .output =        35701 },
+			{ .input = 17170, .drop   =         true },
+			{ .input = 25923, .output =        35923 },
+			{ .input =  4728, .drop   =         true },
+			{ .input = 17170, .output =        27170 },
+			{ .input = 30738, .drop   =         true },
+			{ .input =  4728, .output =        14728 },
+			{ .input =  4806, .drop   =         true },
+			{ .input = 30738, .output =        40738 },
+			{ .input = 50886, .drop   =         true },
+			{ .input =  4806, .output =        14805 },
+			{ .input = 50774, .drop   =         true },
+			{ .input = 50886, .output = std::nullopt }, // Previously dropped.
+			{ .input = 22136, .drop   =         true },
+			{ .input = 50774, .output =        60772 },
+			{ .input = 30910, .drop   =         true },
+			{ .input = 22136, .output = std::nullopt }, // Previously dropped.
+			{ .input = 48862, .drop   =         true },
+			{ .input = 30910, .output =        40908 },
+			{ .input = 56832, .drop   =         true },
+			{ .input = 48862, .output =        58860 },
+			{ .input =     2, .drop   =         true },
+			{ .input = 56832, .output = std::nullopt }, // Previously dropped.
+			{ .input =   530, .drop   =         true },
+			{ .input =     2, .output = std::nullopt } // Previously dropped.
 		};
 		// clang-format on
 
@@ -1582,13 +1587,13 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 36960, 37060, false, false },
-			{  3328,   100, false, true  }, // Drop.
-			{ 24589, 24688, false, false },
-			{   120,   100, false, true  }, // Drop.
-			{  3328, std::nullopt, false, false }, // Previously dropped.
-			{ 30848,   100, false, true  }, // Drop.
-			{   120,   220, false, false }
+			{ .input = 36960, .output =        37060 },
+			{ .input =  3328, .drop   =         true },
+			{ .input = 24589, .output =        24688 },
+			{ .input =   120, .drop   =         true },
+			{ .input =  3328, .output = std::nullopt }, // Previously dropped.
+			{ .input = 30848, .drop   =         true },
+			{ .input =   120, .output =          220 }
 		};
 		// clang-format on
 
@@ -1603,9 +1608,9 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 36964, 37964, false, false },
-			{ 65396 , 1000, false, true  }, // Drop.
-			{ 25855, 26854, false, false }
+			{ .input = 36964, .output = 37964 },
+			{ .input = 65396, .drop   =  true },
+			{ .input = 25855, .output = 26854 }
 		};
 		// clang-format on
 
@@ -1621,10 +1626,10 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 0, false, false },
-			{ 2, 0, false, true  },
-			{ 1, 0, false, true  },
-			{ 3, 1, false, false  }
+			{ .input = 0, .output =    0 },
+			{ .input = 2, .drop   = true },
+			{ .input = 1, .drop   = true },
+			{ .input = 3, .output =    1 }
 		};
 		// clang-format on
 
@@ -1638,17 +1643,17 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0,   0, false, false },
-			{ 1,   1, false, false },
-			{ 2,   2, false, false },
-			{ 4,   4, false, false },
-			{ 5,   5, false, false },
-			{ 6,   0, false, true  },
-			{ 7,   0, false, true  },
-			{ 8,   0, false, true  },
-			{ 3,   0, false, true  },
-			{ 9,   0, false, true  },
-			{ 10,  6, false, false }
+			{ .input =  0, .output =    0 },
+			{ .input =  1, .output =    1 },
+			{ .input =  2, .output =    2 },
+			{ .input =  4, .output =    4 },
+			{ .input =  5, .output =    5 },
+			{ .input =  6, .drop   = true },
+			{ .input =  7, .drop   = true },
+			{ .input =  8, .drop   = true },
+			{ .input =  3, .drop   = true },
+			{ .input =  9, .drop   = true },
+			{ .input = 10, .output =    6 }
 		};
 		// clang-format on
 
@@ -1662,16 +1667,16 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 1, 1, false, false },
-			{ 2, 2, false, false },
-			{ 3, 3, false, false },
-			{ 4, 4, false, false },
-			{ 5, 0, false, true },
-			{ 6, 0, false, true },
-			{ 7, 0, false, true },
-			{ 8, 0, false, true },
-			{ 0, 0, false, true },
-			{ 9, 5, false, false }
+			{ .input = 1, .output =    1 },
+			{ .input = 2, .output =    2 },
+			{ .input = 3, .output =    3 },
+			{ .input = 4, .output =    4 },
+			{ .input = 5, .drop   = true },
+			{ .input = 6, .drop   = true },
+			{ .input = 7, .drop   = true },
+			{ .input = 8, .drop   = true },
+			{ .input = 0, .drop   = true },
+			{ .input = 9, .output =    5 }
 		};
 		// clang-format on
 
@@ -1685,76 +1690,234 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 1, 1, false, false },
-			{ 2, 2, false, false },
-			{ 3, 3, false, false },
-			{ 4, 4, false, false },
-			{ 5, 5, false, false },
-			{ 6, 6, false, false },
-			{ 7, 7, false, false },
-			{ 8, 8, false, false },
-			{ 9, 9, false, false },
-			{ 10, 10, false, false },
-			{ 11, 11, false, false },
-			{ 12, 12, false, false },
-			{ 13, 13, false, false },
-			{ 14, 14, false, false },
-			{ 15, 15, false, false },
-			{ 16, 16, false, false },
-			{ 17, 17, false, false },
-			{ 18, 18, false, false },
-			{ 19, 19, false, false },
-			{ 21, 21, false, false },
-			{ 22, 22, false, false },
-			{ 23, 23, false, false },
-			{ 24, 24, false, false },
-			{ 25, 25, false, false },
-			{ 26, 26, false, false },
-			{ 27, 0, false, true },
-			{ 28, 0, false, true },
-			{ 29, 0, false, true },
-			{ 20, 20, false, false },
-			{ 30, 0, false, true },
-			{ 31, 0, false, true },
-			{ 32, 0, false, true },
-			{ 33, 0, false, true },
-			{ 34, 0, false, true },
-			{ 35, 0, false, true },
-			{ 36, 0, false, true },
-			{ 38, 0, false, true },
-			{ 39, 0, false, true },
-			{ 40, 0, false, true },
-			{ 41, 0, false, true },
-			{ 42, 0, false, true },
-			{ 44, 0, false, true },
-			{ 45, 0, false, true },
-			{ 46, 0, false, true },
-			{ 47, 29, false, false },
-			{ 48, 30, false, false },
-			{ 49, 31, false, false },
-			{ 51, 33, false, false },
-			{ 52, 34, false, false },
-			{ 53, 35, false, false },
-			{ 54, 36, false, false },
-			{ 55, 0, false, true },
-			{ 56, 0, false, true },
-			{ 57, 0, false, true },
-			{ 58, 0, false, true },
-			{ 59, 0, false, true },
-			{ 37, 0, false, true },
-			{ 60, 0, false, true },
-			{ 61, 0, false, true },
-			{ 62, 0, false, true },
-			{ 63, 0, false, true },
-			{ 64, 0, false, true },
-			{ 43, 0, false, true },
-			{ 50, 32, false, false }
+			{ .input =  1, .output =    1 },
+			{ .input =  2, .output =    2 },
+			{ .input =  3, .output =    3 },
+			{ .input =  4, .output =    4 },
+			{ .input =  5, .output =    5 },
+			{ .input =  6, .output =    6 },
+			{ .input =  7, .output =    7 },
+			{ .input =  8, .output =    8 },
+			{ .input =  9, .output =    9 },
+			{ .input = 10, .output =   10 },
+			{ .input = 11, .output =   11 },
+			{ .input = 12, .output =   12 },
+			{ .input = 13, .output =   13 },
+			{ .input = 14, .output =   14 },
+			{ .input = 15, .output =   15 },
+			{ .input = 16, .output =   16 },
+			{ .input = 17, .output =   17 },
+			{ .input = 18, .output =   18 },
+			{ .input = 19, .output =   19 },
+			{ .input = 21, .output =   21 },
+			{ .input = 22, .output =   22 },
+			{ .input = 23, .output =   23 },
+			{ .input = 24, .output =   24 },
+			{ .input = 25, .output =   25 },
+			{ .input = 26, .output =   26 },
+			{ .input = 27, .drop   = true },
+			{ .input = 28, .drop   = true },
+			{ .input = 29, .drop   = true },
+			{ .input = 20, .output =   20 },
+			{ .input = 30, .drop   = true },
+			{ .input = 31, .drop   = true },
+			{ .input = 32, .drop   = true },
+			{ .input = 33, .drop   = true },
+			{ .input = 34, .drop   = true },
+			{ .input = 35, .drop   = true },
+			{ .input = 36, .drop   = true },
+			{ .input = 38, .drop   = true },
+			{ .input = 39, .drop   = true },
+			{ .input = 40, .drop   = true },
+			{ .input = 41, .drop   = true },
+			{ .input = 42, .drop   = true },
+			{ .input = 44, .drop   = true },
+			{ .input = 45, .drop   = true },
+			{ .input = 46, .drop   = true },
+			{ .input = 47, .output =   29 },
+			{ .input = 48, .output =   30 },
+			{ .input = 49, .output =   31 },
+			{ .input = 51, .output =   33 },
+			{ .input = 52, .output =   34 },
+			{ .input = 53, .output =   35 },
+			{ .input = 54, .output =   36 },
+			{ .input = 55, .drop   = true },
+			{ .input = 56, .drop   = true },
+			{ .input = 57, .drop   = true },
+			{ .input = 58, .drop   = true },
+			{ .input = 59, .drop   = true },
+			{ .input = 37, .drop   = true },
+			{ .input = 60, .drop   = true },
+			{ .input = 61, .drop   = true },
+			{ .input = 62, .drop   = true },
+			{ .input = 63, .drop   = true },
+			{ .input = 64, .drop   = true },
+			{ .input = 43, .drop   = true },
+			{ .input = 50, .output =   32 }
 		};
 		// clang-format on
 
 		const auto [actual, expected] = validate(RTC::SeqManager<uint16_t>{}, inputs);
 
 		REQUIRE(actual == expected);
+	}
+
+	SECTION("a drop lower than the highest forwarded input is not accounted")
+	{
+		// clang-format off
+		const std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ .input = 0, .output = 0    },
+			{ .input = 1, .output = 1    },
+			{ .input = 4, .drop   = true },
+			{ .input = 3, .output = 3    },
+			{ .input = 2, .drop   = true },
+			{ .input = 5, .output = 4    },
+			{ .input = 6, .output = 5    }
+		};
+		// clang-format on
+
+		const auto [actual, expected] = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
+		REQUIRE(actual == expected);
+	}
+
+	SECTION("many drops lower than the highest forwarded input are not accounted")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ .input = 0,  .output = 0    },
+			{ .input = 31, .drop   = true },
+			{ .input = 27, .output = 27   },
+			{ .input = 30, .output = 30   }
+		};
+
+		for (uint16_t input{ 1 }; input <= 26; ++input)
+		{
+			inputs.push_back({ .input = input, .drop = true });
+		}
+
+		inputs.push_back({ .input = 28, .drop   = true });
+		inputs.push_back({ .input = 29, .drop   = true });
+		inputs.push_back({ .input = 32, .output = 31   });
+		inputs.push_back({ .input = 33, .output = 32   });
+		// clang-format on
+
+		const auto [actual, expected] = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
+		REQUIRE(actual == expected);
+	}
+
+	SECTION("a drop of an already forwarded input is not accounted")
+	{
+		// clang-format off
+		const std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ .input = 0, .output = 0    },
+			{ .input = 4, .drop   = true },
+			{ .input = 3, .output = 3    },
+			{ .input = 3, .drop   = true },
+			{ .input = 5, .output = 4    }
+		};
+		// clang-format on
+
+		const auto [actual, expected] = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
+		REQUIRE(actual == expected);
+	}
+
+	SECTION("a drop higher than the highest forwarded input is accounted")
+	{
+		// clang-format off
+		const std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ .input = 0,  .output = 0    },
+			{ .input = 10, .drop   = true },
+			{ .input = 5,  .output = 5    },
+			{ .input = 7,  .drop   = true },
+			{ .input = 6,  .output = 6    },
+			{ .input = 8,  .output = 7    },
+			{ .input = 9,  .output = 8    },
+			{ .input = 11, .output = 9    }
+		};
+		// clang-format on
+
+		const auto [actual, expected] = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
+		REQUIRE(actual == expected);
+	}
+
+	SECTION("a drop is accounted when 'maxForwarded' lags by more than half a cycle")
+	{
+		// The sequence wraps at 3328, which is higher than 36960, so 'maxInput'
+		// moves on while 'maxForwarded' stays at 36960, more than half a cycle
+		// behind. 24589 is higher than 'maxInput' but 'IsSeqHigherThan()' cannot
+		// see it above 'maxForwarded', so it is only accounted because 'Drop()'
+		// checks 'maxInput' first. 24590 is 53166 inputs after 36960, two dropped.
+		// clang-format off
+		const std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ .input = 36960, .output = 36960, .maxInput = 36960 },
+			{ .input =  3328, .drop   =  true, .maxInput =  3328 },
+			{ .input = 24589, .drop   =  true, .maxInput = 24589 },
+			{ .input = 24590, .output = 24588, .maxInput = 24590 }
+		};
+		// clang-format on
+
+		const auto [actual, expected] = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
+		REQUIRE(actual == expected);
+	}
+
+	// NOTE: 'validate()' cannot express these: it syncs on an element and then
+	// processes that very same element, so it cannot drop an input between the
+	// sync and the next forwarded input.
+	SECTION("a drop older than the sync point is not accounted")
+	{
+		RTC::SeqManager<uint16_t> seqManager;
+		uint16_t output{ 0 };
+
+		REQUIRE(seqManager.Input(0, output));
+		REQUIRE(output == 0);
+
+		// Drop an input higher than anyone seen, so the highest input seen is a
+		// dropped one.
+		seqManager.Drop(100);
+
+		// Sync so the next input (101) produces the output following the last one.
+		seqManager.Sync(100);
+
+		// A drop older than the sync point must not be accounted, the output of
+		// every input above it was already emitted.
+		seqManager.Drop(50);
+
+		REQUIRE(seqManager.Input(101, output));
+		REQUIRE(output == 1);
+	}
+
+	SECTION("an out of order drop after a sync is accounted")
+	{
+		RTC::SeqManager<uint16_t> seqManager;
+		uint16_t output{ 0 };
+
+		REQUIRE(seqManager.Input(1000, output));
+		REQUIRE(output == 1000);
+
+		// Sync so the next input (1) produces the output following the last one.
+		seqManager.Sync(0);
+
+		seqManager.Drop(5);
+
+		REQUIRE(seqManager.Input(3, output));
+		REQUIRE(output == 1003);
+
+		// Input 4 is dropped once input 3 has been forwarded, so it must be
+		// accounted and input 6 must not leave a gap for it.
+		seqManager.Drop(4);
+
+		REQUIRE(seqManager.Input(6, output));
+		REQUIRE(output == 1004);
 	}
 
 	SECTION("GetMaxOutput() returns the real max output (with initial output)")
