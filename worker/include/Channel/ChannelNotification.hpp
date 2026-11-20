@@ -2,7 +2,7 @@
 #define MS_CHANNEL_NOTIFICATION_HPP
 
 #include "common.hpp"
-#include "FBS/notification.h"
+#include <FBS/notification.h>
 #include <string>
 
 namespace Channel

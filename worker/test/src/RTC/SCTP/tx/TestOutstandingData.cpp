@@ -642,7 +642,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 	SECTION("ack with gap blocks from RFC 9260 section 3.3.4")
 	{
-		for (int i{ 0 }; i < 8; ++i)
+		for (uint32_t i{ 0 }; i < 8; ++i)
 		{
 			const bool isBeginning = (i == 0);
 			const bool isEnd       = (i == 7);
@@ -712,7 +712,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	{
 		// A chunk that has been nacked and scheduled for retransmission should not
 		// get nacked again until it has actually been sent on the wire.
-		for (int i{ 0 }; i <= 10; ++i)
+		for (uint32_t i{ 0 }; i <= 10; ++i)
 		{
 			const bool isBeginning = (i == 0);
 			const bool isEnd       = (i == 10);
@@ -811,7 +811,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		// SACKs that only newly ack chunks sent before the retransmission don't
 		// count as miss indications, see the section about SACKs predating a
 		// retransmission. So send more data after the retransmission (TSN 21..23).
-		for (int i{ 0 }; i < 3; ++i)
+		for (uint32_t i{ 0 }; i < 3; ++i)
 		{
 			buffer.Insert(
 			  OutgoingMessageId,
@@ -867,7 +867,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	SECTION("sacks predating a retransmission are not miss indications")
 	{
 		// TSN 10..30 are sent in a burst, and TSN 10 is lost.
-		for (int i{ 0 }; i < 21; ++i)
+		for (uint32_t i{ 0 }; i < 21; ++i)
 		{
 			buffer.Insert(
 			  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowUs);
@@ -933,7 +933,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		// New data (TSN 31..33) is sent after the retransmission. SACKs for these
 		// are valid miss indications for the retransmitted TSN 10.
-		for (int i{ 0 }; i < 3; ++i)
+		for (uint32_t i{ 0 }; i < 3; ++i)
 		{
 			buffer.Insert(
 			  OutgoingMessageId,
@@ -1500,7 +1500,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		// advances the Cumulative TSN Ack Point, the miss indications are incremented
 		// for all TSNs reported missing in the SACK."
 
-		for (int i{ 10 }; i <= 16; ++i)
+		for (uint32_t i{ 10 }; i <= 16; ++i)
 		{
 			buffer.Insert(
 			  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowUs);
@@ -1560,7 +1560,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 	SECTION("nack between ack blocks does not access out of bounds")
 	{
-		for (int i{ 0 }; i < 5; ++i)
+		for (uint32_t i{ 0 }; i < 5; ++i)
 		{
 			buffer.Insert(
 			  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowUs);
@@ -1580,7 +1580,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	SECTION("handles SACKs with out of bounds TSNs")
 	{
 		// Send chunks with TSNs 10, 11, 12, 13, 14, 15, 16
-		for (int i{ 0 }; i < 7; ++i)
+		for (uint32_t i{ 0 }; i < 7; ++i)
 		{
 			buffer.Insert(
 			  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowUs);

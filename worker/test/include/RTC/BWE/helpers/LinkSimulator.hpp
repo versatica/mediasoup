@@ -31,7 +31,7 @@ namespace bweHelpers
 	{
 	public:
 		RtpStream(
-		  int fps,
+		  uint32_t fps,
 		  int64_t bitrateBps,
 		  uint32_t ssrc               = 0,
 		  uint32_t frequency          = 90000,
@@ -91,7 +91,7 @@ namespace bweHelpers
 		static bool Compare(const std::unique_ptr<RtpStream>& lhs, const std::unique_ptr<RtpStream>& rhs);
 
 	private:
-		const int fps;
+		const uint32_t fps;
 		const uint32_t ssrc;
 		const uint32_t frequency;
 		uint32_t rtpTimestampOffset;

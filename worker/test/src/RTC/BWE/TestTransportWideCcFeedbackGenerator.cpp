@@ -177,7 +177,7 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		  std::addressof(shared),
 		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{});
 
-		static constexpr int64_t FeedbackSendIntervalUs{ 100 * 1000 };
+		constexpr int64_t FeedbackSendIntervalUs{ 100 * 1000 };
 
 		int64_t startTsUs = inputs.at(0).arrivalTimeUs;
 

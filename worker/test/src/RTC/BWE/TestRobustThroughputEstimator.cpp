@@ -24,14 +24,17 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 
 			for (size_t idx{ 0 }; idx < numberOfPackets; ++idx)
 			{
+				// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				packetResults[idx].sentPacket.sendTimeUs     = this->sendClockUs;
 				packetResults[idx].sentPacket.sequenceNumber = this->sequenceNumber;
 				packetResults[idx].sentPacket.size           = packetSize;
+				// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 				this->sendClockUs += static_cast<int64_t>(packetSize) * 8 * 1000000 / sendRate;
 				this->recvClockUs += static_cast<int64_t>(packetSize) * 8 * 1000000 / recvRate;
 				this->sequenceNumber += 1;
 
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				packetResults[idx].receiveTimeUs = this->recvClockUs;
 			}
 
@@ -76,7 +79,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 		RTC::BWE::RobustThroughputEstimator throughputEstimator;
 
 		// One second at 800 kbps, stable.
-		for (int i{ 0 }; i < 10; ++i)
+		for (uint32_t i{ 0 }; i < 10; ++i)
 		{
 			const auto packetResults =
 			  feedbackGenerator.CreateFeedbackVector(10, PacketSize, Rate800Kbps, Rate800Kbps);
@@ -87,7 +90,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 		}
 
 		// One second at 1600 kbps, the estimate climbs without overshooting.
-		for (int i{ 0 }; i < 20; ++i)
+		for (uint32_t i{ 0 }; i < 20; ++i)
 		{
 			const auto packetResults =
 			  feedbackGenerator.CreateFeedbackVector(10, PacketSize, Rate1600Kbps, Rate1600Kbps);
@@ -104,7 +107,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 		}
 
 		// Another second at 1600 kbps, now stable there.
-		for (int i{ 0 }; i < 20; ++i)
+		for (uint32_t i{ 0 }; i < 20; ++i)
 		{
 			const auto packetResults =
 			  feedbackGenerator.CreateFeedbackVector(10, PacketSize, Rate1600Kbps, Rate1600Kbps);
@@ -115,7 +118,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 		}
 
 		// Down to 400 kbps, the estimate falls without undershooting.
-		for (int i{ 0 }; i < 5; ++i)
+		for (uint32_t i{ 0 }; i < 5; ++i)
 		{
 			const auto packetResults =
 			  feedbackGenerator.CreateFeedbackVector(10, PacketSize, Rate400Kbps, Rate400Kbps);
@@ -132,7 +135,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 		}
 
 		// And stable at 400 kbps.
-		for (int i{ 0 }; i < 5; ++i)
+		for (uint32_t i{ 0 }; i < 5; ++i)
 		{
 			const auto packetResults =
 			  feedbackGenerator.CreateFeedbackVector(10, PacketSize, Rate400Kbps, Rate400Kbps);
@@ -203,7 +206,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 
 		// They are all delivered over the next 50 ms. Five more were sent
 		// meanwhile, so 30 packets of 1000 bytes in 50 ms, which is 4800 kbps.
-		for (int i{ 0 }; i < 30; ++i)
+		for (uint32_t i{ 0 }; i < 30; ++i)
 		{
 			packetResults =
 			  feedbackGenerator.CreateFeedbackVector(1, PacketSize, Rate800Kbps, Rate4800Kbps);
@@ -221,7 +224,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 
 		// Back to the normal rate. Once the packets from before the gap leave the
 		// window the arrival rate looks high, but the send rate caps the estimate.
-		for (int i{ 0 }; i < 20; ++i)
+		for (uint32_t i{ 0 }; i < 20; ++i)
 		{
 			packetResults = feedbackGenerator.CreateFeedbackVector(5, PacketSize, Rate800Kbps, Rate800Kbps);
 
@@ -249,6 +252,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 		{
 			if (idx % 2 == 1)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				packetResults[idx].receiveTimeUs.reset();
 			}
 		}
@@ -298,7 +302,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 		REQUIRE(throughputEstimator.GetBitrate() == Rate800Kbps);
 
 		// From there on it's as stable as if nothing had been reordered.
-		for (int i{ 0 }; i < 10; ++i)
+		for (uint32_t i{ 0 }; i < 10; ++i)
 		{
 			packetResults =
 			  feedbackGenerator.CreateFeedbackVector(15, PacketSize, Rate800Kbps, Rate800Kbps);
@@ -322,7 +326,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 		auto delayedPacketResults =
 		  feedbackGenerator.CreateFeedbackVector(1, PacketSize, Rate800Kbps, Rate800Kbps);
 
-		for (int i{ 0 }; i < 10; ++i)
+		for (uint32_t i{ 0 }; i < 10; ++i)
 		{
 			const auto packetResults =
 			  feedbackGenerator.CreateFeedbackVector(10, PacketSize, Rate800Kbps, Rate800Kbps);
@@ -349,7 +353,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 			  Catch::Matchers::WithinAbs(Rate800Kbps, 0.05 * Rate800Kbps));
 		}
 
-		for (int i{ 0 }; i < 10; ++i)
+		for (uint32_t i{ 0 }; i < 10; ++i)
 		{
 			const auto packetResults =
 			  feedbackGenerator.CreateFeedbackVector(10, PacketSize, Rate800Kbps, Rate800Kbps);
@@ -421,7 +425,7 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 		REQUIRE(!throughputEstimator.GetBitrate().has_value());
 
 		// And it's back to the usual level once there is enough data again.
-		for (int i{ 0 }; i < 4; ++i)
+		for (uint32_t i{ 0 }; i < 4; ++i)
 		{
 			packetResults = feedbackGenerator.CreateFeedbackVector(5, PacketSize, Rate800Kbps, Rate800Kbps);
 

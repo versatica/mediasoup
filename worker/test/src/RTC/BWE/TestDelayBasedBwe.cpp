@@ -184,7 +184,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 	                                      int64_t expectedBitrateDropDeltaUs,
 	                                      int64_t receiverClockOffsetChangeUs)
 	{
-		constexpr int Framerate{ 30 };
+		constexpr uint32_t Framerate{ 30 };
 		constexpr int64_t StartBitrate{ 900000 };
 		constexpr int64_t MinExpectedBitrate{ 800000 };
 		constexpr int64_t MaxExpectedBitrate{ 1100000 };
@@ -289,7 +289,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		// bitrate(i) = 1.04 * bitrate(i-1) + 1000 until it passes 500 kbps,
 		// starting from about 30 kbps.
 		int64_t bitrateBps{ 30000 };
-		int iterations{ 0 };
+		uint32_t iterations{ 0 };
 
 		simulatedTransport.AddDefaultStream();
 
@@ -366,7 +366,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 
 	SECTION("packets sent very close together are treated as one group")
 	{
-		constexpr int Framerate{ 50 };
+		constexpr uint32_t Framerate{ 50 };
 		constexpr int64_t FrameIntervalUs{ 1000000 / Framerate };
 
 		SimulatedTransport simulatedTransport;
@@ -374,7 +374,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		int64_t sendTimeUs{ 0 };
 
 		// Six seconds of frames, enough for the first estimate to be produced.
-		for (int i{ 0 }; i <= 6 * Framerate; ++i)
+		for (uint32_t i{ 0 }; i <= 6 * Framerate; ++i)
 		{
 			simulatedTransport.IncomingFeedback(simulatedTransport.nowUs, sendTimeUs, 1000);
 
@@ -387,11 +387,11 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 
 		// Batches of frames sent one tick apart, which the estimator must take as
 		// a single group, while the time between batches grows to simulate overuse.
-		constexpr int TimestampGroupLength{ 15 };
+		constexpr uint32_t TimestampGroupLength{ 15 };
 
-		for (int i{ 0 }; i < 100; ++i)
+		for (uint32_t i{ 0 }; i < 100; ++i)
 		{
-			for (int j{ 0 }; j < TimestampGroupLength; ++j)
+			for (uint32_t j{ 0 }; j < TimestampGroupLength; ++j)
 			{
 				simulatedTransport.IncomingFeedback(simulatedTransport.nowUs, sendTimeUs, 100);
 
@@ -412,7 +412,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 	{
 		SimulatedTransport simulatedTransport;
 
-		constexpr int Framerate{ 100 };
+		constexpr uint32_t Framerate{ 100 };
 		constexpr int64_t FrameIntervalUs{ 1000000 / Framerate };
 		// A client leaving and rejoining after 35 seconds.
 		constexpr int64_t SilenceTimeUs{ 35 * 1000000 };
@@ -452,7 +452,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 	{
 		SimulatedTransport simulatedTransport;
 
-		constexpr int Framerate{ 100 };
+		constexpr uint32_t Framerate{ 100 };
 		constexpr int64_t FrameIntervalUs{ 1000000 / Framerate };
 		// A client rejoining a multiple of 64 seconds later, which is what used to
 		// produce no difference at all in the send times.
@@ -494,7 +494,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		constexpr int64_t StartBitrate{ 300000 };
 		constexpr int64_t InitialCapacity{ 200000 };
 		// A high frame rate so that many packets go out in a short time.
-		constexpr int Fps{ 90 };
+		constexpr uint32_t Fps{ 90 };
 
 		SimulatedTransport simulatedTransport;
 
@@ -509,7 +509,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		bool seenOveruse{ false };
 
 		// Forty frames, which is a third of a second at this frame rate.
-		for (int i{ 0 }; i < 40; ++i)
+		for (uint32_t i{ 0 }; i < 40; ++i)
 		{
 			const bool overuse = simulatedTransport.GenerateAndProcessFrame(bitrateBps);
 
@@ -547,7 +547,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		// arrival ones would round up to 11 ms, faking exactly that.
 		int64_t lastBitrate{ simulatedTransport.latestBitrate };
 
-		for (int i{ 0 }; i < 1000; ++i)
+		for (uint32_t i{ 0 }; i < 1000; ++i)
 		{
 			simulatedTransport.nowUs += 500;
 			simulatedTransport.IncomingFeedback(

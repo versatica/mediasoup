@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
-#include "FBS/router.h"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -15,6 +14,7 @@
 #include "RTC/Transport.hpp"
 #include "RTC/WebRtcServer.hpp"
 #include "SharedInterface.hpp"
+#include <FBS/router.h>
 #include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>

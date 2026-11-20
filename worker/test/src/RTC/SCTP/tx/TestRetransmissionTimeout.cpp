@@ -93,7 +93,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 	{
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		for (int i{ 0 }; i < 1000; ++i)
+		for (uint32_t i{ 0 }; i < 1000; ++i)
 		{
 			rto.ObserveRttUs(1 * 1000);
 		}
@@ -105,7 +105,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 	{
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		for (int i{ 0 }; i < 1000; ++i)
+		for (uint32_t i{ 0 }; i < 1000; ++i)
 		{
 			rto.ObserveRttUs((MaxRttMs - 1) * 1000);
 			// Adding jitter, which would make it RTO be well above RTT.
@@ -224,7 +224,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		for (int i{ 0 }; i < 1000; ++i)
+		for (uint32_t i{ 0 }; i < 1000; ++i)
 		{
 			rto.ObserveRttUs(124 * 1000);
 		}
@@ -240,7 +240,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		RTC::SCTP::RetransmissionTimeout rto(sctpOptions);
 
-		for (int i{ 0 }; i < 1000; ++i)
+		for (uint32_t i{ 0 }; i < 1000; ++i)
 		{
 			rto.ObserveRttUs(124 * 1000);
 		}
@@ -256,7 +256,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		RTC::SCTP::RetransmissionTimeout rto(sctpOptions);
 
-		for (int i{ 0 }; i < 1000; ++i)
+		for (uint32_t i{ 0 }; i < 1000; ++i)
 		{
 			rto.ObserveRttUs(124 * 1000);
 		}
