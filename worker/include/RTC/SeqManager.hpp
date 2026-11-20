@@ -42,7 +42,7 @@ namespace RTC
 
 		void Drop(T input);
 
-		bool Input(T input, T& output);
+		[[nodiscard]] bool Input(T input, T& output);
 
 		T GetMaxInput() const;
 

@@ -376,7 +376,10 @@ namespace RTC
 				{
 					uint16_t pictureId;
 
-					context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId);
+					// Nothing drops on this manager, so `Input()` always generates an output
+					// which is not used since it does not rewrite the pictureId.
+					static_cast<void>(
+					  context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId));
 				}
 
 				// Update current spatial layer if needed.
