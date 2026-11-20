@@ -141,9 +141,11 @@ jobs:
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
+            # Tests write their output to a file since dev logs make it huge.
+            quiet-tests: true
             # Compile with all Meson option flags enabled once with gcc in
             # Debug mode.
-            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_rtc_logger_send_burst=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_werror=true'
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_log_dev_level=3 -Dms_rtc_logger_rtp=true -Dms_rtc_logger_send_burst=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_werror=true'
           - os: ubuntu-26.04
             cc: clang
             cxx: clang++
@@ -153,9 +155,11 @@ jobs:
             run-test: true
             run-test-asan-address: true
             run-test-asan-undefined: true
+            # Tests write their output to a file since dev logs make it huge.
+            quiet-tests: true
             # Let's just compile with all Meson option flags enabled once with
             # clang.
-            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_rtc_logger_send_burst=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_werror=true'
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_log_dev_level=3 -Dms_rtc_logger_rtp=true -Dms_rtc_logger_send_burst=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_werror=true'
           - os: ubuntu-26.04-arm
             cc: gcc
             cxx: g++
@@ -221,10 +225,12 @@ jobs:
             # Address Sanitizer does not work on Windows.
             run-test-asan-address: false
             run-test-asan-undefined: false
+            # Tests write their output to a file since dev logs make it huge.
+            quiet-tests: true
             # Let's just compile with all Meson option flags enabled once with
             # MSVC. MESON_ARGS replaces the default `--vsenv` on Windows, so it
             # must be given here.
-            meson_args: '--vsenv -Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_rtc_logger_send_burst=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_werror=true'
+            meson_args: '--vsenv -Dms_log_trace=true -Dms_log_file_line=true -Dms_log_dev_level=3 -Dms_rtc_logger_rtp=true -Dms_rtc_logger_send_burst=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_werror=true'
 
     runs-on: ${{ matrix.build.os }}
 
@@ -302,14 +308,42 @@ jobs:
       # NOTE: Sanitizer tests run before the regular ones since they report
       # issues (such as misaligned accesses) with file and line, whereas the
       # regular tests may just crash. They use their own build directory.
-      - if: ${{ matrix.build.run-test-asan-undefined }}
+      # NOTE: With `quiet-tests`, the stdout of the tests goes to a file, whose
+      # last lines are printed if they fail, and the whole file is uploaded as
+      # an artifact of the run. stderr goes to that file and to the output.
+      - if: ${{ matrix.build.run-test-asan-undefined && !matrix.build.quiet-tests }}
         name: invoke -r worker test-asan-undefined
         run: invoke -r worker test-asan-undefined
 
-      - if: ${{ matrix.build.run-test-asan-address }}
+      - if: ${{ matrix.build.run-test-asan-undefined && matrix.build.quiet-tests }}
+        name: invoke -r worker test-asan-undefined (stdout in test-asan-undefined.log)
+        shell: bash
+        run: |
+          { invoke -r worker test-asan-undefined 2>&1 1>&3 | tee -a test-asan-undefined.log >&2; } 3>>test-asan-undefined.log || { tail -n 300 test-asan-undefined.log; exit 1; }
+
+      - if: ${{ matrix.build.run-test-asan-address && !matrix.build.quiet-tests }}
         name: invoke -r worker test-asan-address
         run: invoke -r worker test-asan-address
 
-      - if: ${{ matrix.build.run-test }}
+      - if: ${{ matrix.build.run-test-asan-address && matrix.build.quiet-tests }}
+        name: invoke -r worker test-asan-address (stdout in test-asan-address.log)
+        shell: bash
+        run: |
+          { invoke -r worker test-asan-address 2>&1 1>&3 | tee -a test-asan-address.log >&2; } 3>>test-asan-address.log || { tail -n 300 test-asan-address.log; exit 1; }
+
+      - if: ${{ matrix.build.run-test && !matrix.build.quiet-tests }}
         name: invoke -r worker test
         run: invoke -r worker test
+
+      - if: ${{ matrix.build.run-test && matrix.build.quiet-tests }}
+        name: invoke -r worker test (stdout in test.log)
+        shell: bash
+        run: |
+          { invoke -r worker test 2>&1 1>&3 | tee -a test.log >&2; } 3>>test.log || { tail -n 300 test.log; exit 1; }
+
+      - if: ${{ failure() && matrix.build.quiet-tests }}
+        name: Upload test logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-${{ matrix.build.os }}-${{ matrix.build.cc }}
+          path: test*.log

@@ -1,5 +1,6 @@
 option('ms_log_trace', type: 'boolean', value: false, description: 'Logs the current method/function if current log level is "debug"')
 option('ms_log_file_line', type: 'boolean', value: false, description: 'Logging macros print more verbose information, including current file and line')
+option('ms_log_dev_level', type: 'integer', min: 0, max: 3, value: 0, description: 'Dev logging level (0 to 3) of every source file that does not set its own')
 option('ms_rtc_logger_rtp', type: 'boolean', value: false, description: 'Prints a line with information for each processed RTP packet')
 option('ms_rtc_logger_send_burst', type: 'boolean', value: false, description: 'Prints how many RTP packets each transport sends within a single iteration of the event loop')
 option('ms_dump_rtp_payload_descriptor', type: 'boolean', value: false, description: 'RTC::RTP::Packet::Dump() method also dumps payload descriptor details')

@@ -592,7 +592,7 @@ namespace RTC
 
 				MS_DEBUG_DEV(
 				  "using %" PRIu8 " byte(s) extensions [highestId:%" PRIu8 ", highestLen:%" PRIu8 "]",
-				  type,
+				  static_cast<uint8_t>(type),
 				  highestId,
 				  highestLen);
 			}

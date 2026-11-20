@@ -466,7 +466,7 @@ namespace RTC
 
 			this->lastLevelChangeAtMs = nowMs;
 
-			int8_t b{ 0 };
+			uint8_t b{ 0 };
 
 			if (level < MinLevel)
 			{
@@ -582,7 +582,7 @@ namespace RTC
 		this->longActivityScore = computeActivityScore(this->longs[0], N3, 0.5, 47);
 	}
 
-	void ActiveSpeakerObserver::Speaker::UpdateMinLevel(int8_t level)
+	void ActiveSpeakerObserver::Speaker::UpdateMinLevel(uint8_t level)
 	{
 		MS_TRACE();
 
@@ -606,7 +606,7 @@ namespace RTC
 			}
 			else
 			{
-				this->nextMinLevel = std::min<int>(this->nextMinLevel, level);
+				this->nextMinLevel = std::min(this->nextMinLevel, level);
 
 				this->nextMinLevelWindowLen++;
 
@@ -623,7 +623,7 @@ namespace RTC
 						newMinLevel = MaxLevel;
 					}
 
-					this->minLevel              = static_cast<int8_t>(newMinLevel);
+					this->minLevel              = static_cast<uint8_t>(newMinLevel);
 					this->nextMinLevel          = MinLevel;
 					this->nextMinLevelWindowLen = 0;
 				}
