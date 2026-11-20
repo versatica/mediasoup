@@ -66,18 +66,18 @@ namespace RTC
 		// Offset added to an input to generate its output, before discounting the
 		// pending dropped inputs below it.
 		T base{ 0 };
-		// Highest output generated, before adding 'initialOutput'.
+		// Highest output generated, before adding `initialOutput`.
 		T maxOutput{ 0 };
 		// Highest input seen, whether forwarded or dropped.
 		T maxInput{ 0 };
-		// Highest forwarded input. It is lower than 'maxInput' when a higher input
+		// Highest forwarded input. It is lower than `maxInput` when a higher input
 		// was dropped, possibly by more than half a cycle. It must then be raised
-		// along with 'maxInput': 'IsSeqHigherThan()' can no longer see it behind.
+		// along with `maxInput`: `IsSeqHigherThan()` can no longer see it behind.
 		T maxForwarded{ 0 };
-		// Dropped inputs, sorted with 'SeqLowerThan'.
+		// Dropped inputs, sorted with `SeqLowerThan`.
 		std::vector<T> dropped;
 		// Entries before this index are only waiting to be physically erased.
-		// See 'ClearDropped()'.
+		// See `ClearDropped()`.
 		size_t droppedStart{ 0 };
 	};
 } // namespace RTC

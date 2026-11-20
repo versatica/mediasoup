@@ -10,23 +10,23 @@ namespace
 	struct TestSeqManagerInput
 	{
 		T input{ 0 };
-		// No value means 'Input()' is expected to return false.
+		// No value means `Input()` is expected to return false.
 		std::optional<T> output;
 		bool sync{ false };
 		bool drop{ false };
 		int64_t maxInput{ -1 };
 	};
 
-	/*
-	 * Feeds every element to 'seqManager' in order: 'Sync(input - 1)' first when
-	 * the element asks for it, then 'Drop()' or 'Input()'.
+	/**
+	 * Feed every element to `seqManager` in order: `Sync(input - 1)` first when
+	 * the element asks for it, then `Drop()` or `Input()`.
 	 *
-	 * Returns the first mismatch found as an { actual, expected } pair, or
-	 * { 0, 0 } when everything matched, so a single 'REQUIRE(actual == expected)'
-	 * in the caller reports both values on failure.
+	 * An element with no `output` expects `Input()` to return false. An element
+	 * leaving `maxInput` at -1 does not check `GetMaxInput()`.
 	 *
-	 * An element with no 'output' expects 'Input()' to return false. An element
-	 * leaving 'maxInput' at -1 does not check 'GetMaxInput()'.
+	 * @returns The first mismatch found as an { actual, expected } pair, or
+	 *   { 0, 0 } when everything matched, so that a single
+	 *   `REQUIRE(actual == expected)` in the caller reports both values.
 	 */
 	template<typename T, uint8_t N>
 	std::pair<T, T> validate(
@@ -53,7 +53,7 @@ namespace
 					return std::make_pair(static_cast<T>(forwarded), static_cast<T>(element.output.has_value()));
 				}
 
-				// 'Input()' only writes 'output' when it returns true, so there is nothing
+				// `Input()` only writes `output` when it returns true, so there is nothing
 				// to compare otherwise.
 				if (forwarded && output != element.output.value())
 				{
@@ -61,7 +61,7 @@ namespace
 				}
 			}
 
-			// Checked for dropped inputs too, 'Drop()' also moves 'maxInput' forward.
+			// Checked for dropped inputs too, `Drop()` also moves `maxInput` forward.
 			if (element.maxInput != -1)
 			{
 				if (element.maxInput != seqManager.GetMaxInput())
@@ -802,9 +802,9 @@ SCENARIO("SeqManager", "[seqmanager]")
 		REQUIRE(actual == expected);
 	}
 
-	// 'ClearDropped()' stops at the first entry that is not from the previous
+	// `ClearDropped()` stops at the first entry that is not from the previous
 	// cycle. A newer drop can sort before such entries, leaving them behind
-	// forever, which is why 'Drop()' must clear before inserting.
+	// forever, which is why `Drop()` must clear before inserting.
 	//
 	// The stream below is strictly increasing once unwrapped:
 	//
@@ -1848,13 +1848,13 @@ SCENARIO("SeqManager", "[seqmanager]")
 		REQUIRE(actual == expected);
 	}
 
-	SECTION("a drop is accounted when 'maxForwarded' lags by more than half a cycle")
+	SECTION("a drop is accounted when maxForwarded lags by more than half a cycle")
 	{
-		// The sequence wraps at 3328, which is higher than 36960, so 'maxInput'
-		// moves on while 'maxForwarded' stays at 36960, more than half a cycle
-		// behind. 24589 is higher than 'maxInput' but 'IsSeqHigherThan()' cannot
-		// see it above 'maxForwarded', so it is only accounted because 'Drop()'
-		// checks 'maxInput' first. 24590 is 53166 inputs after 36960, two dropped.
+		// The sequence wraps at 3328, which is higher than 36960, so `maxInput`
+		// moves on while `maxForwarded` stays at 36960, more than half a cycle
+		// behind. 24589 is higher than `maxInput` but `IsSeqHigherThan()` cannot
+		// see it above `maxForwarded`, so it is only accounted because `Drop()`
+		// checks `maxInput` first. 24590 is 53166 inputs after 36960, two dropped.
 		// clang-format off
 		const std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
@@ -1870,7 +1870,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		REQUIRE(actual == expected);
 	}
 
-	// NOTE: 'validate()' cannot express these: it syncs on an element and then
+	// NOTE: `validate()` cannot express these: it syncs on an element and then
 	// processes that very same element, so it cannot drop an input between the
 	// sync and the next forwarded input.
 	SECTION("a drop older than the sync point is not accounted")

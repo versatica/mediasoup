@@ -68,13 +68,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// 'input' is higher than any input seen, hence also higher than the highest
-		// forwarded one: make it the highest input and add it to 'dropped'.
+		// `input` is higher than any input seen, hence also higher than the highest
+		// forwarded one: make it the highest input and add it to `dropped`.
 		if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 		{
 			this->maxInput = input;
 
-			// NOTE: Must clear before inserting, see 'ClearDropped()'.
+			// NOTE: Must clear before inserting, see `ClearDropped()`.
 			ClearDropped();
 			AddDropped(input);
 		}
@@ -82,12 +82,12 @@ namespace RTC
 		// forwarded input. Accounting a drop lower than an already forwarded input
 		// would move the output of the next inputs back, since every dropped input
 		// lowers the output of the inputs above it.
-		// NOTE: This check cannot replace the one above. 'maxForwarded' may lag
-		// 'maxInput' by more than half a cycle, and 'IsSeqHigherThan()' would then
-		// not see 'input' above it.
+		// NOTE: This check cannot replace the one above. `maxForwarded` may lag
+		// `maxInput` by more than half a cycle, and `IsSeqHigherThan()` would then
+		// not see `input` above it.
 		else if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxForwarded))
 		{
-			// NOTE: Must clear before inserting, see 'ClearDropped()'.
+			// NOTE: Must clear before inserting, see `ClearDropped()`.
 			ClearDropped();
 			AddDropped(input);
 		}
@@ -108,7 +108,7 @@ namespace RTC
 		// Dropped inputs present, cleanup and update base.
 		else
 		{
-			// Set 'maxInput' and 'maxForwarded' before clearing dropped inputs.
+			// Set `maxInput` and `maxForwarded` before clearing dropped inputs.
 			if (this->started && SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 			{
 				this->maxInput     = input;
@@ -139,7 +139,7 @@ namespace RTC
 				return false;
 			}
 
-			// There are dropped inputs, calculate 'base' for this input.
+			// There are dropped inputs, calculate `base` for this input.
 			const auto droppedCount = std::ranges::distance(droppedBegin, it);
 
 			base = static_cast<T>(this->base - droppedCount) & SeqManager::MaxValue;
@@ -194,14 +194,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// 'maxOutput' is stored in the offset-less space (as 'base' and comparisons
-		// use it), so apply 'initialOutput' here, just like `Input()` does before
+		// `maxOutput` is stored in the offset-less space (as `base` and comparisons
+		// use it), so apply `initialOutput` here, just like `Input()` does before
 		// returning the output to the caller.
 		return static_cast<T>(this->maxOutput + this->initialOutput) & SeqManager::MaxValue;
 	}
 
 	/*
-	 * Insert 'input' into 'dropped', in sorted order, if not present yet.
+	 * Insert `input` into `dropped`, in sorted order, if not present yet.
 	 */
 	template<typename T, uint8_t N>
 	void SeqManager<T, N>::AddDropped(T input)
@@ -219,13 +219,13 @@ namespace RTC
 	}
 
 	/*
-	 * Consume dropped inputs higher than 'maxInput', which belong to a previous
-	 * cycle, accounting them in 'base'.
+	 * Consume dropped inputs higher than `maxInput`, which belong to a previous
+	 * cycle, accounting them in `base`.
 	 *
 	 * They are not erased as they expire. Erasing from the front of a vector
-	 * shifts every remaining entry, and 'dropped' holds up to half a sequence
+	 * shifts every remaining entry, and `dropped` holds up to half a sequence
 	 * cycle, so that would mean a full window memmove per input. They are consumed
-	 * by advancing 'droppedStart' instead, and the consumed prefix is erased in one
+	 * by advancing `droppedStart` instead, and the consumed prefix is erased in one
 	 * go once it is at least as large as the pending range, which makes removal
 	 * O(1) amortized.
 	 *

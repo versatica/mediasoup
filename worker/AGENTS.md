@@ -66,7 +66,7 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 - `static const` members (`Logger::Pid`, lookup tables such as `ChunkType2String`...) are not class constants for this rule: they go together with the rest of the static data members, in the block right after the static methods.
 - A block of `static constexpr` members always starts with its own `public:` or `private:` line, even when the previous block has the same access.
 - Struct fields that need documentation use multiline `/** ... */` comments, never `//`.
-- Public methods and class constants are documented with `/** ... */`. Parameter docs take a dash: `@param nowMs - Current time.`
+- Public methods and class constants are documented with `/** ... */`. Parameter docs take a dash: `@param nowMs - Current time.`. The result takes `@returns`, never `@return`. Continuation lines of either are indented three spaces.
 - `@remarks` goes alone on its line (no colon, no text after it), and its content goes on the following lines as dash items (`- `), with continuation lines indented two spaces.
 
 ## Functions and statements
@@ -148,6 +148,7 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 - A comment must help whoever reads the file cold. Do not write comments that only record a discussion, and do not add references to projects the code may have been ported from. References already in the code stay.
 - Never turn a point raised while working on a change into a comment: why a header was chosen over another, why something is measured one way and not another, what an earlier version did wrong. If the code is right, it needs no note defending it.
 - No semicolons in log messages or comments: use a comma in logs and split into sentences in comments.
+- A comment naming a C++ entity (member, variable, function, type) wraps it in backticks: `maxForwarded`, `ClearDropped()`. Single quotes are for what is not a C++ entity: char literals (`'R'`), API and protocol string values (`'completed'`, `'trace'`, `'apt'`) and quoted compiler messages.
 - Use ASCII `->`, never the Unicode arrow.
 - Prefer `MS_WARN_TAG()` / `MS_WARN_2TAGS()` over `MS_DEBUG_DEV()` for conditions worth seeing in production.
 
