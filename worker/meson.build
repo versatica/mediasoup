@@ -90,6 +90,19 @@ else
   cpp_args += ['-Werror=unused-result']
 endif
 
+# GCC 12, 13 and 14 report false positives of -Warray-bounds and
+# -Wstringop-overflow (disabling only one of them makes the other one show up)
+# when a std::vector copy (e.g. a one-byte vector passed by value) is inlined
+# into a large function. They show up at -O1, -O2 and -O3 (not at -O0 nor -Os)
+# and depend on the surrounding code, so no small snippet reproduces them.
+# GCC 11 and 15 do not report them.
+if cpp.get_id() == 'gcc' and cpp.version().version_compare('>=12') and cpp.version().version_compare('<15')
+  cpp_args += [
+    '-Wno-array-bounds',
+    '-Wno-stringop-overflow',
+  ]
+endif
+
 # Compiler warnings are errors in mediasoup targets only if ms_werror is
 # enabled (never in subprojects). It is disabled by default so that a newer
 # compiler that emits a new warning does not break the build of mediasoup in
