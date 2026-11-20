@@ -3,8 +3,8 @@
 
 #include "common.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "FBS/message.h"
-#include "FBS/notification.h"
+#include <FBS/message.h>
+#include <FBS/notification.h>
 #include <flatbuffers/flatbuffer_builder.h>
 #include <string>
 

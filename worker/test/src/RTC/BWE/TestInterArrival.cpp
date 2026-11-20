@@ -8,11 +8,11 @@ SCENARIO("BWE InterArrival", "[bwe][interarrival]")
 	constexpr int64_t MinStepUs{ 20 };
 	constexpr int64_t TriggerNewGroupUs{ TimestampGroupLengthUs + MinStepUs };
 	constexpr int64_t BurstThresholdMs{ 5 };
-	constexpr int AbsSendTimeFraction{ 18 };
-	constexpr int AbsSendTimeInterArrivalUpshift{ 8 };
-	constexpr int InterArrivalShift{ AbsSendTimeFraction + AbsSendTimeInterArrivalUpshift };
+	constexpr uint32_t AbsSendTimeFraction{ 18 };
+	constexpr uint32_t AbsSendTimeInterArrivalUpshift{ 8 };
+	constexpr uint32_t InterArrivalShift{ AbsSendTimeFraction + AbsSendTimeInterArrivalUpshift };
 	constexpr double RtpTimestampToUs{ 1000.0 / 90.0 };
-	constexpr double AbsSendTimeToUs{ 1000000.0 / static_cast<double>(1 << InterArrivalShift) };
+	constexpr double AbsSendTimeToUs{ 1000000.0 / static_cast<double>(1U << InterArrivalShift) };
 	// NOTE: Both are private to the class, so they are repeated here.
 	constexpr int64_t ArrivalTimeOffsetThresholdMs{ 3000 };
 	constexpr size_t ReorderedResetThreshold{ 3 };

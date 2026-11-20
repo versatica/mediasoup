@@ -5,7 +5,6 @@
 #include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "FBS/transport.h"
 #include "handles/SendCallbacks.hpp"
 #include "handles/TimerHandleInterface.hpp"
 #include "RTC/BWE/BitrateAllocator.hpp"
@@ -31,6 +30,7 @@
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/SctpListener.hpp"
 #include "SharedInterface.hpp"
+#include <FBS/transport.h>
 #ifdef MS_RTC_LOGGER_SEND_BURST
 #include "RTC/RtcLogger/SendBurst.hpp"
 #endif

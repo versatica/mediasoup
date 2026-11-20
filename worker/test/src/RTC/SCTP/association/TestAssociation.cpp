@@ -1339,13 +1339,13 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		connectAssociations(a, z);
 
-		constexpr int Iterations{ 100 };
+		constexpr size_t Iterations{ 100 };
 
 		std::vector<RTC::SCTP::Message> messages;
 
 		messages.reserve(Iterations);
 
-		for (int i = 0; i < Iterations; ++i)
+		for (size_t i = 0; i < Iterations; ++i)
 		{
 			messages.emplace_back(/*streamId*/ 1, /*ppid*/ 53, std::vector<uint8_t>{ 1, 2 });
 		}
@@ -1361,7 +1361,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		exchangeMessages(a, z);
 
-		for (int i = 0; i < Iterations; ++i)
+		for (size_t i = 0; i < Iterations; ++i)
 		{
 			REQUIRE(z.listener.ConsumeFirstReceivedMessage().has_value() == true);
 		}

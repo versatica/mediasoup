@@ -167,7 +167,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 			  .estimatedThroughput = InitialBitrate },
 		  nowUs);
 
-		for (int i{ 0 }; i < 100; ++i)
+		for (uint32_t i{ 0 }; i < 100; ++i)
 		{
 			aimdRateControl.Update(
 			  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
@@ -203,7 +203,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 
 		REQUIRE(aimdRateControl.GetLatestEstimate() == InitialBitrate);
 
-		for (int i{ 0 }; i < 100; ++i)
+		for (uint32_t i{ 0 }; i < 100; ++i)
 		{
 			aimdRateControl.Update(
 			  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
@@ -257,7 +257,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 			  .estimatedThroughput = InitialBitrate },
 		  nowUs);
 
-		for (int i{ 0 }; i < 100; ++i)
+		for (uint32_t i{ 0 }; i < 100; ++i)
 		{
 			aimdRateControl.Update(
 			  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
@@ -385,7 +385,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		aimdRateControl.SetInApplicationLimitedRegion(false);
 		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
 
-		for (int i{ 0 }; i < 100; ++i)
+		for (uint32_t i{ 0 }; i < 100; ++i)
 		{
 			aimdRateControl.Update(
 			  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,

@@ -11,6 +11,7 @@
 SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 {
 	constexpr uint32_t MappedSsrc = 1234567890;
+
 	// Milliseconds between the packets fed by feedRtpStreamRecv() below.
 	constexpr int64_t PacketSpacingMs{ 1 };
 
@@ -20,7 +21,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	{
 	public:
 		bool isActive{ true };
-		int keyFrameRequestCount{ 0 };
+		uint32_t keyFrameRequestCount{ 0 };
 		uint32_t lastKeyFrameRequestedMappedSsrc{ 0 };
 
 		bool IsActive() const override
@@ -395,7 +396,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->OnTransportConnected();
 
-		const int keyFrameCount = listener.keyFrameRequestCount;
+		const uint32_t keyFrameCount = listener.keyFrameRequestCount;
 
 		// Call OnResumed — should set syncRequired and request keyframe again.
 		manager->OnResumed();

@@ -2,10 +2,10 @@
 #define MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 
 #include "common.hpp"
-#include "FBS/activeSpeakerObserver.h"
 #include "handles/TimerHandleInterface.hpp"
 #include "RTC/RtpObserver.hpp"
 #include "SharedInterface.hpp"
+#include <FBS/activeSpeakerObserver.h>
 #include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>

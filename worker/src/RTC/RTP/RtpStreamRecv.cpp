@@ -690,7 +690,7 @@ namespace RTC
 
 			// Fill the rest of the report block.
 			reportBlock.extendedHighestSeq = static_cast<uint32_t>(this->maxSeq) + this->cycles;
-			reportBlock.jitter             = this->jitter;
+			reportBlock.jitter             = static_cast<uint32_t>(this->jitter);
 
 			if (this->lastSenderReportTiming.has_value())
 			{

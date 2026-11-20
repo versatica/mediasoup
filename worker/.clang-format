@@ -51,7 +51,7 @@ FixNamespaceComments: true
 IncludeCategories:
   - Regex: '"common.hpp"'
     Priority: 1
-  - Regex: '^"(Channel|PayloadChannel|FBS|Utils|handles)/'
+  - Regex: '^"(Channel|Utils|handles)/'
     Priority: 2
   - Regex: '^"(test|fuzzer)/'
     Priority: 4
@@ -59,7 +59,7 @@ IncludeCategories:
     Priority: 5
   - Regex: '"*"'
     Priority: 3
-  - Regex: '^<(flatbuffers|uv|openssl|srtp|libwebrtc)(.|/)'
+  - Regex: '^<(flatbuffers|FBS|uv|openssl|srtp)(.|/)'
     Priority: 6
   - Regex: '<*>'
     Priority: 7

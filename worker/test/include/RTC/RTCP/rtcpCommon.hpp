@@ -110,15 +110,15 @@ namespace rtcpCommon
 		REQUIRE((static_cast<size_t>(Utils::Byte::Get2Bytes(packet->GetBuffer(), 2)) + 1) * 4 == length);    \
 		REQUIRE(packet->GetAvailableLength() == packet->GetBufferLength() - packet->GetLength());            \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);                                 \
-		REQUIRE(static_cast<unsigned>(packet->GetVersion()) == 2);                                           \
+		REQUIRE(static_cast<uint32_t>(packet->GetVersion()) == 2);                                           \
 		REQUIRE(packet->GetType() == packetType);                                                            \
 		REQUIRE(packet->HasUnknownType() == unknownType);                                                    \
 		REQUIRE(packet->HasPadding() == hasPadding);                                                         \
-		REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == paddingLength);                         \
+		REQUIRE(static_cast<uint32_t>(packet->GetPaddingLength()) == paddingLength);                         \
                                                                                                          \
 		if (!packet->HasPadding())                                                                           \
 		{                                                                                                    \
-			REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == 0);                                   \
+			REQUIRE(static_cast<uint32_t>(packet->GetPaddingLength()) == 0);                                   \
 		}                                                                                                    \
                                                                                                          \
 		REQUIRE_THROWS_AS(packet->Serialize(rtcpCommon::ThrowBuffer, length - 1), MediaSoupError);           \

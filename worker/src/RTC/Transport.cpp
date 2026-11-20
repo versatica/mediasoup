@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Transport.hpp"
-#include "FBS/sctpAssociation.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/Consts.hpp"
@@ -27,6 +26,7 @@
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SubchannelsCodec.hpp"
 #include "Utils.hpp"
+#include <FBS/sctpAssociation.h>
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger/RtpPacket.hpp"
 #endif

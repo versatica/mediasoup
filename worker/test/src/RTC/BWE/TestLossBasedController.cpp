@@ -32,6 +32,7 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 
 		for (size_t idx{ 0 }; idx < numPackets; ++idx)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			auto& packetResult = packetResults[idx];
 
 			packetResult.sentPacket.sequenceNumber = sequenceNumber++;
@@ -61,6 +62,7 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 
 		for (size_t idx{ 0 }; idx < numPackets; ++idx)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			auto& packetResult = packetResults[idx];
 
 			packetResult.sentPacket.sequenceNumber = sequenceNumber++;
@@ -101,10 +103,14 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 
 		for (size_t idx{ 0 }; idx < packetResults.size(); ++idx)
 		{
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			packetResults[idx].sentPacket.sequenceNumber = sequenceNumber++;
 			packetResults[idx].sentPacket.size           = PacketSizeBytes;
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			packetResults[idx].sentPacket.sendTimeUs =
 			  static_cast<int64_t>(idx) * (ObservationDurationLowerBoundUs / 2);
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			packetResults[idx].receiveTimeUs =
 			  static_cast<int64_t>(idx + 1) * (ObservationDurationLowerBoundUs / 2);
 		}
@@ -165,7 +171,7 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 
 		// Feed feedback telling no loss at all for a while, which is what makes
 		// the estimate grow.
-		for (int i{ 0 }; i < 10; ++i)
+		for (uint32_t i{ 0 }; i < 10; ++i)
 		{
 			lossBasedController.UpdateBitrateEstimate(
 			  createResults(firstSendTimeUs, /*numPackets*/ 2, /*numLostPackets*/ 0),
@@ -550,12 +556,15 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 
 		for (size_t idx{ 0 }; idx < firstResults.size(); ++idx)
 		{
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			firstResults[idx].sentPacket.sequenceNumber = static_cast<int64_t>(idx) + 1;
 			firstResults[idx].sentPacket.size           = PacketSizeBytes;
 			firstResults[idx].sentPacket.sendTimeUs     = 0;
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 			if (idx != 1)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				firstResults[idx].receiveTimeUs = 10 * 1000;
 			}
 		}
@@ -566,10 +575,12 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 
 		for (size_t idx{ 0 }; idx < secondResults.size(); ++idx)
 		{
+			// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			secondResults[idx].sentPacket.sequenceNumber = sequenceNumbers.at(idx);
 			secondResults[idx].sentPacket.size           = PacketSizeBytes;
 			secondResults[idx].sentPacket.sendTimeUs     = idx == 1 ? ObservationDurationLowerBoundUs : 0;
 			secondResults[idx].receiveTimeUs = secondResults[idx].sentPacket.sendTimeUs + (10 * 1000);
+			// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		}
 
 		lossBasedController.UpdateBitrateEstimate(
@@ -1035,14 +1046,18 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		// bytes next to nothing was lost, by packets half of everything was.
 		std::vector<RTC::BWE::Types::PacketResult> packetResults(2);
 
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		packetResults[0].sentPacket.sequenceNumber = sequenceNumber++;
 		packetResults[0].sentPacket.size           = PacketSizeBytes;
 		packetResults[0].sentPacket.sendTimeUs     = 0;
 		packetResults[0].receiveTimeUs             = ObservationDurationLowerBoundUs;
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		packetResults[1].sentPacket.sequenceNumber = sequenceNumber++;
 		packetResults[1].sentPacket.size           = 50;
 		packetResults[1].sentPacket.sendTimeUs     = ObservationDurationLowerBoundUs;
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
 		byBytes.SetBitrateEstimate(600000);
 		byBytes.UpdateBitrateEstimate(packetResults, RTC::BWE::Types::BitrateInfinite, /*inAlr*/ false);

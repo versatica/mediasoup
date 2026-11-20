@@ -49,7 +49,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 	constexpr size_t PayloadSize{ 1000 };
 	// Packets a burst is made of, which is what the estimation of the incoming link
 	// is drawn from.
-	constexpr int Probes{ 5 };
+	constexpr uint16_t Probes{ 5 };
 	constexpr std::string_view FeedbackTimerLabel{ "transport-wide-cc-feedback-generator-send" };
 
 	int64_t nowUs{ BaseTimeUs };
@@ -201,7 +201,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 
 		// A burst of packets spaced evenly, which is what the estimation is drawn
 		// from at the beginning of a call.
-		for (int idx{ 0 }; idx < Probes; ++idx)
+		for (uint16_t idx{ 0 }; idx < Probes; ++idx)
 		{
 			nowUs += 10 * 1000;
 
@@ -275,7 +275,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		  std::addressof(listener), std::addressof(shared), {});
 
 		// A burst where two streams alternate, so that the estimation applies to both.
-		for (int idx{ 0 }; idx < Probes; ++idx)
+		for (uint16_t idx{ 0 }; idx < Probes; ++idx)
 		{
 			nowUs += 10 * 1000;
 
@@ -310,7 +310,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		  std::addressof(listener), std::addressof(shared), {});
 
 		// The very same burst that gives an estimation when it carries video.
-		for (int idx{ 0 }; idx < Probes; ++idx)
+		for (uint16_t idx{ 0 }; idx < Probes; ++idx)
 		{
 			nowUs += 10 * 1000;
 

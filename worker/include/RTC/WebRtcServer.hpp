@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
-#include "FBS/webRtcServer.h"
 #include "RTC/ICE/IceCandidate.hpp"
 #include "RTC/ICE/StunPacket.hpp"
 #include "RTC/TcpConnection.hpp"
@@ -12,6 +11,7 @@
 #include "RTC/UdpSocket.hpp"
 #include "RTC/WebRtcTransport.hpp"
 #include "SharedInterface.hpp"
+#include <FBS/webRtcServer.h>
 #include <flatbuffers/flatbuffers.h>
 #include <uv.h>
 #include <ankerl/unordered_dense.h>

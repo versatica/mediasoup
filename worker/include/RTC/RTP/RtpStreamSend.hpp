@@ -2,7 +2,6 @@
 #define MS_RTC_RTP_RTP_STREAM_SEND_HPP
 
 #include "common.hpp"
-#include "FBS/rtpStream.h"
 #include "Utils/UnwrappedSequenceNumber.hpp"
 #include "handles/TimerHandleInterface.hpp"
 #include "RTC/RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
@@ -16,6 +15,7 @@
 #include "RTC/RateCalculator.hpp"
 #include "SharedInterface.hpp"
 #include "Utils.hpp"
+#include <FBS/rtpStream.h>
 #include <flatbuffers/flatbuffer_builder.h>
 #include <ankerl/unordered_dense.h>
 #include <deque>
