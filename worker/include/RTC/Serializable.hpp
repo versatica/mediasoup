@@ -253,10 +253,15 @@ namespace RTC
 		virtual void CloneInto(Serializable* serializable) const;
 
 		/**
-		 * Fill the last given `padding` number of bytes of the buffer with zeros.
+		 * Set to zero the last `padding` bytes of the current length.
 		 *
 		 * @remarks
-		 * - This method does NOT add bytes to the buffer.
+		 * - The length is not modified, so those bytes must already be included in
+		 *   it (call `SetLength()` first).
+		 *
+		 * @throw
+		 * - MediaSoupTypeError - If given `padding` is greater than the current
+		 *   length of the Serializable.
 		 */
 		virtual void FillPadding(uint8_t padding) final;
 
