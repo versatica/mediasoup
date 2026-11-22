@@ -51,7 +51,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLength*/ 33,
+		  /*payloadLength*/ 34,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
@@ -77,7 +77,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLength*/ 33,
+		  /*payloadLength*/ 34,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
@@ -103,7 +103,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLength*/ 33,
+		  /*payloadLength*/ 34,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
@@ -115,7 +115,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*packet*/ packet.get(),
 		  /*buffer*/ rtpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(rtpCommon::CloneBuffer),
-		  /*length*/ bufferLength - 33 + 16,
+		  /*length*/ bufferLength - 34 + 16,
 		  /*payloadType*/ 111,
 		  /*hasMarker*/ false,
 		  /*seqNumber*/ 23617,
@@ -279,7 +279,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLength*/ 77,
+		  /*payloadLength*/ 78,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
@@ -305,7 +305,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLength*/ 77,
+		  /*payloadLength*/ 78,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
@@ -331,7 +331,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLength*/ 77,
+		  /*payloadLength*/ 78,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
@@ -343,7 +343,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*packet*/ packet.get(),
 		  /*buffer*/ rtpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(rtpCommon::CloneBuffer),
-		  /*length*/ bufferLength - 77 + 16,
+		  /*length*/ bufferLength - 78 + 16,
 		  /*payloadType*/ 111,
 		  /*hasMarker*/ false,
 		  /*seqNumber*/ 19354,
