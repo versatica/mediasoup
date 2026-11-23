@@ -854,6 +854,93 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		REQUIRE(packet->GetReceivedRtpPackets().size() == 2);
 	}
 
+	SECTION(
+	  "TransportWideCcPacket::AddReceivedRtpPacket() does not add missing RTP packets if the received one does not fit")
+	{
+		const std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
+			RTC::RTCP::TransportWideCcPacket::Factory(rtcpCommon::FactoryBuffer, 24, /*includeDeltas*/ true)
+		};
+
+		packet->SetBase(0, 0);
+
+		// 20 bytes of fixed header, 2 bytes of packet chunk and 1 byte of receive
+		// delta, padded to 24 bytes.
+		REQUIRE(packet->AddReceivedRtpPacket(0, 0));
+
+		uint8_t buffer[24];
+
+		std::memcpy(buffer, packet->GetBuffer(), sizeof(buffer));
+
+		// The missing RTP packet fits in the last packet chunk, but the large
+		// receive delta (300 ticks) does not fit.
+		REQUIRE(!packet->AddReceivedRtpPacket(2, 300 * RTC::RTCP::TransportWideCcPacket::DeltaTickUs));
+
+		REQUIRE(packet->GetLength() == 24);
+		REQUIRE(packet->GetPacketStatusCount() == 1);
+		REQUIRE(
+		  helpers::AreBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, sizeof(buffer)) ==
+		  true);
+
+		// The packet keeps building from where it was.
+		REQUIRE(packet->AddReceivedRtpPacket(1, RTC::RTCP::TransportWideCcPacket::DeltaTickUs));
+		REQUIRE(packet->GetPacketStatusCount() == 2);
+
+		const auto receivedRtpPackets = packet->GetReceivedRtpPackets();
+
+		REQUIRE(receivedRtpPackets.size() == 2);
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+		REQUIRE(receivedRtpPackets[0].sequenceNumber == 0);
+		REQUIRE(receivedRtpPackets[0].deltaTicks == 0);
+		REQUIRE(receivedRtpPackets[1].sequenceNumber == 1);
+		REQUIRE(receivedRtpPackets[1].deltaTicks == 1);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+	}
+
+	SECTION(
+	  "TransportWideCcPacket::AddReceivedRtpPacket() does not add missing RTP packets if the received one does not fit after inserting packet chunks")
+	{
+		const std::unique_ptr<RTC::RTCP::TransportWideCcPacket> packet{
+			RTC::RTCP::TransportWideCcPacket::Factory(rtcpCommon::FactoryBuffer, 28, /*includeDeltas*/ true)
+		};
+
+		packet->SetBase(0, 0);
+
+		// 20 bytes of fixed header, 2 bytes of packet chunk and 1 byte of receive
+		// delta, padded to 24 bytes.
+		REQUIRE(packet->AddReceivedRtpPacket(0, 0));
+
+		uint8_t buffer[24];
+
+		std::memcpy(buffer, packet->GetBuffer(), sizeof(buffer));
+
+		// 23 missing RTP packets: 13 fill the last packet chunk (One Bit Status
+		// Vector Chunk) and 10 go into a new Run Length Chunk, which moves the
+		// receive delta. Then the large receive delta (300 ticks) needs another
+		// packet chunk, which does not fit.
+		REQUIRE(!packet->AddReceivedRtpPacket(24, 300 * RTC::RTCP::TransportWideCcPacket::DeltaTickUs));
+
+		REQUIRE(packet->GetLength() == 24);
+		REQUIRE(packet->GetPaddingLength() == 1);
+		REQUIRE(packet->GetPacketStatusCount() == 1);
+		REQUIRE(
+		  helpers::AreBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, sizeof(buffer)) ==
+		  true);
+
+		// The packet keeps building from where it was.
+		REQUIRE(packet->AddReceivedRtpPacket(1, RTC::RTCP::TransportWideCcPacket::DeltaTickUs));
+		REQUIRE(packet->GetPacketStatusCount() == 2);
+
+		const auto receivedRtpPackets = packet->GetReceivedRtpPackets();
+
+		REQUIRE(receivedRtpPackets.size() == 2);
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+		REQUIRE(receivedRtpPackets[0].sequenceNumber == 0);
+		REQUIRE(receivedRtpPackets[0].deltaTicks == 0);
+		REQUIRE(receivedRtpPackets[1].sequenceNumber == 1);
+		REQUIRE(receivedRtpPackets[1].deltaTicks == 1);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+	}
+
 	SECTION("TransportWideCcPacket::Factory() throws if the buffer is too small")
 	{
 		REQUIRE_THROWS_AS(

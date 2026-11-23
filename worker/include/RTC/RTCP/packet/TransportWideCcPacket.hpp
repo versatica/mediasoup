@@ -396,6 +396,20 @@ namespace RTC
 
 			[[nodiscard]] bool AddMissingRtpPackets(size_t numMissingRtpPackets);
 
+			/**
+			 * Add the status of `numMissingRtpPackets` RTP packets not received and
+			 * the delta size of the received RTP packet that follows them. If any of
+			 * them cannot be added, the packet is left as it was.
+			 *
+			 * @remarks
+			 * - Missing RTP packets must not be reported without the received RTP
+			 *   packet that follows them. Otherwise, when the received RTP packet
+			 *   does not fit and goes into the next feedback packet, both feedback
+			 *   packets would report them as not received.
+			 */
+			[[nodiscard]] bool AddMissingRtpPacketsAndDeltaSize(
+			  size_t numMissingRtpPackets, DeltaSize deltaSize);
+
 		private:
 			// Whether the packet includes receive deltas.
 			const bool hasDeltas;
