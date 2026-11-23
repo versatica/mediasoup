@@ -4,10 +4,11 @@ const config = {
 	testEnvironment: 'node',
 	testRegex: 'node/src/test/test-.*\\.ts',
 	transform: {
-		// transpilation: true is needed to avoid warnigns. However we lose TS
-		// checks. We don't care since we have TS tasks for that.
-		// See https://kulshekhar.github.io/ts-jest/docs/getting-started/options/transpilation
-		'^.+\\.ts?$': ['ts-jest', { transpilation: true }],
+		// NOTE: Since tsconfig.json has `isolatedModules: true`, ts-jest
+		// transpiles each file on its own without type checking it, so a TS error
+		// shows up here as a runtime error (if at all). We don't care since we
+		// have TS tasks for that.
+		'^.+\\.ts?$': ['ts-jest'],
 	},
 	coveragePathIgnorePatterns: [
 		'node/src/Logger.ts',
