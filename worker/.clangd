@@ -1,7 +1,7 @@
 CompileFlags:
   CompilationDatabase: "out/Release/build"
 
-CompletionOptions:
+Completion:
   HeaderInsertion: Never
 
 ---
