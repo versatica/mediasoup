@@ -798,7 +798,7 @@ namespace Utils
 		void SkipBits(size_t count);
 
 	private:
-		uint8_t data[RTC::Consts::TwoBytesRtpExtensionMaxLength];
+		uint8_t data[RTC::Consts::TwoByteRtpExtensionMaxLength];
 		const uint32_t len;
 		uint32_t offset{ 0 };
 	};

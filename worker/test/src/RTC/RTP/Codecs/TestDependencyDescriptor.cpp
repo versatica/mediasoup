@@ -26,7 +26,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		REQUIRE(packet);
 
-		uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
+		uint8_t value[RTC::Consts::TwoByteRtpExtensionMaxLength]{};
 
 		std::memcpy(value, data, len);
 
@@ -309,7 +309,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		// activeDecodeTargetsBitmask == 00000011
 		REQUIRE(bitmask == 3);
 
-		uint8_t buffer[RTC::Consts::TwoBytesRtpExtensionMaxLength];
+		uint8_t buffer[RTC::Consts::TwoByteRtpExtensionMaxLength];
 
 		const auto len = dependencyDescriptor->Write(
 		  RTC::RTP::Codecs::DependencyDescriptor::RewriteParams{ .activeDecodeTargetsBitmask = bitmask },
@@ -724,7 +724,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		// Nothing grows, since the bitmask is already in there.
 		REQUIRE(deltaFrame->GetMaxLength() == sizeof(deltaFrameData));
 
-		uint8_t buffer[RTC::Consts::TwoBytesRtpExtensionMaxLength];
+		uint8_t buffer[RTC::Consts::TwoByteRtpExtensionMaxLength];
 
 		// Writing the very bitmask it came with must give the very same descriptor.
 		auto len = deltaFrame->Write(
@@ -784,7 +784,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		const auto structure = keyFrame->templateDependencyStructure;
 
-		uint8_t buffer[RTC::Consts::TwoBytesRtpExtensionMaxLength];
+		uint8_t buffer[RTC::Consts::TwoByteRtpExtensionMaxLength];
 
 		// Only decode target 0 is kept.
 		const auto len = keyFrame->Write(

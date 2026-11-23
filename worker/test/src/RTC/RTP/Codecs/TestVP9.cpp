@@ -90,7 +90,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 
 		REQUIRE(packet);
 
-		uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
+		uint8_t value[RTC::Consts::TwoByteRtpExtensionMaxLength]{};
 
 		std::memcpy(value, dependencyDescriptor, len);
 

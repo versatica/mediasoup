@@ -21,7 +21,7 @@ namespace RTC
 			// mandatory descriptor fields and the extended descriptor field flags.
 			static constexpr uint32_t TemplateDependencyStructureOffset{ 29 };
 			// Where a rewritten descriptor is built before being written into the packet.
-			static thread_local uint8_t RewriteBuffer[Consts::TwoBytesRtpExtensionMaxLength];
+			static thread_local uint8_t RewriteBuffer[Consts::TwoByteRtpExtensionMaxLength];
 
 			/* Static members. */
 
@@ -49,9 +49,9 @@ namespace RTC
 					return nullptr;
 				}
 
-				if (len > Consts::TwoBytesRtpExtensionMaxLength)
+				if (len > Consts::TwoByteRtpExtensionMaxLength)
 				{
-					MS_WARN_DEV("ignoring payload with length > %" PRIu8, Consts::TwoBytesRtpExtensionMaxLength);
+					MS_WARN_DEV("ignoring payload with length > %" PRIu8, Consts::TwoByteRtpExtensionMaxLength);
 
 					return nullptr;
 				}
@@ -705,7 +705,7 @@ namespace RTC
 				// `Write()` will refuse to produce it and the descriptor will be forwarded
 				// just as it was received, telling the endpoint that decode targets being
 				// filtered out are active.
-				if (bitCount > Consts::TwoBytesRtpExtensionMaxLength * 8)
+				if (bitCount > Consts::TwoByteRtpExtensionMaxLength * 8)
 				{
 					MS_WARN_TAG(
 					  codec,
@@ -729,7 +729,7 @@ namespace RTC
 				const bool withActiveDecodeTargets = params.activeDecodeTargetsBitmask.has_value();
 				const uint32_t bitCount            = GetRewrittenBitCount(withActiveDecodeTargets);
 
-				if (bitCount > Consts::TwoBytesRtpExtensionMaxLength * 8)
+				if (bitCount > Consts::TwoByteRtpExtensionMaxLength * 8)
 				{
 					MS_WARN_DEV("rewritten descriptor does not fit [bitCount:%" PRIu32 "]", bitCount);
 

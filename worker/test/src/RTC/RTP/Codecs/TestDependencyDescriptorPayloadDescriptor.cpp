@@ -216,7 +216,7 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 
 		REQUIRE(packet);
 
-		uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
+		uint8_t value[RTC::Consts::TwoByteRtpExtensionMaxLength]{};
 
 		std::memcpy(value, data, len);
 

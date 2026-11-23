@@ -48,7 +48,7 @@ namespace rtpCommon
   /*bool*/ hasHeaderExtension,                                                                           \
   /*size_t*/ headerExtensionValueLength,                                                                 \
   /*bool*/ hasOneByteExtensions,                                                                         \
-  /*bool*/ hasTwoBytesExtensions,                                                                        \
+  /*bool*/ hasTwoByteExtensions,                                                                         \
   /*bool*/ hasPayload,                                                                                   \
   /*size_t*/ payloadLength,                                                                              \
   /*bool*/ hasPadding,                                                                                   \
@@ -77,16 +77,16 @@ namespace rtpCommon
 		REQUIRE(packet->HasCsrcs() == hasCsrcs);                                                             \
 		REQUIRE(packet->HasHeaderExtension() == hasHeaderExtension);                                         \
 		REQUIRE(packet->GetHeaderExtensionValueLength() == headerExtensionValueLength);                      \
-		REQUIRE(packet->HasExtensions() == (hasOneByteExtensions || hasTwoBytesExtensions));                 \
+		REQUIRE(packet->HasExtensions() == (hasOneByteExtensions || hasTwoByteExtensions));                  \
 		REQUIRE(packet->HasOneByteExtensions() == hasOneByteExtensions);                                     \
-		REQUIRE(packet->HasTwoBytesExtensions() == hasTwoBytesExtensions);                                   \
+		REQUIRE(packet->HasTwoByteExtensions() == hasTwoByteExtensions);                                     \
                                                                                                          \
 		if (!packet->HasHeaderExtension())                                                                   \
 		{                                                                                                    \
 			REQUIRE(packet->GetHeaderExtensionValueLength() == 0);                                             \
 			REQUIRE(packet->HasExtensions() == false);                                                         \
 			REQUIRE(packet->HasOneByteExtensions() == false);                                                  \
-			REQUIRE(packet->HasTwoBytesExtensions() == false);                                                 \
+			REQUIRE(packet->HasTwoByteExtensions() == false);                                                  \
 		}                                                                                                    \
                                                                                                          \
 		REQUIRE(packet->HasPayload() == hasPayload);                                                         \

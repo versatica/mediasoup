@@ -35,7 +35,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 
 		if (dependencyDescriptor)
 		{
-			uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
+			uint8_t value[RTC::Consts::TwoByteRtpExtensionMaxLength]{};
 
 			std::memcpy(value, dependencyDescriptor, len);
 

@@ -110,19 +110,19 @@ namespace RTC
 
 		public:
 			/**
-			 * One-Byte and Two-Bytes Extension types.
+			 * One-Byte and Two-Byte Extension types.
 			 *
 			 * @see RFC 8285.
 			 */
 			enum class ExtensionsType : uint8_t
 			{
 				/**
-				 * Auto means that One-Byte or Two-Bytes is chosen based on given
+				 * Auto means that One-Byte or Two-Byte is chosen based on given
 				 * extensions.
 				 */
-				Auto     = 0,
-				OneByte  = 1,
-				TwoBytes = 2
+				Auto    = 0,
+				OneByte = 1,
+				TwoByte = 2
 			};
 
 #ifdef MS_TEST
@@ -155,7 +155,7 @@ namespace RTC
 			 * @remarks
 			 * - This struct is guaranteed to be aligned to 1 byte.
 			 */
-			struct TwoBytesExtension
+			struct TwoByteExtension
 			{
 				uint8_t id;
 				uint8_t len;
@@ -360,13 +360,13 @@ namespace RTC
 			void RemoveHeaderExtension();
 
 			/**
-			 * Whether the packet has One-Byte or Two-Bytes extensions.
+			 * Whether the packet has One-Byte or Two-Byte extensions.
 			 *
 			 * @see RFC 8285.
 			 */
 			bool HasExtensions() const
 			{
-				return HasOneByteExtensions() || HasTwoBytesExtensions();
+				return HasOneByteExtensions() || HasTwoByteExtensions();
 			}
 
 			/**
@@ -380,17 +380,17 @@ namespace RTC
 			}
 
 			/**
-			 * Whether the packet has Two-Bytes extensions.
+			 * Whether the packet has Two-Byte extensions.
 			 *
 			 * @see RFC 8285.
 			 */
-			bool HasTwoBytesExtensions() const
+			bool HasTwoByteExtensions() const
 			{
 				return (GetHeaderExtensionId() & 0b1111111111110000) == 0b0001000000000000;
 			}
 
 			/**
-			 * Whether the One-Byte or Two-Bytes extension with given `id` exists in
+			 * Whether the One-Byte or Two-Byte extension with given `id` exists in
 			 * the packet.
 			 *
 			 * @see RFC 8285.
@@ -417,9 +417,9 @@ namespace RTC
 
 					return offset != -1;
 				}
-				else if (HasTwoBytesExtensions())
+				else if (HasTwoByteExtensions())
 				{
-					return this->twoBytesExtensions.contains(id);
+					return this->twoByteExtensions.contains(id);
 				}
 				else
 				{
@@ -428,7 +428,7 @@ namespace RTC
 			}
 
 			/**
-			 * Get a pointer to the value of the the One-Byte or Two-Bytes extension
+			 * Get a pointer to the value of the the One-Byte or Two-Byte extension
 			 * with given `id` and set its value length into given `len`.
 			 *
 			 * @see RFC 8285.
@@ -471,11 +471,11 @@ namespace RTC
 
 					return extension->value;
 				}
-				else if (HasTwoBytesExtensions())
+				else if (HasTwoByteExtensions())
 				{
-					const auto it = this->twoBytesExtensions.find(id);
+					const auto it = this->twoByteExtensions.find(id);
 
-					if (it == this->twoBytesExtensions.end())
+					if (it == this->twoByteExtensions.end())
 					{
 						len = 0;
 
@@ -485,7 +485,7 @@ namespace RTC
 					const auto offset = it->second;
 
 					auto* const extension =
-					  reinterpret_cast<TwoBytesExtension*>(GetHeaderExtensionValue() + offset);
+					  reinterpret_cast<TwoByteExtension*>(GetHeaderExtensionValue() + offset);
 
 					len = extension->len;
 
@@ -1057,10 +1057,10 @@ namespace RTC
 			// extension value to the beginning of the extension.
 			std::array<ssize_t, 14> oneByteExtensions{ -1, -1, -1, -1, -1, -1, -1,
 			                                           -1, -1, -1, -1, -1, -1, -1 };
-			// Ordered map of Two Bytes Extensions. Key is the id 1 of the extension,
+			// Ordered map of Two-Byte Extensions. Key is the id 1 of the extension,
 			// each entry is the offset (in bytes) from the beginning of the header
 			// extension value to the beginning of the extension.
-			std::map<uint8_t, ssize_t> twoBytesExtensions;
+			std::map<uint8_t, ssize_t> twoByteExtensions;
 			// Extension ids.
 			RTP::HeaderExtensionIds headerExtensionIds;
 			// Codec related.

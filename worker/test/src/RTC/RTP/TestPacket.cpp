@@ -19,7 +19,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(alignof(RTC::RTP::Packet::FixedHeader) == 4);
 		REQUIRE(alignof(RTC::RTP::Packet::HeaderExtension) == 2);
 		REQUIRE(alignof(RTC::RTP::Packet::OneByteExtension) == 1);
-		REQUIRE(alignof(RTC::RTP::Packet::TwoBytesExtension) == 1);
+		REQUIRE(alignof(RTC::RTP::Packet::TwoByteExtension) == 1);
 	}
 
 	SECTION("Packet::Parse() packet1.raw succeeds")
@@ -49,7 +49,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 4,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 34,
 		  /*hasPadding*/ false,
@@ -75,7 +75,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 4,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 34,
 		  /*hasPadding*/ false,
@@ -101,7 +101,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 4,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 34,
 		  /*hasPadding*/ false,
@@ -125,7 +125,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 4,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 16,
 		  /*hasPadding*/ false,
@@ -163,7 +163,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 78,
 		  /*hasPadding*/ true,
@@ -189,7 +189,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 78,
 		  /*hasPadding*/ true,
@@ -215,7 +215,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 78,
 		  /*hasPadding*/ true,
@@ -239,7 +239,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 16,
 		  /*hasPadding*/ false,
@@ -277,7 +277,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 8,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 78,
 		  /*hasPadding*/ false,
@@ -303,7 +303,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 8,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 78,
 		  /*hasPadding*/ false,
@@ -329,7 +329,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 8,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 78,
 		  /*hasPadding*/ false,
@@ -353,7 +353,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 8,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 16,
 		  /*hasPadding*/ false,
@@ -391,7 +391,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ false,
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
@@ -419,7 +419,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ false,
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
@@ -447,7 +447,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ false,
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
@@ -473,7 +473,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 16,
 		  /*hasPadding*/ false,
@@ -517,7 +517,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 2,
 		  /*hasPadding*/ false,
@@ -573,7 +573,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 2,
 		  /*hasPadding*/ false,
@@ -625,7 +625,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 2,
 		  /*hasPadding*/ false,
@@ -675,7 +675,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 16,
 		  /*hasPadding*/ false,
@@ -687,7 +687,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 	}
 
-	SECTION("Packet::Parse() with Two-Bytes extensions succeeds")
+	SECTION("Packet::Parse() with Two-Byte extensions succeeds")
 	{
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
@@ -719,7 +719,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 16,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ true,
+		  /*hasTwoByteExtensions*/ true,
 		  /*hasPayload*/ false,
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
@@ -780,7 +780,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 16,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ true,
+		  /*hasTwoByteExtensions*/ true,
 		  /*hasPayload*/ false,
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
@@ -837,7 +837,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 16,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ true,
+		  /*hasTwoByteExtensions*/ true,
 		  /*hasPayload*/ false,
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
@@ -892,7 +892,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 16,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ true,
+		  /*hasTwoByteExtensions*/ true,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 15,
 		  /*hasPadding*/ false,
@@ -933,7 +933,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ false,
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ true,
@@ -961,7 +961,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ false,
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ true,
@@ -989,7 +989,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ false,
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ true,
@@ -1015,7 +1015,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 1,
 		  /*hasPadding*/ false,
@@ -1044,7 +1044,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 1,
 		  /*hasPadding*/ true,
@@ -1100,7 +1100,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ false,
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
@@ -1128,7 +1128,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		// - Header extension value length: 1 + 1 + 1 + 2 + 1 + 3 = 9 => 12 (padded)
 		// - Header extension length: 4 + 12 = 16
 		//
-		// Using Two-Bytes extensions:
+		// Using Two-Byte extensions:
 		// - Header extension value length: 2 + 1 + 2 + 2 + 2 + 3 = 12
 		// - Header extension length: 4 + 12 = 16
 		//
@@ -1180,7 +1180,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 10,
 		  /*hasPadding*/ true,
@@ -1238,7 +1238,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 10,
 		  /*hasPadding*/ true,
@@ -1293,7 +1293,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 10,
 		  /*hasPadding*/ true,
@@ -1346,7 +1346,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 1,
 		  /*hasPadding*/ false,
@@ -1401,7 +1401,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 1,
 		  /*hasPadding*/ true,
@@ -1456,7 +1456,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 1,
 		  /*hasPadding*/ true,
@@ -1472,8 +1472,8 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		    packet->GetPayload(), packet->GetPayloadLength(), rtpCommon::DataBuffer, 1) == true);
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 
-		// Add Two-Bytes extensions.
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions) == true);
+		// Add Two-Byte extensions.
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions) == true);
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -1489,7 +1489,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ true,
+		  /*hasTwoByteExtensions*/ true,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 1,
 		  /*hasPadding*/ true,
@@ -1544,32 +1544,32 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
 		REQUIRE(packet->HasOneByteExtensions());
 
-		// Requires Two-Bytes type extensions due to id > 14.
+		// Requires Two-Byte type extensions due to id > 14.
 		extensions.assign(
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 15, 2, rtpCommon::DataBuffer }
     });
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
-		REQUIRE(packet->HasTwoBytesExtensions());
+		REQUIRE(packet->HasTwoByteExtensions());
 
-		// Requires Two-Bytes type extensions due to length 0.
+		// Requires Two-Byte type extensions due to length 0.
 		extensions.assign(
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID, 1, 0, rtpCommon::DataBuffer }
     });
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
-		REQUIRE(packet->HasTwoBytesExtensions());
+		REQUIRE(packet->HasTwoByteExtensions());
 
-		// Requires Two-Bytes type extensions due to length > 16.
+		// Requires Two-Byte type extensions due to length > 16.
 		extensions.assign(
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME, 1, 17, rtpCommon::DataBuffer }
     });
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
-		REQUIRE(packet->HasTwoBytesExtensions());
+		REQUIRE(packet->HasTwoByteExtensions());
 	}
 
 	SECTION("Packet::SetExtensions() with supported extensions succeeds")
@@ -1792,7 +1792,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions),
 		  MediaSoupTypeError);
 		REQUIRE_THROWS_AS(
-		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions),
+		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions),
 		  MediaSoupTypeError);
 
 		// Invalid extension id > 14 in One-Byte.
@@ -1806,7 +1806,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE_THROWS_AS(
 		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions),
 		  MediaSoupTypeError);
-		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions));
+		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions));
 
 		// Invalid extension length 0 in One-Byte.
 		extensions.assign(
@@ -1820,7 +1820,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE_THROWS_AS(
 		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions),
 		  MediaSoupTypeError);
-		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions));
+		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions));
 
 		// Invalid extension length > 16 in One-Byte.
 		extensions.assign(
@@ -1836,7 +1836,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE_THROWS_AS(
 		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions),
 		  MediaSoupTypeError);
-		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions));
+		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -1852,7 +1852,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 72,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ true,
+		  /*hasTwoByteExtensions*/ true,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 10,
 		  /*hasPadding*/ true,
@@ -1961,7 +1961,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 	SECTION("Packet::SetExtensions() with ExtensionsType::Auto accepts a zero length extension")
 	{
-		// A received packet with a Two-Bytes header extension holding a single
+		// A received packet with a Two-Byte header extension holding a single
 		// extension (id 2) whose value has length 0, which RFC 8285 allows.
 		// clang-format off
 		alignas(4) const uint8_t receivedBuffer[] =
@@ -1969,7 +1969,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 			0x90, 0x6F, 0x00, 0x01, // Version 2, extension flag set, payload type 111, sequence number 1.
 			0x00, 0x00, 0x00, 0x01, // Timestamp.
 			0x00, 0x00, 0x00, 0x01, // SSRC.
-			0x10, 0x00, 0x00, 0x01, // Two-Bytes header extension, length 1 (4 bytes).
+			0x10, 0x00, 0x00, 0x01, // Two-Byte header extension, length 1 (4 bytes).
 			0x02, 0x00, 0x00, 0x00, // Extension id 2 with length 0, then padding.
 			0x11, 0x22, 0x33, 0x44 // Payload.
 		};
@@ -1981,7 +1981,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 			rtpCommon::FactoryBuffer, sizeof(receivedBuffer), sizeof(rtpCommon::FactoryBuffer)) };
 
 		REQUIRE(packet);
-		REQUIRE(packet->HasTwoBytesExtensions() == true);
+		REQUIRE(packet->HasTwoByteExtensions() == true);
 
 		uint8_t extenLen;
 
@@ -1992,7 +1992,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		// Rewrite the extensions as a Producer does on every received packet: a MID
 		// plus the received extension, copied as it came. A One-Byte extension
-		// cannot have length 0, so this must use Two-Bytes extensions.
+		// cannot have length 0, so this must use Two-Byte extensions.
 		uint8_t mid[]{ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' };
 		uint8_t audioLevel[16];
 		std::vector<RTC::RTP::Packet::Extension> extensions;
@@ -2006,7 +2006,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
 
-		REQUIRE(packet->HasTwoBytesExtensions() == true);
+		REQUIRE(packet->HasTwoByteExtensions() == true);
 		REQUIRE(packet->HasExtension(1) == true);
 		REQUIRE(packet->HasExtension(2) == true);
 		REQUIRE(packet->GetExtensionValue(2, extenLen) != nullptr);
@@ -2046,17 +2046,17 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet->HasOneByteExtensions() == true);
 		REQUIRE(packet->HasExtension(1) == true);
 
-		// Two Two-Bytes elements of 6 bytes take 12 bytes, 4 more than the current
+		// Two Two-Byte elements of 6 bytes take 12 bytes, 4 more than the current
 		// header extension value, so they do not fit and the One-Byte extensions
 		// already in the packet must remain untouched.
 		extensions.emplace_back(
 		  RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 2, 4, rtpCommon::DataBuffer + 4);
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions) == false);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions) == false);
 
 		REQUIRE(packet->GetLength() == 34);
 		REQUIRE(packet->HasOneByteExtensions() == true);
-		REQUIRE(packet->HasTwoBytesExtensions() == false);
+		REQUIRE(packet->HasTwoByteExtensions() == false);
 		REQUIRE(packet->HasExtension(1) == true);
 		REQUIRE(packet->HasExtension(2) == false);
 
@@ -2104,7 +2104,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 10,
 		  /*hasPadding*/ true,
@@ -2128,7 +2128,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 501,
 		  /*hasPadding*/ false,
@@ -2153,7 +2153,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ false,
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
@@ -2226,7 +2226,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 10,
 		  /*hasPadding*/ true,
@@ -2294,7 +2294,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 11,
 		  /*hasPadding*/ false,
@@ -2359,7 +2359,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ true,
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 8,
 		  /*hasPadding*/ false,
@@ -2468,7 +2468,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 10,
 		  /*hasPadding*/ true,
@@ -2497,7 +2497,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 12,
 		  /*hasPadding*/ false,
@@ -2536,7 +2536,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*hasHeaderExtension*/ false,
 		  /*headerExtensionValueLength*/ 0,
 		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
+		  /*hasTwoByteExtensions*/ false,
 		  /*hasPayload*/ true,
 		  /*payloadLength*/ 10,
 		  /*hasPadding*/ false,

@@ -69,7 +69,7 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->GetHeaderExtensionValueLength();
 	packet->HasExtensions();
 	packet->HasOneByteExtensions();
-	packet->HasTwoBytesExtensions();
+	packet->HasTwoByteExtensions();
 
 	const RTC::RTP::HeaderExtensionIds headerExtensionIds{ .mid               = 5,
 	                                                       .rid               = 6,
@@ -153,12 +153,12 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	);
 
 	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions));
-	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions));
+	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions));
 	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions));
 
 	extensions.clear();
 
-	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions));
+	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions));
 	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions));
 	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions));
 
@@ -196,7 +196,7 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	// NOTE: Cannot use One-Byte extensions because we are using big ids and
 	// lengths.
 	// packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
-	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions));
+	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions));
 	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions));
 
 	packet->HasExtension(13);

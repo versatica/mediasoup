@@ -186,9 +186,9 @@ namespace RTC
 				}
 				else
 				{
-					extIds.reserve(this->twoBytesExtensions.size());
+					extIds.reserve(this->twoByteExtensions.size());
 
-					for (const auto& kv : this->twoBytesExtensions)
+					for (const auto& kv : this->twoByteExtensions)
 					{
 						const auto offset = kv.second;
 
@@ -198,7 +198,7 @@ namespace RTC
 						}
 
 						const auto* extension =
-						  reinterpret_cast<TwoBytesExtension*>(GetHeaderExtensionValue() + offset);
+						  reinterpret_cast<TwoByteExtension*>(GetHeaderExtensionValue() + offset);
 
 						extIds.push_back(
 						  "{id:" + std::to_string(extension->id) + ", len:" + std::to_string(extension->len) +
@@ -215,7 +215,7 @@ namespace RTC
 					MS_DUMP_CLEAN(
 					  indentation,
 					  "  RFC5285 extensions (%s): %s",
-					  HasOneByteExtensions() ? "One-Byte" : "Two-Bytes",
+					  HasOneByteExtensions() ? "One-Byte" : "Two-Byte",
 					  extIdsStream.str().c_str());
 				}
 
@@ -419,8 +419,8 @@ namespace RTC
 			Serializable::CloneInto(clonedPacket);
 
 			// Clone extension containers.
-			clonedPacket->oneByteExtensions  = this->oneByteExtensions;
-			clonedPacket->twoBytesExtensions = this->twoBytesExtensions;
+			clonedPacket->oneByteExtensions = this->oneByteExtensions;
+			clonedPacket->twoByteExtensions = this->twoByteExtensions;
 
 			// Clone extension ids.
 			clonedPacket->headerExtensionIds = this->headerExtensionIds;
@@ -538,9 +538,9 @@ namespace RTC
 				return;
 			}
 
-			// Clear One-Byte and Two-Bytes extensions.
+			// Clear One-Byte and Two-Byte extensions.
 			std::ranges::fill(this->oneByteExtensions, -1);
-			this->twoBytesExtensions.clear();
+			this->twoByteExtensions.clear();
 
 			const auto headerExtensionLength = GetHeaderExtensionLength();
 
@@ -572,7 +572,7 @@ namespace RTC
 			{
 				uint8_t highestId{ 0 };
 				uint8_t highestLen{ 0 };
-				// A One-Byte extension cannot have length 0, while a Two-Bytes one can.
+				// A One-Byte extension cannot have length 0, while a Two-Byte one can.
 				bool hasZeroLength{ false };
 
 				for (const auto& extension : extensions)
@@ -588,7 +588,7 @@ namespace RTC
 
 				type = highestId <= 14 && !hasZeroLength && highestLen > 0 && highestLen <= 16
 				         ? ExtensionsType::OneByte
-				         : ExtensionsType::TwoBytes;
+				         : ExtensionsType::TwoByte;
 
 				MS_DEBUG_DEV(
 				  "using %" PRIu8 " byte(s) extensions [highestId:%" PRIu8 ", highestLen:%" PRIu8 "]",
@@ -632,7 +632,7 @@ namespace RTC
 					extensionsLength += (1 + extension.len);
 				}
 			}
-			else if (type == ExtensionsType::TwoBytes)
+			else if (type == ExtensionsType::TwoByte)
 			{
 				for (const auto& extension : extensions)
 				{
@@ -673,9 +673,9 @@ namespace RTC
 				return false;
 			}
 
-			// Clear One-Byte and Two-Bytes extensions.
+			// Clear One-Byte and Two-Byte extensions.
 			std::ranges::fill(this->oneByteExtensions, -1);
-			this->twoBytesExtensions.clear();
+			this->twoByteExtensions.clear();
 
 			// Reset extension ids.
 			this->headerExtensionIds = {};
@@ -686,9 +686,9 @@ namespace RTC
 			{
 				// Nothing to do.
 			}
-			// If Two-Bytes is requested and the packet already has Two-Bytes extensions,
+			// If Two-Byte is requested and the packet already has Two-Byte extensions,
 			// keep the header extension id.
-			else if (type == ExtensionsType::TwoBytes && HasTwoBytesExtensions())
+			else if (type == ExtensionsType::TwoByte && HasTwoByteExtensions())
 			{
 				// Nothing to do.
 			}
@@ -699,7 +699,7 @@ namespace RTC
 				{
 					GetHeaderExtensionPointer()->id = htons(0xBEDE);
 				}
-				else if (type == ExtensionsType::TwoBytes)
+				else if (type == ExtensionsType::TwoByte)
 				{
 					GetHeaderExtensionPointer()->id = htons(0b0001000000000000);
 				}
@@ -740,7 +740,7 @@ namespace RTC
 				{
 					headerExtension->id = htons(0xBEDE);
 				}
-				else if (type == ExtensionsType::TwoBytes)
+				else if (type == ExtensionsType::TwoByte)
 				{
 					headerExtension->id = htons(0b0001000000000000);
 				}
@@ -770,12 +770,12 @@ namespace RTC
 					ptr += extension.len;
 				}
 			}
-			else if (type == ExtensionsType::TwoBytes)
+			else if (type == ExtensionsType::TwoByte)
 			{
 				for (const auto& extension : extensions)
 				{
-					// Store the Two-Bytes extension offset in the map.
-					this->twoBytesExtensions[extension.id] = ptr - extensionsStart;
+					// Store the Two-Byte extension offset in the map.
+					this->twoByteExtensions[extension.id] = ptr - extensionsStart;
 
 					*ptr = extension.id;
 					++ptr;
@@ -1187,7 +1187,7 @@ namespace RTC
 			{
 				const auto offset = static_cast<size_t>(extenValue - GetHeaderExtensionValue());
 				// In One-Byte extensions the length field holds 1..16.
-				const size_t maxLen = HasOneByteExtensions() ? 16 : Consts::TwoBytesRtpExtensionMaxLength;
+				const size_t maxLen = HasOneByteExtensions() ? 16 : Consts::TwoByteRtpExtensionMaxLength;
 
 				bool fits = len <= maxLen && offset + len <= GetHeaderExtensionValueLength();
 
@@ -1858,7 +1858,7 @@ namespace RTC
 
 				return true;
 			}
-			else if (HasTwoBytesExtensions())
+			else if (HasTwoByteExtensions())
 			{
 				const uint8_t* extensionsStart = GetHeaderExtensionValue();
 				const uint8_t* extensionsEnd   = extensionsStart + GetHeaderExtensionValueLength();
@@ -1869,7 +1869,7 @@ namespace RTC
 				// Two-Byte extensions can have length 0.
 				while (ptr + 1 < extensionsEnd)
 				{
-					const auto* extension = reinterpret_cast<const TwoBytesExtension*>(ptr);
+					const auto* extension = reinterpret_cast<const TwoByteExtension*>(ptr);
 					const uint8_t id      = extension->id;
 					const size_t len      = extension->len;
 
@@ -1885,7 +1885,7 @@ namespace RTC
 						{
 							MS_WARN_TAG(
 							  rtp,
-							  "not enough space for the announced value of the Two-Bytes extension with id %" PRIu8,
+							  "not enough space for the announced value of the Two-Byte extension with id %" PRIu8,
 							  id);
 
 							return false;
@@ -1893,8 +1893,8 @@ namespace RTC
 
 						if (storeExtensions)
 						{
-							// Store the Two-Bytes extension offset in the map.
-							this->twoBytesExtensions[id] = ptr - extensionsStart;
+							// Store the Two-Byte extension offset in the map.
+							this->twoByteExtensions[id] = ptr - extensionsStart;
 						}
 
 						ptr += (2 + len);
@@ -1952,16 +1952,16 @@ namespace RTC
 
 				extension->len = len - 1;
 			}
-			else if (HasTwoBytesExtensions())
+			else if (HasTwoByteExtensions())
 			{
-				const auto it = this->twoBytesExtensions.find(id);
+				const auto it = this->twoByteExtensions.find(id);
 
-				MS_ASSERT(it != this->twoBytesExtensions.end(), "extension with id %" PRIu8 " not found", id);
+				MS_ASSERT(it != this->twoByteExtensions.end(), "extension with id %" PRIu8 " not found", id);
 
 				const auto offset = it->second;
 
 				auto* const extension =
-				  reinterpret_cast<TwoBytesExtension*>(GetHeaderExtensionValue() + offset);
+				  reinterpret_cast<TwoByteExtension*>(GetHeaderExtensionValue() + offset);
 
 				const auto currentLen = extension->len;
 

@@ -164,7 +164,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		{
 			// NOTE: Zero initialized, so the spare bytes are just zero padding for
 			// Dependency Descriptor parsers.
-			uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
+			uint8_t value[RTC::Consts::TwoByteRtpExtensionMaxLength]{};
 
 			std::memcpy(value, extenValue, extenLen);
 

@@ -91,7 +91,7 @@ namespace RTC
 		/**
 		 * Max length for a 2 bytes RTP header extension.
 		 */
-		constexpr uint8_t TwoBytesRtpExtensionMaxLength{ 255 };
+		constexpr uint8_t TwoByteRtpExtensionMaxLength{ 255 };
 
 		/**
 		 * MID RTP header extension max length (just used when setting/updating MID

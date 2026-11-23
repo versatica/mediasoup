@@ -49,7 +49,7 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 
 	SECTION("a packet carrying a Dependency Descriptor gets a payload descriptor")
 	{
-		uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
+		uint8_t value[RTC::Consts::TwoByteRtpExtensionMaxLength]{};
 
 		std::memcpy(value, KeyFrameData, sizeof(KeyFrameData));
 

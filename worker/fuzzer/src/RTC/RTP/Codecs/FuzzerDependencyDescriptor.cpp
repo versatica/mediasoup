@@ -18,7 +18,7 @@ void FuzzerRtcRtpCodecsDependencyDescriptor::Fuzz(const uint8_t* data, size_t le
 	// bit offsets taken while parsing and must never write past what it counted.
 	descriptor->GetMaxLength();
 
-	uint8_t buffer[RTC::Consts::TwoBytesRtpExtensionMaxLength];
+	uint8_t buffer[RTC::Consts::TwoByteRtpExtensionMaxLength];
 
 	for (uint8_t maxSpatialLayer{ 0 }; maxSpatialLayer < 4; ++maxSpatialLayer)
 	{
