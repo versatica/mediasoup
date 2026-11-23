@@ -498,15 +498,13 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 
 		// 17, 18 and 19 are lost. The chunk that reports them still fits in the
 		// first feedback packet, but the delta of 20 does not, so the first packet
-		// ends with them and 20 goes into a second one.
+		// ends with 16 and the lost ones go with 20 into a second one.
 		feedPacket(transportWideCcFeedbackGenerator, 20, 1160000, DefaultPayloadSize);
 
 		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		for (uint16_t wideSeqNumber{ 17 }; wideSeqNumber <= 19; ++wideSeqNumber)
 		{
-			expectedResults.at(0).push_back(
-			  { .wideSeqNumber = wideSeqNumber, .received = false, .timestampUs = 0 });
 			expectedResults.at(1).push_back(
 			  { .wideSeqNumber = wideSeqNumber, .received = false, .timestampUs = 0 });
 		}
@@ -515,8 +513,8 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 
 		checkFeedbacks(listener, expectedResults);
 
-		// The lost ones that closed the first report are reported again, since
-		// the second one starts right after 16 and not after 19.
+		// The lost ones are reported once, by the second report, which starts
+		// right after 16.
 		REQUIRE(listener.baseSequenceNumbers.at(0) == 1);
 		REQUIRE(listener.baseSequenceNumbers.at(1) == 17);
 	}

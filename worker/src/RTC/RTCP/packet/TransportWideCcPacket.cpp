@@ -327,6 +327,7 @@ namespace RTC
 				}
 			}
 
+			const DeltaSize deltaSize = (delta >= 0 && delta <= 0xFF) ? 1 : 2;
 			const auto nextSequenceNumber =
 			  static_cast<uint16_t>(GetBaseSequenceNumber() + GetPacketStatusCount());
 
@@ -341,15 +342,12 @@ namespace RTC
 
 				const auto numMissingRtpPackets = static_cast<uint16_t>(sequenceNumber - nextSequenceNumber);
 
-				if (!AddMissingRtpPackets(numMissingRtpPackets))
+				if (!AddMissingRtpPacketsAndDeltaSize(numMissingRtpPackets, deltaSize))
 				{
 					return false;
 				}
 			}
-
-			const DeltaSize deltaSize = (delta >= 0 && delta <= 0xFF) ? 1 : 2;
-
-			if (!AddDeltaSize(deltaSize))
+			else if (!AddDeltaSize(deltaSize))
 			{
 				return false;
 			}
@@ -725,6 +723,52 @@ namespace RTC
 			SetPacketStatusCount(static_cast<uint16_t>(newPacketStatusCount));
 
 			return true;
+		}
+
+		bool TransportWideCcPacket::AddMissingRtpPacketsAndDeltaSize(
+		  size_t numMissingRtpPackets, DeltaSize deltaSize)
+		{
+			MS_TRACE();
+
+			auto* const chunksPointer              = GetChunksPointer();
+			const uint16_t packetStatusCount       = GetPacketStatusCount();
+			const size_t chunksLength              = this->chunksLength;
+			const size_t variableLengthValueLength = GetVariableLengthValueLength();
+			const LastChunk lastChunk              = this->lastChunk;
+			// The last packet chunk is overwritten while adding.
+			const uint16_t lastChunkValue =
+			  chunksLength > 0
+			    ? Utils::Byte::Get2Bytes(chunksPointer, chunksLength - TransportWideCcPacket::ChunkLength)
+			    : 0;
+
+			if (AddMissingRtpPackets(numMissingRtpPackets) && AddDeltaSize(deltaSize))
+			{
+				return true;
+			}
+
+			// Remove the inserted packet chunks (if any).
+			if (this->chunksLength != chunksLength)
+			{
+				// Move the receive deltas back.
+				std::memmove(
+				  chunksPointer + chunksLength, chunksPointer + this->chunksLength, this->deltasLength);
+
+				this->chunksLength = chunksLength;
+
+				SetVariableLengthValueLength(variableLengthValueLength);
+			}
+
+			if (chunksLength > 0)
+			{
+				Utils::Byte::Set2Bytes(
+				  chunksPointer, chunksLength - TransportWideCcPacket::ChunkLength, lastChunkValue);
+			}
+
+			SetPacketStatusCount(packetStatusCount);
+
+			this->lastChunk = lastChunk;
+
+			return false;
 		}
 
 		/* LastChunk instance methods. */
