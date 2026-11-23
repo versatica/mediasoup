@@ -354,7 +354,9 @@ namespace RTC
 
 				uint16_t forwardedFrameNumber;
 
-				context->forwardedFrameIdManager.Input(frameNumber, forwardedFrameNumber);
+				// Nothing drops on this manager, so `Input()` always generates an output,
+				// which is the frame number the packet is rewritten with below.
+				static_cast<void>(context->forwardedFrameIdManager.Input(frameNumber, forwardedFrameNumber));
 
 				const Codecs::DependencyDescriptor::RewriteParams rewriteParams{
 					.frameNumber = forwardedFrameNumber,

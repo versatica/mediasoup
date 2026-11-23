@@ -26,6 +26,7 @@ namespace RTC
 			{ RtpPacket::DiscardReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH, "PacketPreviousToSpatialLayerSwitch" },
 			{ RtpPacket::DiscardReason::DROPPED_BY_CODEC,                        "DroppedByCodec"                     },
 			{ RtpPacket::DiscardReason::TOO_HIGH_TIMESTAMP_EXTRA_NEEDED,         "TooHighTimestampExtraNeeded"        },
+			{ RtpPacket::DiscardReason::ALREADY_DROPPED_SEQ_NUMBER,              "AlreadyDroppedSeqNumber"            },
 			{ RtpPacket::DiscardReason::SEND_RTP_STREAM_DISCARDED,               "SendRtpStreamDiscarded"             }
 		};
 		// clang-format on

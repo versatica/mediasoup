@@ -1303,7 +1303,20 @@ namespace RTC
 
 		const uint32_t timestamp = packet->GetTimestamp() - action.tsOffset;
 
-		rtpSeqManager->Input(packet->GetSequenceNumber(), seq);
+		// The sequence number was dropped before, so this packet is a duplicate or a
+		// retransmission of a dropped one.
+		if (!rtpSeqManager->Input(packet->GetSequenceNumber(), seq))
+		{
+			// `ProcessRtpPacket()` above may have rewritten the payload for this
+			// Consumer, restore it.
+			packet->RestorePayload(PrefersDependencyDescriptor());
+
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::ALREADY_DROPPED_SEQ_NUMBER);
+#endif
+
+			return;
+		}
 
 		// Save original packet fields.
 		const auto origSsrc      = packet->GetSsrc();
