@@ -3,7 +3,7 @@
 #include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
-#include "RTC/RTP/HeaderExtensionIds.hpp"
+#include "RTC/RTP/ExtensionMapping.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SimulcastProducerStreamManager.hpp"
@@ -307,14 +307,14 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		};
 
 		REQUIRE(
-		  absCaptureTimePacket->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) ==
+		  absCaptureTimePacket->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions) ==
 		  true);
 
-		RTC::RTP::HeaderExtensionIds headerExtensionIds;
+		RTC::RTP::ExtensionMapping extensionMapping;
 
-		headerExtensionIds.absCaptureTime = AbsCaptureTimeId;
+		extensionMapping.absCaptureTime = AbsCaptureTimeId;
 
-		absCaptureTimePacket->AssignExtensionIds(headerExtensionIds);
+		absCaptureTimePacket->SetExtensionMapping(extensionMapping);
 
 		const auto ntp = Utils::Time::TimeUsToNtp(captureAtUs);
 

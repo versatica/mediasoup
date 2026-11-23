@@ -119,13 +119,13 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 			 rtpCommon::DataBuffer }
 		};
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions) == true);
 
-		RTC::RTP::HeaderExtensionIds headerExtensionIds;
+		RTC::RTP::ExtensionMapping extensionMapping;
 
-		headerExtensionIds.absCaptureTime = AbsCaptureTimeId;
+		extensionMapping.absCaptureTime = AbsCaptureTimeId;
 
-		packet->AssignExtensionIds(headerExtensionIds);
+		packet->SetExtensionMapping(extensionMapping);
 
 		const auto ntp = Utils::Time::TimeUsToNtp(static_cast<int64_t>(RemoteBaseNtpSec) * 1000000);
 

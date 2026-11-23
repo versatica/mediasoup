@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTP_HEADER_EXTENSION_IDS_HPP
-#define MS_RTC_RTP_HEADER_EXTENSION_IDS_HPP
+#ifndef MS_RTC_RTP_EXTENSION_MAPPING_HPP
+#define MS_RTC_RTP_EXTENSION_MAPPING_HPP
 
 #include "common.hpp"
 
@@ -7,9 +7,10 @@ namespace RTC
 {
 	namespace RTP
 	{
-		// RTP header extension ids. Some of these are shared by all Producers using
-		// the same Transport. Others are different for each Producer.
-		struct HeaderExtensionIds
+		// Mapping of RTP extension types and their corresponding RTP extension
+		// ids. Some of these are shared by all Producers using the same Transport.
+		// Others are different for each Producer.
+		struct ExtensionMapping
 		{
 			// 0 means no id.
 			uint8_t mid{ 0 };

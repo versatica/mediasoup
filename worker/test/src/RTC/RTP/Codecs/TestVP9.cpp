@@ -98,7 +98,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, DependencyDescriptorId, reservedLen, value }
 		};
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions) == true);
 
 		// As the Producer does, tell the length the descriptor really has.
 		REQUIRE(packet->UpdateDependencyDescriptor(dependencyDescriptor, len));

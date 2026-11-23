@@ -229,7 +229,7 @@ namespace RTC
 						MS_DUMP_CLEAN(
 						  indentation + 1,
 						  "  mid: id:%" PRIu8 ", value:'%s'",
-						  this->headerExtensionIds.mid,
+						  this->extensionMapping.mid,
 						  mid.c_str());
 					}
 				}
@@ -242,7 +242,7 @@ namespace RTC
 						MS_DUMP_CLEAN(
 						  indentation + 1,
 						  "  rid: id:%" PRIu8 ", value:'%s'",
-						  this->headerExtensionIds.rid,
+						  this->extensionMapping.rid,
 						  rid.c_str());
 					}
 				}
@@ -255,7 +255,7 @@ namespace RTC
 						MS_DUMP_CLEAN(
 						  indentation + 1,
 						  "  rrid: id:%" PRIu8 ", value:'%s'",
-						  this->headerExtensionIds.rrid,
+						  this->extensionMapping.rrid,
 						  rrid.c_str());
 					}
 				}
@@ -268,7 +268,7 @@ namespace RTC
 						MS_DUMP_CLEAN(
 						  indentation + 1,
 						  "  absSendTime: id:%" PRIu8 ", value:%" PRIu32,
-						  this->headerExtensionIds.absSendTime,
+						  this->extensionMapping.absSendTime,
 						  absSendtime);
 					}
 				}
@@ -281,7 +281,7 @@ namespace RTC
 						MS_DUMP_CLEAN(
 						  indentation + 1,
 						  "  transportWideCc01: id:%" PRIu8 ", value:%" PRIu16,
-						  this->headerExtensionIds.transportWideCc01,
+						  this->extensionMapping.transportWideCc01,
 						  wideSeqNumber);
 					}
 				}
@@ -295,7 +295,7 @@ namespace RTC
 						MS_DUMP_CLEAN(
 						  indentation + 1,
 						  "  ssrcAudioLevel: id:%" PRIu8 ", volume:%" PRIu8 ", voice:%s",
-						  this->headerExtensionIds.ssrcAudioLevel,
+						  this->extensionMapping.ssrcAudioLevel,
 						  volume,
 						  voice ? "true" : "false");
 					}
@@ -305,14 +305,14 @@ namespace RTC
 					uint8_t extenLen;
 
 					const uint8_t* extenValue =
-					  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
+					  GetExtensionValue(this->extensionMapping.dependencyDescriptor, extenLen);
 
 					if (extenValue)
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
 						  "  dependencyDescriptor: id:%" PRIu8 ", length:%" PRIu8,
-						  this->headerExtensionIds.dependencyDescriptor,
+						  this->extensionMapping.dependencyDescriptor,
 						  extenLen);
 					}
 				}
@@ -327,7 +327,7 @@ namespace RTC
 						MS_DUMP_CLEAN(
 						  indentation + 1,
 						  "  videoOrientation: id:%" PRIu8 ", camera:%s, flip:%s, rotation:%" PRIu16,
-						  this->headerExtensionIds.videoOrientation,
+						  this->extensionMapping.videoOrientation,
 						  camera ? "true" : "false",
 						  flip ? "true" : "false",
 						  rotation);
@@ -343,7 +343,7 @@ namespace RTC
 						MS_DUMP_CLEAN(
 						  indentation + 1,
 						  "  absCaptureTime: id:%" PRIu8 ", timestamp:%" PRIu64 ", clock offset:%" PRId64,
-						  this->headerExtensionIds.absCaptureTime,
+						  this->extensionMapping.absCaptureTime,
 						  absCaptureTimestamp,
 						  estimatedCaptureClockOffset);
 					}
@@ -358,7 +358,7 @@ namespace RTC
 						MS_DUMP_CLEAN(
 						  indentation + 1,
 						  "  playoutDelay: id:%" PRIu8 ", min delay:%" PRIu16 ", max delay:%" PRIu16,
-						  this->headerExtensionIds.playoutDelay,
+						  this->extensionMapping.playoutDelay,
 						  minDelay,
 						  maxDelay);
 					}
@@ -372,7 +372,7 @@ namespace RTC
 						MS_DUMP_CLEAN(
 						  indentation + 1,
 						  "  mediasoupPacketId: id:%" PRIu8 ", value:%" PRIu32,
-						  this->headerExtensionIds.mediasoupPacketId,
+						  this->extensionMapping.mediasoupPacketId,
 						  mediasoupPacketId);
 					}
 				}
@@ -423,7 +423,7 @@ namespace RTC
 			clonedPacket->twoByteExtensions = this->twoByteExtensions;
 
 			// Clone extension ids.
-			clonedPacket->headerExtensionIds = this->headerExtensionIds;
+			clonedPacket->extensionMapping = this->extensionMapping;
 
 			// Clone capture time.
 			clonedPacket->captureAtUs = this->captureAtUs;
@@ -559,16 +559,16 @@ namespace RTC
 			std::memmove(payload - headerExtensionLength, payload, payloadLength + paddingLength);
 		}
 
-		bool Packet::SetExtensions(ExtensionsType type, const std::vector<Extension>& extensions)
+		bool Packet::SetExtensions(ExtensionsForm form, const std::vector<Extension>& extensions)
 		{
 			MS_TRACE();
 
 			const auto hadHeaderExtension                 = HasHeaderExtension();
 			const auto previousHeaderExtensionValueLength = GetHeaderExtensionValueLength();
 
-			// If no explicit ExtensionType is given then select the best one based
+			// If no explicit ExtensionsForm is given then select the best one based
 			// on given extensions.
-			if (type == ExtensionsType::Auto)
+			if (form == ExtensionsForm::Auto)
 			{
 				uint8_t highestId{ 0 };
 				uint8_t highestLen{ 0 };
@@ -586,13 +586,13 @@ namespace RTC
 					}
 				}
 
-				type = highestId <= 14 && !hasZeroLength && highestLen > 0 && highestLen <= 16
-				         ? ExtensionsType::OneByte
-				         : ExtensionsType::TwoByte;
+				form = highestId <= 14 && !hasZeroLength && highestLen > 0 && highestLen <= 16
+				         ? ExtensionsForm::OneByte
+				         : ExtensionsForm::TwoByte;
 
 				MS_DEBUG_DEV(
 				  "using %" PRIu8 " byte(s) extensions [highestId:%" PRIu8 ", highestLen:%" PRIu8 "]",
-				  static_cast<uint8_t>(type),
+				  static_cast<uint8_t>(form),
 				  highestId,
 				  highestLen);
 			}
@@ -600,7 +600,7 @@ namespace RTC
 			// Calculate total length required for all extensions (with padding if needed).
 			size_t extensionsLength{ 0 };
 
-			if (type == ExtensionsType::OneByte)
+			if (form == ExtensionsForm::OneByte)
 			{
 				for (const auto& extension : extensions)
 				{
@@ -632,7 +632,7 @@ namespace RTC
 					extensionsLength += (1 + extension.len);
 				}
 			}
-			else if (type == ExtensionsType::TwoByte)
+			else if (form == ExtensionsForm::TwoByte)
 			{
 				for (const auto& extension : extensions)
 				{
@@ -678,28 +678,28 @@ namespace RTC
 			this->twoByteExtensions.clear();
 
 			// Reset extension ids.
-			this->headerExtensionIds = {};
+			this->extensionMapping = {};
 
 			// If One-Byte is requested and the packet already has One-Byte extensions,
 			// keep the header extension id.
-			if (type == ExtensionsType::OneByte && HasOneByteExtensions())
+			if (form == ExtensionsForm::OneByte && HasOneByteExtensions())
 			{
 				// Nothing to do.
 			}
 			// If Two-Byte is requested and the packet already has Two-Byte extensions,
 			// keep the header extension id.
-			else if (type == ExtensionsType::TwoByte && HasTwoByteExtensions())
+			else if (form == ExtensionsForm::TwoByte && HasTwoByteExtensions())
 			{
 				// Nothing to do.
 			}
-			// Otherwise, if there is header extension of non matching type, modify its id.
+			// Otherwise, if there is header extension of non matching form, modify its id.
 			else if (hadHeaderExtension)
 			{
-				if (type == ExtensionsType::OneByte)
+				if (form == ExtensionsForm::OneByte)
 				{
 					GetHeaderExtensionPointer()->id = htons(0xBEDE);
 				}
-				else if (type == ExtensionsType::TwoByte)
+				else if (form == ExtensionsForm::TwoByte)
 				{
 					GetHeaderExtensionPointer()->id = htons(0b0001000000000000);
 				}
@@ -736,11 +736,11 @@ namespace RTC
 				std::memmove(payload + shift, payload, payloadLength + paddingLength);
 
 				// Set the header extension id.
-				if (type == ExtensionsType::OneByte)
+				if (form == ExtensionsForm::OneByte)
 				{
 					headerExtension->id = htons(0xBEDE);
 				}
-				else if (type == ExtensionsType::TwoByte)
+				else if (form == ExtensionsForm::TwoByte)
 				{
 					headerExtension->id = htons(0b0001000000000000);
 				}
@@ -753,7 +753,7 @@ namespace RTC
 
 			uint8_t* ptr = extensionsStart;
 
-			if (type == ExtensionsType::OneByte)
+			if (form == ExtensionsForm::OneByte)
 			{
 				for (const auto& extension : extensions)
 				{
@@ -770,7 +770,7 @@ namespace RTC
 					ptr += extension.len;
 				}
 			}
-			else if (type == ExtensionsType::TwoByte)
+			else if (form == ExtensionsForm::TwoByte)
 			{
 				for (const auto& extension : extensions)
 				{
@@ -799,67 +799,67 @@ namespace RTC
 				{
 					case RTC::RtpHeaderExtensionUri::Type::MID:
 					{
-						this->headerExtensionIds.mid = extension.id;
+						this->extensionMapping.mid = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID:
 					{
-						this->headerExtensionIds.rid = extension.id;
+						this->extensionMapping.rid = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID:
 					{
-						this->headerExtensionIds.rrid = extension.id;
+						this->extensionMapping.rrid = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME:
 					{
-						this->headerExtensionIds.absSendTime = extension.id;
+						this->extensionMapping.absSendTime = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01:
 					{
-						this->headerExtensionIds.transportWideCc01 = extension.id;
+						this->extensionMapping.transportWideCc01 = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL:
 					{
-						this->headerExtensionIds.ssrcAudioLevel = extension.id;
+						this->extensionMapping.ssrcAudioLevel = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR:
 					{
-						this->headerExtensionIds.dependencyDescriptor = extension.id;
+						this->extensionMapping.dependencyDescriptor = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION:
 					{
-						this->headerExtensionIds.videoOrientation = extension.id;
+						this->extensionMapping.videoOrientation = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME:
 					{
-						this->headerExtensionIds.absCaptureTime = extension.id;
+						this->extensionMapping.absCaptureTime = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY:
 					{
-						this->headerExtensionIds.playoutDelay = extension.id;
+						this->extensionMapping.playoutDelay = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID:
 					{
-						this->headerExtensionIds.mediasoupPacketId = extension.id;
+						this->extensionMapping.mediasoupPacketId = extension.id;
 						break;
 					}
 				}
@@ -868,26 +868,26 @@ namespace RTC
 			return true;
 		}
 
-		void Packet::AssignExtensionIds(const RTP::HeaderExtensionIds& headerExtensionIds)
+		void Packet::SetExtensionMapping(const RTP::ExtensionMapping& extensionMapping)
 		{
 			MS_TRACE();
 
 			// Reset extension ids.
-			this->headerExtensionIds = headerExtensionIds;
+			this->extensionMapping = extensionMapping;
 		}
 
 		bool Packet::ReadMid(std::string& mid) const
 		{
 			MS_TRACE();
 
-			if (this->headerExtensionIds.mid == 0)
+			if (this->extensionMapping.mid == 0)
 			{
 				return false;
 			}
 
 			uint8_t extenLen;
 
-			const uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.mid, extenLen);
+			const uint8_t* extenValue = GetExtensionValue(this->extensionMapping.mid, extenLen);
 
 			if (!extenValue || extenLen == 0)
 			{
@@ -905,7 +905,7 @@ namespace RTC
 
 			uint8_t extenLen;
 
-			uint8_t* const extenValue = GetExtensionValue(this->headerExtensionIds.mid, extenLen);
+			uint8_t* const extenValue = GetExtensionValue(this->extensionMapping.mid, extenLen);
 
 			if (!extenValue)
 			{
@@ -937,7 +937,7 @@ namespace RTC
 
 			std::memcpy(extenValue, mid.c_str(), midLen);
 
-			SetExtensionLength(this->headerExtensionIds.mid, midLen);
+			SetExtensionLength(this->extensionMapping.mid, midLen);
 
 			return true;
 		}
@@ -946,7 +946,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->headerExtensionIds.rid == 0 && this->headerExtensionIds.rrid == 0)
+			if (this->extensionMapping.rid == 0 && this->extensionMapping.rrid == 0)
 			{
 				return false;
 			}
@@ -954,7 +954,7 @@ namespace RTC
 			// First try with the RID id then with the Repaired RID id.
 			uint8_t extenLen;
 
-			const uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.rid, extenLen);
+			const uint8_t* extenValue = GetExtensionValue(this->extensionMapping.rid, extenLen);
 
 			if (extenValue && extenLen > 0)
 			{
@@ -963,7 +963,7 @@ namespace RTC
 				return true;
 			}
 
-			extenValue = GetExtensionValue(this->headerExtensionIds.rrid, extenLen);
+			extenValue = GetExtensionValue(this->extensionMapping.rrid, extenLen);
 
 			if (extenValue && extenLen > 0)
 			{
@@ -979,14 +979,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->headerExtensionIds.rrid == 0)
+			if (this->extensionMapping.rrid == 0)
 			{
 				return false;
 			}
 
 			uint8_t extenLen;
 
-			const uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.rrid, extenLen);
+			const uint8_t* extenValue = GetExtensionValue(this->extensionMapping.rrid, extenLen);
 
 			if (!extenValue || extenLen == 0)
 			{
@@ -1002,14 +1002,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->headerExtensionIds.absSendTime == 0)
+			if (this->extensionMapping.absSendTime == 0)
 			{
 				return false;
 			}
 
 			uint8_t extenLen;
 
-			const uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
+			const uint8_t* extenValue = GetExtensionValue(this->extensionMapping.absSendTime, extenLen);
 
 			if (!extenValue || extenLen != 3)
 			{
@@ -1027,7 +1027,7 @@ namespace RTC
 
 			uint8_t extenLen;
 
-			uint8_t* const extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
+			uint8_t* const extenValue = GetExtensionValue(this->extensionMapping.absSendTime, extenLen);
 
 			if (!extenValue)
 			{
@@ -1050,7 +1050,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->headerExtensionIds.transportWideCc01 == 0)
+			if (this->extensionMapping.transportWideCc01 == 0)
 			{
 				return false;
 			}
@@ -1058,7 +1058,7 @@ namespace RTC
 			uint8_t extenLen;
 
 			const uint8_t* extenValue =
-			  GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
+			  GetExtensionValue(this->extensionMapping.transportWideCc01, extenLen);
 
 			if (!extenValue || extenLen != 2)
 			{
@@ -1077,7 +1077,7 @@ namespace RTC
 			uint8_t extenLen;
 
 			uint8_t* const extenValue =
-			  GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
+			  GetExtensionValue(this->extensionMapping.transportWideCc01, extenLen);
 
 			if (!extenValue)
 			{
@@ -1100,15 +1100,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->headerExtensionIds.ssrcAudioLevel == 0)
+			if (this->extensionMapping.ssrcAudioLevel == 0)
 			{
 				return false;
 			}
 
 			uint8_t extenLen;
 
-			const uint8_t* extenValue =
-			  GetExtensionValue(this->headerExtensionIds.ssrcAudioLevel, extenLen);
+			const uint8_t* extenValue = GetExtensionValue(this->extensionMapping.ssrcAudioLevel, extenLen);
 
 			if (!extenValue || extenLen != 1)
 			{
@@ -1128,7 +1127,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->headerExtensionIds.dependencyDescriptor == 0)
+			if (this->extensionMapping.dependencyDescriptor == 0)
 			{
 				return false;
 			}
@@ -1136,7 +1135,7 @@ namespace RTC
 			uint8_t extenLen;
 
 			const uint8_t* extenValue =
-			  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
+			  GetExtensionValue(this->extensionMapping.dependencyDescriptor, extenLen);
 
 			auto* const value =
 			  Codecs::DependencyDescriptor::Parse(extenValue, extenLen, dependencyDescriptorContext);
@@ -1158,7 +1157,7 @@ namespace RTC
 			uint8_t extenLen;
 
 			uint8_t* const extenValue =
-			  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
+			  GetExtensionValue(this->extensionMapping.dependencyDescriptor, extenLen);
 
 			if (!extenValue)
 			{
@@ -1210,7 +1209,7 @@ namespace RTC
 
 			std::memcpy(extenValue, data, len);
 
-			SetExtensionLength(this->headerExtensionIds.dependencyDescriptor, static_cast<uint8_t>(len));
+			SetExtensionLength(this->extensionMapping.dependencyDescriptor, static_cast<uint8_t>(len));
 
 			return true;
 		}
@@ -1219,7 +1218,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->headerExtensionIds.videoOrientation == 0)
+			if (this->extensionMapping.videoOrientation == 0)
 			{
 				return false;
 			}
@@ -1227,7 +1226,7 @@ namespace RTC
 			uint8_t extenLen;
 
 			const uint8_t* extenValue =
-			  GetExtensionValue(this->headerExtensionIds.videoOrientation, extenLen);
+			  GetExtensionValue(this->extensionMapping.videoOrientation, extenLen);
 
 			if (!extenValue || extenLen != 1)
 			{
@@ -1277,15 +1276,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->headerExtensionIds.absCaptureTime == 0)
+			if (this->extensionMapping.absCaptureTime == 0)
 			{
 				return false;
 			}
 
 			uint8_t extenLen;
 
-			const uint8_t* extenValue =
-			  GetExtensionValue(this->headerExtensionIds.absCaptureTime, extenLen);
+			const uint8_t* extenValue = GetExtensionValue(this->extensionMapping.absCaptureTime, extenLen);
 
 			// Extension value can be 8 or 16 bytes depending on whether it contains
 			// estimated capture clock offset or not.
@@ -1316,8 +1314,7 @@ namespace RTC
 
 			uint8_t extenLen;
 
-			uint8_t* const extenValue =
-			  GetExtensionValue(this->headerExtensionIds.absCaptureTime, extenLen);
+			uint8_t* const extenValue = GetExtensionValue(this->extensionMapping.absCaptureTime, extenLen);
 
 			if (!extenValue)
 			{
@@ -1342,14 +1339,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->headerExtensionIds.playoutDelay == 0)
+			if (this->extensionMapping.playoutDelay == 0)
 			{
 				return false;
 			}
 
 			uint8_t extenLen;
 
-			const uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.playoutDelay, extenLen);
+			const uint8_t* extenValue = GetExtensionValue(this->extensionMapping.playoutDelay, extenLen);
 
 			if (extenLen != 3)
 			{
@@ -1367,7 +1364,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->headerExtensionIds.mediasoupPacketId == 0)
+			if (this->extensionMapping.mediasoupPacketId == 0)
 			{
 				return false;
 			}
@@ -1375,7 +1372,7 @@ namespace RTC
 			uint8_t extenLen;
 
 			const uint8_t* extenValue =
-			  GetExtensionValue(this->headerExtensionIds.mediasoupPacketId, extenLen);
+			  GetExtensionValue(this->extensionMapping.mediasoupPacketId, extenLen);
 
 			if (extenLen != 4)
 			{

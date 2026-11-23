@@ -2,7 +2,7 @@
 #include "RTC/BWE/SenderTransportCongestionController.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/RTCP/packet/TransportWideCcPacket.hpp"
-#include "RTC/RTP/HeaderExtensionIds.hpp"
+#include "RTC/RTP/ExtensionMapping.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
@@ -111,14 +111,14 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME,        AbsSendTimeId, /*len*/ 3, rtpCommon::DataBuffer }
 		};
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions) == true);
 
-		RTC::RTP::HeaderExtensionIds headerExtensionIds;
+		RTC::RTP::ExtensionMapping extensionMapping;
 
-		headerExtensionIds.transportWideCc01 = TransportWideCc01Id;
-		headerExtensionIds.absSendTime       = AbsSendTimeId;
+		extensionMapping.transportWideCc01 = TransportWideCc01Id;
+		extensionMapping.absSendTime       = AbsSendTimeId;
 
-		packet->AssignExtensionIds(headerExtensionIds);
+		packet->SetExtensionMapping(extensionMapping);
 		packet->SetPayloadLength(PayloadSize);
 
 		return packet;
@@ -456,12 +456,12 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 
 		audioPacket->SetSsrc(Ssrc);
 
-		RTC::RTP::HeaderExtensionIds headerExtensionIds;
+		RTC::RTP::ExtensionMapping extensionMapping;
 
-		headerExtensionIds.transportWideCc01 = TransportWideCc01Id;
-		headerExtensionIds.absSendTime       = AbsSendTimeId;
+		extensionMapping.transportWideCc01 = TransportWideCc01Id;
+		extensionMapping.absSendTime       = AbsSendTimeId;
 
-		audioPacket->AssignExtensionIds(headerExtensionIds);
+		audioPacket->SetExtensionMapping(extensionMapping);
 		audioPacket->SetPayloadLength(PayloadSize);
 
 		const auto audioSequenceNumber = senderTransportCongestionController.OnRtpPacketToBeSent(

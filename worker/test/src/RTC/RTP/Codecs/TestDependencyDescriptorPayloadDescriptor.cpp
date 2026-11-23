@@ -224,7 +224,7 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, DependencyDescriptorId, reservedLen, value }
 		};
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions) == true);
 		REQUIRE(packet->UpdateDependencyDescriptor(data, len));
 
 		return packet;

@@ -2,7 +2,7 @@
 #include "RTC/BWE/ReceiverTransportCongestionController.hpp"
 #include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/RembPacket.hpp"
-#include "RTC/RTP/HeaderExtensionIds.hpp"
+#include "RTC/RTP/ExtensionMapping.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
@@ -80,13 +80,13 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 			 rtpCommon::DataBuffer }
 		};
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions) == true);
 
-		RTC::RTP::HeaderExtensionIds headerExtensionIds;
+		RTC::RTP::ExtensionMapping extensionMapping;
 
-		headerExtensionIds.transportWideCc01 = TransportWideCc01Id;
+		extensionMapping.transportWideCc01 = TransportWideCc01Id;
 
-		packet->AssignExtensionIds(headerExtensionIds);
+		packet->SetExtensionMapping(extensionMapping);
 		packet->SetPayloadLength(PayloadSize);
 
 		REQUIRE(packet->UpdateTransportWideCc01(wideSeqNumber));
@@ -110,13 +110,13 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, AbsSendTimeId, /*len*/ 3, rtpCommon::DataBuffer }
 		};
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions) == true);
 
-		RTC::RTP::HeaderExtensionIds headerExtensionIds;
+		RTC::RTP::ExtensionMapping extensionMapping;
 
-		headerExtensionIds.absSendTime = AbsSendTimeId;
+		extensionMapping.absSendTime = AbsSendTimeId;
 
-		packet->AssignExtensionIds(headerExtensionIds);
+		packet->SetExtensionMapping(extensionMapping);
 		packet->SetPayloadLength(PayloadSize);
 
 		REQUIRE(packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(sendTimeUs)));

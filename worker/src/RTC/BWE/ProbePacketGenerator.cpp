@@ -88,7 +88,7 @@ namespace RTC
 			}
 
 			const bool extensionsSet =
-			  this->packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+			  this->packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions);
 
 			MS_ASSERT(extensionsSet, "no room in the packet buffer for the header extensions");
 

@@ -1,5 +1,5 @@
 #include "fuzzer/include/RTC/RTP/FuzzerPacket.hpp"
-#include "RTC/RTP/HeaderExtensionIds.hpp"
+#include "RTC/RTP/ExtensionMapping.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
@@ -71,17 +71,17 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasOneByteExtensions();
 	packet->HasTwoByteExtensions();
 
-	const RTC::RTP::HeaderExtensionIds headerExtensionIds{ .mid               = 5,
-	                                                       .rid               = 6,
-	                                                       .rrid              = 7,
-	                                                       .absSendTime       = 3,
-	                                                       .transportWideCc01 = 4,
-	                                                       .ssrcAudioLevel    = 1,
-	                                                       .videoOrientation  = 2,
-	                                                       .absCaptureTime    = 9,
-	                                                       .playoutDelay      = 8 };
+	const RTC::RTP::ExtensionMapping extensionMapping{ .mid               = 5,
+	                                                   .rid               = 6,
+	                                                   .rrid              = 7,
+	                                                   .absSendTime       = 3,
+	                                                   .transportWideCc01 = 4,
+	                                                   .ssrcAudioLevel    = 1,
+	                                                   .videoOrientation  = 2,
+	                                                   .absCaptureTime    = 9,
+	                                                   .playoutDelay      = 8 };
 
-	packet->AssignExtensionIds(headerExtensionIds);
+	packet->SetExtensionMapping(extensionMapping);
 
 	packet->HasExtension(5);
 	packet->GetExtensionValue(5, extenLen);
@@ -152,15 +152,15 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	  value2                                           // value
 	);
 
-	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions));
-	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions));
-	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions));
+	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions));
+	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::TwoByte, extensions));
+	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions));
 
 	extensions.clear();
 
-	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions));
-	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions));
-	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions));
+	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::TwoByte, extensions));
+	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions));
+	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions));
 
 	uint8_t value3[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
 	                     0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
@@ -195,9 +195,9 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 
 	// NOTE: Cannot use One-Byte extensions because we are using big ids and
 	// lengths.
-	// packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
-	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions));
-	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions));
+	// packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions);
+	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::TwoByte, extensions));
+	static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions));
 
 	packet->HasExtension(13);
 	packet->GetExtensionValue(13, extenLen);
@@ -308,7 +308,7 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 		};
 		// clang-format on
 
-		static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions));
+		static_cast<void>(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions));
 
 		// Call UpdateDependencyDescriptor() with the full fuzzer input as
 		// the replacement bytes. This covers:

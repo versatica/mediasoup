@@ -17,7 +17,7 @@
 #include "RTC/RTCP/packet/AnyReportPacket.hpp"
 #include "RTC/RTCP/packet/CompoundPacket.hpp"
 #include "RTC/RTCP/packet/Packet.hpp"
-#include "RTC/RTP/HeaderExtensionIds.hpp"
+#include "RTC/RTP/ExtensionMapping.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RateCalculator.hpp"
@@ -567,7 +567,7 @@ namespace RTC
 		// Others.
 		const bool direct; // Whether this Transport allows direct communication.
 		bool isDestroying{ false };
-		RTC::RTP::HeaderExtensionIds recvRtpHeaderExtensionIds;
+		RTC::RTP::ExtensionMapping recvRtpExtensionMapping;
 		RTC::RtpListener rtpListener;
 		RTC::SctpListener sctpListener;
 		RTC::RateCalculator recvTransmission;

@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
-#include "RTC/RTP/HeaderExtensionIds.hpp"
+#include "RTC/RTP/ExtensionMapping.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/Serializable.hpp"
 #include "Utils.hpp"
@@ -110,11 +110,11 @@ namespace RTC
 
 		public:
 			/**
-			 * One-Byte and Two-Byte Extension types.
+			 * One-Byte and Two-Byte header forms of extensions.
 			 *
 			 * @see RFC 8285.
 			 */
-			enum class ExtensionsType : uint8_t
+			enum class ExtensionsForm : uint8_t
 			{
 				/**
 				 * Auto means that One-Byte or Two-Byte is chosen based on given
@@ -509,14 +509,14 @@ namespace RTC
 			 *
 			 * @throw MediaSoupTypeError - If given extensions are invalid/wrong.
 			 */
-			[[nodiscard]] bool SetExtensions(ExtensionsType type, const std::vector<Extension>& extensions);
+			[[nodiscard]] bool SetExtensions(ExtensionsForm form, const std::vector<Extension>& extensions);
 
 			/**
-			 * Assign extension ids.
+			 * Set the extension mapping.
 			 *
 			 * @see RFC 8285.
 			 */
-			void AssignExtensionIds(const RTP::HeaderExtensionIds& headerExtensionIds);
+			void SetExtensionMapping(const RTP::ExtensionMapping& extensionMapping);
 
 			bool ReadMid(std::string& mid) const;
 
@@ -1062,7 +1062,7 @@ namespace RTC
 			// extension value to the beginning of the extension.
 			std::map<uint8_t, ssize_t> twoByteExtensions;
 			// Extension ids.
-			RTP::HeaderExtensionIds headerExtensionIds;
+			RTP::ExtensionMapping extensionMapping;
 			// Codec related.
 			std::shared_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
 			/**

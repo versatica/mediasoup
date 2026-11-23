@@ -136,61 +136,59 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("RTP extension id cannot be 0");
 			}
 
-			if (this->rtpHeaderExtensionIds.mid == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
+			if (this->rtpExtensionMapping.mid == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
 			{
-				this->rtpHeaderExtensionIds.mid = exten.id;
+				this->rtpExtensionMapping.mid = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.rid == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
+			if (this->rtpExtensionMapping.rid == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
 			{
-				this->rtpHeaderExtensionIds.rid = exten.id;
+				this->rtpExtensionMapping.rid = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.rrid == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID)
+			if (this->rtpExtensionMapping.rrid == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID)
 			{
-				this->rtpHeaderExtensionIds.rrid = exten.id;
+				this->rtpExtensionMapping.rrid = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.absSendTime == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
+			if (this->rtpExtensionMapping.absSendTime == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
 			{
-				this->rtpHeaderExtensionIds.absSendTime = exten.id;
+				this->rtpExtensionMapping.absSendTime = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.transportWideCc01 == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01)
+			if (this->rtpExtensionMapping.transportWideCc01 == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01)
 			{
-				this->rtpHeaderExtensionIds.transportWideCc01 = exten.id;
+				this->rtpExtensionMapping.transportWideCc01 = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
+			if (this->rtpExtensionMapping.ssrcAudioLevel == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
-				this->rtpHeaderExtensionIds.ssrcAudioLevel = exten.id;
+				this->rtpExtensionMapping.ssrcAudioLevel = exten.id;
 			}
 
-			if (
-			  this->rtpHeaderExtensionIds.dependencyDescriptor == 0 &&
-			  exten.type == RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR)
+			if (this->rtpExtensionMapping.dependencyDescriptor == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR)
 			{
-				this->rtpHeaderExtensionIds.dependencyDescriptor = exten.id;
+				this->rtpExtensionMapping.dependencyDescriptor = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.videoOrientation == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION)
+			if (this->rtpExtensionMapping.videoOrientation == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION)
 			{
-				this->rtpHeaderExtensionIds.videoOrientation = exten.id;
+				this->rtpExtensionMapping.videoOrientation = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.absCaptureTime == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME)
+			if (this->rtpExtensionMapping.absCaptureTime == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME)
 			{
-				this->rtpHeaderExtensionIds.absCaptureTime = exten.id;
+				this->rtpExtensionMapping.absCaptureTime = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.playoutDelay == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY)
+			if (this->rtpExtensionMapping.playoutDelay == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY)
 			{
-				this->rtpHeaderExtensionIds.playoutDelay = exten.id;
+				this->rtpExtensionMapping.playoutDelay = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.mediasoupPacketId == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID)
+			if (this->rtpExtensionMapping.mediasoupPacketId == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID)
 			{
-				this->rtpHeaderExtensionIds.mediasoupPacketId = exten.id;
+				this->rtpExtensionMapping.mediasoupPacketId = exten.id;
 			}
 		}
 
@@ -545,7 +543,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return this->rtpHeaderExtensionIds.transportWideCc01 != 0 &&
+		return this->rtpExtensionMapping.transportWideCc01 != 0 &&
 		       std::ranges::any_of(
 		         this->rtpParameters.codecs,
 		         [](const RTC::RtpCodecParameters& codec)
@@ -558,7 +556,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return this->rtpHeaderExtensionIds.absSendTime != 0 &&
+		return this->rtpExtensionMapping.absSendTime != 0 &&
 		       std::ranges::any_of(
 		         this->rtpParameters.codecs,
 		         [](const RTC::RtpCodecParameters& codec)
@@ -1292,7 +1290,7 @@ namespace RTC
 			//
 			// @see https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-abs-capture-time-00
 			{
-				extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.absCaptureTime, extenLen);
+				extenValue = packet->GetExtensionValue(this->rtpExtensionMapping.absCaptureTime, extenLen);
 
 				// NOTE: The extension value is 8 or 16 bytes long depending on whether it holds
 				// the capture clock offset or not.
@@ -1346,7 +1344,7 @@ namespace RTC
 
 			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
 			{
-				extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.playoutDelay, extenLen);
+				extenValue = packet->GetExtensionValue(this->rtpExtensionMapping.playoutDelay, extenLen);
 
 				if (extenValue && extenLen > 0)
 				{
@@ -1369,8 +1367,7 @@ namespace RTC
 			// Otherwise, if the flag `enableMediasoupPacketIdHeaderExtension` is set,
 			// add it.
 			{
-				extenValue =
-				  packet->GetExtensionValue(this->rtpHeaderExtensionIds.mediasoupPacketId, extenLen);
+				extenValue = packet->GetExtensionValue(this->rtpExtensionMapping.mediasoupPacketId, extenLen);
 
 				if (extenValue && extenLen > 0)
 				{
@@ -1404,8 +1401,7 @@ namespace RTC
 			{
 				// Proxy urn:ietf:params:rtp-hdrext:ssrc-audio-level.
 				{
-					extenValue =
-					  packet->GetExtensionValue(this->rtpHeaderExtensionIds.ssrcAudioLevel, extenLen);
+					extenValue = packet->GetExtensionValue(this->rtpExtensionMapping.ssrcAudioLevel, extenLen);
 
 					if (extenValue && extenLen > 0)
 					{
@@ -1446,7 +1442,7 @@ namespace RTC
 				// Proxy https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension.
 				{
 					extenValue =
-					  packet->GetExtensionValue(this->rtpHeaderExtensionIds.dependencyDescriptor, extenLen);
+					  packet->GetExtensionValue(this->rtpExtensionMapping.dependencyDescriptor, extenLen);
 
 					if (extenValue && extenLen > 0)
 					{
@@ -1486,7 +1482,7 @@ namespace RTC
 				// Proxy urn:3gpp:video-orientation.
 				{
 					extenValue =
-					  packet->GetExtensionValue(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
+					  packet->GetExtensionValue(this->rtpExtensionMapping.videoOrientation, extenLen);
 
 					if (extenValue && extenLen > 0)
 					{
@@ -1504,7 +1500,7 @@ namespace RTC
 				}
 			}
 
-			if (!packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions))
+			if (!packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions))
 			{
 				MS_WARN_TAG(
 				  rtp,

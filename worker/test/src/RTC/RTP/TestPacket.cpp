@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include "RTC/RTP/HeaderExtensionIds.hpp"
+#include "RTC/RTP/ExtensionMapping.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
@@ -1161,7 +1161,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*value*/ rtpCommon::DataBuffer + 3);
 
 		// Add One-Byte extensions.
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions) == true);
 
 		packet->SetPayload(rtpCommon::DataBuffer, 10);
 		packet->PadTo4Bytes(); // payload + padding = 12.
@@ -1473,7 +1473,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 
 		// Add Two-Byte extensions.
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::TwoByte, extensions) == true);
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -1527,7 +1527,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 	}
 
-	SECTION("Packet::SetExtensions() with ExtensionsType::Auto selects best type")
+	SECTION("Packet::SetExtensions() with ExtensionsForm::Auto selects best type")
 	{
 		const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
 			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
@@ -1541,7 +1541,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		    { RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 14, 16, rtpCommon::DataBuffer }
     });
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions) == true);
 		REQUIRE(packet->HasOneByteExtensions());
 
 		// Requires Two-Byte type extensions due to id > 14.
@@ -1550,7 +1550,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		    { RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 15, 2, rtpCommon::DataBuffer }
     });
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions) == true);
 		REQUIRE(packet->HasTwoByteExtensions());
 
 		// Requires Two-Byte type extensions due to length 0.
@@ -1559,7 +1559,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		    { RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID, 1, 0, rtpCommon::DataBuffer }
     });
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions) == true);
 		REQUIRE(packet->HasTwoByteExtensions());
 
 		// Requires Two-Byte type extensions due to length > 16.
@@ -1568,7 +1568,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		    { RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME, 1, 17, rtpCommon::DataBuffer }
     });
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions) == true);
 		REQUIRE(packet->HasTwoByteExtensions());
 	}
 
@@ -1628,7 +1628,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		);
 		// clang-format on
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions) == true);
 
 		REQUIRE(packet->HasOneByteExtensions());
 
@@ -1679,11 +1679,11 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet2->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
-		const RTC::RTP::HeaderExtensionIds headerExtensionIds{
+		const RTC::RTP::ExtensionMapping extensionMapping{
 			.mid = 1, .rid = 2, .absSendTime = 3, .transportWideCc01 = 4
 		};
 
-		packet2->AssignExtensionIds(headerExtensionIds);
+		packet2->SetExtensionMapping(extensionMapping);
 
 		REQUIRE(packet2->HasOneByteExtensions());
 		REQUIRE(packet2->ReadMid(readMid));
@@ -1698,7 +1698,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 	SECTION("Packet::ReadRid() and Packet::ReadRrid() read the RID and RRID extensions")
 	{
-		const RTC::RTP::HeaderExtensionIds headerExtensionIds{ .rid = 1, .rrid = 2 };
+		const RTC::RTP::ExtensionMapping extensionMapping{ .rid = 1, .rrid = 2 };
 
 		std::string rid{ "r1" };
 		std::string rrid{ "r2" };
@@ -1714,21 +1714,21 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		{
 			{
 				RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID,
-				headerExtensionIds.rid,
+				extensionMapping.rid,
 				static_cast<uint8_t>(rid.size()),
 				reinterpret_cast<uint8_t*>(rid.data())
 			}
 		};
 		// clang-format on
 
-		REQUIRE(ridPacket->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, ridExtensions));
+		REQUIRE(ridPacket->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, ridExtensions));
 
 		const std::unique_ptr<RTC::RTP::Packet> parsedRidPacket{ RTC::RTP::Packet::Parse(
 			ridPacket->GetBuffer(), ridPacket->GetLength()) };
 
 		REQUIRE(parsedRidPacket);
 
-		parsedRidPacket->AssignExtensionIds(headerExtensionIds);
+		parsedRidPacket->SetExtensionMapping(extensionMapping);
 
 		REQUIRE(parsedRidPacket->ReadRid(readRid));
 		REQUIRE(readRid == rid);
@@ -1743,21 +1743,21 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		{
 			{
 				RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID,
-				headerExtensionIds.rrid,
+				extensionMapping.rrid,
 				static_cast<uint8_t>(rrid.size()),
 				reinterpret_cast<uint8_t*>(rrid.data())
 			}
 		};
 		// clang-format on
 
-		REQUIRE(rridPacket->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, rridExtensions));
+		REQUIRE(rridPacket->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, rridExtensions));
 
 		const std::unique_ptr<RTC::RTP::Packet> parsedRridPacket{ RTC::RTP::Packet::Parse(
 			rridPacket->GetBuffer(), rridPacket->GetLength()) };
 
 		REQUIRE(parsedRridPacket);
 
-		parsedRridPacket->AssignExtensionIds(headerExtensionIds);
+		parsedRridPacket->SetExtensionMapping(extensionMapping);
 
 		readRid.clear();
 		readRrid.clear();
@@ -1789,10 +1789,10 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
     });
 
 		REQUIRE_THROWS_AS(
-		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions),
+		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions),
 		  MediaSoupTypeError);
 		REQUIRE_THROWS_AS(
-		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions),
+		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::TwoByte, extensions),
 		  MediaSoupTypeError);
 
 		// Invalid extension id > 14 in One-Byte.
@@ -1804,9 +1804,9 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
     });
 
 		REQUIRE_THROWS_AS(
-		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions),
+		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions),
 		  MediaSoupTypeError);
-		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions));
+		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::TwoByte, extensions));
 
 		// Invalid extension length 0 in One-Byte.
 		extensions.assign(
@@ -1818,9 +1818,9 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
     });
 
 		REQUIRE_THROWS_AS(
-		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions),
+		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions),
 		  MediaSoupTypeError);
-		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions));
+		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::TwoByte, extensions));
 
 		// Invalid extension length > 16 in One-Byte.
 		extensions.assign(
@@ -1834,9 +1834,9 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
     });
 
 		REQUIRE_THROWS_AS(
-		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions),
+		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions),
 		  MediaSoupTypeError);
-		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions));
+		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::TwoByte, extensions));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -1952,14 +1952,14 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 2, 4, rtpCommon::DataBuffer + 4);
 
 		// Must shrink the packet.
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions) == true);
 
 		// New length: 12 (fixed header) + 4 (ext header) + 12 (two 5-byte One-Byte
 		// elements padded to 4) + 8 (payload) = 36.
 		REQUIRE(packet->GetLength() == 36);
 	}
 
-	SECTION("Packet::SetExtensions() with ExtensionsType::Auto accepts a zero length extension")
+	SECTION("Packet::SetExtensions() with ExtensionsForm::Auto accepts a zero length extension")
 	{
 		// A received packet with a Two-Byte header extension holding a single
 		// extension (id 2) whose value has length 0, which RFC 8285 allows.
@@ -2004,7 +2004,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		extensions.emplace_back(
 		  RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, 2, extenLen, audioLevel);
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions) == true);
 
 		REQUIRE(packet->HasTwoByteExtensions() == true);
 		REQUIRE(packet->HasExtension(1) == true);
@@ -2027,7 +2027,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->SetPayload(rtpCommon::DataBuffer, 10);
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == false);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions) == false);
 
 		REQUIRE(packet->GetLength() == 22);
 		REQUIRE(packet->HasHeaderExtension() == false);
@@ -2040,7 +2040,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->SetPayload(rtpCommon::DataBuffer, 10);
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions) == true);
 
 		REQUIRE(packet->GetLength() == 34);
 		REQUIRE(packet->HasOneByteExtensions() == true);
@@ -2052,7 +2052,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		extensions.emplace_back(
 		  RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 2, 4, rtpCommon::DataBuffer + 4);
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoByte, extensions) == false);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::TwoByte, extensions) == false);
 
 		REQUIRE(packet->GetLength() == 34);
 		REQUIRE(packet->HasOneByteExtensions() == true);
@@ -2210,7 +2210,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		    { RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01, 3, 3, extension3 }
     });
 
-		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions) == true);
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),

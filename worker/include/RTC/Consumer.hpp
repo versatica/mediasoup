@@ -10,7 +10,7 @@
 #include "RTC/RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/RTCP/packet/AnyReportPacket.hpp"
 #include "RTC/RTCP/packet/NackPacket.hpp"
-#include "RTC/RTP/HeaderExtensionIds.hpp"
+#include "RTC/RTP/ExtensionMapping.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RTP/RtpStreamSend.hpp"
@@ -103,9 +103,9 @@ namespace RTC
 			return this->rtpParameters;
 		}
 
-		const RTC::RTP::HeaderExtensionIds& GetRtpHeaderExtensionIds() const
+		const RTC::RTP::ExtensionMapping& GetRtpExtensionMapping() const
 		{
-			return this->rtpHeaderExtensionIds;
+			return this->rtpExtensionMapping;
 		}
 
 		/**
@@ -115,7 +115,7 @@ namespace RTC
 		 */
 		bool PrefersDependencyDescriptor() const
 		{
-			return this->rtpHeaderExtensionIds.dependencyDescriptor != 0;
+			return this->rtpExtensionMapping.dependencyDescriptor != 0;
 		}
 
 		RTC::RtpParameters::Type GetType() const
@@ -337,7 +337,7 @@ namespace RTC
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type;
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
-		RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
+		RTC::RTP::ExtensionMapping rtpExtensionMapping;
 		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
 		std::bitset<128> supportedCodecPayloadTypes;

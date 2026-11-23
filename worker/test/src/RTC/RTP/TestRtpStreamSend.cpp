@@ -9,7 +9,7 @@
 #include "RTC/RTP/Codecs/AV1.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/Codecs/VP8.hpp"
-#include "RTC/RTP/HeaderExtensionIds.hpp"
+#include "RTC/RTP/ExtensionMapping.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/PacketUtils.hpp"
 #include "RTC/RTP/RtpStream.hpp"
@@ -174,7 +174,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 				 value }
 			};
 
-			REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+			REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions) == true);
 		}
 
 		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor;
@@ -870,14 +870,14 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		};
 		// clang-format on
 
-		RTC::RTP::HeaderExtensionIds headerExtensionIds{};
+		RTC::RTP::ExtensionMapping extensionMapping{};
 
-		headerExtensionIds.dependencyDescriptor = DependencyDescriptorId;
+		extensionMapping.dependencyDescriptor = DependencyDescriptorId;
 
 		// Write the given Dependency Descriptor into the packet as its only
 		// extension.
 		const auto setDependencyDescriptor =
-		  [&headerExtensionIds](RTC::RTP::Packet* packet, uint8_t* value, size_t len) -> void
+		  [&extensionMapping](RTC::RTP::Packet* packet, uint8_t* value, size_t len) -> void
 		{
 			const std::vector<RTC::RTP::Packet::Extension> extensions{
 				{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
@@ -885,9 +885,9 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 				 value }
 			};
 
-			REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
+			REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::OneByte, extensions) == true);
 
-			packet->AssignExtensionIds(headerExtensionIds);
+			packet->SetExtensionMapping(extensionMapping);
 		};
 
 		// packet1 [seq:1, timestamp:1]

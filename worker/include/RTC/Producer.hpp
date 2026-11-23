@@ -8,7 +8,7 @@
 #include "RTC/RTCP/packet/Packet.hpp"
 #include "RTC/RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
-#include "RTC/RTP/HeaderExtensionIds.hpp"
+#include "RTC/RTP/ExtensionMapping.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpDictionaries.hpp"
@@ -170,9 +170,9 @@ namespace RTC
 			return this->rtpParameters;
 		}
 
-		const RTC::RTP::HeaderExtensionIds& GetRtpHeaderExtensionIds() const
+		const RTC::RTP::ExtensionMapping& GetRtpExtensionMapping() const
 		{
-			return this->rtpHeaderExtensionIds;
+			return this->rtpExtensionMapping;
 		}
 
 		RTC::RtpParameters::Type GetType() const
@@ -333,7 +333,7 @@ namespace RTC
 		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamRecv*> mapRtxSsrcRtpStream;
 		ankerl::unordered_dense::map<RTC::RTP::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		ankerl::unordered_dense::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
-		RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
+		RTC::RTP::ExtensionMapping rtpExtensionMapping;
 		bool paused;
 		const bool enableMediasoupPacketIdHeaderExtension;
 		RTC::RTP::Packet* currentRtpPacket{ nullptr };

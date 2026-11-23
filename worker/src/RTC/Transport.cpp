@@ -336,23 +336,23 @@ namespace RTC
 			dataConsumerIds.emplace_back(builder.CreateString(dataConsumerId));
 		}
 
-		// Add headerExtensionIds.
+		// Add recvRtpExtensionMapping.
 		const auto recvRtpHeaderExtensions = FBS::Transport::CreateRecvRtpHeaderExtensions(
 		  builder,
-		  this->recvRtpHeaderExtensionIds.mid != 0
-		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.mid)
+		  this->recvRtpExtensionMapping.mid != 0
+		    ? flatbuffers::Optional<uint8_t>(this->recvRtpExtensionMapping.mid)
 		    : flatbuffers::nullopt,
-		  this->recvRtpHeaderExtensionIds.rid != 0
-		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.rid)
+		  this->recvRtpExtensionMapping.rid != 0
+		    ? flatbuffers::Optional<uint8_t>(this->recvRtpExtensionMapping.rid)
 		    : flatbuffers::nullopt,
-		  this->recvRtpHeaderExtensionIds.rrid != 0
-		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.rrid)
+		  this->recvRtpExtensionMapping.rrid != 0
+		    ? flatbuffers::Optional<uint8_t>(this->recvRtpExtensionMapping.rrid)
 		    : flatbuffers::nullopt,
-		  this->recvRtpHeaderExtensionIds.absSendTime != 0
-		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.absSendTime)
+		  this->recvRtpExtensionMapping.absSendTime != 0
+		    ? flatbuffers::Optional<uint8_t>(this->recvRtpExtensionMapping.absSendTime)
 		    : flatbuffers::nullopt,
-		  this->recvRtpHeaderExtensionIds.transportWideCc01 != 0
-		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.transportWideCc01)
+		  this->recvRtpExtensionMapping.transportWideCc01 != 0
+		    ? flatbuffers::Optional<uint8_t>(this->recvRtpExtensionMapping.transportWideCc01)
 		    : flatbuffers::nullopt);
 
 		const auto rtpListenerOffset = this->rtpListener.FillBuffer(builder);
@@ -712,55 +712,54 @@ namespace RTC
 					const auto& cname = producer->GetRtpParameters().rtcp.cname;
 
 					this->mapCnameRemoteCaptureTimeEstimator[cname].UpdateSource(
-					  producer->GetRtpHeaderExtensionIds().absCaptureTime != 0);
+					  producer->GetRtpExtensionMapping().absCaptureTime != 0);
 				}
 
 				MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
 
 				// Take the transport related RTP header extensions of the Producer and
 				// add them to the Transport.
-				// NOTE: Producer::GetRtpHeaderExtensionIds() returns the original
+				// NOTE: Producer::GetRtpExtensionMapping() returns the original
 				// header extension ids of the Producer (and not their mapped values).
-				const auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+				const auto& producerRtpExtensionMapping = producer->GetRtpExtensionMapping();
 
-				if (producerRtpHeaderExtensionIds.mid != 0)
+				if (producerRtpExtensionMapping.mid != 0)
 				{
-					this->recvRtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
+					this->recvRtpExtensionMapping.mid = producerRtpExtensionMapping.mid;
 				}
 
-				if (producerRtpHeaderExtensionIds.rid != 0)
+				if (producerRtpExtensionMapping.rid != 0)
 				{
-					this->recvRtpHeaderExtensionIds.rid = producerRtpHeaderExtensionIds.rid;
+					this->recvRtpExtensionMapping.rid = producerRtpExtensionMapping.rid;
 				}
 
-				if (producerRtpHeaderExtensionIds.rrid != 0)
+				if (producerRtpExtensionMapping.rrid != 0)
 				{
-					this->recvRtpHeaderExtensionIds.rrid = producerRtpHeaderExtensionIds.rrid;
+					this->recvRtpExtensionMapping.rrid = producerRtpExtensionMapping.rrid;
 				}
 
-				if (producerRtpHeaderExtensionIds.absSendTime != 0)
+				if (producerRtpExtensionMapping.absSendTime != 0)
 				{
-					this->recvRtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
+					this->recvRtpExtensionMapping.absSendTime = producerRtpExtensionMapping.absSendTime;
 				}
 
-				if (producerRtpHeaderExtensionIds.transportWideCc01 != 0)
+				if (producerRtpExtensionMapping.transportWideCc01 != 0)
 				{
-					this->recvRtpHeaderExtensionIds.transportWideCc01 =
-					  producerRtpHeaderExtensionIds.transportWideCc01;
+					this->recvRtpExtensionMapping.transportWideCc01 =
+					  producerRtpExtensionMapping.transportWideCc01;
 				}
 
-				if (producerRtpHeaderExtensionIds.dependencyDescriptor != 0)
+				if (producerRtpExtensionMapping.dependencyDescriptor != 0)
 				{
-					this->recvRtpHeaderExtensionIds.dependencyDescriptor =
-					  producerRtpHeaderExtensionIds.dependencyDescriptor;
+					this->recvRtpExtensionMapping.dependencyDescriptor =
+					  producerRtpExtensionMapping.dependencyDescriptor;
 				}
 
 				// NOTE: Not transport related, but needed here so that received packets carry
 				// its id and `RtpStreamRecv` can read the extension off them.
-				if (producerRtpHeaderExtensionIds.absCaptureTime != 0)
+				if (producerRtpExtensionMapping.absCaptureTime != 0)
 				{
-					this->recvRtpHeaderExtensionIds.absCaptureTime =
-					  producerRtpHeaderExtensionIds.absCaptureTime;
+					this->recvRtpExtensionMapping.absCaptureTime = producerRtpExtensionMapping.absCaptureTime;
 				}
 
 				// Create status response.
@@ -1430,7 +1429,7 @@ namespace RTC
 
 		// Apply the Transport RTP header extension ids so the RTP listener can use
 		// them.
-		packet->AssignExtensionIds(this->recvRtpHeaderExtensionIds);
+		packet->SetExtensionMapping(this->recvRtpExtensionMapping);
 
 		// Get the associated Producer.
 		RTC::Producer* const producer = this->rtpListener.GetProducer(packet);

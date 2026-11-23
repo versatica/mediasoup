@@ -45,7 +45,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 				 value }
 			};
 
-			REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+			REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions) == true);
 
 			// As the Producer does, tell the length the descriptor really has.
 			REQUIRE(packet->UpdateDependencyDescriptor(dependencyDescriptor, len));
