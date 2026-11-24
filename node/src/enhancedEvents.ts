@@ -107,7 +107,13 @@ export class EnhancedEventEmitter<
 	override removeAllListeners<K extends keyof E2 & string>(
 		eventName?: K
 	): this {
-		super.removeAllListeners(eventName);
+		// NOTE: The parent only removes the listeners of all events if called
+		// without arguments, not if called with `undefined`.
+		if (eventName === undefined) {
+			super.removeAllListeners();
+		} else {
+			super.removeAllListeners(eventName);
+		}
 
 		return this;
 	}
