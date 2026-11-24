@@ -227,6 +227,58 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(templateStructure->templateLayers[4].frameDiffChains == fdiffChains);
 	}
 
+	// The decode target count is `dt_cnt_minus_one` plus one, so a descriptor
+	// may declare up to 32 of them and the bitmask of every one being active is
+	// built by shifting that many bits.
+	SECTION("a structure declaring the highest decode target counts is parsed")
+	{
+		// Key frame carrying a template dependency structure with a single
+		// template, whose decode target indications are all "switch", no frame
+		// diffs and no chains.
+		//
+		// NOTE: The decode target count goes in the five bits right after the
+		// first three bytes and the five extended descriptor field flags, this
+		// is, in the low five bits of the fifth byte.
+
+		// 31 decode targets, where the bitmask is the highest value an int holds.
+		// clang-format off
+		const uint8_t data31[] =
+		{
+			0xC0, 0x00, 0x00, 0x80,
+			0x1E, 0xEA, 0xAA, 0xAA,
+			0xAA, 0xAA, 0xAA, 0xAA,
+			0xAA, 0x00
+		};
+
+		// 32 decode targets, where the bitmask takes every bit of it.
+		const uint8_t data32[] =
+		{
+			0xC0, 0x00, 0x00, 0x80,
+			0x1F, 0xEA, 0xAA, 0xAA,
+			0xAA, 0xAA, 0xAA, 0xAA,
+			0xAA, 0x80, 0x00
+		};
+		// clang-format on
+
+		RTC::RTP::Codecs::DependencyDescriptor::Context context31;
+
+		const auto descriptor31 = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(data31, sizeof(data31), context31));
+
+		REQUIRE(descriptor31);
+		REQUIRE(descriptor31->templateDependencyStructure->decodeTargetCount == 31);
+		REQUIRE(descriptor31->activeDecodeTargetsBitmask == 0x7FFFFFFF);
+
+		RTC::RTP::Codecs::DependencyDescriptor::Context context32;
+
+		const auto descriptor32 = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(data32, sizeof(data32), context32));
+
+		REQUIRE(descriptor32);
+		REQUIRE(descriptor32->templateDependencyStructure->decodeTargetCount == 32);
+		REQUIRE(descriptor32->activeDecodeTargetsBitmask == 0xFFFFFFFF);
+	}
+
 	SECTION("serialize")
 	{
 		/**

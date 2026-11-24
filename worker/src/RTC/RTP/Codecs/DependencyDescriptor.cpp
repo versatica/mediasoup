@@ -280,8 +280,10 @@ namespace RTC
 
 					this->templateDependencyStructureEndOffset = this->bitReader.GetOffset();
 
-					this->activeDecodeTargetsBitmask =
-					  (1 << this->templateDependencyStructure->decodeTargetCount) - 1;
+					// NOTE: Shift in 64 bits since the decode target count reaches 32 and
+					// shifting a value by the width of its own type is undefined.
+					this->activeDecodeTargetsBitmask = static_cast<uint32_t>(
+					  (uint64_t{ 1 } << this->templateDependencyStructure->decodeTargetCount) - 1);
 				}
 
 				if (this->activeDecodeTargetsPresent)
