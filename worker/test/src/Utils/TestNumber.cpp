@@ -5,7 +5,7 @@
 
 SCENARIO("Utils::Number", "[utils][number]")
 {
-	SECTION("MaxValue()")
+	SECTION("Number::MaxValue()")
 	{
 		// A length of 0 means every bit of T.
 		REQUIRE(Utils::Number::MaxValue<uint8_t>(0) == std::numeric_limits<uint8_t>::max());
@@ -34,7 +34,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number::MaxValue<uint32_t>(15) == 32767);
 	}
 
-	SECTION("IsEqualThan()")
+	SECTION("Number::IsEqualThan()")
 	{
 		// 0 is not equal than 16.
 		REQUIRE(Utils::Number::IsEqualThan<uint16_t>(0, 16) == false);
@@ -52,7 +52,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number::IsEqualThan<uint64_t, 7>(0, 128) == true);
 	}
 
-	SECTION("IsHigherThan()")
+	SECTION("Number::IsHigherThan()")
 	{
 		// 10 is higher than std::numeric_limits<uint8_t>::max().
 		REQUIRE(Utils::Number::IsHigherThan<uint8_t>(10, std::numeric_limits<uint8_t>::max()) == true);
@@ -85,7 +85,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number::IsHigherThan<uint64_t, 6>(0, 64) == false);
 	}
 
-	SECTION("IsHigherThan() with max value")
+	SECTION("Number::IsHigherThan() with max value")
 	{
 		// Same as giving the bits it takes.
 		REQUIRE(
@@ -111,7 +111,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		  Utils::Number::IsHigherThan<uint16_t>(10000, 5, Utils::Number::MaxValue<uint16_t>(14)) == false);
 	}
 
-	SECTION("IsLowerThan()")
+	SECTION("Number::IsLowerThan()")
 	{
 		// 1 is lower than 2.
 		REQUIRE(Utils::Number::IsLowerThan<uint8_t>(1, 2) == true);
@@ -150,7 +150,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number::IsLowerThan<uint64_t, 2>(3, 1) == true);
 	}
 
-	SECTION("IsLowerThan() with max value")
+	SECTION("Number::IsLowerThan() with max value")
 	{
 		// Same as giving the bits it takes.
 		REQUIRE(Utils::Number::IsLowerThan<uint16_t>(15, 2, Utils::Number::MaxValue<uint16_t>(3)) == true);
@@ -173,7 +173,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		  Utils::Number::IsLowerThan<uint16_t>(5, 10000, Utils::Number::MaxValue<uint16_t>(14)) == false);
 	}
 
-	SECTION("IsHigherOrEqualThan()")
+	SECTION("Number::IsHigherOrEqualThan()")
 	{
 		// 0 is greater or equal than std::numeric_limits<uint64_t>::max().
 		REQUIRE(
@@ -186,7 +186,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number::IsHigherOrEqualThan<uint64_t, 5>(0, 32) == true);
 	}
 
-	SECTION("IsLowerOrEqualThan()")
+	SECTION("Number::IsLowerOrEqualThan()")
 	{
 		// std::numeric_limits<uint64_t>::max() is lower or equal than 0.
 		REQUIRE(
@@ -205,7 +205,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number::IsLowerOrEqualThan<uint64_t, 2>(3, 1) == true);
 	}
 
-	SECTION("ForwardDiff()")
+	SECTION("Number::ForwardDiff()")
 	{
 		REQUIRE(static_cast<uint64_t>(Utils::Number::ForwardDiff(4711U, 4711U)) == 0);
 
@@ -231,7 +231,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		}
 	}
 
-	SECTION("ForwardDiff() with divisor")
+	SECTION("Number::ForwardDiff() with divisor")
 	{
 		REQUIRE(static_cast<uint64_t>(Utils::Number::ForwardDiff<uint8_t, 123>(0, 122)) == 122);
 		REQUIRE(static_cast<uint64_t>(Utils::Number::ForwardDiff<uint8_t, 123>(122, 122)) == 0);
@@ -240,7 +240,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(static_cast<uint64_t>(Utils::Number::ForwardDiff<uint8_t, 123>(122, 0)) == 1);
 	}
 
-	SECTION("ReverseDiff()")
+	SECTION("Number::ReverseDiff()")
 	{
 		REQUIRE(static_cast<uint64_t>(Utils::Number::ReverseDiff(4711U, 4711U)) == 0);
 
@@ -266,7 +266,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		}
 	}
 
-	SECTION("ReverseDiff() with divisor")
+	SECTION("Number::ReverseDiff() with divisor")
 	{
 		REQUIRE(static_cast<uint64_t>(Utils::Number::ReverseDiff<uint8_t, 123>(0, 122)) == 1);
 		REQUIRE(static_cast<uint64_t>(Utils::Number::ReverseDiff<uint8_t, 123>(122, 122)) == 0);

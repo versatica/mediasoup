@@ -7,7 +7,7 @@
 
 SCENARIO("Utils::Time", "[utils][time]")
 {
-	SECTION("TimeUsToMs()")
+	SECTION("Time::TimeUsToMs()")
 	{
 		REQUIRE(Utils::Time::TimeUsToMs(0) == 0);
 		REQUIRE(Utils::Time::TimeUsToMs(1000) == 1);
@@ -31,7 +31,7 @@ SCENARIO("Utils::Time", "[utils][time]")
 		REQUIRE(Utils::Time::TimeUsToMs(std::numeric_limits<int64_t>::min()) == -9223372036854776LL);
 	}
 
-	SECTION("NtpToTimeUs()")
+	SECTION("Time::NtpToTimeUs()")
 	{
 		const auto nowUs  = DepLibUV::GetTimeUs();
 		const auto ntp    = Utils::Time::TimeUsToNtp(nowUs);
@@ -43,7 +43,7 @@ SCENARIO("Utils::Time", "[utils][time]")
 		REQUIRE(ntp2.fractions == ntp.fractions);
 	}
 
-	SECTION("TimeUsToNtp()")
+	SECTION("Time::TimeUsToNtp()")
 	{
 		auto ntp = Utils::Time::TimeUsToNtp(1500000);
 
@@ -63,7 +63,7 @@ SCENARIO("Utils::Time", "[utils][time]")
 		REQUIRE(Utils::Time::NtpToTimeUs(Utils::Time::TimeUsToNtp(1000500)) == 1000500);
 	}
 
-	SECTION("NtpToCompactNtp()")
+	SECTION("Time::NtpToCompactNtp()")
 	{
 		// The middle 32 bits of the NTP timestamp.
 		REQUIRE(
@@ -89,7 +89,7 @@ SCENARIO("Utils::Time", "[utils][time]")
 		return Utils::Time::NtpToTimeUs(Utils::Time::Ntp{ .seconds = seconds, .fractions = fractions });
 	};
 
-	SECTION("CompactNtpIntervalToTimeUs()")
+	SECTION("Time::CompactNtpIntervalToTimeUs()")
 	{
 		{
 			const int64_t diffUs = toTimeUs(0x12654, 0x64335) - toTimeUs(0x12345, 0x23456);
@@ -126,7 +126,7 @@ SCENARIO("Utils::Time", "[utils][time]")
 		REQUIRE(std::abs(Utils::Time::CompactNtpIntervalToTimeUs(0x80000000)) == 0x8000 * 1000000LL);
 	}
 
-	SECTION("CompactNtpRttToTimeUs()")
+	SECTION("Time::CompactNtpRttToTimeUs()")
 	{
 		// A difference close to 2^15 seconds is still a positive one.
 		{
@@ -151,7 +151,7 @@ SCENARIO("Utils::Time", "[utils][time]")
 		}
 	}
 
-	SECTION("TimeUsToAbsSendTime()")
+	SECTION("Time::TimeUsToAbsSendTime()")
 	{
 		// A whole second is the fractional unit itself, being the format 6.18 fixed
 		// point seconds.
@@ -177,7 +177,7 @@ SCENARIO("Utils::Time", "[utils][time]")
 		REQUIRE(Utils::Time::TimeUsToAbsSendTime(-WrapPeriodUs) == 0);
 	}
 
-	SECTION("TimeUsToQ32x32()")
+	SECTION("Time::TimeUsToQ32x32()")
 	{
 		// A whole second is the fractional unit itself.
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -198,7 +198,7 @@ SCENARIO("Utils::Time", "[utils][time]")
 		REQUIRE(Utils::Time::TimeUsToQ32x32(-OutOfRangeUs + 1).has_value());
 	}
 
-	SECTION("Q32x32ToTimeUs()")
+	SECTION("Time::Q32x32ToTimeUs()")
 	{
 		REQUIRE(Utils::Time::Q32x32ToTimeUs(4294967296) == 1000000);
 		REQUIRE(Utils::Time::Q32x32ToTimeUs(-4294967296) == -1000000);

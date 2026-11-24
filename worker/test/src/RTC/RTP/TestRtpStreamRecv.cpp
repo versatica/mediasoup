@@ -401,7 +401,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(listener.keyFrameRequiredCount == 1);
 	}
 
-	SECTION("ReceiveRtcpSenderReportPacket() ignores a zeroed NTP timestamp")
+	SECTION("RtpStreamRecv::ReceiveRtcpSenderReportPacket() ignores a zeroed NTP timestamp")
 	{
 		RtpStreamRecvListener listener;
 		RTC::RTP::RtpStreamRecv rtpStream(
@@ -440,7 +440,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(senderReportMappingValue.ts == 1000);
 	}
 
-	SECTION("AddRtcpReportBlock() reports the losses and the last Sender Report")
+	SECTION("RtpStreamRecv::AddRtcpReportBlock() reports the losses and the last Sender Report")
 	{
 		RtpStreamRecvListener listener;
 		RTC::RTP::RtpStreamRecv rtpStream(
@@ -492,7 +492,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(reportBlock.delaySinceLastSenderReport == 0x8000);
 	}
 
-	SECTION("AddRtcpReportBlock() touches nothing if the report block does not fit")
+	SECTION("RtpStreamRecv::AddRtcpReportBlock() touches nothing if the report block does not fit")
 	{
 		RtpStreamRecvListener listener;
 		RTC::RTP::RtpStreamRecv rtpStream(
@@ -552,7 +552,8 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(reportBlock.totalLost == 1);
 	}
 
-	SECTION("AddRtxRtcpReportBlock() reports about the RTX stream once it receives packets")
+	SECTION(
+	  "RtpStreamRecv::AddRtxRtcpReportBlock() reports about the RTX stream once it receives packets")
 	{
 		// Needed by the RTX stream to tell its MIME type, and by the codec
 		// processing of the packets it carries.
@@ -622,7 +623,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 	}
 
 	SECTION(
-	  "AddRtcpReportBlock() and AddRtxRtcpReportBlock() stop reporting about streams that receive nothing for too long")
+	  "RtpStreamRecv::AddRtcpReportBlock() and RtpStreamRecv::AddRtxRtcpReportBlock() stop reporting about streams that receive nothing for too long")
 	{
 		int64_t nowUs{ 1000 * 1000 };
 
@@ -751,7 +752,8 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(rtpStream.GetScore() == 10);
 	}
 
-	SECTION("AddRtcpReportBlock() keeps counting the losses across a sequence number restart")
+	SECTION(
+	  "RtpStreamRecv::AddRtcpReportBlock() keeps counting the losses across a sequence number restart")
 	{
 		// Not to get NACKs for the packets lost on purpose.
 		params.useNack = false;
@@ -794,7 +796,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 	}
 
 	SECTION(
-	  "AddRtcpReportBlock() keeps counting the losses across a sequence number restart after a wrap")
+	  "RtpStreamRecv::AddRtcpReportBlock() keeps counting the losses across a sequence number restart after a wrap")
 	{
 		RtpStreamRecvListener listener;
 		RTC::RTP::RtpStreamRecv rtpStream(
@@ -1098,7 +1100,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(reportBlock.extendedHighestSeq == 2005);
 	}
 
-	SECTION("AddRtcpReportBlock() reports a jitter that leaves out RTP timestamp jumps")
+	SECTION("RtpStreamRecv::AddRtcpReportBlock() reports a jitter that leaves out RTP timestamp jumps")
 	{
 		RtpStreamRecvListener listener;
 		RTC::RTP::RtpStreamRecv rtpStream(
@@ -1129,7 +1131,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(reportBlock.jitter == 0);
 	}
 
-	SECTION("AddRtcpReportBlock() reports a jitter that leaves out late packets")
+	SECTION("RtpStreamRecv::AddRtcpReportBlock() reports a jitter that leaves out late packets")
 	{
 		RtpStreamRecvListener listener;
 		RTC::RTP::RtpStreamRecv rtpStream(
@@ -1161,7 +1163,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(reportBlock.jitter == 0);
 	}
 
-	SECTION("AddRtcpReportBlock() truncates the fraction lost")
+	SECTION("RtpStreamRecv::AddRtcpReportBlock() truncates the fraction lost")
 	{
 		RtpStreamRecvListener listener;
 		RTC::RTP::RtpStreamRecv rtpStream(

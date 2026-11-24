@@ -212,7 +212,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 		REQUIRE(packet->GetReason() == "abc");
 	}
 
-	SECTION("ByePacket::Parse() with padding and SetReason() succeeds")
+	SECTION("ByePacket::Parse() with padding and ByePacket::SetReason() succeeds")
 	{
 		// clang-format off
 		alignas(4) uint8_t buffer[] =

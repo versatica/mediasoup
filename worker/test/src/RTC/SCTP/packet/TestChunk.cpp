@@ -19,7 +19,8 @@ SCENARIO("SCTP Chunk", "[serializable][sctp][chunk]")
 		REQUIRE(alignof(RTC::SCTP::Chunk::ChunkFlags) == 1);
 	}
 
-	SECTION("BuildParameterInPlace() and AddParameter() throw if the Chunk needs consolidation")
+	SECTION(
+	  "Chunk::BuildParameterInPlace() and Chunk::AddParameter() throw if the Chunk needs consolidation")
 	{
 		const std::unique_ptr<RTC::SCTP::InitChunk> chunk{ RTC::SCTP::InitChunk::Factory(
 			sctpCommon::FactoryBuffer, 1000) };
@@ -67,7 +68,8 @@ SCENARIO("SCTP Chunk", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->NeedsConsolidation() == false);
 	}
 
-	SECTION("BuildErrorCauseInPlace() and AddErrorCause() throw if the Chunk needs consolidation")
+	SECTION(
+	  "Chunk::BuildErrorCauseInPlace() and Chunk::AddErrorCause() throw if the Chunk needs consolidation")
 	{
 		const std::unique_ptr<RTC::SCTP::AbortAssociationChunk> chunk{
 			RTC::SCTP::AbortAssociationChunk::Factory(sctpCommon::FactoryBuffer, 1000)
@@ -115,7 +117,7 @@ SCENARIO("SCTP Chunk", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->NeedsConsolidation() == false);
 	}
 
-	SECTION("Discard() removes the parameter being built in place")
+	SECTION("Parameter::Discard() removes the parameter being built in place")
 	{
 		const std::unique_ptr<RTC::SCTP::InitChunk> chunk{ RTC::SCTP::InitChunk::Factory(
 			sctpCommon::FactoryBuffer, 1000) };
@@ -152,7 +154,7 @@ SCENARIO("SCTP Chunk", "[serializable][sctp][chunk]")
 		REQUIRE_THROWS_AS(parameter2->Discard(), MediaSoupError);
 	}
 
-	SECTION("Discard() removes the error cause being built in place")
+	SECTION("ErrorCause::Discard() removes the error cause being built in place")
 	{
 		const std::unique_ptr<RTC::SCTP::AbortAssociationChunk> chunk{
 			RTC::SCTP::AbortAssociationChunk::Factory(sctpCommon::FactoryBuffer, 1000)

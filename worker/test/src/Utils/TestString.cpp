@@ -6,7 +6,7 @@
 
 SCENARIO("Utils::String", "[utils][string]")
 {
-	SECTION("ToLowerCase()")
+	SECTION("String::ToLowerCase()")
 	{
 		std::string str;
 
@@ -21,7 +21,7 @@ SCENARIO("Utils::String", "[utils][string]")
 		REQUIRE(str == "foo!œ");
 	}
 
-	SECTION("Base64Encode() and Base64Decode()")
+	SECTION("String::Base64Encode() and String::Base64Decode()")
 	{
 		std::string data;
 		std::string encoded;

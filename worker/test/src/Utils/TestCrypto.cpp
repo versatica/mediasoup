@@ -8,7 +8,7 @@
 
 SCENARIO("Utils::Crypto", "[utils][crypto]")
 {
-	SECTION("GetCRC32()")
+	SECTION("Crypto::GetCRC32()")
 	{
 		const std::array<uint8_t, 0> dataEmpty{};
 		const uint8_t dataZero[] = { 0 };
@@ -25,7 +25,7 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 		REQUIRE(Utils::Crypto::GetCRC32(dataRandom, sizeof(dataRandom)) == 0xEEE31378);
 	}
 
-	SECTION("GetCRC32c()")
+	SECTION("Crypto::GetCRC32c()")
 	{
 		// Tests copied from dcSCTP code in libwebrtc:
 		// https://webrtc.googlesource.com/src//+/refs/heads/main/net/dcsctp/packet/crc32c_test.cc
@@ -78,7 +78,7 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 		REQUIRE(Utils::Crypto::GetCRC32c(dataSCSICommandPDU, sizeof(dataSCSICommandPDU)) == 0x563A96D9);
 	}
 
-	SECTION("GetCRC32() and GetCRC32c() match a byte at a time reference")
+	SECTION("Crypto::GetCRC32() and Crypto::GetCRC32c() match a byte at a time reference")
 	{
 		// Guards the slice-by-8 implementations against regressions at the 8 byte block
 		// boundary and on unaligned input. Deliberately table free so that it shares

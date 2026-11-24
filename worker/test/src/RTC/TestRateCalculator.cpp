@@ -441,7 +441,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 
 	// NOTE: This pins the GetRate() memoization key, which is the time plus both
 	// totals. Keying it on the time alone would return a stale rate.
-	SECTION("rate is recalculated after Update() with the same now")
+	SECTION("rate is recalculated after RateCalculator::Update() with the same now")
 	{
 		RTC::RateCalculator rate(1000, 8000, 100);
 

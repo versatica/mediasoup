@@ -4,7 +4,7 @@
 
 SCENARIO("Utils::Bits", "[utils][bits]")
 {
-	SECTION("CountSetBits()")
+	SECTION("Bits::CountSetBits()")
 	{
 		uint16_t mask;
 

@@ -5,21 +5,21 @@
 
 SCENARIO("BWE BitrateUtils", "[bwe][bitrateutils]")
 {
-	SECTION("ApplyBitrateFactor() gives the bitrate times the factor")
+	SECTION("BitrateUtils::ApplyBitrateFactor() gives the bitrate times the factor")
 	{
 		REQUIRE(RTC::BWE::BitrateUtils::ApplyBitrateFactor(600000, 1.02) == 612000);
 		REQUIRE(RTC::BWE::BitrateUtils::ApplyBitrateFactor(600000, 0.95) == 570000);
 		REQUIRE(RTC::BWE::BitrateUtils::ApplyBitrateFactor(600000, 1.0) == 600000);
 	}
 
-	SECTION("ApplyBitrateFactor() rounds to the nearest bitrate, away from zero on a tie")
+	SECTION("BitrateUtils::ApplyBitrateFactor() rounds to the nearest bitrate, away from zero on a tie")
 	{
 		REQUIRE(RTC::BWE::BitrateUtils::ApplyBitrateFactor(3, 0.4) == 1);
 		REQUIRE(RTC::BWE::BitrateUtils::ApplyBitrateFactor(3, 0.5) == 2);
 		REQUIRE(RTC::BWE::BitrateUtils::ApplyBitrateFactor(7, 0.5) == 4);
 	}
 
-	SECTION("ApplyBitrateFactor() gives no bitrate at all beyond what the type holds")
+	SECTION("BitrateUtils::ApplyBitrateFactor() gives no bitrate at all beyond what the type holds")
 	{
 		// Anything over the maximum means no limit, which is what its own value
 		// already means.
@@ -34,19 +34,19 @@ SCENARIO("BWE BitrateUtils", "[bwe][bitrateutils]")
 		  RTC::BWE::Types::BitrateInfinite);
 	}
 
-	SECTION("ApplyBitrateFactor() never gives a negative bitrate")
+	SECTION("BitrateUtils::ApplyBitrateFactor() never gives a negative bitrate")
 	{
 		REQUIRE(RTC::BWE::BitrateUtils::ApplyBitrateFactor(600000, -1.0) == 0);
 		REQUIRE(RTC::BWE::BitrateUtils::ApplyBitrateFactor(0, 1.5) == 0);
 	}
 
-	SECTION("AddBitrates() gives the sum")
+	SECTION("BitrateUtils::AddBitrates() gives the sum")
 	{
 		REQUIRE(RTC::BWE::BitrateUtils::AddBitrates(600000, 1000) == 601000);
 		REQUIRE(RTC::BWE::BitrateUtils::AddBitrates(600000, 0) == 600000);
 	}
 
-	SECTION("AddBitrates() gives no bitrate at all beyond what the type holds")
+	SECTION("BitrateUtils::AddBitrates() gives no bitrate at all beyond what the type holds")
 	{
 		REQUIRE(
 		  RTC::BWE::BitrateUtils::AddBitrates(RTC::BWE::Types::BitrateInfinite, 1000) ==

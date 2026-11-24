@@ -312,7 +312,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		}
 	};
 
-	SECTION("ProcessRtpPacket() returns DROP when target spatial layer is -1")
+	SECTION("SvcProducerStreamManager::ProcessRtpPacket() returns DROP when target spatial layer is -1")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -328,7 +328,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::DROP);
 	}
 
-	SECTION("ProcessRtpPacket() returns DROP when target temporal layer is -1")
+	SECTION("SvcProducerStreamManager::ProcessRtpPacket() returns DROP when target temporal layer is -1")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -346,7 +346,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::DROP);
 	}
 
-	SECTION("ProcessRtpPacket() returns BUFFER when sync required and packet is not a keyframe")
+	SECTION(
+	  "SvcProducerStreamManager::ProcessRtpPacket() returns BUFFER when sync required and packet is not a keyframe")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -370,7 +371,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	}
 
 	SECTION(
-	  "ProcessRtpPacket() returns FORWARD with isSyncPacket and sendBufferedPackets on keyframe sync")
+	  "SvcProducerStreamManager::ProcessRtpPacket() returns FORWARD with isSyncPacket and sendBufferedPackets on keyframe sync")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -404,7 +405,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.sendBufferedPackets == true);
 	}
 
-	SECTION("ProcessRtpPacket() always requires a keyframe for sync regardless of keyFrameSupported flag")
+	SECTION(
+	  "SvcProducerStreamManager::ProcessRtpPacket() always requires a keyframe for sync regardless of keyFrameSupported flag")
 	{
 		MockListener listener;
 		// keyFrameSupported=false has no effect in SVC: sync always needs a keyframe.
@@ -448,7 +450,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.sendBufferedPackets == true);
 	}
 
-	SECTION("ProcessRtpPacket() returns DROP for empty payload packets")
+	SECTION("SvcProducerStreamManager::ProcessRtpPacket() returns DROP for empty payload packets")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -481,7 +483,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::DROP);
 	}
 
-	SECTION("ProcessRtpPacket() returns DROP when ProcessPayload fails")
+	SECTION("SvcProducerStreamManager::ProcessRtpPacket() returns DROP when ProcessPayload fails")
 	{
 		MockListener listener;
 		auto encodingContext = std::make_unique<MockEncodingContext>();
@@ -524,7 +526,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	// move in one that is not forwarded. In K-SVC the switch points of the decode
 	// target being sent are frames of a lower spatial layer, which the Consumer
 	// is never given, so a change made there must be reported all the same.
-	SECTION("ProcessRtpPacket() reports a layer change made in a dropped packet")
+	SECTION(
+	  "SvcProducerStreamManager::ProcessRtpPacket() reports a layer change made in a dropped packet")
 	{
 		MockListener listener;
 		auto encodingContext = std::make_unique<MockEncodingContext>();
@@ -563,7 +566,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.temporalLayerChanged);
 	}
 
-	SECTION("ProcessRtpPacket() returns FORWARD for normal packets after sync")
+	SECTION("SvcProducerStreamManager::ProcessRtpPacket() returns FORWARD for normal packets after sync")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -598,7 +601,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.tsOffset == 0);
 	}
 
-	SECTION("ProcessRtpPacket() always sets tsOffset to 0 (SVC uses single stream)")
+	SECTION(
+	  "SvcProducerStreamManager::ProcessRtpPacket() always sets tsOffset to 0 (SVC uses single stream)")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -634,7 +638,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.tsOffset == 0);
 	}
 
-	SECTION("UpdateTargetLayers() to -1 resets current and target layers")
+	SECTION("SvcProducerStreamManager::UpdateTargetLayers() to -1 resets current and target layers")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -653,7 +657,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(manager->GetCurrentSpatialLayer() == -1);
 	}
 
-	SECTION("UpdateTargetLayers() fires OnProducerStreamManagerLayersChanged() when setting -1")
+	SECTION(
+	  "SvcProducerStreamManager::UpdateTargetLayers() fires ProducerStreamManager::Listener::OnProducerStreamManagerLayersChanged() when setting -1")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -668,7 +673,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(listener.layersChangedCount == countBefore + 1);
 	}
 
-	SECTION("UpdateTargetLayers() requests keyframe for full-SVC spatial upgrade")
+	SECTION(
+	  "SvcProducerStreamManager::UpdateTargetLayers() requests keyframe for full-SVC spatial upgrade")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -688,7 +694,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
-	SECTION("GetProducerCurrentRtpStream() returns nullptr when current spatial layer is -1")
+	SECTION(
+	  "SvcProducerStreamManager::GetProducerCurrentRtpStream() returns nullptr when current spatial layer is -1")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -701,7 +708,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(manager->GetCurrentSpatialLayer() == -1);
 	}
 
-	SECTION("GetProducerTargetRtpStream() returns nullptr when target spatial layer is -1")
+	SECTION(
+	  "SvcProducerStreamManager::GetProducerTargetRtpStream() returns nullptr when target spatial layer is -1")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -712,7 +720,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(manager->GetProducerTargetRtpStream() == nullptr);
 	}
 
-	SECTION("GetProducerTargetRtpStream() returns the producer stream after UpdateTargetLayers()")
+	SECTION(
+	  "SvcProducerStreamManager::GetProducerTargetRtpStream() returns the producer stream after SvcProducerStreamManager::UpdateTargetLayers()")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -726,7 +735,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(manager->GetTargetLayers().temporal == 0);
 	}
 
-	SECTION("IsActive() returns false when listener is not active")
+	SECTION("SvcProducerStreamManager::IsActive() returns false when listener is not active")
 	{
 		MockListener listener;
 		listener.isActive = false;
@@ -739,7 +748,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(manager->IsActive() == false);
 	}
 
-	SECTION("IsActive() returns false when no producer stream is set")
+	SECTION("SvcProducerStreamManager::IsActive() returns false when no producer stream is set")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
@@ -748,7 +757,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(manager->IsActive() == false);
 	}
 
-	SECTION("RequestKeyFrame() always uses the single SVC mapped SSRC")
+	SECTION("SvcProducerStreamManager::RequestKeyFrame() always uses the single SVC mapped SSRC")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -764,7 +773,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
-	SECTION("RequestKeyFrameForTargetSpatialLayer() delegates to single-SSRC RequestKeyFrame()")
+	SECTION(
+	  "SvcProducerStreamManager::RequestKeyFrameForTargetSpatialLayer() delegates to single-SSRC SvcProducerStreamManager::RequestKeyFrame()")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -780,7 +790,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
-	SECTION("RequestKeyFrameForCurrentSpatialLayer() delegates to single-SSRC RequestKeyFrame()")
+	SECTION(
+	  "SvcProducerStreamManager::RequestKeyFrameForCurrentSpatialLayer() delegates to single-SSRC SvcProducerStreamManager::RequestKeyFrame()")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -804,7 +815,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
-	SECTION("OnTransportConnected() sets syncRequired")
+	SECTION("SvcProducerStreamManager::OnTransportConnected() sets syncRequired")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -848,7 +859,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.isSyncPacket == true);
 	}
 
-	SECTION("OnTransportConnected() does not request keyframe when not active")
+	SECTION("SvcProducerStreamManager::OnTransportConnected() does not request keyframe when not active")
 	{
 		MockListener listener;
 		listener.isActive = false;
@@ -861,7 +872,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(listener.keyFrameRequestCount == 0);
 	}
 
-	SECTION("OnTransportDisconnected() resets target and current layers to -1")
+	SECTION("SvcProducerStreamManager::OnTransportDisconnected() resets target and current layers to -1")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -879,7 +890,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(manager->GetCurrentSpatialLayer() == -1);
 	}
 
-	SECTION("OnPaused() resets target and current layers to -1")
+	SECTION("SvcProducerStreamManager::OnPaused() resets target and current layers to -1")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -897,7 +908,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(manager->GetCurrentSpatialLayer() == -1);
 	}
 
-	SECTION("OnResumed() sets syncRequired and requests keyframe when active")
+	SECTION("SvcProducerStreamManager::OnResumed() sets syncRequired and requests keyframe when active")
 	{
 		MockListener listener;
 		// Use preferred layer 0 so RecalculateTargetLayers can find it with spatial-layer-0 bitrate.
@@ -932,7 +943,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
-	SECTION("OnResumed() sets syncRequired: next packet is a sync packet")
+	SECTION("SvcProducerStreamManager::OnResumed() sets syncRequired: next packet is a sync packet")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -979,7 +990,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.isSyncPacket == true);
 	}
 
-	SECTION("ProducerNewRtpStream() updates the producer stream and fires score event")
+	SECTION(
+	  "SvcProducerStreamManager::ProducerNewRtpStream() updates the producer stream and fires score event")
 	{
 		MockListener listener;
 		auto manager    = createManager(std::addressof(listener));
@@ -1002,7 +1014,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(manager->GetProducerTargetRtpStream() == rtpStream1.get());
 	}
 
-	SECTION("ProducerRtpStreamScore() triggers MayChangeLayers() when stream dies (score==0)")
+	SECTION(
+	  "SvcProducerStreamManager::ProducerRtpStreamScore() triggers ProducerStreamManager::MayChangeLayers() when stream dies (score==0)")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -1029,7 +1042,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(manager->GetTargetLayers().spatial == -1);
 	}
 
-	SECTION("ProducerRtpStreamScore() triggers MayChangeLayers() when stream revives (previousScore==0)")
+	SECTION(
+	  "SvcProducerStreamManager::ProducerRtpStreamScore() triggers ProducerStreamManager::MayChangeLayers() when stream revives (previousScore==0)")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -1047,7 +1061,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		manager->ProducerRtpStreamScore(rtpStream.get(), /*score*/ 7, /*previousScore*/ 0);
 	}
 
-	SECTION("OnTransportConnected() computes target layers when not managed by BWE")
+	SECTION(
+	  "SvcProducerStreamManager::OnTransportConnected() computes target layers when not managed by BWE")
 	{
 		MockListener listener;
 		auto encodingContext =
@@ -1079,7 +1094,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(listener.needBitrateChangeCount == 0);
 	}
 
-	SECTION("OnTransportConnected() leaves target layers to BWE when managed by it")
+	SECTION(
+	  "SvcProducerStreamManager::OnTransportConnected() leaves target layers to BWE when managed by it")
 	{
 		MockListener listener;
 		auto encodingContext =
@@ -1103,7 +1119,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(listener.needBitrateChangeCount == 0);
 	}
 
-	SECTION("GetBitrateOptions() offers only sending nothing when no producer stream is set")
+	SECTION(
+	  "SvcProducerStreamManager::GetBitrateOptions() offers only sending nothing when no producer stream is set")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
@@ -1116,7 +1133,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(bitrateOptions.options.at(0).layers.temporal == -1);
 	}
 
-	SECTION("GetBitrateOptions() offers only sending nothing when producer stream has score 0")
+	SECTION(
+	  "SvcProducerStreamManager::GetBitrateOptions() offers only sending nothing when producer stream has score 0")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -1131,7 +1149,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(bitrateOptions.options.at(0).bitrate == 0);
 	}
 
-	SECTION("GetBitrateOptions() reports no current option until a point has been given")
+	SECTION(
+	  "SvcProducerStreamManager::GetBitrateOptions() reports no current option until a point has been given")
 	{
 		MockListener listener;
 		auto encodingContext =
@@ -1167,7 +1186,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(manager->GetTargetLayers().temporal == 0);
 	}
 
-	SECTION("GetBitrateOptions() offers a point per layer up to the preferred ones")
+	SECTION(
+	  "SvcProducerStreamManager::GetBitrateOptions() offers a point per layer up to the preferred ones")
 	{
 		MockListener listener;
 		auto encodingContext =
@@ -1196,7 +1216,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(bitrateOptions.options.at(1).bitrate > 0);
 	}
 
-	SECTION("GetBitrateOptions() lowers the temporal layer only within the lowest spatial layer")
+	SECTION(
+	  "SvcProducerStreamManager::GetBitrateOptions() lowers the temporal layer only within the lowest spatial layer")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener), /*preferredLayers*/ { 2, 2 });
@@ -1242,7 +1263,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	}
 
 	SECTION(
-	  "GetBitrateOptions() offers the highest arriving temporal layer of a spatial layer above the lowest one")
+	  "SvcProducerStreamManager::GetBitrateOptions() offers the highest arriving temporal layer of a spatial layer above the lowest one")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener), /*preferredLayers*/ { 2, 2 });
@@ -1286,7 +1307,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		}
 	}
 
-	SECTION("GetDesiredBitrate() returns 0 when no producer stream is set")
+	SECTION("SvcProducerStreamManager::GetDesiredBitrate() returns 0 when no producer stream is set")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
@@ -1297,7 +1318,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(desiredBitrate == 0);
 	}
 
-	SECTION("GetDesiredBitrate() (full SVC) returns total stream bitrate")
+	SECTION("SvcProducerStreamManager::GetDesiredBitrate() (full SVC) returns total stream bitrate")
 	{
 		MockListener listener;
 		// Full SVC (ksvc=false).
@@ -1321,7 +1342,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(desiredBitrate == streamBitrate);
 	}
 
-	SECTION("GetDesiredBitrate() (K-SVC) returns the maximum spatial-layer bitrate")
+	SECTION(
+	  "SvcProducerStreamManager::GetDesiredBitrate() (K-SVC) returns the maximum spatial-layer bitrate")
 	{
 		MockListener listener;
 		// K-SVC (ksvc=true): GetDesiredBitrate iterates per-layer bitrates.
@@ -1348,7 +1370,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(desiredBitrate >= 0);
 	}
 
-	SECTION("RecalculateTargetLayers() returns false when no producer stream is set")
+	SECTION(
+	  "SvcProducerStreamManager::RecalculateTargetLayers() returns false when no producer stream is set")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
@@ -1361,7 +1384,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(newTargetLayers.spatial == -1);
 	}
 
-	SECTION("RecalculateTargetLayers() resets layers when stream score is 0")
+	SECTION("SvcProducerStreamManager::RecalculateTargetLayers() resets layers when stream score is 0")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -1378,7 +1401,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		(void)changed;
 	}
 
-	SECTION("K-SVC: UpdateTargetLayers() requests keyframe on any spatial layer change")
+	SECTION(
+	  "K-SVC: SvcProducerStreamManager::UpdateTargetLayers() requests keyframe on any spatial layer change")
 	{
 		MockListener listener;
 		auto encodingContext = std::make_unique<MockEncodingContext>(3, 3, /*ksvc*/ true);
@@ -1404,7 +1428,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
-	SECTION("Full SVC: UpdateTargetLayers() does NOT request keyframe on spatial downgrade")
+	SECTION(
+	  "Full SVC: SvcProducerStreamManager::UpdateTargetLayers() does NOT request keyframe on spatial downgrade")
 	{
 		MockListener listener;
 		auto encodingContext = std::make_unique<MockEncodingContext>(3, 3, /*ksvc*/ false);

@@ -218,7 +218,7 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedErrorCause1->GetMeasureOfStaleness() == 666);
 	}
 
-	SECTION("AbortAssociationChunk::Factory() with AddErrorCause() succeeds")
+	SECTION("AbortAssociationChunk::Factory() with AbortAssociationChunk::AddErrorCause() succeeds")
 	{
 		std::unique_ptr<RTC::SCTP::AbortAssociationChunk> chunk{ RTC::SCTP::AbortAssociationChunk::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };

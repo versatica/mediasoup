@@ -2205,7 +2205,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		}
 	}
 
-	SECTION("GetBaseDeltaUs() compensates the wrap around")
+	SECTION("TransportWideCcPacket::GetBaseDeltaUs() compensates the wrap around")
 	{
 		constexpr int64_t MaxBaseTimeUs{ BaseTimeWrapPeriodUs - BaseTimeTickUs };
 
@@ -2237,7 +2237,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		REQUIRE(packet3->GetBaseDeltaUs(packet1->GetBaseTimeUs()) == 128000);
 	}
 
-	SECTION("SetBase() wraps the reference time over the whole period GetBaseDeltaUs() compensates for")
+	SECTION(
+	  "TransportWideCcPacket::SetBase() wraps the reference time over the whole period TransportWideCcPacket::GetBaseDeltaUs() compensates for")
 	{
 		// Timestamp sitting on the last whole base time tick before the reference
 		// time wraps around.

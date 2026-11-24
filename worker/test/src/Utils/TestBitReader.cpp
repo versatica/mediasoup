@@ -99,7 +99,7 @@ SCENARIO("BitReader", "[utils][bitreader]")
 
 	// Non symmetric unsigned encoded integer, whose values take as many bits as
 	// the number of them requires and one less for the lowest ones.
-	SECTION("ReadNs() reads non symmetric unsigned integers")
+	SECTION("BitReader::ReadNs() reads non symmetric unsigned integers")
 	{
 		// 0|10|11|000, this is, 0, 1 and 2 encoded with n = 3.
 		const uint8_t data[] = { 0b01011000 };
@@ -116,7 +116,7 @@ SCENARIO("BitReader", "[utils][bitreader]")
 		REQUIRE(bitReader.GetOffset() == 5);
 	}
 
-	SECTION("ReadNs() tells when there are not enough bits left")
+	SECTION("BitReader::ReadNs() tells when there are not enough bits left")
 	{
 		const uint8_t data[] = { 0b10000000 };
 

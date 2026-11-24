@@ -2071,7 +2071,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		    packet->GetPayload(), packet->GetPayloadLength(), rtpCommon::DataBuffer, 10) == true);
 	}
 
-	SECTION("Packet::SetPayload(), SetPayloadLength() and packet::RemovePayload() succeed")
+	SECTION("Packet::SetPayload(), Packet::SetPayloadLength() and Packet::RemovePayload() succeed")
 	{
 		const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
 			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };

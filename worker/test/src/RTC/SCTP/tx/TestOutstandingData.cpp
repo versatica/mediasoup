@@ -688,7 +688,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		});
 	}
 
-	SECTION("MeasureRttUs()")
+	SECTION("OutstandingData::MeasureRttUs()")
 	{
 		buffer.Insert(
 		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowUs);
@@ -1687,7 +1687,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 12);
 	}
 
-	SECTION("expires chunk on NackAll()")
+	SECTION("expires chunk on OutstandingData::NackAll()")
 	{
 		constexpr int64_t ExpiresAtUs = NowUs + 50000;
 

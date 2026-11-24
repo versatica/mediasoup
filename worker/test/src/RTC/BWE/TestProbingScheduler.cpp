@@ -234,7 +234,7 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		REQUIRE(std::ranges::is_sorted(listener.sentClusterIds));
 	}
 
-	SECTION("StopProbing() lets the burst going out finish and drops the one behind it")
+	SECTION("ProbingScheduler::StopProbing() lets the burst going out finish and drops the one behind it")
 	{
 		constexpr int64_t TestBitrate{ 900000 };
 
@@ -262,7 +262,7 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		REQUIRE(listener.sentClusterIds.back() == 0);
 	}
 
-	SECTION("a burst asked for after StopProbing() goes out as usual")
+	SECTION("a burst asked for after ProbingScheduler::StopProbing() goes out as usual")
 	{
 		constexpr int64_t TestBitrate{ 900000 };
 

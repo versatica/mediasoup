@@ -463,7 +463,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedParameter3->GetLifeSpanIncrement() == 876543210);
 	}
 
-	SECTION("InitChunk::Factory() using AddParameter() succeeds")
+	SECTION("InitChunk::Factory() using InitChunk::AddParameter() succeeds")
 	{
 		std::unique_ptr<RTC::SCTP::InitChunk> chunk{ RTC::SCTP::InitChunk::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
