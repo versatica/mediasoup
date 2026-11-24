@@ -878,6 +878,32 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		parameter2->Discard();
 	}
 
+	SECTION("AddChunk() throws if the buffer of the chunk covers where it would be cloned")
+	{
+		// The chunk would be cloned at [212, 232).
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer + 200, 1000) };
+
+		// The bytes of the chunk, [150, 170), don't overlap where it would be
+		// cloned, but its buffer, [150, 2000), does.
+		const std::unique_ptr<RTC::SCTP::InitChunk> chunk{ RTC::SCTP::InitChunk::Factory(
+			sctpCommon::FactoryBuffer + 150, 1850) };
+
+		REQUIRE_THROWS_AS(packet->AddChunk(chunk.get()), MediaSoupTypeError);
+
+		CHECK_SCTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer + 200,
+		  /*bufferLength*/ 1000,
+		  /*length*/ 12,
+		  /*sourcePort*/ 0,
+		  /*destinationPort*/ 0,
+		  /*verificationTag*/ 0,
+		  /*checksum*/ 0,
+		  /*hasValidCrc32cChecksum*/ false,
+		  /*chunksCount*/ 0);
+	}
+
 	SECTION("BuildChunkInPlace() throws if given chunk exceeds Packet buffer length")
 	{
 		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(

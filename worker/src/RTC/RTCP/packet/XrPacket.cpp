@@ -251,9 +251,23 @@ namespace RTC
 			// NOTE: It may throw.
 			SetVariableLengthValueLength(previousValueLength + extendedReport->GetLength());
 
-			// Let's append the Extended Report block at the end of existing ones.
-			auto* const clonedExtendedReport = extendedReport->Clone(
-			  GetVariableLengthValuePointer() + previousValueLength, extendedReport->GetLength());
+			ExtendedReport* clonedExtendedReport{ nullptr };
+
+			try
+			{
+				// Let's append the Extended Report block at the end of existing ones.
+				// NOTE: It may throw if the buffer of the given Extended Report block
+				// shares memory with the position where it would be cloned.
+				clonedExtendedReport = extendedReport->Clone(
+				  GetVariableLengthValuePointer() + previousValueLength, extendedReport->GetLength());
+			}
+			catch (const MediaSoupError&)
+			{
+				// Rollback.
+				SetVariableLengthValueLength(previousValueLength);
+
+				throw;
+			}
 
 			// Add the Extended Report block to the list.
 			this->extendedReports.push_back(clonedExtendedReport);

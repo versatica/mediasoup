@@ -2677,4 +2677,51 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		// been destroyed.
 		packet->SetBufferReleasedListener(nullptr);
 	}
+
+	SECTION("Packet::Clone() fails if the given buffer shares memory with the buffer of the packet")
+	{
+		// The packet takes 20 bytes at [100, 120) and its buffer, with its free
+		// space, is [100, 150).
+		const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
+			rtpCommon::FactoryBuffer + 100, 50) };
+
+		const uint8_t payload[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+
+		packet->SetSequenceNumber(7);
+		packet->SetPayload(payload, sizeof(payload));
+
+		REQUIRE(packet->GetLength() == 20);
+
+		const std::vector<uint8_t> originalBytes(
+		  packet->GetBuffer(), packet->GetBuffer() + packet->GetLength());
+
+		// The bytes of the clone, [0, 20), don't overlap the ones of the packet,
+		// but its buffer covers them, so growing the clone would overwrite them.
+		REQUIRE_THROWS_AS(
+		  std::unique_ptr<RTC::RTP::Packet>(packet->Clone(rtpCommon::FactoryBuffer, 200)),
+		  MediaSoupTypeError);
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    packet->GetBuffer(), packet->GetLength(), originalBytes.data(), originalBytes.size()) == true);
+
+		// The given buffer is within the free space of the packet, so growing the
+		// packet would overwrite the clone.
+		REQUIRE_THROWS_AS(
+		  std::unique_ptr<RTC::RTP::Packet>(packet->Clone(rtpCommon::FactoryBuffer + 130, 70)),
+		  MediaSoupTypeError);
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    packet->GetBuffer(), packet->GetLength(), originalBytes.data(), originalBytes.size()) == true);
+
+		// Same buffer but without sharing memory.
+		const std::unique_ptr<RTC::RTP::Packet> clonedPacket{ packet->Clone(
+			rtpCommon::FactoryBuffer + 150, 50) };
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    clonedPacket->GetBuffer(),
+		    clonedPacket->GetLength(),
+		    originalBytes.data(),
+		    originalBytes.size()) == true);
+	}
 }

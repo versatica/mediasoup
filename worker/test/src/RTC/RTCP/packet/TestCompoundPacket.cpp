@@ -1226,6 +1226,24 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 	}
 
 	SECTION(
+	  "CompoundPacket::AddPacket() throws if the buffer of the packet covers where it would be cloned")
+	{
+		// The packet would be cloned at [200, 212).
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
+			RTC::RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer + 200, 1000)
+		};
+
+		// The bytes of the packet, [150, 162), don't overlap where it would be
+		// cloned, but its buffer, [150, 2000), does.
+		const std::unique_ptr<RTC::RTCP::PliPacket> packet{ RTC::RTCP::PliPacket::Factory(
+			rtcpCommon::FactoryBuffer + 150, 1850) };
+
+		REQUIRE_THROWS_AS(compoundPacket->AddPacket(packet.get()), MediaSoupTypeError);
+		REQUIRE(compoundPacket->GetLength() == 0);
+		REQUIRE(compoundPacket->GetPacketsCount() == 0);
+	}
+
+	SECTION(
 	  "CompoundPacket::BuildPacketInPlace() and AddPacket() throw if the CompoundPacket needs consolidation")
 	{
 		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
