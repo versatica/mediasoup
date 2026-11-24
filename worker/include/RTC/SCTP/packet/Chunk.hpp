@@ -285,6 +285,8 @@ namespace RTC
 			 *   error cause yet.
 			 * - MediaSoupTypeError - If there is no space in the buffer for given
 			 *   parameter.
+			 * - MediaSoupTypeError - If the buffer of given parameter shares memory
+			 *   with the position where it would be cloned.
 			 */
 			virtual void AddParameter(const Parameter* parameter) final;
 
@@ -414,6 +416,8 @@ namespace RTC
 			 *   error cause yet.
 			 * - MediaSoupTypeError - If there is no space in the buffer for given
 			 *   error cause.
+			 * - MediaSoupTypeError - If the buffer of given error cause shares
+			 *   memory with the position where it would be cloned.
 			 */
 			virtual void AddErrorCause(const ErrorCause* errorCause) final;
 

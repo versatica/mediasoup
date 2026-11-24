@@ -407,7 +407,8 @@ namespace RTC
 			try
 			{
 				// Let's append the chunk at the end of existing chunks.
-				// NOTE: It may throw if the given chunk needs consolidation.
+				// NOTE: It may throw if the given chunk needs consolidation or if its
+				// buffer shares memory with the position where it would be cloned.
 				clonedChunk =
 				  chunk->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, chunk->GetLength());
 			}

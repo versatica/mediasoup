@@ -336,7 +336,8 @@ namespace RTC
 			try
 			{
 				// Let's append the packet at the end of existing packets.
-				// NOTE: It may throw if the given packet needs consolidation.
+				// NOTE: It may throw if the given packet needs consolidation or if its
+				// buffer shares memory with the position where it would be cloned.
 				clonedPacket =
 				  packet->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, packet->GetLength());
 			}

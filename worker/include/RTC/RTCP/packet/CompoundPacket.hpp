@@ -118,6 +118,8 @@ namespace RTC
 			 *   being built in place within it).
 			 * - MediaSoupTypeError - If there is no space in the buffer for given
 			 *   packet.
+			 * - MediaSoupTypeError - If the buffer of given packet shares memory
+			 *   with the position where it would be cloned.
 			 */
 			void AddPacket(const Packet* packet);
 

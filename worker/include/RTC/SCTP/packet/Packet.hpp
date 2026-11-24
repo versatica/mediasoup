@@ -212,6 +212,8 @@ namespace RTC
 			 *   being built in place within it).
 			 * - MediaSoupTypeError - If there is no space in the buffer for given
 			 *   chunk.
+			 * - MediaSoupTypeError - If the buffer of given chunk shares memory with
+			 *   the position where it would be cloned.
 			 */
 			void AddChunk(const Chunk* chunk);
 

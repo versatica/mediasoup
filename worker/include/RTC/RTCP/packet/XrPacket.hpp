@@ -176,6 +176,8 @@ namespace RTC
 			 *   returned Extended Report block yet.
 			 * - MediaSoupTypeError - If there is no space in the buffer for given
 			 *   Extended Report block.
+			 * - MediaSoupTypeError - If the buffer of given Extended Report block
+			 *   shares memory with the position where it would be cloned.
 			 */
 			void AddExtendedReport(const ExtendedReport* extendedReport);
 
