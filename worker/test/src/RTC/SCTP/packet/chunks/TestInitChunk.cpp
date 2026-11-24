@@ -463,7 +463,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedParameter3->GetLifeSpanIncrement() == 876543210);
 	}
 
-	SECTION("InitChunk::Factory() using AddParameter() succeeds")
+	SECTION("InitChunk::Factory() using InitChunk::AddParameter() succeeds")
 	{
 		std::unique_ptr<RTC::SCTP::InitChunk> chunk{ RTC::SCTP::InitChunk::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
@@ -621,5 +621,36 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(obtainedParameter2->GetAddressTypeAt(0) == 1111);
 		REQUIRE(obtainedParameter2->GetAddressTypeAt(1) == 2222);
 		REQUIRE(obtainedParameter2->GetAddressTypeAt(2) == 3333);
+	}
+
+	SECTION(
+	  "InitChunk::AddParameter() throws if the buffer of the parameter covers where it would be cloned")
+	{
+		// The parameter would be cloned at [220, 228).
+		const std::unique_ptr<RTC::SCTP::InitChunk> chunk{ RTC::SCTP::InitChunk::Factory(
+			sctpCommon::FactoryBuffer + 200, 1000) };
+
+		// The bytes of the parameter, [150, 158), don't overlap where it would be
+		// cloned, but its buffer, [150, 2000), does.
+		const std::unique_ptr<RTC::SCTP::CookiePreservativeParameter> parameter{
+			RTC::SCTP::CookiePreservativeParameter::Factory(sctpCommon::FactoryBuffer + 150, 1850)
+		};
+
+		REQUIRE_THROWS_AS(chunk->AddParameter(parameter.get()), MediaSoupTypeError);
+
+		// The chunk is left as it was.
+		CHECK_SCTP_CHUNK(
+		  /*chunk*/ chunk.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer + 200,
+		  /*bufferLength*/ 1000,
+		  /*length*/ 20,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::INIT,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 	}
 }

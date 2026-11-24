@@ -19,20 +19,20 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 	};
 	// clang-format on
 
-	SECTION("Get3Bytes()")
+	SECTION("Byte::Get3Bytes()")
 	{
 		// Bytes 4,5 and 6 in the array are number 8405024.
 		REQUIRE(Utils::Byte::Get3Bytes(buffer, 4) == 8405024);
 	}
 
-	SECTION("Set3Bytes()")
+	SECTION("Byte::Set3Bytes()")
 	{
 		Utils::Byte::Set3Bytes(buffer, 4, 5666777);
 
 		REQUIRE(Utils::Byte::Get3Bytes(buffer, 4) == 5666777);
 	}
 
-	SECTION("Get3BytesSigned()")
+	SECTION("Byte::Get3BytesSigned()")
 	{
 		// Bytes 8, 9 and 10 in the array are number 8388607 since first bit is 0 and
 		// all other bits are 1, so it must be maximum positive 24 bits signed integer,
@@ -48,7 +48,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::Get3BytesSigned(buffer, 16) == -8388608);
 	}
 
-	SECTION("Set3BytesSigned()")
+	SECTION("Byte::Set3BytesSigned()")
 	{
 		Utils::Byte::Set3BytesSigned(buffer, 0, 8388607);
 
@@ -63,7 +63,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::Get3BytesSigned(buffer, 0) == -8388608);
 	}
 
-	SECTION("IsPaddedTo4Bytes()")
+	SECTION("Byte::IsPaddedTo4Bytes()")
 	{
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint8_t{ 0 }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint8_t{ 1 }) == false);
@@ -152,7 +152,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 #endif
 	}
 
-	SECTION("IsPaddedTo8Bytes()")
+	SECTION("Byte::IsPaddedTo8Bytes()")
 	{
 		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 0 }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 1 }) == false);
@@ -241,7 +241,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 #endif
 	}
 
-	SECTION("PadTo4Bytes()")
+	SECTION("Byte::PadTo4Bytes()")
 	{
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint8_t{ 0 }) == 0);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint8_t{ 1 }) == 4);
@@ -339,7 +339,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 #endif
 	}
 
-	SECTION("PadDownTo4Bytes()")
+	SECTION("Byte::PadDownTo4Bytes()")
 	{
 		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 0 }) == 0);
 		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 1 }) == 0);
@@ -437,7 +437,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 #endif
 	}
 
-	SECTION("PadTo8Bytes()")
+	SECTION("Byte::PadTo8Bytes()")
 	{
 		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 0 }) == 0);
 		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 1 }) == 8);

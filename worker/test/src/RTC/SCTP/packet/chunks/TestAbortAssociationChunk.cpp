@@ -218,7 +218,7 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedErrorCause1->GetMeasureOfStaleness() == 666);
 	}
 
-	SECTION("AbortAssociationChunk::Factory() with AddErrorCause() succeeds")
+	SECTION("AbortAssociationChunk::Factory() with AbortAssociationChunk::AddErrorCause() succeeds")
 	{
 		std::unique_ptr<RTC::SCTP::AbortAssociationChunk> chunk{ RTC::SCTP::AbortAssociationChunk::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
@@ -301,5 +301,37 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 		  /*unknownCode*/ false);
 
 		REQUIRE(obtainedErrorCause1->GetMeasureOfStaleness() == 666666);
+	}
+
+	SECTION(
+	  "AbortAssociationChunk::AddErrorCause() throws if the buffer of the error cause covers where it would be cloned")
+	{
+		// The error cause would be cloned at [204, 212).
+		const std::unique_ptr<RTC::SCTP::AbortAssociationChunk> chunk{
+			RTC::SCTP::AbortAssociationChunk::Factory(sctpCommon::FactoryBuffer + 200, 1000)
+		};
+
+		// The bytes of the error cause, [150, 158), don't overlap where it would
+		// be cloned, but its buffer, [150, 2000), does.
+		const std::unique_ptr<RTC::SCTP::StaleCookieErrorCause> errorCause{
+			RTC::SCTP::StaleCookieErrorCause::Factory(sctpCommon::FactoryBuffer + 150, 1850)
+		};
+
+		REQUIRE_THROWS_AS(chunk->AddErrorCause(errorCause.get()), MediaSoupTypeError);
+
+		// The chunk is left as it was.
+		CHECK_SCTP_CHUNK(
+		  /*chunk*/ chunk.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer + 200,
+		  /*bufferLength*/ 1000,
+		  /*length*/ 4,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::ABORT,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ true,
+		  /*errorCausesCount*/ 0);
 	}
 }

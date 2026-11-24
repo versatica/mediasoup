@@ -165,6 +165,14 @@ namespace RTC
 			}
 		}
 
+		void TLV::UndoAddItem(size_t previousLength, uint16_t previousLengthField)
+		{
+			MS_TRACE();
+
+			SetLength(previousLength);
+			SetLengthField(previousLengthField);
+		}
+
 		void TLV::SetLengthField(size_t length)
 		{
 			MS_TRACE();

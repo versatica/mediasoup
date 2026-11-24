@@ -1920,7 +1920,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		REQUIRE(output == 1004);
 	}
 
-	SECTION("GetMaxOutput() returns the real max output (with initial output)")
+	SECTION("SeqManager::GetMaxOutput() returns the real max output (with initial output)")
 	{
 		RTC::SeqManager<uint16_t> seqManager(/*initialOutput*/ 1000);
 		uint16_t output{ 0 };

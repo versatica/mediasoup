@@ -22,7 +22,7 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 	};
 
 	SECTION(
-	  "EncodeSubchannels() encodes subchannels, requiredSubchannel and ignoredSubchannel and DecodeSubchannels() decodes them back")
+	  "SubchannelsCodec::EncodeSubchannels() encodes subchannels, requiredSubchannel and ignoredSubchannel and SubchannelsCodec::DecodeSubchannels() decodes them back")
 	{
 		const std::vector<uint8_t> originalPayload = { 0x01, 0x02, 0x03, 0x04 };
 
@@ -55,7 +55,8 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 		REQUIRE(payloadToVector(message) == originalPayload);
 	}
 
-	SECTION("EncodeSubchannels() encodes subchannels without requiredSubchannel nor ignoredSubchannel")
+	SECTION(
+	  "SubchannelsCodec::EncodeSubchannels() encodes subchannels without requiredSubchannel nor ignoredSubchannel")
 	{
 		const std::vector<uint8_t> originalPayload = { 0xAA, 0xBB };
 
@@ -84,7 +85,7 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 		REQUIRE(payloadToVector(message) == originalPayload);
 	}
 
-	SECTION("EncodeSubchannels() encodes requiredSubchannel without subchannels")
+	SECTION("SubchannelsCodec::EncodeSubchannels() encodes requiredSubchannel without subchannels")
 	{
 		const std::vector<uint8_t> originalPayload = { 0xAA, 0xBB, 0xCC };
 
@@ -112,7 +113,7 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 		REQUIRE(payloadToVector(message) == originalPayload);
 	}
 
-	SECTION("EncodeSubchannels() encodes ignoredSubchannel without subchannels")
+	SECTION("SubchannelsCodec::EncodeSubchannels() encodes ignoredSubchannel without subchannels")
 	{
 		const std::vector<uint8_t> originalPayload = { 0xAA, 0xBB, 0xCC };
 
@@ -140,7 +141,8 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 		REQUIRE(payloadToVector(message) == originalPayload);
 	}
 
-	SECTION("EncodeSubchannels() encodes subchannels and ignoredSubchannel without requiredSubchannel")
+	SECTION(
+	  "SubchannelsCodec::EncodeSubchannels() encodes subchannels and ignoredSubchannel without requiredSubchannel")
 	{
 		const std::vector<uint8_t> originalPayload = { 0x11 };
 
@@ -171,7 +173,7 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 		REQUIRE(payloadToVector(message) == originalPayload);
 	}
 
-	SECTION("EncodeSubchannels() does nothing if there is nothing to encode")
+	SECTION("SubchannelsCodec::EncodeSubchannels() does nothing if there is nothing to encode")
 	{
 		const std::vector<uint8_t> originalPayload = { 0x01, 0x02 };
 
@@ -184,7 +186,8 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 		REQUIRE(payloadToVector(message) == originalPayload);
 	}
 
-	SECTION("DecodeSubchannels() does nothing if the message does not start with the Magic Token")
+	SECTION(
+	  "SubchannelsCodec::DecodeSubchannels() does nothing if the message does not start with the Magic Token")
 	{
 		const std::vector<uint8_t> originalPayload(12);
 
@@ -204,7 +207,8 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 		REQUIRE(payloadToVector(message) == originalPayload);
 	}
 
-	SECTION("DecodeSubchannels() does nothing if the message is shorter than the Magic Token")
+	SECTION(
+	  "SubchannelsCodec::DecodeSubchannels() does nothing if the message is shorter than the Magic Token")
 	{
 		const std::vector<uint8_t> originalPayload = { 0x01, 0x02 };
 
@@ -225,7 +229,7 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 	}
 
 	SECTION(
-	  "DecodeSubchannels() ignores a truncated message that announces more subchannels than present")
+	  "SubchannelsCodec::DecodeSubchannels() ignores a truncated message that announces more subchannels than present")
 	{
 		// Craft a payload with the Magic Token (no flags set) that announces 3
 		// subchannels but does not carry their bytes.
@@ -251,7 +255,7 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 	}
 
 	SECTION(
-	  "DecodeSubchannels() ignores a message whose requiredSubchannelFlag is set but has no room for the requiredSubchannel field")
+	  "SubchannelsCodec::DecodeSubchannels() ignores a message whose requiredSubchannelFlag is set but has no room for the requiredSubchannel field")
 	{
 		// Craft a payload with the Magic Token and requiredSubchannelFlag set,
 		// announcing 1 subchannel (present) but without the requiredSubchannel bytes.
@@ -281,7 +285,7 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 	}
 
 	SECTION(
-	  "DecodeSubchannels() ignores a message whose ignoredSubchannelFlag is set but has no room for the ignoredSubchannel field")
+	  "SubchannelsCodec::DecodeSubchannels() ignores a message whose ignoredSubchannelFlag is set but has no room for the ignoredSubchannel field")
 	{
 		// Craft a payload with the Magic Token and ignoredSubchannelFlag set,
 		// announcing 1 subchannel (present) but without the ignoredSubchannel bytes.
@@ -311,7 +315,7 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 	}
 
 	SECTION(
-	  "DecodeSubchannels() ignores a message with both flags set but room for just one of the fields")
+	  "SubchannelsCodec::DecodeSubchannels() ignores a message with both flags set but room for just one of the fields")
 	{
 		// Craft a payload with the Magic Token and both flags set, announcing no
 		// subchannels but carrying just 2 bytes after the header.
@@ -338,7 +342,8 @@ SCENARIO("SubchannelsCodec", "[subchannels]")
 		REQUIRE(payloadToVector(message) == originalPayload);
 	}
 
-	SECTION("EncodeSubchannels() and DecodeSubchannels() work with an empty original payload")
+	SECTION(
+	  "SubchannelsCodec::EncodeSubchannels() and SubchannelsCodec::DecodeSubchannels() work with an empty original payload")
 	{
 		auto message = makeMessage({});
 

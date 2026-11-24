@@ -416,7 +416,8 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 		REQUIRE(prober.IsProbing());
 	}
 
-	SECTION("StopProbing() drops the bursts that are waiting and lets the one going out finish")
+	SECTION(
+	  "BitrateProber::StopProbing() drops the bursts that are waiting and lets the one going out finish")
 	{
 		constexpr int64_t Bitrate{ 300000 };
 
@@ -444,7 +445,7 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 		REQUIRE(!prober.IsProbing());
 	}
 
-	SECTION("StopProbing() drops a burst that had not begun")
+	SECTION("BitrateProber::StopProbing() drops a burst that had not begun")
 	{
 		constexpr int64_t Bitrate{ 300000 };
 		constexpr size_t SmallPacketSize{ 20 };

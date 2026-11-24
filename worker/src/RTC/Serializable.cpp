@@ -187,6 +187,20 @@ namespace RTC
 			  this->length);
 		}
 
+		// The clone would share memory with this Serializable, so growing any of
+		// them would overwrite the other one.
+		const std::less<> less;
+		const auto* const clonedBuffer = serializable->GetBuffer();
+
+		if (
+		  less(clonedBuffer, this->buffer + this->bufferLength) &&
+		  less(this->buffer, clonedBuffer + serializable->GetBufferLength()))
+		{
+			delete serializable;
+
+			MS_THROW_TYPE_ERROR("given buffer shares memory with the buffer of the Serializable");
+		}
+
 		std::memmove(const_cast<uint8_t*>(serializable->GetBuffer()), this->buffer, this->length);
 
 		// Need to manually set Serializable length.

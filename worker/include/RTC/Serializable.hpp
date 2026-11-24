@@ -124,6 +124,8 @@ namespace RTC
 		 *   Serializable (see `NeedsConsolidation()`).
 		 * - MediaSoupError - If given `bufferLength` is lower than the current
 		 *   exact length of the Serializable.
+		 * - MediaSoupError - If given `buffer` shares memory with the buffer of
+		 *   the Serializable.
 		 */
 		virtual Serializable* Clone(uint8_t* buffer, size_t bufferLength) const = 0;
 
@@ -249,6 +251,8 @@ namespace RTC
 		 *   Serializable (see `NeedsConsolidation()`).
 		 * - MediaSoupError - If the buffer length of the given `serializable` is
 		 *   too small.
+		 * - MediaSoupError - If the buffer of the given `serializable` shares
+		 *   memory with the buffer of this Serializable.
 		 */
 		virtual void CloneInto(Serializable* serializable) const;
 

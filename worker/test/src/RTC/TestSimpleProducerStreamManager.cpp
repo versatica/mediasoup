@@ -359,7 +359,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		REQUIRE(result.tsOffset == 0);
 	}
 
-	SECTION("OnTransportConnected() requests keyframe when active")
+	SECTION("SimpleProducerStreamManager::OnTransportConnected() requests keyframe when active")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -374,7 +374,8 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
-	SECTION("OnTransportConnected() does not request keyframe when not active")
+	SECTION(
+	  "SimpleProducerStreamManager::OnTransportConnected() does not request keyframe when not active")
 	{
 		MockListener listener;
 		listener.isActive = false;
@@ -387,7 +388,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		REQUIRE(listener.keyFrameRequestCount == 0);
 	}
 
-	SECTION("OnResumed() sets syncRequired and requests keyframe")
+	SECTION("SimpleProducerStreamManager::OnResumed() sets syncRequired and requests keyframe")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -412,7 +413,8 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::BUFFER);
 	}
 
-	SECTION("GetBitrateOptions() offers the single point of the Producer stream bitrate")
+	SECTION(
+	  "SimpleProducerStreamManager::GetBitrateOptions() offers the single point of the Producer stream bitrate")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -436,7 +438,8 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		REQUIRE(bitrateOptions.currentOption == 0);
 	}
 
-	SECTION("GetBitrateOptions() offers a point of 0 while no Producer stream has arrived")
+	SECTION(
+	  "SimpleProducerStreamManager::GetBitrateOptions() offers a point of 0 while no Producer stream has arrived")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));

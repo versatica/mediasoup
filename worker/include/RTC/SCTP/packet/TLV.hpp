@@ -158,6 +158,16 @@ namespace RTC
 			 */
 			virtual void AddItem(const TLV* item) final;
 
+			/**
+			 * Undo a previous call to `AddItem()` by restoring the length of the
+			 * Serializable and the value of the length field that it had before.
+			 *
+			 * @param previousLength - Length before calling `AddItem()`.
+			 * @param previousLengthField - Value of the length field before calling
+			 *   `AddItem()`.
+			 */
+			virtual void UndoAddItem(size_t previousLength, uint16_t previousLengthField) final;
+
 		private:
 			/**
 			 * @throw

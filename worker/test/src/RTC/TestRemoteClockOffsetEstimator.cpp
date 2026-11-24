@@ -222,7 +222,7 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 		REQUIRE(estimator.RemoteUsToLocalUs(0).has_value() == false);
 	}
 
-	SECTION("Reset() clears the estimation")
+	SECTION("RemoteClockOffsetEstimator::Reset() clears the estimation")
 	{
 		feed(estimator, RemoteBaseUs, LocalBaseUs, minSampleCount, 0, 0);
 

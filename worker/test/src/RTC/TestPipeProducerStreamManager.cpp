@@ -131,7 +131,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	packet->SetSsrc(MappedSsrc0);
 	packet->SetPayloadLength(40);
 
-	SECTION("IsActive() returns listener state")
+	SECTION("PipeProducerStreamManager::IsActive() returns listener state")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
@@ -143,7 +143,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(manager->IsActive() == false);
 	}
 
-	SECTION("ProcessRtpPacket() returns FORWARD with isSyncPacket on first packet after connect")
+	SECTION(
+	  "PipeProducerStreamManager::ProcessRtpPacket() returns FORWARD with isSyncPacket on first packet after connect")
 	{
 		MockListener listener;
 		auto manager =
@@ -172,7 +173,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(result.isSyncPacket == false);
 	}
 
-	SECTION("ProcessRtpPacket() returns BUFFER when sync required and packet is not a key frame")
+	SECTION(
+	  "PipeProducerStreamManager::ProcessRtpPacket() returns BUFFER when sync required and packet is not a key frame")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
@@ -188,7 +190,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::BUFFER);
 	}
 
-	SECTION("ProcessRtpPacket() syncs independently per stream")
+	SECTION("PipeProducerStreamManager::ProcessRtpPacket() syncs independently per stream")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -226,7 +228,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(result2.isSyncPacket == false);
 	}
 
-	SECTION("ProcessRtpPacket() returns FORWARD with sendBufferedPackets on key frame sync")
+	SECTION(
+	  "PipeProducerStreamManager::ProcessRtpPacket() returns FORWARD with sendBufferedPackets on key frame sync")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
@@ -248,7 +251,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(result.sendBufferedPackets == true);
 	}
 
-	SECTION("ProcessRtpPacket() returns DROP for empty payload packets")
+	SECTION("PipeProducerStreamManager::ProcessRtpPacket() returns DROP for empty payload packets")
 	{
 		MockListener listener;
 		auto manager =
@@ -270,7 +273,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::DROP);
 	}
 
-	SECTION("ProcessRtpPacket() preserves original marker bit")
+	SECTION("PipeProducerStreamManager::ProcessRtpPacket() preserves original marker bit")
 	{
 		MockListener listener;
 		auto manager =
@@ -295,7 +298,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(result.marker == false);
 	}
 
-	SECTION("OnTransportConnected() sets sync required for all streams and requests key frames")
+	SECTION(
+	  "PipeProducerStreamManager::OnTransportConnected() sets sync required for all streams and requests key frames")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
@@ -326,7 +330,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		}
 	}
 
-	SECTION("OnTransportConnected() does not request key frames when not active")
+	SECTION(
+	  "PipeProducerStreamManager::OnTransportConnected() does not request key frames when not active")
 	{
 		MockListener listener;
 		listener.isActive = false;
@@ -337,7 +342,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(listener.keyFrameRequestCount == 0);
 	}
 
-	SECTION("OnTransportConnected() does not request key frames for audio")
+	SECTION("PipeProducerStreamManager::OnTransportConnected() does not request key frames for audio")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -348,7 +353,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(listener.keyFrameRequestCount == 0);
 	}
 
-	SECTION("OnTransportDisconnected() clears sync required for all streams")
+	SECTION("PipeProducerStreamManager::OnTransportDisconnected() clears sync required for all streams")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -371,7 +376,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		}
 	}
 
-	SECTION("OnPaused() clears sync required for all streams")
+	SECTION("PipeProducerStreamManager::OnPaused() clears sync required for all streams")
 	{
 		MockListener listener;
 		auto manager =
@@ -389,7 +394,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(result.isSyncPacket == false);
 	}
 
-	SECTION("OnResumed() sets sync required and requests key frames for all streams")
+	SECTION(
+	  "PipeProducerStreamManager::OnResumed() sets sync required and requests key frames for all streams")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1 });
@@ -415,7 +421,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		}
 	}
 
-	SECTION("RequestKeyFrame() requests for all video streams")
+	SECTION("PipeProducerStreamManager::RequestKeyFrame() requests for all video streams")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
@@ -425,7 +431,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(listener.keyFrameRequestCount == 3);
 	}
 
-	SECTION("RequestKeyFrame() is no-op for audio")
+	SECTION("PipeProducerStreamManager::RequestKeyFrame() is no-op for audio")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -436,7 +442,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(listener.keyFrameRequestCount == 0);
 	}
 
-	SECTION("RecalculateTargetLayers() always returns false")
+	SECTION("PipeProducerStreamManager::RecalculateTargetLayers() always returns false")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
@@ -446,7 +452,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == false);
 	}
 
-	SECTION("GetBitrateOptions() offers a single point of 0 while no Producer stream has arrived")
+	SECTION(
+	  "PipeProducerStreamManager::GetBitrateOptions() offers a single point of 0 while no Producer stream has arrived")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });

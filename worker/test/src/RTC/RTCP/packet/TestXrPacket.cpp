@@ -759,6 +759,35 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		REQUIRE(packet->HasExtendedReports() == false);
 	}
 
+	SECTION(
+	  "XrPacket::AddExtendedReport() throws if the buffer of the Extended Report block covers where it would be cloned")
+	{
+		// The Extended Report block would be cloned at [208, 220).
+		const std::unique_ptr<RTC::RTCP::XrPacket> packet{ RTC::RTCP::XrPacket::Factory(
+			rtcpCommon::FactoryBuffer + 200, 1000) };
+
+		// The bytes of the Extended Report block, [150, 162), don't overlap where
+		// it would be cloned, but its buffer, [150, 2000), does.
+		const std::unique_ptr<RTC::RTCP::RrtExtendedReport> extendedReport{
+			RTC::RTCP::RrtExtendedReport::Factory(rtcpCommon::FactoryBuffer + 150, 1850)
+		};
+
+		REQUIRE_THROWS_AS(packet->AddExtendedReport(extendedReport.get()), MediaSoupTypeError);
+
+		// The packet is left as it was.
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ rtcpCommon::FactoryBuffer + 200,
+		  /*bufferLength*/ 1000,
+		  /*length*/ 8,
+		  /*packetType*/ RTC::RTCP::Packet::PacketType::XR,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(packet->HasExtendedReports() == false);
+	}
+
 	SECTION("XrPacket::Factory() throws if the buffer is too small")
 	{
 		REQUIRE_THROWS_AS(RTC::RTCP::XrPacket::Factory(rtcpCommon::FactoryBuffer, 7), MediaSoupTypeError);

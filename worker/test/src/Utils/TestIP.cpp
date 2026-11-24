@@ -7,7 +7,7 @@
 
 SCENARIO("Utils::IP", "[utils][ip]")
 {
-	SECTION("GetFamily()")
+	SECTION("IP::GetFamily()")
 	{
 		std::string ip;
 
@@ -84,7 +84,7 @@ SCENARIO("Utils::IP", "[utils][ip]")
 		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 	}
 
-	SECTION("NormalizeIp()")
+	SECTION("IP::NormalizeIp()")
 	{
 		std::string ip;
 
@@ -141,7 +141,7 @@ SCENARIO("Utils::IP", "[utils][ip]")
 		REQUIRE_THROWS_AS(Utils::IP::NormalizeIp(ip), MediaSoupTypeError);
 	}
 
-	SECTION("GetAddressInfo()")
+	SECTION("IP::GetAddressInfo()")
 	{
 		sockaddr_in sin{};
 

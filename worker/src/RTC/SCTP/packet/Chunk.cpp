@@ -169,15 +169,30 @@ namespace RTC
 			AssertCanHaveParameters();
 			AssertDoesNotNeedConsolidation();
 
-			const size_t previousLength = GetLength();
+			const size_t previousLength        = GetLength();
+			const uint16_t previousLengthField = GetLengthField();
 
 			// This will update the total length and length field of the chunk.
 			// NOTE: It may throw.
 			AddItem(parameter);
 
-			// Let's append the parameter at the end of existing parameters.
-			auto* const clonedParameter =
-			  parameter->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, parameter->GetLength());
+			Parameter* clonedParameter{ nullptr };
+
+			try
+			{
+				// Let's append the parameter at the end of existing parameters.
+				// NOTE: It may throw if the buffer of the given parameter shares memory
+				// with the position where it would be cloned.
+				clonedParameter = parameter->Clone(
+				  const_cast<uint8_t*>(GetBuffer()) + previousLength, parameter->GetLength());
+			}
+			catch (const MediaSoupError&)
+			{
+				// Rollback.
+				UndoAddItem(previousLength, previousLengthField);
+
+				throw;
+			}
 
 			// Add the parameter to the list.
 			this->parameters.push_back(clonedParameter);
@@ -190,15 +205,30 @@ namespace RTC
 			AssertCanHaveErrorCauses();
 			AssertDoesNotNeedConsolidation();
 
-			const size_t previousLength = GetLength();
+			const size_t previousLength        = GetLength();
+			const uint16_t previousLengthField = GetLengthField();
 
 			// This will update the total length and length field of the chunk.
 			// NOTE: It may throw.
 			AddItem(errorCause);
 
-			// Let's append the error cause at the end of existing error causes.
-			auto* const clonedErrorCause = errorCause->Clone(
-			  const_cast<uint8_t*>(GetBuffer()) + previousLength, errorCause->GetLength());
+			ErrorCause* clonedErrorCause{ nullptr };
+
+			try
+			{
+				// Let's append the error cause at the end of existing error causes.
+				// NOTE: It may throw if the buffer of the given error cause shares
+				// memory with the position where it would be cloned.
+				clonedErrorCause = errorCause->Clone(
+				  const_cast<uint8_t*>(GetBuffer()) + previousLength, errorCause->GetLength());
+			}
+			catch (const MediaSoupError&)
+			{
+				// Rollback.
+				UndoAddItem(previousLength, previousLengthField);
+
+				throw;
+			}
 
 			// Add the error cause to the list.
 			this->errorCauses.push_back(clonedErrorCause);

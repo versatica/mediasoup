@@ -742,7 +742,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		REQUIRE(unknownPacket->HasUnknownMessageType() == true);
 	}
 
-	SECTION("CompoundPacket::Parse() with a XR packet, Serialize() and Clone() succeed")
+	SECTION(
+	  "CompoundPacket::Parse() with a XR packet, CompoundPacket::Serialize() and CompoundPacket::Clone() succeed")
 	{
 		const auto checkPackets =
 		  [](const RTC::RTCP::CompoundPacket* compoundPacket, const uint8_t* buffer) -> void
@@ -860,7 +861,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		checkPackets(compoundPacket.get(), rtcpCommon::CloneBuffer);
 	}
 
-	SECTION("CompoundPacket::Parse() with a Transport-wide CC packet, Serialize() and Clone() succeed")
+	SECTION(
+	  "CompoundPacket::Parse() with a Transport-wide CC packet, CompoundPacket::Serialize() and CompoundPacket::Clone() succeed")
 	{
 		const auto checkPackets =
 		  [](const RTC::RTCP::CompoundPacket* compoundPacket, const uint8_t* buffer) -> void
@@ -1011,7 +1013,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		REQUIRE(!RTC::RTCP::CompoundPacket::Parse(buffer, sizeof(buffer)));
 	}
 
-	SECTION("CompoundPacket::Factory() using AddPacket() with a Transport-wide CC packet succeeds")
+	SECTION(
+	  "CompoundPacket::Factory() using CompoundPacket::AddPacket() with a Transport-wide CC packet succeeds")
 	{
 		const auto checkPackets =
 		  [](const RTC::RTCP::CompoundPacket* compoundPacket, const uint8_t* buffer) -> void
@@ -1095,7 +1098,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		checkPackets(parsedCompoundPacket.get(), rtcpCommon::FactoryBuffer);
 	}
 
-	SECTION("CompoundPacket::Factory() using AddPacket() succeeds")
+	SECTION("CompoundPacket::Factory() using CompoundPacket::AddPacket() succeeds")
 	{
 		const auto checkPackets =
 		  [](const RTC::RTCP::CompoundPacket* compoundPacket, const uint8_t* buffer) -> void
@@ -1226,7 +1229,25 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 	}
 
 	SECTION(
-	  "CompoundPacket::BuildPacketInPlace() and AddPacket() throw if the CompoundPacket needs consolidation")
+	  "CompoundPacket::AddPacket() throws if the buffer of the packet covers where it would be cloned")
+	{
+		// The packet would be cloned at [200, 212).
+		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
+			RTC::RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer + 200, 1000)
+		};
+
+		// The bytes of the packet, [150, 162), don't overlap where it would be
+		// cloned, but its buffer, [150, 2000), does.
+		const std::unique_ptr<RTC::RTCP::PliPacket> packet{ RTC::RTCP::PliPacket::Factory(
+			rtcpCommon::FactoryBuffer + 150, 1850) };
+
+		REQUIRE_THROWS_AS(compoundPacket->AddPacket(packet.get()), MediaSoupTypeError);
+		REQUIRE(compoundPacket->GetLength() == 0);
+		REQUIRE(compoundPacket->GetPacketsCount() == 0);
+	}
+
+	SECTION(
+	  "CompoundPacket::BuildPacketInPlace() and CompoundPacket::AddPacket() throw if the CompoundPacket needs consolidation")
 	{
 		const std::unique_ptr<RTC::RTCP::CompoundPacket> compoundPacket{
 			RTC::RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer, 1000)

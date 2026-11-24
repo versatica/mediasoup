@@ -28,7 +28,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(alignof(RTC::SCTP::Packet::CommonHeader) == 4);
 	}
 
-	SECTION("Parse() without chunks succeeds")
+	SECTION("Packet::Parse() without chunks succeeds")
 	{
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
@@ -117,7 +117,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::DataChunk>() == nullptr);
 	}
 
-	SECTION("Parse() with chunks succeeds")
+	SECTION("Packet::Parse() with chunks succeeds")
 	{
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
@@ -505,7 +505,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(parameter3_1->GetInfo()[3] == 0x00);
 	}
 
-	SECTION("Factory() with chunks succeeds")
+	SECTION("Packet::Factory() with chunks succeeds")
 	{
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
@@ -751,7 +751,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(obtainedParameter2_1->GetInfo()[2] == 0x02);
 	}
 
-	SECTION("Factory() using AddChunk() succeeds")
+	SECTION("Packet::Factory() using Packet::AddChunk() succeeds")
 	{
 		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, 1000) };
@@ -814,7 +814,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(obtainedChunk1->GetT() == true);
 	}
 
-	SECTION("AddChunk() throws and leaves the Packet as it was")
+	SECTION("Packet::AddChunk() throws and leaves the Packet as it was")
 	{
 		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, 28) };
@@ -878,7 +878,33 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		parameter2->Discard();
 	}
 
-	SECTION("BuildChunkInPlace() throws if given chunk exceeds Packet buffer length")
+	SECTION("Packet::AddChunk() throws if the buffer of the chunk covers where it would be cloned")
+	{
+		// The chunk would be cloned at [212, 232).
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer + 200, 1000) };
+
+		// The bytes of the chunk, [150, 170), don't overlap where it would be
+		// cloned, but its buffer, [150, 2000), does.
+		const std::unique_ptr<RTC::SCTP::InitChunk> chunk{ RTC::SCTP::InitChunk::Factory(
+			sctpCommon::FactoryBuffer + 150, 1850) };
+
+		REQUIRE_THROWS_AS(packet->AddChunk(chunk.get()), MediaSoupTypeError);
+
+		CHECK_SCTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer + 200,
+		  /*bufferLength*/ 1000,
+		  /*length*/ 12,
+		  /*sourcePort*/ 0,
+		  /*destinationPort*/ 0,
+		  /*verificationTag*/ 0,
+		  /*checksum*/ 0,
+		  /*hasValidCrc32cChecksum*/ false,
+		  /*chunksCount*/ 0);
+	}
+
+	SECTION("Packet::BuildChunkInPlace() throws if given chunk exceeds Packet buffer length")
 	{
 		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, 28) };
@@ -919,7 +945,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*chunksCount*/ 0);
 	}
 
-	SECTION("BuildChunkInPlace() and AddChunk() throw if the Packet needs consolidation")
+	SECTION("Packet::BuildChunkInPlace() and Packet::AddChunk() throw if the Packet needs consolidation")
 	{
 		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, 1000) };
@@ -965,7 +991,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(packet->NeedsConsolidation() == false);
 	}
 
-	SECTION("Discard() removes the chunk being built in place")
+	SECTION("Chunk::Discard() removes the chunk being built in place")
 	{
 		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, 1000) };
