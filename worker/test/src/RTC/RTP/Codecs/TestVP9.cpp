@@ -241,10 +241,46 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		REQUIRE(context.GetTemporalLayerForFrameId(start + 1000) == 1);
 		REQUIRE(context.GetTemporalLayerForFrameId(start + 0) == 1); // It will get the item at start+1.
 
-		context.SetCurrentTemporalLayer(0, 0); // This will drop items from start to start+999.
+		context.SetCurrentTemporalLayer(0, 0); // This will drop items from start to start+1000.
 
 		REQUIRE(context.GetTemporalLayerForFrameId(0) == 0);
-		REQUIRE(context.GetTemporalLayerForFrameId(start + 0) == 1); // It will get the item at start+1000.
+		REQUIRE(context.GetTemporalLayerForFrameId(start + 0) == 2); // It will get the item at start+1001.
+	}
+
+	// A layer change is kept while it is no more than a thousand frames behind
+	// the one being recorded, and frame ids wrap, so the distance between them is
+	// taken in the space they are numbered in.
+	SECTION("the frames a layer change is behind are counted across the wrap")
+	{
+		// Close enough to the 15 bits wrap that a change a thousand frames later
+		// has a lower frame id than this one.
+		constexpr uint16_t Start{ MaxPictureId - 767 };
+
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 1, .temporalLayers = 3 };
+
+		// Records a layer change at `Start`, another at the next frame and a third
+		// one the given number of frames past `Start`. Tells the layer the frame at
+		// `Start` is given then, which is the one of its own change unless that
+		// change was dropped for being too far behind.
+		const auto layerAtStart = [&params](uint16_t frames) -> int16_t
+		{
+			RTC::RTP::Codecs::VP9::EncodingContext context(params);
+
+			context.SetCurrentTemporalLayer(0, Start);
+			context.SetCurrentTemporalLayer(1, Start + 1);
+			context.SetCurrentTemporalLayer(2, static_cast<uint16_t>((Start + frames) & MaxPictureId));
+
+			return context.GetTemporalLayerForFrameId(Start);
+		};
+
+		// No frames at all past it, which a target layer changed in the middle of a
+		// frame brings about, and a thousand frames past it.
+		REQUIRE(layerAtStart(0) == 0);
+		REQUIRE(layerAtStart(1000) == 0);
+
+		// Past that the change at `Start` is dropped, so the one at the next frame
+		// is the oldest one left and tells the layer.
+		REQUIRE(layerAtStart(1001) == 1);
 	}
 
 	// VP9 numbers its pictures with 15 bits, so that is where the frame ids of a
