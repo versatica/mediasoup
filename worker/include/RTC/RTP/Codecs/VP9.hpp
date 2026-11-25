@@ -109,7 +109,7 @@ namespace RTC
 				 * @param pictureIdUnwrapper - Unwrapper of the stream the packet
 				 *   belongs to, which extends its pictureId into the 15 bits.
 				 */
-				static void ProcessRtpPacket(
+				[[nodiscard]] static bool ProcessRtpPacket(
 				  RTP::Packet* packet,
 				  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext,
 				  Codecs::PictureIdUnwrapper& pictureIdUnwrapper);

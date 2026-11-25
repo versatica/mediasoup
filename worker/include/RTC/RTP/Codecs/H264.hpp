@@ -41,7 +41,7 @@ namespace RTC
 			public:
 				static H264::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
 				static bool IsKeyFrame(const uint8_t* data, size_t len);
-				static void ProcessRtpPacket(
+				[[nodiscard]] static bool ProcessRtpPacket(
 				  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext);
 
 			public:

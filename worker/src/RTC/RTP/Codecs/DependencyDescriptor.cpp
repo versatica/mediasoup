@@ -96,14 +96,18 @@ namespace RTC
 				// Update the template dependency structure if needed.
 				if (dependencyDescriptor->templateDependencyStructurePresent)
 				{
-					// A structure only counts in the first packet of its frame, and only if
-					// its frame is not older than the one that brought the structure in use.
+					// A structure may only be given in the first packet of its frame.
 					if (!dependencyDescriptor->startOfFrame)
 					{
-						MS_DEBUG_DEV(
-						  "ignoring a template dependency structure that is not in the first packet of its frame");
+						MS_WARN_TAG(
+						  codec, "template dependency structure in a packet that does not start its frame");
+
+						return nullptr;
 					}
-					else if (
+
+					// A structure only counts if its frame is not older than the one that
+					// brought the structure in use.
+					if (
 					  context.unwrappedStructureFrameNumber.has_value() &&
 					  unwrappedFrameNumber < context.unwrappedStructureFrameNumber.value())
 					{

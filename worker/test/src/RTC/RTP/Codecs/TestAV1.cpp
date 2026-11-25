@@ -141,7 +141,7 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions) == true);
 
-		RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
+		REQUIRE(RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
 
 		// A payload descriptor handler is installed, which is what tells the
 		// length the rewritten descriptor may grow to.
@@ -168,7 +168,7 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 
 		packet->SetPayload(payload, sizeof(payload));
 
-		RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
+		REQUIRE(RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
 
 		REQUIRE(packet->GetDependencyDescriptorMaxLength() == 0);
 		REQUIRE(!dependencyDescriptorContext.templateDependencyStructure);
@@ -193,7 +193,7 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 
 		packet->SetPayload(payload, sizeof(payload));
 
-		RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
+		REQUIRE(RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
 
 		REQUIRE(packet->IsKeyFrame() == false);
 	}

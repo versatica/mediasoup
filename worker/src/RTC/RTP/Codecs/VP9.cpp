@@ -110,7 +110,7 @@ namespace RTC
 				return payloadDescriptor.release();
 			}
 
-			void VP9::ProcessRtpPacket(
+			bool VP9::ProcessRtpPacket(
 			  RTP::Packet* packet,
 			  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext,
 			  Codecs::PictureIdUnwrapper& pictureIdUnwrapper)
@@ -124,11 +124,17 @@ namespace RTC
 				//
 				// NOTE: The payload descriptor of the codec is parsed all the same, for
 				// the Consumers that did not and cannot be told the layers any other way.
-				auto* const dependencyDescriptorPayloadDescriptor =
-				  DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext);
-
-				if (dependencyDescriptorPayloadDescriptor)
+				if (packet->HasDependencyDescriptor())
 				{
+					auto* const dependencyDescriptorPayloadDescriptor =
+					  DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext);
+
+					// The descriptor could not be parsed.
+					if (!dependencyDescriptorPayloadDescriptor)
+					{
+						return false;
+					}
+
 					packet->SetDependencyDescriptorPayloadDescriptorHandler(
 					  std::make_unique<DependencyDescriptorPayloadDescriptorHandler>(
 					    dependencyDescriptorPayloadDescriptor));
@@ -141,7 +147,7 @@ namespace RTC
 
 				if (!payloadDescriptor)
 				{
-					return;
+					return true;
 				}
 
 				// Extend the pictureId into the 15 bits, that is, carrying the cycles a 7
@@ -166,6 +172,8 @@ namespace RTC
 
 				packet->SetPayloadDescriptorHandler(
 				  std::make_unique<PayloadDescriptorHandler>(payloadDescriptor));
+
+				return true;
 			}
 
 			/* Instance methods. */

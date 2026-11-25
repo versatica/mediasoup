@@ -555,6 +555,11 @@ namespace RTC
 
 			bool ReadSsrcAudioLevel(uint8_t& volume, bool& voice) const;
 
+			bool HasDependencyDescriptor() const
+			{
+				return HasExtension(this->extensionMapping.dependencyDescriptor);
+			}
+
 			bool ReadDependencyDescriptor(
 			  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor,
 			  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext) const;

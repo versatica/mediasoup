@@ -353,8 +353,18 @@ namespace RTC
 					this->pictureIdUnwrapper.Reset();
 				}
 
-				RTP::Codecs::Tools::ProcessRtpPacket(
-				  packet, GetMimeType(), this->dependencyDescriptorContext, this->pictureIdUnwrapper);
+				// A packet the codec cannot process is not forwarded.
+				// Tell about it to NackGenerator so that it stops requesting it.
+				if (!RTP::Codecs::Tools::ProcessRtpPacket(
+				      packet, GetMimeType(), this->dependencyDescriptorContext, this->pictureIdUnwrapper))
+				{
+					if (this->params.useNack)
+					{
+						this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ false);
+					}
+
+					return false;
+				}
 			}
 
 			// Tell the listener if this packet made the stream restart, now that it
@@ -546,8 +556,15 @@ namespace RTC
 			// Process the packet at codec level.
 			if (packet->GetPayloadType() == GetPayloadType())
 			{
-				RTP::Codecs::Tools::ProcessRtpPacket(
-				  packet, GetMimeType(), this->dependencyDescriptorContext, this->pictureIdUnwrapper);
+				// A packet the codec cannot process is not forwarded.
+				// Tell about it to NackGenerator so that it stops requesting it.
+				if (!RTP::Codecs::Tools::ProcessRtpPacket(
+				      packet, GetMimeType(), this->dependencyDescriptorContext, this->pictureIdUnwrapper))
+				{
+					this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ true);
+
+					return false;
+				}
 			}
 
 			// Mark the packet as retransmitted.

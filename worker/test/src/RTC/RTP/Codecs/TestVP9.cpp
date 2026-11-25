@@ -176,8 +176,9 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 			packet->SetPayload(payload, sizeof(payload));
 
 			// As the Producer does, which is what extends the pictureId.
-			RTC::RTP::Codecs::VP9::ProcessRtpPacket(
-			  packet.get(), dependencyDescriptorContext, pictureIdUnwrapper);
+			REQUIRE(
+			  RTC::RTP::Codecs::VP9::ProcessRtpPacket(
+			    packet.get(), dependencyDescriptorContext, pictureIdUnwrapper));
 
 			bool marker;
 
@@ -382,8 +383,9 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 			  payload,
 			  sizeof(payload));
 
-			RTC::RTP::Codecs::VP9::ProcessRtpPacket(
-			  packet.get(), dependencyDescriptorContext, pictureIdUnwrapper);
+			REQUIRE(
+			  RTC::RTP::Codecs::VP9::ProcessRtpPacket(
+			    packet.get(), dependencyDescriptorContext, pictureIdUnwrapper));
 
 			const auto params = makeContext(/*preferDependencyDescriptor*/ true);
 
@@ -416,8 +418,9 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 			  payload,
 			  sizeof(payload));
 
-			RTC::RTP::Codecs::VP9::ProcessRtpPacket(
-			  packet.get(), dependencyDescriptorContext, pictureIdUnwrapper);
+			REQUIRE(
+			  RTC::RTP::Codecs::VP9::ProcessRtpPacket(
+			    packet.get(), dependencyDescriptorContext, pictureIdUnwrapper));
 
 			const auto params = makeContext(/*preferDependencyDescriptor*/ false);
 

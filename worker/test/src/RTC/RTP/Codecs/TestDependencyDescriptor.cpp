@@ -1,5 +1,8 @@
 #include "common.hpp"
+#include "RTC/RTP/Codecs/AV1.hpp"
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
+#include "RTC/RTP/Codecs/H264.hpp"
+#include "RTC/RTP/Codecs/VP9.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "Utils.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
@@ -1014,15 +1017,6 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x41, 0x01, 0x0C, 0x13,
 			0xFC, 0x0B, 0x3C
 		};
-
-		// And frame number 252, in a packet that is not the first one of its frame.
-		const uint8_t newestKeyFrameNotStartOfFrame[] =
-		{
-			0x00, 0x00, 0xFC, 0x80,
-			0x01, 0x1E, 0xA8, 0x51,
-			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C
-		};
 		// clang-format on
 
 		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
@@ -1052,9 +1046,74 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		 */
 		REQUIRE(parse(oldKeyFrame, sizeof(oldKeyFrame)));
 		REQUIRE(dependencyDescriptorContext.templateDependencyStructure.get() == newStructure);
+	}
 
-		// Neither does a newer one that is not in the first packet of its frame.
-		REQUIRE(parse(newestKeyFrameNotStartOfFrame, sizeof(newestKeyFrameNotStartOfFrame)));
-		REQUIRE(dependencyDescriptorContext.templateDependencyStructure.get() == newStructure);
+	/**
+	 * A structure may only be given in the first packet of its frame. A
+	 * descriptor that carries it anywhere else is not to be trusted, since its
+	 * own layers would be told by a structure the stream does not take into use,
+	 * so it is not parsed at all and the packet it came in is dropped.
+	 */
+	SECTION("a template dependency structure that does not start its frame is rejected")
+	{
+		// Key frame of an L1T2 stream, frame number 232.
+		// clang-format off
+		const uint8_t keyFrame[] =
+		{
+			0x80, 0x00, 0xE8, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C
+		};
+
+		// The same one, frame number 252, in a packet that does not start its frame.
+		const uint8_t keyFrameNotStartOfFrame[] =
+		{
+			0x00, 0x00, 0xFC, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C
+		};
+		// clang-format on
+
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
+
+		const auto parse = [&dependencyDescriptorContext](
+		                     const uint8_t* data,
+		                     size_t len) -> std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>
+		{
+			return std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+			  RTC::RTP::Codecs::DependencyDescriptor::Parse(data, len, dependencyDescriptorContext));
+		};
+
+		REQUIRE(parse(keyFrame, sizeof(keyFrame)));
+
+		const auto* structure = dependencyDescriptorContext.templateDependencyStructure.get();
+
+		REQUIRE(!parse(keyFrameNotStartOfFrame, sizeof(keyFrameNotStartOfFrame)));
+
+		// And the structure in use is left alone.
+		REQUIRE(dependencyDescriptorContext.templateDependencyStructure.get() == structure);
+
+		// So the codecs refuse the packet it came in, which is told apart from a
+		// packet carrying no Dependency Descriptor at all. The ones that have a
+		// payload descriptor of their own refuse it just the same, since a Consumer
+		// given the extension would otherwise be sent a descriptor that nothing
+		// rewrote, with the frame numbers of the Producer.
+		RTC::RTP::Codecs::PictureIdUnwrapper pictureIdUnwrapper;
+
+		const auto packet = createPacket(
+		  keyFrameNotStartOfFrame,
+		  sizeof(keyFrameNotStartOfFrame),
+		  /*reservedLen*/ sizeof(keyFrameNotStartOfFrame));
+
+		REQUIRE(!RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
+		REQUIRE(!RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
+		REQUIRE(!RTC::RTP::Codecs::VP9::ProcessRtpPacket(
+		  packet.get(), dependencyDescriptorContext, pictureIdUnwrapper));
+
+		// So the packet gets no payload descriptor of any kind.
+		REQUIRE(packet->GetDependencyDescriptorMaxLength() == 0);
+		REQUIRE(packet->IsKeyFrame() == false);
 	}
 }

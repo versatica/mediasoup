@@ -40,16 +40,22 @@ namespace RTC
 				return payloadDescriptor.release();
 			}
 
-			void AV1::ProcessRtpPacket(
+			bool AV1::ProcessRtpPacket(
 			  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
 			{
 				MS_TRACE();
 
-				auto* const dependencyDescriptorPayloadDescriptor =
-				  DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext);
-
-				if (dependencyDescriptorPayloadDescriptor)
+				if (packet->HasDependencyDescriptor())
 				{
+					auto* const dependencyDescriptorPayloadDescriptor =
+					  DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext);
+
+					// The descriptor could not be parsed.
+					if (!dependencyDescriptorPayloadDescriptor)
+					{
+						return false;
+					}
+
 					// NOTE: Set as the handler of the codec, so that it also serves a
 					// Consumer that did not negotiate the extension, which the payload
 					// descriptor of AV1 cannot do since it tells nothing about the layers.
@@ -77,6 +83,8 @@ namespace RTC
 						  std::make_unique<PayloadDescriptorHandler>(payloadDescriptor));
 					}
 				}
+
+				return true;
 			}
 
 			/* Instance methods. */

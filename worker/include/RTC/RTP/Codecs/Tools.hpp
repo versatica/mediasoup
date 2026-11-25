@@ -56,8 +56,13 @@ namespace RTC
 				 *   packet belongs to.
 				 * @param pictureIdUnwrapper - Unwrapper of the stream the packet
 				 *   belongs to, which extends its pictureId into the 15 bits.
+				 * @returns Whether the packet was correctly processed.
+				 *
+				 * @remarks
+				 * - It returns false if the Dependency Descriptor could not be parsed, in
+				 *   which case the packet is not to be forwarded.
 				 */
-				static void ProcessRtpPacket(
+				[[nodiscard]] static bool ProcessRtpPacket(
 				  RTP::Packet* packet,
 				  const RTC::RtpCodecMimeType& mimeType,
 				  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext,
@@ -78,24 +83,18 @@ namespace RTC
 
 								case RTC::RtpCodecMimeType::Subtype::VP9:
 								{
-									Codecs::VP9::ProcessRtpPacket(
+									return Codecs::VP9::ProcessRtpPacket(
 									  packet, dependencyDescriptorContext, pictureIdUnwrapper);
-
-									break;
 								}
 
 								case RTC::RtpCodecMimeType::Subtype::H264:
 								{
-									Codecs::H264::ProcessRtpPacket(packet, dependencyDescriptorContext);
-
-									break;
+									return Codecs::H264::ProcessRtpPacket(packet, dependencyDescriptorContext);
 								}
 
 								case RTC::RtpCodecMimeType::Subtype::AV1:
 								{
-									Codecs::AV1::ProcessRtpPacket(packet, dependencyDescriptorContext);
-
-									break;
+									return Codecs::AV1::ProcessRtpPacket(packet, dependencyDescriptorContext);
 								}
 
 								default:;
@@ -124,6 +123,8 @@ namespace RTC
 
 						default:;
 					}
+
+					return true;
 				}
 
 				static bool IsValidTypeForCodec(

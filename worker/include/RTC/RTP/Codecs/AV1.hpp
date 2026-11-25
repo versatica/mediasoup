@@ -59,7 +59,7 @@ namespace RTC
 
 			public:
 				static AV1::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
-				static void ProcessRtpPacket(
+				[[nodiscard]] static bool ProcessRtpPacket(
 				  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext);
 
 			public:
