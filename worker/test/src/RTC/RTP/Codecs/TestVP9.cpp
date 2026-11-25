@@ -269,7 +269,8 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 
 			context.SetCurrentTemporalLayer(0, Start);
 			context.SetCurrentTemporalLayer(1, Start + 1);
-			context.SetCurrentTemporalLayer(2, static_cast<uint16_t>((Start + frames) & MaxPictureId));
+			context.SetCurrentTemporalLayer(
+			  2, static_cast<uint16_t>((uint32_t{ Start } + frames) & uint32_t{ MaxPictureId }));
 
 			return context.GetTemporalLayerForFrameId(Start);
 		};

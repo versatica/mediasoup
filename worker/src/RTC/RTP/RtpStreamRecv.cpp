@@ -553,18 +553,17 @@ namespace RTC
 				return false;
 			}
 
-			// Process the packet at codec level.
-			if (packet->GetPayloadType() == GetPayloadType())
+			// Process the packet at codec level. A packet the codec cannot process is
+			// not forwarded. Tell about it to NackGenerator so that it stops
+			// requesting it.
+			if (
+			  packet->GetPayloadType() == GetPayloadType() &&
+			  !RTP::Codecs::Tools::ProcessRtpPacket(
+			    packet, GetMimeType(), this->dependencyDescriptorContext, this->pictureIdUnwrapper))
 			{
-				// A packet the codec cannot process is not forwarded.
-				// Tell about it to NackGenerator so that it stops requesting it.
-				if (!RTP::Codecs::Tools::ProcessRtpPacket(
-				      packet, GetMimeType(), this->dependencyDescriptorContext, this->pictureIdUnwrapper))
-				{
-					this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ true);
+				this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ true);
 
-					return false;
-				}
+				return false;
 			}
 
 			// Mark the packet as retransmitted.
