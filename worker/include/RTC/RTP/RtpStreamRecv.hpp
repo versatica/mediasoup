@@ -10,6 +10,7 @@
 #include "RTC/RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
+#include "RTC/RTP/Codecs/PictureIdUnwrapper.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "Utils.hpp"
@@ -412,44 +413,81 @@ namespace RTC
 			// Passed by argument.
 			const bool useRtpInactivityCheck;
 			// Others.
-			// Packets expected at last interval.
-			// NOTE: As wide as GetExpectedPackets(), which wraps with the sequence
-			// number, so that the difference against it is taken in its own width.
+			/**
+			 * Packets expected at last interval.
+			 *
+			 * @remarks
+			 * - As wide as `GetExpectedPackets()`, which wraps with the sequence
+			 *   number, so that the difference against it is taken in its own width.
+			 */
 			uint32_t expectedPrior{ 0 };
-			// Packets expected at last interval for score calculation.
+			/**
+			 * Packets expected at last interval for score calculation.
+			 */
 			uint32_t expectedPriorScore{ 0 };
-			// Packets received at last interval.
-			// NOTE: As wide as the counter it snapshots, which does not wrap, so that
-			// the difference against it stays exact however long the stream runs.
+			/**
+			 * Packets received at last interval.
+			 *
+			 * @remarks
+			 * - As wide as the counter it snapshots, which does not wrap, so that the
+			 *   difference against it stays exact however long the stream runs.
+			 */
 			uint64_t receivedPrior{ 0 };
-			// Packets received at last interval for score calculation.
+			/**
+			 * Packets received at last interval for score calculation.
+			 */
 			uint64_t receivedPriorScore{ 0 };
-			// Timing data of the most recent Sender Report received.
+			/**
+			 * Timing data of the most recent Sender Report received.
+			 */
 			std::optional<SenderReportTiming> lastSenderReportTiming;
-			// Local time at which the last valid RTP packet arrived.
+			/**
+			 * Local time at which the last valid RTP packet arrived.
+			 */
 			std::optional<int64_t> lastPacketReceivedAtUs;
-			// Most recent `abs-capture-time` RTP header extension received.
+			/**
+			 * Most recent 'abs-capture-time' RTP header extension received.
+			 */
 			std::optional<AbsCaptureTime> lastAbsCaptureTime;
-			// Relative transit time for prev packet.
+			/**
+			 * Relative transit time for prev packet.
+			 */
 			int32_t transit{ 0 };
 			uint8_t firSeqNumber{ 0 };
 			int32_t reportedPacketsLost{ 0 };
-			// Only created if NACK is enabled.
+			/**
+			 * Only created if NACK is enabled.
+			 */
 			const std::unique_ptr<RTC::NackGenerator> nackGenerator;
 			const std::unique_ptr<TimerHandleInterface> inactivityCheckPeriodicTimer;
 			bool inactive{ false };
-			// Whether the packet being received made the stream restart.
+			/**
+			 * Whether the packet being received made the stream restart.
+			 */
 			bool restarted{ false };
 			const std::unique_ptr<TimerHandleInterface> spatialLayersActivityCheckPeriodicTimer;
-			// Whether each spatial layer was carrying traffic at the latest check.
-			// Empty unless this stream has more than a spatial layer.
+			/**
+			 * Whether each spatial layer was carrying traffic at the latest check.
+			 * Empty unless this stream has more than a spatial layer.
+			 */
 			std::vector<bool> spatialLayersActivity;
-			// Valid media + valid RTX.
+			/**
+			 * Valid media + valid RTX.
+			 */
 			TransmissionCounter transmissionCounter;
-			// Just valid media.
+			/**
+			 * Just valid media.
+			 */
 			RTC::RtpDataCounter mediaTransmissionCounter;
-			// Template dependency structure for Dependency Descriptor.
+			/**
+			 * Template dependency structure for Dependency Descriptor.
+			 */
 			RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
+			/**
+			 * Extends the pictureIds of the codecs that carry one, so that a 7 bits
+			 * sequence does not look like it goes back every 128 pictures.
+			 */
+			RTP::Codecs::PictureIdUnwrapper pictureIdUnwrapper;
 		};
 	} // namespace RTP
 } // namespace RTC

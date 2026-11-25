@@ -346,7 +346,15 @@ namespace RTC
 			// Process the packet at codec level.
 			if (packet->GetPayloadType() == GetPayloadType())
 			{
-				RTP::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->dependencyDescriptorContext);
+				// The sender restarted the stream, so the pictures to come may be
+				// numbered by another encoder and with pictureIds of another width.
+				if (this->restarted)
+				{
+					this->pictureIdUnwrapper.Reset();
+				}
+
+				RTP::Codecs::Tools::ProcessRtpPacket(
+				  packet, GetMimeType(), this->dependencyDescriptorContext, this->pictureIdUnwrapper);
 			}
 
 			// Tell the listener if this packet made the stream restart, now that it
@@ -538,7 +546,8 @@ namespace RTC
 			// Process the packet at codec level.
 			if (packet->GetPayloadType() == GetPayloadType())
 			{
-				RTP::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->dependencyDescriptorContext);
+				RTP::Codecs::Tools::ProcessRtpPacket(
+				  packet, GetMimeType(), this->dependencyDescriptorContext, this->pictureIdUnwrapper);
 			}
 
 			// Mark the packet as retransmitted.

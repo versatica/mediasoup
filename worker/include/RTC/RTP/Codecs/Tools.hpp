@@ -6,6 +6,7 @@
 #include "RTC/RTP/Codecs/H264.hpp"
 #include "RTC/RTP/Codecs/Opus.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
+#include "RTC/RTP/Codecs/PictureIdUnwrapper.hpp"
 #include "RTC/RTP/Codecs/VP8.hpp"
 #include "RTC/RTP/Codecs/VP9.hpp"
 #include "RTC/RTP/Packet.hpp"
@@ -49,10 +50,17 @@ namespace RTC
 					}
 				}
 
+				/**
+				 * @param dependencyDescriptorContext - Parsing context of the stream the
+				 *   packet belongs to.
+				 * @param pictureIdUnwrapper - Unwrapper of the stream the packet
+				 *   belongs to, which extends its pictureId into the 15 bits.
+				 */
 				static void ProcessRtpPacket(
 				  RTP::Packet* packet,
 				  const RTC::RtpCodecMimeType& mimeType,
-				  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
+				  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext,
+				  Codecs::PictureIdUnwrapper& pictureIdUnwrapper)
 				{
 					switch (mimeType.type)
 					{
@@ -62,14 +70,15 @@ namespace RTC
 							{
 								case RTC::RtpCodecMimeType::Subtype::VP8:
 								{
-									Codecs::VP8::ProcessRtpPacket(packet);
+									Codecs::VP8::ProcessRtpPacket(packet, pictureIdUnwrapper);
 
 									break;
 								}
 
 								case RTC::RtpCodecMimeType::Subtype::VP9:
 								{
-									Codecs::VP9::ProcessRtpPacket(packet, dependencyDescriptorContext);
+									Codecs::VP9::ProcessRtpPacket(
+									  packet, dependencyDescriptorContext, pictureIdUnwrapper);
 
 									break;
 								}

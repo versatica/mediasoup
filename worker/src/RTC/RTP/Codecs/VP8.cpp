@@ -77,8 +77,7 @@ namespace RTC
 					}
 					else
 					{
-						payloadDescriptor->hasOneBytePictureId = true;
-						payloadDescriptor->pictureId           = byte & 0x7F;
+						payloadDescriptor->pictureId = byte & 0x7F;
 					}
 
 					payloadDescriptor->hasPictureId = true;
@@ -126,7 +125,7 @@ namespace RTC
 				return payloadDescriptor.release();
 			}
 
-			void VP8::ProcessRtpPacket(RTP::Packet* packet)
+			void VP8::ProcessRtpPacket(RTP::Packet* packet, Codecs::PictureIdUnwrapper& pictureIdUnwrapper)
 			{
 				MS_TRACE();
 
@@ -143,18 +142,39 @@ namespace RTC
 				packet->SetPayloadDescriptorHandler(
 				  std::make_unique<PayloadDescriptorHandler>(payloadDescriptor));
 
-				// Modify the RtpPacket payload in order to always have two byte pictureId.
-				if (payloadDescriptor->hasOneBytePictureId)
+				if (!payloadDescriptor->hasPictureId)
+				{
+					return;
+				}
+
+				// Extend the pictureId into the 15 bits, that is, carrying the cycles a 7
+				// bits one has already wrapped.
+				//
+				// NOTE: The field is widened below, which hides the width the sender used,
+				// so the extended value is written into it. A pipe Consumer does not
+				// rewrite the pictureId, so the worker at the other end would otherwise be
+				// given a 15 bits field holding a value that wraps every 128 pictures.
+				const auto pictureId = pictureIdUnwrapper.Unwrap(
+				  payloadDescriptor->pictureId, payloadDescriptor->hasTwoBytesPictureId);
+
+				// Modify the RtpPacket payload in order to always have two byte pictureId,
+				// which is what an extended one takes and what `Encode()` writes into it.
+				if (!payloadDescriptor->hasTwoBytesPictureId)
 				{
 					// Shift the RTP payload one byte from the begining of the pictureId field.
 					packet->ShiftPayload(2, 1);
 
 					// Set the two byte pictureId marker bit.
 					data[2] = 0x80;
+				}
 
-					// Update the payloadDescriptor.
-					payloadDescriptor->hasOneBytePictureId  = false;
-					payloadDescriptor->hasTwoBytesPictureId = true;
+				// Write the extended pictureId if it changed, which happens if a 7 bits
+				// one has already wrapped or a sender has just widened it to 15 bits.
+				if (pictureId != payloadDescriptor->pictureId)
+				{
+					payloadDescriptor->Encode(data, pictureId, payloadDescriptor->tl0PictureIndex);
+
+					payloadDescriptor->pictureId = pictureId;
 				}
 			}
 
@@ -184,8 +204,6 @@ namespace RTC
 				MS_DUMP_CLEAN(indentation, "  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
 				MS_DUMP_CLEAN(indentation, "  hasPictureId: %s", this->hasPictureId ? "true" : "false");
 				MS_DUMP_CLEAN(
-				  indentation, "  hasOneBytePictureId: %s", this->hasOneBytePictureId ? "true" : "false");
-				MS_DUMP_CLEAN(
 				  indentation, "  hasTwoBytesPictureId: %s", this->hasTwoBytesPictureId ? "true" : "false");
 				MS_DUMP_CLEAN(
 				  indentation, "  hasTl0PictureIndex: %s", this->hasTl0PictureIndex ? "true" : "false");
@@ -212,24 +230,11 @@ namespace RTC
 
 				if (this->i)
 				{
-					if (this->hasTwoBytesPictureId)
-					{
-						uint16_t netPictureId = htons(pictureId);
+					uint16_t netPictureId = htons(pictureId);
 
-						std::memcpy(data, std::addressof(netPictureId), 2);
-						data[0] |= 0x80;
-						data += 2;
-					}
-					else if (this->hasOneBytePictureId)
-					{
-						*data = pictureId;
-						data++;
-
-						if (pictureId > 127)
-						{
-							MS_DEBUG_TAG(codec, "casting pictureId value to one byte");
-						}
-					}
+					std::memcpy(data, std::addressof(netPictureId), 2);
+					data[0] |= 0x80;
+					data += 2;
 				}
 
 				if (this->l)
@@ -278,6 +283,9 @@ namespace RTC
 				{
 					MS_WARN_DEV("stream is supposed to have >1 temporal layers but does not have TlIndex field");
 				}
+
+				// NOTE: `ProcessRtpPacket()` already extended the pictureId into the 15
+				// bits, so it is used as it comes from here on.
 
 				// Check whether pictureId and tl0PictureIndex sync is required.
 				if (

@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "RTC/RTP/Codecs/PictureIdUnwrapper.hpp"
 #include "RTC/RTP/Codecs/VP9.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
@@ -139,6 +140,83 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		REQUIRE(!forwarded);
 	}
 
+	// The pictureIds of a 7 bits sender wrap every 128 pictures, which must not
+	// make the Consumer take every packet that follows for a reordered one and
+	// stop switching layers.
+	SECTION("layers are still switched after a 7 bits pictureId wraps")
+	{
+		// Builds a VP9 payload whose pictureId takes a single byte, this is, 7
+		// bits, which is what a sender that does not use the M bit gives.
+		const auto processVP9PacketWithOneBytePictureId =
+		  [](
+		    RTC::RTP::Codecs::DependencyDescriptor::Context& dependencyDescriptorContext,
+		    RTC::RTP::Codecs::PictureIdUnwrapper& pictureIdUnwrapper,
+		    RTC::RTP::Codecs::VP9::EncodingContext& context,
+		    uint8_t pictureId,
+		    uint8_t tlIndex) -> bool
+		{
+			// clang-format off
+			uint8_t payload[] =
+			{
+				0xAD, 0x00, 0x00, 0x00, 0x00, 0x00
+			};
+			// clang-format on
+
+			// M unset, so the pictureId is the 7 bits that follow it.
+			payload[1] = pictureId & 0x7F;
+			// tlIndex and switchingUpPoint.
+			payload[2] = static_cast<uint8_t>((uint32_t{ tlIndex } << 5) | (uint32_t{ 1 } << 4));
+
+			const std::unique_ptr<RTC::RTP::Packet> packet{
+				RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)),
+			};
+
+			REQUIRE(packet);
+
+			packet->SetPayload(payload, sizeof(payload));
+
+			// As the Producer does, which is what extends the pictureId.
+			RTC::RTP::Codecs::VP9::ProcessRtpPacket(
+			  packet.get(), dependencyDescriptorContext, pictureIdUnwrapper);
+
+			bool marker;
+
+			return packet->ProcessPayload(std::addressof(context), marker);
+		};
+
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 1, .temporalLayers = 3 };
+		const std::vector<uint8_t> pictureIds{ 126, 127, 0, 1 };
+
+		// Held by the Producer stream, so every packet of it is extended with the
+		// same unwrapper.
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
+		RTC::RTP::Codecs::PictureIdUnwrapper pictureIdUnwrapper;
+
+		RTC::RTP::Codecs::VP9::EncodingContext context(params);
+
+		context.SyncRequired();
+		context.SetCurrentTemporalLayer(0);
+		context.SetTargetTemporalLayer(0);
+
+		context.SetCurrentSpatialLayer(0);
+		context.SetTargetSpatialLayer(0);
+
+		// Pictures 126 and 127, then the wrap to 0 and 1.
+		for (const auto pictureId : pictureIds)
+		{
+			REQUIRE(processVP9PacketWithOneBytePictureId(
+			  dependencyDescriptorContext, pictureIdUnwrapper, context, pictureId, 0));
+		}
+
+		// The Consumer is given a higher temporal layer now, and the next picture
+		// is a switching up point, so it takes it there.
+		context.SetTargetTemporalLayer(1);
+
+		REQUIRE(processVP9PacketWithOneBytePictureId(
+		  dependencyDescriptorContext, pictureIdUnwrapper, context, 2, 1));
+		REQUIRE(context.GetCurrentTemporalLayer() == 1);
+	}
+
 	SECTION("PayloadDescriptorHandler")
 	{
 		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 1, .temporalLayers = 3 };
@@ -238,6 +316,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		// clang-format on
 
 		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
+		RTC::RTP::Codecs::PictureIdUnwrapper pictureIdUnwrapper;
 
 		// NOTE: Taken apart from any packet, just to get the structure that the
 		// delta frame below is parsed with.
@@ -267,7 +346,8 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 			  payload,
 			  sizeof(payload));
 
-			RTC::RTP::Codecs::VP9::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
+			RTC::RTP::Codecs::VP9::ProcessRtpPacket(
+			  packet.get(), dependencyDescriptorContext, pictureIdUnwrapper);
 
 			const auto params = makeContext(/*preferDependencyDescriptor*/ true);
 
@@ -300,7 +380,8 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 			  payload,
 			  sizeof(payload));
 
-			RTC::RTP::Codecs::VP9::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
+			RTC::RTP::Codecs::VP9::ProcessRtpPacket(
+			  packet.get(), dependencyDescriptorContext, pictureIdUnwrapper);
 
 			const auto params = makeContext(/*preferDependencyDescriptor*/ false);
 
