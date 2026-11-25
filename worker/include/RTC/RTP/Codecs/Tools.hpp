@@ -100,6 +100,8 @@ namespace RTC
 
 								default:;
 							}
+
+							break;
 						}
 
 						case RTC::RtpCodecMimeType::Type::AUDIO:
@@ -116,6 +118,8 @@ namespace RTC
 
 								default:;
 							}
+
+							break;
 						}
 
 						default:;
