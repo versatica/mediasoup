@@ -59,8 +59,7 @@ namespace RTC
 				 * @returns Whether the packet was correctly processed.
 				 *
 				 * @remarks
-				 * - It returns false, and the packet is hence not to be forwarded, if the
-				 *   Dependency Descriptor could not be parsed.
+				 * - It returns false if the Dependency Descriptor could not be parsed.
 				 * - It returns false if the payload has no room for what the codec writes
 				 *   into it.
 				 */
