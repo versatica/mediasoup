@@ -173,6 +173,8 @@ namespace RTC
 				 *   which case writing it would exceed the maximum size of a 2 bytes RTP
 				 *   header extension. In that case we opt for skipping the bitmask and
 				 *   rewriting the frame number, so the endpoint can decode the frame.
+				 * - Nothing is written when it returns false, since the packet refuses a
+				 *   descriptor that does not fit before touching it.
 				 * - The packet is given on every call rather than remembered, since a
 				 *   packet shares its payload descriptor handler with its clones and every
 				 *   Consumer of its Producer.
