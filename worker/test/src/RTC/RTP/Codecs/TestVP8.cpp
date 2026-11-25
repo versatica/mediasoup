@@ -758,7 +758,7 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 			// As the Producer does, which is what extends the pictureId and widens
 			// the field to two bytes.
-			RTC::RTP::Codecs::VP8::ProcessRtpPacket(packet.get(), pictureIdUnwrapper);
+			REQUIRE(RTC::RTP::Codecs::VP8::ProcessRtpPacket(packet.get(), pictureIdUnwrapper));
 
 			bool marker;
 

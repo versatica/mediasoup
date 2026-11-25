@@ -125,57 +125,66 @@ namespace RTC
 				return payloadDescriptor.release();
 			}
 
-			void VP8::ProcessRtpPacket(RTP::Packet* packet, Codecs::PictureIdUnwrapper& pictureIdUnwrapper)
+			bool VP8::ProcessRtpPacket(RTP::Packet* packet, Codecs::PictureIdUnwrapper& pictureIdUnwrapper)
 			{
 				MS_TRACE();
 
 				auto* data = packet->GetPayload();
 				auto len   = packet->GetPayloadLength();
 
-				PayloadDescriptor* payloadDescriptor = VP8::Parse(data, len);
+				std::unique_ptr<PayloadDescriptor> payloadDescriptor{ VP8::Parse(data, len) };
 
 				if (!payloadDescriptor)
 				{
-					return;
+					return true;
 				}
 
+				if (payloadDescriptor->hasPictureId)
+				{
+					// Extend the pictureId into the 15 bits, that is, carrying the cycles a 7
+					// bits one has already wrapped.
+					//
+					// NOTE: The field is widened below, which hides the width the sender
+					// used, so the extended value is written into it. A pipe Consumer does
+					// not rewrite the pictureId, so the worker at the other end would
+					// otherwise be given a 15 bits field holding a value that wraps every 128
+					// pictures.
+					const auto pictureId = pictureIdUnwrapper.Unwrap(
+					  payloadDescriptor->pictureId, payloadDescriptor->hasTwoBytesPictureId);
+
+					// Modify the RtpPacket payload in order to always have two byte
+					// pictureId, which is what an extended one takes and what `Encode()`
+					// writes into it.
+					if (!payloadDescriptor->hasTwoBytesPictureId)
+					{
+						// Shift the RTP payload one byte from the begining of the pictureId
+						// field. The packet is not forwarded if it has no room for it, since
+						// every Consumer writes a 15 bits pictureId into it from here on.
+						if (!packet->ShiftPayload(2, 1))
+						{
+							return false;
+						}
+
+						// Set the two byte pictureId marker bit.
+						data[2] = 0x80;
+					}
+
+					// Write the extended pictureId if it changed, which happens if a 7 bits
+					// one has already wrapped or a sender has just widened it to 15 bits.
+					if (pictureId != payloadDescriptor->pictureId)
+					{
+						payloadDescriptor->Encode(data, pictureId, payloadDescriptor->tl0PictureIndex);
+
+						payloadDescriptor->pictureId = pictureId;
+					}
+				}
+
+				// NOTE: Set once the packet carries what the descriptor says, so that a
+				// packet that could not be widened is left with none.
 				packet->SetPayloadDescriptorHandler(
-				  std::make_unique<PayloadDescriptorHandler>(payloadDescriptor));
+				  std::make_unique<PayloadDescriptorHandler>(payloadDescriptor.release()));
 
-				if (!payloadDescriptor->hasPictureId)
-				{
-					return;
-				}
-
-				// Extend the pictureId into the 15 bits, that is, carrying the cycles a 7
-				// bits one has already wrapped.
-				//
-				// NOTE: The field is widened below, which hides the width the sender used,
-				// so the extended value is written into it. A pipe Consumer does not
-				// rewrite the pictureId, so the worker at the other end would otherwise be
-				// given a 15 bits field holding a value that wraps every 128 pictures.
-				const auto pictureId = pictureIdUnwrapper.Unwrap(
-				  payloadDescriptor->pictureId, payloadDescriptor->hasTwoBytesPictureId);
-
-				// Modify the RtpPacket payload in order to always have two byte pictureId,
-				// which is what an extended one takes and what `Encode()` writes into it.
-				if (!payloadDescriptor->hasTwoBytesPictureId)
-				{
-					// Shift the RTP payload one byte from the begining of the pictureId field.
-					packet->ShiftPayload(2, 1);
-
-					// Set the two byte pictureId marker bit.
-					data[2] = 0x80;
-				}
-
-				// Write the extended pictureId if it changed, which happens if a 7 bits
-				// one has already wrapped or a sender has just widened it to 15 bits.
-				if (pictureId != payloadDescriptor->pictureId)
-				{
-					payloadDescriptor->Encode(data, pictureId, payloadDescriptor->tl0PictureIndex);
-
-					payloadDescriptor->pictureId = pictureId;
-				}
+				return true;
 			}
 
 			/* Instance methods. */

@@ -1430,13 +1430,13 @@ namespace RTC
 			GetFixedHeaderPointer()->padding = 0;
 		}
 
-		void Packet::ShiftPayload(size_t payloadOffset, int32_t delta)
+		bool Packet::ShiftPayload(size_t payloadOffset, int32_t delta)
 		{
 			MS_TRACE();
 
 			if (delta == 0)
 			{
-				return;
+				return true;
 			}
 
 			auto* const payload      = GetPayloadPointer();
@@ -1446,40 +1446,57 @@ namespace RTC
 
 			if (payloadOffset >= payloadLength)
 			{
-				MS_THROW_TYPE_ERROR(
-				  "payloadOffset (%zu) is bigger than payload length (%zu)", payloadOffset, payloadLength);
+				MS_WARN_TAG(
+				  rtp, "payloadOffset (%zu) is bigger than payload length (%zu)", payloadOffset, payloadLength);
+
+				return false;
 			}
-			else if (delta < 0 && absDelta > (payloadLength - payloadOffset))
+
+			if (delta < 0 && absDelta > (payloadLength - payloadOffset))
 			{
-				MS_THROW_TYPE_ERROR("negative delta (%" PRIi32 ") too big", delta);
+				MS_WARN_TAG(rtp, "negative delta (%" PRIi32 ") too big", delta);
+
+				return false;
+			}
+
+			// Length the packet takes once shifted, with the padding it is about to
+			// lose already taken out of it.
+			const auto strippedLength = GetLength() - GetPaddingLength();
+			const auto newLength      = delta > 0 ? strippedLength + absDelta : strippedLength - absDelta;
+
+			if (newLength > GetBufferLength())
+			{
+				MS_WARN_TAG(
+				  rtp, "shifted payload does not fit [needed:%zu, buffer:%zu]", newLength, GetBufferLength());
+
+				return false;
 			}
 
 			// Remove padding (if any).
+			//
+			// NOTE: Nothing below fails, since the length it leaves the packet with is
+			// the one checked above.
 			if (HasPadding())
 			{
 				SetPaddingLength(0);
 			}
 
+			SetLength(newLength);
+
 			if (delta > 0)
 			{
-				// Update packet length.
-				// NOTE: This throws if given length is higher than buffer length.
-				SetLength(GetLength() + delta);
-
 				std::memmove(
 				  payload + payloadOffset + delta, payload + payloadOffset, payloadLength - payloadOffset);
 			}
 			else
 			{
-				// Update packet length.
-				// NOTE: This throws if given length is higher than buffer length.
-				SetLength(GetLength() - absDelta);
-
 				std::memmove(
 				  payload + payloadOffset,
 				  payload + payloadOffset + absDelta,
 				  payloadLength - payloadOffset - absDelta);
 			}
+
+			return true;
 		}
 
 		void Packet::SetPaddingLength(uint8_t paddingLength)

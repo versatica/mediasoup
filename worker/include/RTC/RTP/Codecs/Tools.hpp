@@ -59,8 +59,10 @@ namespace RTC
 				 * @returns Whether the packet was correctly processed.
 				 *
 				 * @remarks
-				 * - It returns false if the Dependency Descriptor could not be parsed, in
-				 *   which case the packet is not to be forwarded.
+				 * - It returns false, and the packet is hence not to be forwarded, if the
+				 *   Dependency Descriptor could not be parsed.
+				 * - It returns false if the payload has no room for what the codec writes
+				 *   into it.
 				 */
 				[[nodiscard]] static bool ProcessRtpPacket(
 				  RTP::Packet* packet,
@@ -76,9 +78,7 @@ namespace RTC
 							{
 								case RTC::RtpCodecMimeType::Subtype::VP8:
 								{
-									Codecs::VP8::ProcessRtpPacket(packet, pictureIdUnwrapper);
-
-									break;
+									return Codecs::VP8::ProcessRtpPacket(packet, pictureIdUnwrapper);
 								}
 
 								case RTC::RtpCodecMimeType::Subtype::VP9:

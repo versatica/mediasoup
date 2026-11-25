@@ -49,6 +49,7 @@
   - AV1: Parse aggregation header to detect a keyframe.
   - DD: Validate the template dependency structure limits.
   - Codecs: FrameIdList, consider frameId wraps.
+  - RTP: Drop the packet if its payload cannot be shifted.
 
 ### 3.32.2
 
