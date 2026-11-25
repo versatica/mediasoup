@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "Utils.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcpy(), std::memset()
@@ -277,6 +278,106 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(descriptor32);
 		REQUIRE(descriptor32->templateDependencyStructure->decodeTargetCount == 32);
 		REQUIRE(descriptor32->activeDecodeTargetsBitmask == 0xFFFFFFFF);
+	}
+
+	// The templates of a structure are told one after another by a 2 bits
+	// `next_layer_idc`, which says whether the next one is in the same layer, in
+	// the next temporal one, in the next spatial one or that there is none. A
+	// structure past the number of templates a template id can address, or past
+	// the layer ids a frame can be given, is rejected rather than taken into use
+	// for the frames that follow.
+	SECTION("a structure past the template and layer limits is rejected")
+	{
+		// Builds a key frame descriptor whose template dependency structure
+		// declares the templates told by the given `next_layer_idc` values, one
+		// template per value. It has a single decode target, no frame diffs, no
+		// chains and no render resolutions, so that nothing but the templates
+		// takes room.
+		const auto createStructure = [](const std::vector<uint8_t>& nextLayerIdcs) -> std::vector<uint8_t>
+		{
+			uint8_t buffer[RTC::Consts::TwoByteRtpExtensionMaxLength]{};
+
+			Utils::BitWriter writer(buffer, sizeof(buffer));
+
+			// Mandatory fields: start of frame, end of frame, template id and frame
+			// number.
+			writer.PutBits(1, 1);
+			writer.PutBits(1, 1);
+			writer.PutBits(6, 0);
+			writer.PutBits(16, 0);
+
+			// Extended descriptor field flags, with just the structure present.
+			writer.PutBits(5, 0b10000);
+
+			// Template id offset and decode target count minus one.
+			writer.PutBits(6, 0);
+			writer.PutBits(5, 0);
+
+			for (const auto nextLayerIdc : nextLayerIdcs)
+			{
+				writer.PutBits(2, nextLayerIdc);
+			}
+
+			// Decode target indications, one per template, all of them "switch".
+			for (size_t idx{ 0 }; idx < nextLayerIdcs.size(); ++idx)
+			{
+				writer.PutBits(2, 2);
+			}
+
+			// No frame diffs follow any template.
+			for (size_t idx{ 0 }; idx < nextLayerIdcs.size(); ++idx)
+			{
+				writer.PutBits(1, 0);
+			}
+
+			// No chains, which takes a single bit with a single decode target, and
+			// no render resolutions.
+			writer.PutBits(1, 0);
+			writer.PutBits(1, 0);
+
+			const size_t len = (writer.GetOffset() + 7) / 8;
+
+			return { buffer, buffer + len };
+		};
+
+		// The `next_layer_idc` values of `count` templates, the last of which tells
+		// that there is no other one.
+		const auto nextLayerIdcs = [](size_t count, uint8_t nextLayerIdc) -> std::vector<uint8_t>
+		{
+			std::vector<uint8_t> values(count, nextLayerIdc);
+
+			values.back() = 3;
+
+			return values;
+		};
+
+		const auto parse = [](const std::vector<uint8_t>& data) -> bool
+		{
+			RTC::RTP::Codecs::DependencyDescriptor::Context context;
+
+			const auto descriptor = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+			  RTC::RTP::Codecs::DependencyDescriptor::Parse(data.data(), data.size(), context));
+
+			return descriptor != nullptr;
+		};
+
+		// Every template in the same layer, so that only their number is at play.
+		REQUIRE(parse(
+		  createStructure(nextLayerIdcs(RTC::RTP::Codecs::DependencyDescriptor::MaxTemplates, 0))));
+		REQUIRE(!parse(
+		  createStructure(nextLayerIdcs(RTC::RTP::Codecs::DependencyDescriptor::MaxTemplates + 1, 0))));
+
+		// A template per temporal layer, so that the last one has the highest id.
+		REQUIRE(parse(
+		  createStructure(nextLayerIdcs(RTC::RTP::Codecs::DependencyDescriptor::MaxTemporalIds, 1))));
+		REQUIRE(!parse(createStructure(
+		  nextLayerIdcs(RTC::RTP::Codecs::DependencyDescriptor::MaxTemporalIds + 1, 1))));
+
+		// And the same per spatial layer.
+		REQUIRE(parse(
+		  createStructure(nextLayerIdcs(RTC::RTP::Codecs::DependencyDescriptor::MaxSpatialIds, 2))));
+		REQUIRE(!parse(
+		  createStructure(nextLayerIdcs(RTC::RTP::Codecs::DependencyDescriptor::MaxSpatialIds + 1, 2))));
 	}
 
 	SECTION("serialize")

@@ -423,6 +423,16 @@ namespace RTC
 
 				do
 				{
+					if (this->templateDependencyStructure->templateLayers.size() == DependencyDescriptor::MaxTemplates)
+					{
+						MS_WARN_TAG(
+						  codec,
+						  "more templates than the %zu a structure may declare",
+						  DependencyDescriptor::MaxTemplates);
+
+						return false;
+					}
+
 					this->templateDependencyStructure->templateLayers.emplace_back(spatialId, temporalId);
 
 					if (this->bitReader.GetLeftBits() < 2)
@@ -435,12 +445,29 @@ namespace RTC
 					// nextLayerIdc == 0, same spatialId and temporalId.
 					if (nextLayerIdc == 1)
 					{
-						temporalId++;
+						if (++temporalId == DependencyDescriptor::MaxTemporalIds)
+						{
+							MS_WARN_TAG(
+							  codec,
+							  "higher temporal layer id than the %" PRIu8 " a template may be given",
+							  DependencyDescriptor::MaxTemporalIds);
+
+							return false;
+						}
 					}
 					else if (nextLayerIdc == 2)
 					{
 						temporalId = 0;
-						spatialId++;
+
+						if (++spatialId == DependencyDescriptor::MaxSpatialIds)
+						{
+							MS_WARN_TAG(
+							  codec,
+							  "higher spatial layer id than the %" PRIu8 " a template may be given",
+							  DependencyDescriptor::MaxSpatialIds);
+
+							return false;
+						}
 					}
 				} while (nextLayerIdc != 3);
 
@@ -564,13 +591,14 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				const uint8_t templateIndex = (this->frameDependencyTemplateId + 64 -
-				                               this->templateDependencyStructure->templateIdOffset) %
-				                              64;
+				const auto templateIndex = static_cast<uint8_t>(
+				  (this->frameDependencyTemplateId + DependencyDescriptor::MaxTemplates -
+					 this->templateDependencyStructure->templateIdOffset) %
+				  DependencyDescriptor::MaxTemplates);
 
 				if (this->templateDependencyStructure->templateLayers.size() <= templateIndex)
 				{
-					MS_WARN_DEV("invalid template index %u", templateIndex);
+					MS_WARN_TAG(codec, "invalid template index %u", templateIndex);
 
 					return false;
 				}

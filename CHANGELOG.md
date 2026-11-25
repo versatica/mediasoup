@@ -47,6 +47,7 @@
   - DD: Fix undefined behaviour on network input in the Dependency Descriptor.
   - VP8, VP9: Fix 7 bits pictureIds being taken for 15 bits ones.
   - AV1: Parse aggregation header to detect a keyframe.
+  - DD: Validate the template dependency structure limits.
 
 ### 3.32.2
 
