@@ -270,7 +270,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 		// one short.
 		auto packet = buildPacketWithDataChunk(1140);
 
-		REQUIRE(packet->GetAvailableLength() == 23);
+		REQUIRE(packet->GetAvailableBufferLength() == 23);
 
 		REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == false);
 
@@ -282,11 +282,11 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 		// fits.
 		packet = buildPacketWithDataChunk(1136);
 
-		REQUIRE(packet->GetAvailableLength() == 27);
+		REQUIRE(packet->GetAvailableBufferLength() == 27);
 
 		REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == true);
 
-		REQUIRE(packet->GetAvailableLength() == 3);
+		REQUIRE(packet->GetAvailableBufferLength() == 3);
 		REQUIRE(test.streamResetHandler.ShouldSendStreamResetRequest() == false);
 	}
 
@@ -319,7 +319,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 			REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == true);
 
-			REQUIRE(packet->GetAvailableLength() == 3);
+			REQUIRE(packet->GetAvailableBufferLength() == 3);
 		}
 
 		// 579 streams do not fit, so their reset is cancelled.

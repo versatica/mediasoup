@@ -94,7 +94,7 @@ namespace RTC
 				return false;
 			}
 
-			if (receiverReportPacket->GetAvailableLength() < RTC::RTCP::AnyReportPacket::ReportBlockLength)
+			if (receiverReportPacket->GetAvailableBufferLength() < RTC::RTCP::AnyReportPacket::ReportBlockLength)
 			{
 				return false;
 			}
