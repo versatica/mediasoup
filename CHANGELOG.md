@@ -43,7 +43,7 @@
   - `Sync()` did not reset `maxForwarded`, so a drop lower than the sync point was accounted (repeating an already emitted output) while an out of order drop above it was not (leaving an unnecessary gap).
 - Consumer: Drop RTP packet if `SeqManager.Input()` returns `false` ([PR #2068](https://github.com/versatica/mediasoup/pull/2068)).
 - BWE: Fix Transport-CC feedback reporting missing RTP packets twice ([PR #2073](https://github.com/versatica/mediasoup/pull/2073)).
-- Update OpenSSL meson wrap to 3.5.9-1 ([PR XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Update OpenSSL meson wrap to 3.5.9-1 ([PR 2076](https://github.com/versatica/mediasoup/pull/2076)).
 
 ### 3.32.2
 
