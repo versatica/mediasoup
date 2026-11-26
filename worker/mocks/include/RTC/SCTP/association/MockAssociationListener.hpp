@@ -336,7 +336,7 @@ namespace mocks
 					return this->onAssociationLifecycleMessageFullySentCalls.contains(lifecycleId);
 				}
 
-				bool HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
+				bool HasOnAssociationLifecycleMessageExpiredBeenCalledWithLifecycleId(
 				  uint64_t lifecycleId, bool maybeDelivered) const
 				{
 					if (!this->onAssociationLifecycleMessageExpiredCalls.contains(lifecycleId))

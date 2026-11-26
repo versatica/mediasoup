@@ -7,6 +7,11 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
+	static const std::string AptString{ "apt" };
+
 	/* Instance methods. */
 
 	RtpCodecParameters::RtpCodecParameters(const FBS::RtpParameters::RtpCodecParameters* data)
@@ -59,6 +64,7 @@ namespace RTC
 		const auto parameters = this->parameters.FillBuffer(builder);
 
 		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtcpFeedback>> rtcpFeedback;
+
 		rtcpFeedback.reserve(this->rtcpFeedback.size());
 
 		for (const auto& fb : this->rtcpFeedback)
@@ -82,7 +88,7 @@ namespace RTC
 
 		return std::ranges::any_of(
 		  this->rtcpFeedback,
-		  [type](const RTC::RtcpFeedback& fb)
+		  [type](const RTC::RtcpFeedback& fb) -> bool
 		  {
 			  return fb.type == type;
 		  });
@@ -91,8 +97,6 @@ namespace RTC
 	inline void RtpCodecParameters::CheckCodec() const
 	{
 		MS_TRACE();
-
-		static const std::string AptString{ "apt" };
 
 		// Check per MIME parameters and set default values.
 		// NOTE: We want a switch here, as in every other check per codec.

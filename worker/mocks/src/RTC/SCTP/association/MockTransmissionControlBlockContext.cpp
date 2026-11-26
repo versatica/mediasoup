@@ -4,20 +4,24 @@
 #include "mocks/include/RTC/SCTP/association/MockTransmissionControlBlockContext.hpp"
 #include "Logger.hpp"
 
-alignas(4) static thread_local uint8_t FactoryBuffer[65536];
-
 namespace mocks
 {
 	namespace RTC
 	{
 		namespace SCTP
 		{
+			/* Static. */
+
+			alignas(4) static thread_local uint8_t PacketFactoryBuffer[65536];
+
+			/* Instance methods. */
+
 			std::unique_ptr<::RTC::SCTP::Packet> MockTransmissionControlBlockContext::CreatePacket() const
 			{
 				MS_TRACE();
 
 				auto packet = std::unique_ptr<::RTC::SCTP::Packet>{ ::RTC::SCTP::Packet::Factory(
-					FactoryBuffer, this->sctpOptions.mtu) };
+					PacketFactoryBuffer, this->sctpOptions.mtu) };
 
 				packet->SetSourcePort(this->sctpOptions.sourcePort);
 				packet->SetDestinationPort(this->sctpOptions.destinationPort);

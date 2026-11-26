@@ -68,6 +68,7 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 - Struct fields that need documentation use multiline `/** ... */` comments, never `//`.
 - Public methods and class constants are documented with `/** ... */`. Parameter docs take a dash: `@param nowMs - Current time.`. The result takes `@returns`, never `@return`. Continuation lines of either are indented three spaces.
 - `@remarks` goes alone on its line (no colon, no text after it), and its content goes on the following lines as dash items (`- `), with continuation lines indented two spaces.
+- Storage and constants private to a `.cpp` (buffers, `static constexpr`, `static const` and `thread_local` objects) go at the top of the file, in a `/* Static. */` block inside the namespace of the code that uses them, or at file scope if that code has no namespace. They are named in `UpperCamelCase` and are never declared as `static` locals inside a function or method. The only exception is `fuzzer/`, whose `Fuzz()` methods keep them as `static` locals because some of them are objects with constructors that should not run at program startup. That exception is a leftover rather than a real need: the same happens in `src/` and `test/`, which follow the rule anyway.
 
 ## Functions and statements
 
@@ -95,7 +96,7 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 - Class methods, static or not, and namespace functions always start with an uppercase letter, `constexpr` ones included: `GenerateCrcTables()`, never `generateCrcTables()`. Only file-scope `static` functions in a `.cpp` (libuv and OpenSSL callbacks and similar) start with a lowercase letter: `onCloseTcp()`.
 - A method of the class itself is called without `this->`: `Send(...)`, never `this->Send(...)`. `this->` is only for members: `this->bufferBuilder`.
 - A `static` constant of a class (`static constexpr` or `static const`) declared in its `.hpp` always carries the class prefix, in every mention, also inside the class's own methods: `StunPacket::FixedHeaderLength`, never `FixedHeaderLength`.
-- Value getters are named `GetXxx()`. Boolean getters are named `IsXxx()` / `HasXxx()`.
+- Value getters are named `GetXxx()`. Boolean getters are named `IsXxx()` / `HasXxx()`. A getter that returns a count may be named `CountXxx()` instead (`CountOnAssociationClosedCalls()`), since the verb already says that it returns a number.
 - Never `&foo` to take an address: use `std::addressof(foo)`.
 - Never reach through an iterator (`it->second.field`): bind a named reference or copy first.
 - Never use `.first` / `.second` inline: bind them to a named variable first (`const bool inserted = set.insert(x).second;`).
