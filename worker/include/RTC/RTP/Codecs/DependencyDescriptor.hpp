@@ -21,20 +21,14 @@ namespace RTC
 				 * Bits the Dependency Descriptor numbers frames with.
 				 */
 				static constexpr uint8_t FrameIdLength{ 16 };
-				/**
-				 * Templates a template dependency structure may declare, which is what
-				 * the 6 bits of a template id tell apart.
-				 */
+				// Templates a template dependency structure may declare, which is what
+				// the 6 bits of a template id tell apart.
 				static constexpr size_t MaxTemplates{ 64 };
-				/**
-				 * Spatial layer ids a template may be given, which is what the 2 bits
-				 * AV1 gives the spatial id of a frame tell apart.
-				 */
+				// Spatial layer ids a template may be given, which is what the 2 bits AV1
+				// gives the spatial id of a frame tell apart.
 				static constexpr uint8_t MaxSpatialIds{ 4 };
-				/**
-				 * Temporal layer ids a template may be given, which is what the 3 bits
-				 * AV1 gives the temporal id of a frame tell apart.
-				 */
+				// Temporal layer ids a template may be given, which is what the 3 bits AV1
+				// gives the temporal id of a frame tell apart.
 				static constexpr uint8_t MaxTemporalIds{ 8 };
 
 			public:

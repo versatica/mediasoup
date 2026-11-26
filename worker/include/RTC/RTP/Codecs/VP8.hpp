@@ -100,10 +100,8 @@ namespace RTC
 					// Parsed values.
 					bool isKeyFrame{ false };
 					bool hasPictureId{ false };
-					/**
-					 * Whether `pictureId` was originally represented with 15 bits rather
-					 * than 7.
-					 */
+					// Whether `pictureId` was originally represented with 15 bits rather
+					// than 7.
 					bool hasTwoBytesPictureId{ false };
 					bool hasTl0PictureIndex{ false };
 					bool hasTlIndex{ false };

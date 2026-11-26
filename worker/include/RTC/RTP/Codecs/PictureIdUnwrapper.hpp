@@ -22,9 +22,7 @@ namespace RTC
 			class PictureIdUnwrapper
 			{
 			private:
-				/**
-				 * Highest value each pictureId width holds.
-				 */
+				// Highest value each pictureId width holds.
 				static constexpr uint32_t OneByteMaxPictureId{ 0x7F };
 				static constexpr uint32_t TwoBytesMaxPictureId{ 0x7FFF };
 
@@ -82,13 +80,9 @@ namespace RTC
 				}
 
 			private:
-				/**
-				 * Highest pictureId unwrapped so far.
-				 */
+				// Highest pictureId unwrapped so far.
 				std::optional<uint16_t> maxPictureId;
-				/**
-				 * Whether the sender gave 15 bits to `maxPictureId`.
-				 */
+				// Whether the sender gave 15 bits to `maxPictureId`.
 				bool maxHasTwoBytesPictureId{ false };
 			};
 		} // namespace Codecs

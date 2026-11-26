@@ -65,8 +65,8 @@ Every rule states a criterion. The cases, names and snippets that come with a ru
 - Class constants (`static constexpr` members) go at the very top of the class body. Nested types (`struct`, `class`, `enum`, `using`) go right after them, before any method, under their own access specifier. A class constant whose type uses a nested type goes after that nested type.
 - `static const` members (`Logger::Pid`, lookup tables such as `ChunkType2String`...) are not class constants for this rule: they go together with the rest of the static data members, in the block right after the static methods.
 - A block of `static constexpr` members always starts with its own `public:` or `private:` line, even when the previous block has the same access.
-- Struct fields that need documentation use multiline `/** ... */` comments, never `//`.
-- Public methods and class constants are documented with `/** ... */`. Parameter docs take a dash: `@param nowMs - Current time.`. The result takes `@returns`, never `@return`. Continuation lines of either are indented three spaces.
+- Class members that are not methods (data members, struct fields and `static constexpr` constants) are documented with `//` comments, never with `/** ... */`.
+- Public methods are documented with `/** ... */`. Parameter docs take a dash: `@param nowMs - Current time.`. The result takes `@returns`, never `@return`. Continuation lines of either are indented three spaces.
 - `@remarks` goes alone on its line (no colon, no text after it), and its content goes on the following lines as dash items (`- `), with continuation lines indented two spaces.
 
 ## Functions and statements

@@ -80,14 +80,10 @@ namespace RTC
 					uint8_t e : 1; // E: End of a layer frame.
 					uint8_t v : 1; // V: Scalability structure (SS) data present.
 					// Extension fields.
-					/**
-					 * PictureId of the packet, extended to 15 bits by `ProcessRtpPacket()`,
-					 * which is the value layer selection and reordering checks take.
-					 *
-					 * @remarks
-					 * - The payload is never rewritten, so the pictureId it carries keeps the
-					 *   width the sender gave it and is not necessarily this value.
-					 */
+					// PictureId of the packet, extended to 15 bits by ProcessRtpPacket(),
+					// which is the value layer selection and reordering checks take.
+					// NOTE: The payload is never rewritten, so the pictureId it carries keeps
+					// the width the sender gave it and is not necessarily this value.
 					uint16_t pictureId{ 0 };
 					uint8_t slIndex{ 0 };
 					uint8_t tlIndex{ 0 };

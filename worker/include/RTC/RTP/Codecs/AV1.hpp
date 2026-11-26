@@ -36,23 +36,15 @@ namespace RTC
 
 					// Aggregation header.
 
-					/**
-					 * Z: Whether the first OBU element continues one from the previous
-					 * packet.
-					 */
+					// Z: Whether the first OBU element continues one from the previous
+					// packet.
 					uint8_t z : 1;
-					/**
-					 * Y: Whether the last OBU element continues in the next packet.
-					 */
+					// Y: Whether the last OBU element continues in the next packet.
 					uint8_t y : 1;
-					/**
-					 * W: OBU elements in the packet, or 0 if every one of them carries its
-					 * length.
-					 */
+					// W: OBU elements in the packet, or 0 if every one of them carries its
+					// length.
 					uint8_t w : 2;
-					/**
-					 * N: Whether the packet is the first one of a coded video sequence.
-					 */
+					// N: Whether the packet is the first one of a coded video sequence.
 					uint8_t n : 1;
 
 					// Parsed values.
