@@ -3,6 +3,8 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/public/AssociationListenerInterface.hpp"
+#include "RTC/SCTP/public/Message.hpp"
+#include "RTC/SCTP/public/SctpTypes.hpp"
 #include <deque>
 #include <map>
 #include <set>
@@ -363,14 +365,14 @@ namespace mocks
 				bool connected{ false };
 				bool restarted{ false };
 				bool failed{ false };
-				::RTC::SCTP::Types::ErrorKind failedErrorKind;
+				::RTC::SCTP::Types::ErrorKind failedErrorKind{ ::RTC::SCTP::Types::ErrorKind::SUCCESS };
 				std::string failedErrorMessage;
 				size_t onAssociationClosedCalls{ 0 };
 				bool closed{ false };
-				::RTC::SCTP::Types::ErrorKind closedErrorKind;
+				::RTC::SCTP::Types::ErrorKind closedErrorKind{ ::RTC::SCTP::Types::ErrorKind::SUCCESS };
 				std::string closedErrorMessage;
 				bool errored{ false };
-				::RTC::SCTP::Types::ErrorKind erroredErrorKind;
+				::RTC::SCTP::Types::ErrorKind erroredErrorKind{ ::RTC::SCTP::Types::ErrorKind::SUCCESS };
 				std::string erroredErrorMessage;
 				std::map<uint16_t /*streamId*/, size_t /*count*/> onStreamBufferedAmountLowCalls;
 				size_t onTotalBufferedAmountLowCalls{ 0 };

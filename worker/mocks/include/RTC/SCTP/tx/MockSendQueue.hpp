@@ -51,7 +51,7 @@ namespace mocks
 
 					if (!this->produceOnceActions.empty())
 					{
-						auto action = std::move(this->produceOnceActions.front());
+						const auto action = std::move(this->produceOnceActions.front());
 
 						this->produceOnceActions.pop();
 

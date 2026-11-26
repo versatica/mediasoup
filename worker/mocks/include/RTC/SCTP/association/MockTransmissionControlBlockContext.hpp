@@ -59,7 +59,7 @@ namespace mocks
 				{
 					if (!this->getCurrentRtoUsOnceActions.empty())
 					{
-						auto action = std::move(this->getCurrentRtoUsOnceActions.front());
+						const auto action = std::move(this->getCurrentRtoUsOnceActions.front());
 
 						this->getCurrentRtoUsOnceActions.pop();
 
@@ -80,7 +80,6 @@ namespace mocks
 
 				void ClearTxErrorCounter() override
 				{
-					this->incrementTxErrorCounterCallCount = 0;
 				}
 
 				bool HasTooManyTxErrors() const override

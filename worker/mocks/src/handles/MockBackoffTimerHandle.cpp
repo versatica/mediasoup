@@ -68,7 +68,7 @@ namespace mocks
 				: "(unset)");
 		MS_DUMP_CLEAN(
 		  indentation,
-		  "  max restarts (ms): %s",
+		  "  max restarts: %s",
 		  this->maxRestarts.has_value() ? std::to_string(this->maxRestarts.value()).c_str() : "(unset)");
 		MS_DUMP_CLEAN(indentation, "  running: %s", this->running ? "yes" : "no");
 		MS_DUMP_CLEAN(indentation, "  expiration count: %zu", this->expirationCount);

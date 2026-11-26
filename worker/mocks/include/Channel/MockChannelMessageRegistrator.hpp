@@ -5,6 +5,8 @@
 #include "Channel/ChannelMessageRegistratorInterface.hpp"
 // TODO: We should have a ChannelSocketInterface class instead.
 #include "Channel/ChannelSocket.hpp"
+#include <FBS/worker.h>
+#include <flatbuffers/flatbuffer_builder.h>
 #include <ankerl/unordered_dense.h>
 #include <string>
 

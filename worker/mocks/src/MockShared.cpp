@@ -33,7 +33,7 @@ namespace mocks
 			MS_THROW_ERROR("a timer with same label already exists [label:%s]", label.c_str());
 		}
 
-		auto* timer = new MockTimerHandle(
+		auto* const timer = new MockTimerHandle(
 		  listener,
 		  label,
 		  // NOTE: The timer mocks take a milliseconds callback, being that the
@@ -69,7 +69,7 @@ namespace mocks
 			MS_THROW_ERROR("a backoff timer with same label already exists [label:%s]", label.c_str());
 		}
 
-		auto* backoffTimer = new MockBackoffTimerHandle(
+		auto* const backoffTimer = new MockBackoffTimerHandle(
 		  options,
 		  // NOTE: The timer mocks take a milliseconds callback, being that the
 		  // resolution of the libuv handles they mimic.
