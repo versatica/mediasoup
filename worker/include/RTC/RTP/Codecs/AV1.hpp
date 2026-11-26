@@ -15,10 +15,8 @@ namespace RTC
 			class AV1
 			{
 			private:
-				/**
-				 * Bits AV1 numbers its frames with. It does not number them itself, so
-				 * they are the ones the Dependency Descriptor gives.
-				 */
+				// Bits AV1 numbers its frames with. It does not number them itself, so
+				// they are the ones the Dependency Descriptor gives.
 				static constexpr uint8_t FrameIdLength{ DependencyDescriptor::FrameIdLength };
 
 			public:

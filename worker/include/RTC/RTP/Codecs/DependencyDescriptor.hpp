@@ -17,9 +17,7 @@ namespace RTC
 			struct DependencyDescriptor
 			{
 			public:
-				/**
-				 * Bits the Dependency Descriptor numbers frames with.
-				 */
+				// Bits the Dependency Descriptor numbers frames with.
 				static constexpr uint8_t FrameIdLength{ 16 };
 				// Templates a template dependency structure may declare, which is what
 				// the 6 bits of a template id tell apart.

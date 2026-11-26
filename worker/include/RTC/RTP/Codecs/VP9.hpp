@@ -58,9 +58,7 @@ namespace RTC
 			class VP9
 			{
 			private:
-				/**
-				 * Bits VP9 numbers its pictures with, which tells where they wrap.
-				 */
+				// Bits VP9 numbers its pictures with, which tells where they wrap.
 				static constexpr uint8_t FrameIdLength{ 15 };
 
 			public:
