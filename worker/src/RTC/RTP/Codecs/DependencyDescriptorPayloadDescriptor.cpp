@@ -79,11 +79,10 @@ namespace RTC
 			}
 
 			DependencyDescriptorPayloadDescriptorHandler::DependencyDescriptorPayloadDescriptorHandler(
-			  DependencyDescriptorPayloadDescriptor* payloadDescriptor)
+			  std::unique_ptr<DependencyDescriptorPayloadDescriptor> payloadDescriptor)
+			  : payloadDescriptor(std::move(payloadDescriptor))
 			{
 				MS_TRACE();
-
-				this->payloadDescriptor.reset(payloadDescriptor);
 			}
 
 			bool DependencyDescriptorPayloadDescriptorHandler::Process(

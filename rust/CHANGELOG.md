@@ -51,6 +51,7 @@
   - Codecs: FrameIdList, consider frameId wraps.
   - RTP: Drop the packet if its payload cannot be shifted.
 - Update OpenSSL meson wrap to 3.5.9-2 ([PR #2077](https://github.com/versatica/mediasoup/pull/2077)).
+- Worker: Enable Dependency Descriptor for VP8 ([PR #2079](https://github.com/versatica/mediasoup/pull/2079)).
 
 ### 0.33.2
 

@@ -113,7 +113,9 @@ namespace RTC
 				 *   belongs to, which extends its pictureId into the 15 bits.
 				 */
 				[[nodiscard]] static bool ProcessRtpPacket(
-				  RTP::Packet* packet, Codecs::PictureIdUnwrapper& pictureIdUnwrapper);
+				  RTP::Packet* packet,
+				  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext,
+				  Codecs::PictureIdUnwrapper& pictureIdUnwrapper);
 
 			public:
 				class EncodingContext : public Codecs::EncodingContext

@@ -111,17 +111,14 @@ namespace RTC
 				// the same.
 				uint8_t temporalLayer{ 0 };
 
-				// The Dependency Descriptor tells the layers of the frame and whether
-				// decoding can start at it, which is all that is needed to forward the
-				// packet, and it must be rewritten for the layers each Consumer is given.
-				// So it serves the Consumers that negotiated the extension.
-				//
-				// NOTE: The payload descriptor of the codec is parsed all the same, for
-				// the Consumers that did not and cannot be told the layers any other way.
+				// NOTE: The payload descriptor of the codec is also parsed, for the
+				// Consumers that did not negotiate the Dependency Descriptor RTP header
+				// extension.
 				if (packet->HasDependencyDescriptor())
 				{
-					auto* const dependencyDescriptorPayloadDescriptor =
-					  DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext);
+					std::unique_ptr<DependencyDescriptorPayloadDescriptor> dependencyDescriptorPayloadDescriptor{
+						DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext)
+					};
 
 					// The descriptor could not be parsed.
 					if (!dependencyDescriptorPayloadDescriptor)
@@ -133,7 +130,7 @@ namespace RTC
 
 					packet->SetDependencyDescriptorPayloadDescriptorHandler(
 					  std::make_unique<DependencyDescriptorPayloadDescriptorHandler>(
-					    dependencyDescriptorPayloadDescriptor));
+					    std::move(dependencyDescriptorPayloadDescriptor)));
 				}
 
 				auto* data = packet->GetPayload();
