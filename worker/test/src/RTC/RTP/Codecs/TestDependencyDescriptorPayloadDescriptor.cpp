@@ -267,11 +267,9 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 		const auto packet =
 		  createPacket(data, static_cast<uint8_t>(len), dependencyDescriptor->GetMaxLength());
 
-		auto* const payloadDescriptor =
-		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(std::move(dependencyDescriptor));
-
 		RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler payloadDescriptorHandler(
-		  payloadDescriptor);
+		  std::make_unique<RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor>(
+		    std::move(dependencyDescriptor)));
 
 		result.forwarded =
 		  payloadDescriptorHandler.Process(std::addressof(context), packet.get(), result.marker);
@@ -971,7 +969,8 @@ SCENARIO("Dependency Descriptor payload descriptor", "[rtp][codecs][dependency-d
 			  data, static_cast<uint8_t>(len), dependencyDescriptor->GetMaxLength(), buffer, bufferLength);
 
 			auto handler = std::make_unique<RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler>(
-			  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(std::move(dependencyDescriptor)));
+			  std::make_unique<RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor>(
+			    std::move(dependencyDescriptor)));
 
 			bool marker{ false };
 

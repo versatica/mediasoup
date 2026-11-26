@@ -47,8 +47,9 @@ namespace RTC
 
 				if (packet->HasDependencyDescriptor())
 				{
-					auto* const dependencyDescriptorPayloadDescriptor =
-					  DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext);
+					std::unique_ptr<DependencyDescriptorPayloadDescriptor> dependencyDescriptorPayloadDescriptor{
+						DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext)
+					};
 
 					// The descriptor could not be parsed.
 					if (!dependencyDescriptorPayloadDescriptor)
@@ -66,7 +67,7 @@ namespace RTC
 					// https://issues.webrtc.org/issues/560293075.
 					packet->SetPayloadDescriptorHandler(
 					  std::make_unique<DependencyDescriptorPayloadDescriptorHandler>(
-					    dependencyDescriptorPayloadDescriptor));
+					    std::move(dependencyDescriptorPayloadDescriptor)));
 				}
 				else
 				{

@@ -2,6 +2,7 @@
 #include "RTC/RTP/Codecs/AV1.hpp"
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 #include "RTC/RTP/Codecs/H264.hpp"
+#include "RTC/RTP/Codecs/VP8.hpp"
 #include "RTC/RTP/Codecs/VP9.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "Utils.hpp"
@@ -1109,6 +1110,8 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		REQUIRE(!RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
 		REQUIRE(!RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
+		REQUIRE(!RTC::RTP::Codecs::VP8::ProcessRtpPacket(
+		  packet.get(), dependencyDescriptorContext, pictureIdUnwrapper));
 		REQUIRE(!RTC::RTP::Codecs::VP9::ProcessRtpPacket(
 		  packet.get(), dependencyDescriptorContext, pictureIdUnwrapper));
 

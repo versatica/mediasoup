@@ -3,6 +3,7 @@
 
 #include "RTC/RTP/Codecs/VP8.hpp"
 #include "Logger.hpp"
+#include "RTC/RTP/Codecs/DependencyDescriptorPayloadDescriptor.hpp"
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -125,9 +126,32 @@ namespace RTC
 				return payloadDescriptor.release();
 			}
 
-			bool VP8::ProcessRtpPacket(RTP::Packet* packet, Codecs::PictureIdUnwrapper& pictureIdUnwrapper)
+			bool VP8::ProcessRtpPacket(
+			  RTP::Packet* packet,
+			  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext,
+			  Codecs::PictureIdUnwrapper& pictureIdUnwrapper)
 			{
 				MS_TRACE();
+
+				// NOTE: The payload descriptor of the codec is also parsed, for the
+				// Consumers that did not negotiate the Dependency Descriptor RTP header
+				// extension.
+				if (packet->HasDependencyDescriptor())
+				{
+					std::unique_ptr<DependencyDescriptorPayloadDescriptor> dependencyDescriptorPayloadDescriptor{
+						DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext)
+					};
+
+					// The descriptor could not be parsed.
+					if (!dependencyDescriptorPayloadDescriptor)
+					{
+						return false;
+					}
+
+					packet->SetDependencyDescriptorPayloadDescriptorHandler(
+					  std::make_unique<DependencyDescriptorPayloadDescriptorHandler>(
+					    std::move(dependencyDescriptorPayloadDescriptor)));
+				}
 
 				auto* data = packet->GetPayload();
 				auto len   = packet->GetPayloadLength();

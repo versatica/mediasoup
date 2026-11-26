@@ -124,7 +124,7 @@ namespace RTC
 			{
 			public:
 				explicit DependencyDescriptorPayloadDescriptorHandler(
-				  DependencyDescriptorPayloadDescriptor* payloadDescriptor);
+				  std::unique_ptr<DependencyDescriptorPayloadDescriptor> payloadDescriptor);
 				~DependencyDescriptorPayloadDescriptorHandler() override = default;
 
 			public:

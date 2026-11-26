@@ -183,11 +183,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		REQUIRE(dependencyDescriptor);
 
-		auto* const payloadDescriptor =
-		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(std::move(dependencyDescriptor));
 		packet->SetPayloadDescriptorHandler(
 		  std::make_unique<RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler>(
-		    payloadDescriptor));
+		    std::make_unique<RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor>(
+		      std::move(dependencyDescriptor))));
 	};
 
 	// Instant reported by the mocked clock, which sections move to let timers
