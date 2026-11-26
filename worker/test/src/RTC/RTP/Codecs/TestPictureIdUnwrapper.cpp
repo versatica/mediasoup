@@ -89,11 +89,11 @@ SCENARIO("pictureIds are unwrapped into the 15 bits", "[rtp][codecs][picture-id-
 
 		uint16_t unwrapped{ 0 };
 
-		// A whole 15 bits cycle of pictures numbered with 7 bits, so the last one
+		// A whole 15 bits cycle of pictureIds numbered with 7 bits, so the last one
 		// lands back at the pictureId the first one did.
-		for (uint32_t picture{ 0 }; picture <= MaxPictureId + 1; ++picture)
+		for (uint32_t pictureId{ 0 }; pictureId <= MaxPictureId + 1; ++pictureId)
 		{
-			unwrapped = unwrapper.Unwrap(static_cast<uint16_t>(picture % 128), false);
+			unwrapped = unwrapper.Unwrap(static_cast<uint16_t>(pictureId % 128), false);
 		}
 
 		REQUIRE(unwrapped == 0);

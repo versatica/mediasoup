@@ -35,6 +35,7 @@ namespace RTC
 					void Dump(int indentation = 0) const override;
 
 					// Aggregation header.
+
 					/**
 					 * Z: Whether the first OBU element continues one from the previous
 					 * packet.
@@ -53,6 +54,7 @@ namespace RTC
 					 * N: Whether the packet is the first one of a coded video sequence.
 					 */
 					uint8_t n : 1;
+
 					// Parsed values.
 					bool isKeyFrame{ false };
 				};
