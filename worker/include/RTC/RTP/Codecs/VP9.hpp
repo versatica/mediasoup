@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
+#include "RTC/RTP/Codecs/PictureIdUnwrapper.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/SeqManager.hpp"
 
@@ -57,9 +58,7 @@ namespace RTC
 			class VP9
 			{
 			private:
-				/**
-				 * Bits VP9 numbers its pictures with, which tells where they wrap.
-				 */
+				// Bits VP9 numbers its pictures with, which tells where they wrap.
 				static constexpr uint8_t FrameIdLength{ 15 };
 
 			public:
@@ -79,6 +78,10 @@ namespace RTC
 					uint8_t e : 1; // E: End of a layer frame.
 					uint8_t v : 1; // V: Scalability structure (SS) data present.
 					// Extension fields.
+					// PictureId of the packet, extended to 15 bits by ProcessRtpPacket(),
+					// which is the value layer selection and reordering checks take.
+					// NOTE: The payload is never rewritten, so the pictureId it carries keeps
+					// the width the sender gave it and is not necessarily this value.
 					uint16_t pictureId{ 0 };
 					uint8_t slIndex{ 0 };
 					uint8_t tlIndex{ 0 };
@@ -88,7 +91,6 @@ namespace RTC
 					// Parsed values.
 					bool isKeyFrame{ false };
 					bool hasPictureId{ false };
-					bool hasOneBytePictureId{ false };
 					bool hasTwoBytesPictureId{ false };
 					bool hasSlIndex{ false };
 					bool hasTl0PictureIndex{ false };
@@ -97,8 +99,15 @@ namespace RTC
 
 			public:
 				static VP9::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
-				static void ProcessRtpPacket(
-				  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext);
+
+				/**
+				 * @param pictureIdUnwrapper - Unwrapper of the stream the packet
+				 *   belongs to, which extends its pictureId into the 15 bits.
+				 */
+				[[nodiscard]] static bool ProcessRtpPacket(
+				  RTP::Packet* packet,
+				  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext,
+				  Codecs::PictureIdUnwrapper& pictureIdUnwrapper);
 
 			public:
 				class EncodingContext : public Codecs::EncodingContext

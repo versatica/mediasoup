@@ -38,6 +38,86 @@ namespace
 	// clang-format on
 } // namespace
 
+SCENARIO("AV1 payload descriptor", "[rtp][codecs][av1]")
+{
+	SECTION("parse the aggregation header")
+	{
+		/**
+		 * AV1 Aggregation Header
+		 *
+		 * 0 = Z bit: The first OBU element does not continue one from the
+		 *     previous packet
+		 * 1 = Y bit: The last OBU element continues in the next packet
+		 * 10 = W: Two OBU elements, the last one with no length field
+		 * 1 = N bit: First packet of a coded video sequence
+		 */
+
+		// clang-format off
+		const uint8_t payload[] =
+		{
+			0x68, 0x0a, 0x0b
+		};
+		// clang-format on
+
+		const std::unique_ptr<RTC::RTP::Codecs::AV1::PayloadDescriptor> payloadDescriptor{
+			RTC::RTP::Codecs::AV1::Parse(payload, sizeof(payload))
+		};
+
+		REQUIRE(payloadDescriptor);
+
+		REQUIRE(payloadDescriptor->z == 0);
+		REQUIRE(payloadDescriptor->y == 1);
+		REQUIRE(payloadDescriptor->w == 2);
+		REQUIRE(payloadDescriptor->n == 1);
+
+		REQUIRE(payloadDescriptor->isKeyFrame == true);
+	}
+
+	SECTION("a payload with no aggregation header is not parsed")
+	{
+		// clang-format off
+		const uint8_t payload[] =
+		{
+			0x68
+		};
+		// clang-format on
+
+		const std::unique_ptr<RTC::RTP::Codecs::AV1::PayloadDescriptor> payloadDescriptor{
+			RTC::RTP::Codecs::AV1::Parse(payload, 0)
+		};
+
+		REQUIRE(!payloadDescriptor);
+	}
+
+	// A coded video sequence starts with a key frame, which the N bit tells, and
+	// it cannot start in the middle of an OBU, so a packet that continues one
+	// does not start it however N is set.
+	SECTION("a key frame is the start of a coded video sequence that continues no OBU")
+	{
+		const auto isKeyFrame = [](uint8_t aggregationHeader) -> bool
+		{
+			const uint8_t payload[] = { aggregationHeader, 0x0a };
+
+			const std::unique_ptr<RTC::RTP::Codecs::AV1::PayloadDescriptor> payloadDescriptor{
+				RTC::RTP::Codecs::AV1::Parse(payload, sizeof(payload))
+			};
+
+			REQUIRE(payloadDescriptor);
+
+			return payloadDescriptor->isKeyFrame;
+		};
+
+		// N, with no Z.
+		REQUIRE(isKeyFrame(0x08) == true);
+		// N and Z.
+		REQUIRE(isKeyFrame(0x88) == false);
+		// Z alone.
+		REQUIRE(isKeyFrame(0x80) == false);
+		// Neither.
+		REQUIRE(isKeyFrame(0x00) == false);
+	}
+}
+
 SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 {
 	RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
@@ -61,7 +141,7 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions) == true);
 
-		RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
+		REQUIRE(RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
 
 		// A payload descriptor handler is installed, which is what tells the
 		// length the rewritten descriptor may grow to.
@@ -72,14 +152,49 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 		REQUIRE(dependencyDescriptorContext.templateDependencyStructure);
 	}
 
-	// Nothing but the Dependency Descriptor tells the layers of an AV1 packet,
-	// so without it there is nothing to process and the packet is forwarded just
-	// as it comes.
-	SECTION("a packet carrying no Dependency Descriptor gets no payload descriptor")
+	// Nothing but the Dependency Descriptor tells the layers of an AV1 packet, so
+	// without it the packet is forwarded as it comes. Its aggregation header
+	// still tells whether it starts a key frame, which is what a Consumer waits
+	// for before forwarding anything to its endpoint.
+	SECTION("a packet carrying no Dependency Descriptor is told a key frame by its payload")
 	{
-		RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
+		// Z=0, W=1, N=1.
+		// clang-format off
+		const uint8_t payload[] =
+		{
+			0x18, 0x0a, 0x0b
+		};
+		// clang-format on
+
+		packet->SetPayload(payload, sizeof(payload));
+
+		REQUIRE(RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
 
 		REQUIRE(packet->GetDependencyDescriptorMaxLength() == 0);
 		REQUIRE(!dependencyDescriptorContext.templateDependencyStructure);
+
+		REQUIRE(packet->IsKeyFrame() == true);
+
+		// There is nothing to filter, so every packet is taken for the only layer
+		// the Consumer can be given.
+		REQUIRE(packet->GetSpatialLayer() == 0);
+		REQUIRE(packet->GetTemporalLayer() == 0);
+	}
+
+	SECTION("a packet carrying no Dependency Descriptor and no key frame is told so")
+	{
+		// Z=0, W=1, N=0.
+		// clang-format off
+		const uint8_t payload[] =
+		{
+			0x10, 0x0a, 0x0b
+		};
+		// clang-format on
+
+		packet->SetPayload(payload, sizeof(payload));
+
+		REQUIRE(RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
+
+		REQUIRE(packet->IsKeyFrame() == false);
 	}
 }

@@ -56,10 +56,8 @@ namespace RTC
 					{
 						const auto front = this->layerChanges.front().first;
 
-						// Layers can be changed only with ordered frameId values.
-						// If frameId is lower than the previous one, then it has rolled over the max value.
-						const uint16_t diff =
-						  frameId > front ? frameId - front : frameId + GetMaxFrameId() - front;
+						// Frames between the oldest layer change and this one, considering the possible wrap.
+						const auto diff = static_cast<uint16_t>((uint32_t{ frameId } - front) & GetMaxFrameId());
 
 						if (diff <= MaxCurrentLayerFrameIdNum)
 						{
