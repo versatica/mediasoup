@@ -77,7 +77,8 @@ namespace RTC
 							{
 								case RTC::RtpCodecMimeType::Subtype::VP8:
 								{
-									return Codecs::VP8::ProcessRtpPacket(packet, pictureIdUnwrapper);
+									return Codecs::VP8::ProcessRtpPacket(
+									  packet, dependencyDescriptorContext, pictureIdUnwrapper);
 								}
 
 								case RTC::RtpCodecMimeType::Subtype::VP9:

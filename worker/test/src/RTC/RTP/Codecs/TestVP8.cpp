@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 #include "RTC/RTP/Codecs/PictureIdUnwrapper.hpp"
 #include "RTC/RTP/Codecs/VP8.hpp"
 #include "RTC/RTP/Packet.hpp"
@@ -728,12 +729,14 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 		// side, which extends it and widens the field to two bytes, and then
 		// through the Consumer one, which rewrites it. Tells the pictureId the
 		// endpoint is given, or nothing if the packet is not forwarded at all.
-		const auto forwardVP8Packet = [](
-		                                RTC::RTP::Codecs::PictureIdUnwrapper& pictureIdUnwrapper,
-		                                RTC::RTP::Codecs::VP8::EncodingContext& context,
-		                                uint8_t pictureId,
-		                                uint8_t tl0PictureIndex,
-		                                uint8_t tlIndex) -> std::optional<uint16_t>
+		const auto forwardVP8Packet =
+		  [](
+		    RTC::RTP::Codecs::DependencyDescriptor::Context& dependencyDescriptorContext,
+		    RTC::RTP::Codecs::PictureIdUnwrapper& pictureIdUnwrapper,
+		    RTC::RTP::Codecs::VP8::EncodingContext& context,
+		    uint8_t pictureId,
+		    uint8_t tl0PictureIndex,
+		    uint8_t tlIndex) -> std::optional<uint16_t>
 		{
 			// clang-format off
 			uint8_t payload[] =
@@ -758,7 +761,9 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 			// As the Producer does, which is what extends the pictureId and widens
 			// the field to two bytes.
-			REQUIRE(RTC::RTP::Codecs::VP8::ProcessRtpPacket(packet.get(), pictureIdUnwrapper));
+			REQUIRE(
+			  RTC::RTP::Codecs::VP8::ProcessRtpPacket(
+			    packet.get(), dependencyDescriptorContext, pictureIdUnwrapper));
 
 			bool marker;
 
@@ -781,6 +786,7 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 		// Held by the Producer stream, so every packet of it is extended with the
 		// same unwrapper.
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 		RTC::RTP::Codecs::PictureIdUnwrapper pictureIdUnwrapper;
 
 		RTC::RTP::Codecs::VP8::EncodingContext context(params);
@@ -790,7 +796,8 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 		context.SetTargetTemporalLayer(0);
 
 		// Picture 126, the first one forwarded.
-		const auto first = forwardVP8Packet(pictureIdUnwrapper, context, 126, 10, 0);
+		const auto first =
+		  forwardVP8Packet(dependencyDescriptorContext, pictureIdUnwrapper, context, 126, 10, 0);
 
 		REQUIRE(first.has_value());
 
@@ -798,20 +805,22 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 		const auto firstPictureId = first.value();
 
 		// Picture 127, filtered out since it belongs to a higher temporal layer.
-		REQUIRE(!forwardVP8Packet(pictureIdUnwrapper, context, 127, 10, 1));
+		REQUIRE(!forwardVP8Packet(dependencyDescriptorContext, pictureIdUnwrapper, context, 127, 10, 1));
 
 		// Picture 128, where the 7 bits of the sender wrap back to zero. It is the
 		// one right after the one forwarded, since the filtered picture leaves no
 		// gap behind.
-		const auto second = forwardVP8Packet(pictureIdUnwrapper, context, 0, 11, 0);
+		const auto second =
+		  forwardVP8Packet(dependencyDescriptorContext, pictureIdUnwrapper, context, 0, 11, 0);
 
 		REQUIRE(second == static_cast<uint16_t>(firstPictureId + 1));
 
 		// Picture 129, filtered out as well.
-		REQUIRE(!forwardVP8Packet(pictureIdUnwrapper, context, 1, 11, 1));
+		REQUIRE(!forwardVP8Packet(dependencyDescriptorContext, pictureIdUnwrapper, context, 1, 11, 1));
 
 		// Picture 130.
-		const auto third = forwardVP8Packet(pictureIdUnwrapper, context, 2, 12, 0);
+		const auto third =
+		  forwardVP8Packet(dependencyDescriptorContext, pictureIdUnwrapper, context, 2, 12, 0);
 
 		REQUIRE(third == static_cast<uint16_t>(firstPictureId + 2));
 	}
