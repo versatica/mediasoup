@@ -96,10 +96,11 @@ namespace mocks
 		MS_TRACE();
 
 		// Schedule the next expiration, or deactivate the timer if it doesn't
-		// repeat, just like the real TimerHandle does. This is done before invoking
-		// the callback for two reasons: the listener may call Start(), Restart() or
-		// Stop() within it, which must win over this, and the listener may delete
-		// this instance within it, so nothing can be accessed afterwards.
+		// repeat, just like the real `TimerHandle` does. This is done before
+		// invoking the callback for two reasons: the listener may call `Start()`,
+		// `Restart()` or `Stop()` within it, which must win over this, and the
+		// listener may delete this instance within it, so nothing can be accessed
+		// afterwards.
 		if (this->repeatMs != 0)
 		{
 			this->running     = true;

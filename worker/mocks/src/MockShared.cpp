@@ -15,8 +15,8 @@ namespace mocks
 	{
 		MS_TRACE();
 
-		// Give the Channel the Shared instance, which it needs to take the arrival
-		// time of received notifications.
+		// Give the `ChannelSocket` the `SharedInterface` instance, which it needs to
+		// take the arrival time of received notifications.
 		this->channelSocket->SetShared(this);
 	}
 
@@ -26,7 +26,7 @@ namespace mocks
 		MS_TRACE();
 
 		// NOTE: Timers are indexed by label so that tests can retrieve them via
-		// GetTimer(). Two alive timers sharing a label would make that lookup
+		// `GetTimer()`. Two alive timers sharing a label would make that lookup
 		// ambiguous.
 		if (this->timers.contains(label))
 		{
@@ -62,7 +62,7 @@ namespace mocks
 		const auto& label = options.label;
 
 		// NOTE: Backoff timers are indexed by label so that tests can retrieve them
-		// via GetBackoffTimer(). Two alive timers sharing a label would make that
+		// via `GetBackoffTimer()`. Two alive timers sharing a label would make that
 		// lookup ambiguous.
 		if (this->backoffTimers.contains(label))
 		{
