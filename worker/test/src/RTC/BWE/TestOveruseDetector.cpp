@@ -3,8 +3,8 @@
 #include "RTC/BWE/OveruseDetector.hpp"
 #include "RTC/BWE/OveruseEstimator.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cmath>
-#include <numbers>
+#include <cmath>   // std::cos(), std::log(), std::sqrt()
+#include <numbers> // std::numbers::pi
 
 SCENARIO("BWE OveruseDetector", "[bwe][overusedetector]")
 {
@@ -125,8 +125,10 @@ SCENARIO("BWE OveruseDetector", "[bwe][overusedetector]")
 
 			rtpTimestamp += meanMs * 90;
 			nowMs += meanMs;
+
 			const double jitter = random.Gaussian(0, static_cast<double>(standardDeviationMs));
-			// NOTE: Truncated towards zero rather than rounded with std::llround(),
+
+			// NOTE: Truncated towards zero rather than rounded with `std::llround()`,
 			// which rounds away from it. Half of these samples are negative, so the
 			// two disagree on them and the counts asserted below would no longer
 			// hold.
@@ -168,8 +170,10 @@ SCENARIO("BWE OveruseDetector", "[bwe][overusedetector]")
 
 			rtpTimestamp += meanMs * 90;
 			nowMs += meanMs + driftPerFrameMs;
+
 			const double jitter = random.Gaussian(0, static_cast<double>(standardDeviationMs));
-			// NOTE: Truncated towards zero rather than rounded with std::llround(),
+
+			// NOTE: Truncated towards zero rather than rounded with `std::llround()`,
 			// which rounds away from it. Half of these samples are negative, so the
 			// two disagree on them and the counts asserted below would no longer
 			// hold.

@@ -174,6 +174,7 @@ namespace RTC
 
 			for (size_t idx{ 0 }; idx < numSsrcs; ++idx)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				packet->AddSsrc(ssrcs[idx]);
 			}
 

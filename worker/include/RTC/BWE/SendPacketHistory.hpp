@@ -111,19 +111,19 @@ namespace RTC
 				 * cannot be told from that of another one, which happens when the very
 				 * same SSRC and RTP sequence number were sent more than once.
 				 *
-				 * @remark
+				 * @remarks
 				 * - Nothing in this estimator reads it. It is only of use to SCReAM,
 				 *   another way of estimating the bandwidth, which discards the delay
 				 *   of a packet it cannot tell apart.
 				 *
-				 * @link https://datatracker.ietf.org/doc/draft-johansson-ccwg-rfc8298bis-screamv2
+				 * @see https://datatracker.ietf.org/doc/draft-johansson-ccwg-rfc8298bis-screamv2
 				 */
 				bool ambiguousReceiveTime{ false };
 				/**
 				 * Whether the packet was sent marked as ECT(1), which asks the network
 				 * to report congestion instead of dropping the packet.
 				 *
-				 * @remark
+				 * @remarks
 				 * - Only a feedback that reports ECN carries it back, which is the one
 				 *   of RFC 8888 and not the transport-cc one.
 				 *
@@ -135,7 +135,7 @@ namespace RTC
 				 * Whether a feedback already reported this packet as lost, which is
 				 * what tells a first loss from the same loss reported again.
 				 *
-				 * @remark
+				 * @remarks
 				 * - Only a feedback that reports on a whole range of packets makes use
 				 *   of it, which is the one of RFC 8888 and not the transport-cc one.
 				 *
@@ -164,7 +164,7 @@ namespace RTC
 				{
 					// Both fit in a single 64 bit word, which is hashed as a whole.
 					return ankerl::unordered_dense::hash<uint64_t>{}(
-					  (static_cast<uint64_t>(key.ssrc) << 16) | key.seq);
+					  (static_cast<uint64_t>(key.ssrc) << 16) | uint64_t{ key.seq });
 				}
 			};
 

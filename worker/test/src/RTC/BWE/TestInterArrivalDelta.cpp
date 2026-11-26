@@ -80,15 +80,16 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 		const auto deltas = feed(interArrivalDelta, InitialSendTimeMs + 20);
 
 		REQUIRE(deltas.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& deltasValue = deltas.value();
+
 		// Send time of B (+10) minus send time of A (+4).
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().sendDeltaUs == 6 * 1000);
+		REQUIRE(deltasValue.sendDeltaUs == 6 * 1000);
 		// Same value since every packet had the very same network delay.
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().arrivalDeltaUs == 6 * 1000);
+		REQUIRE(deltasValue.arrivalDeltaUs == 6 * 1000);
 		// B holds a single packet while A holds three of them.
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().sizeDelta == -2 * static_cast<int64_t>(PacketSize));
+		REQUIRE(deltasValue.sizeDelta == -2 * static_cast<int64_t>(PacketSize));
 	}
 
 	SECTION("a longer send time group absorbs packets that would otherwise start a new one")
@@ -110,13 +111,15 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 		const auto deltas = feed(interArrivalDelta, InitialSendTimeMs + 80);
 
 		REQUIRE(deltas.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& deltasValue = deltas.value();
+
 		// Send time of B (+40) minus send time of A (+20), which is the last packet
 		// absorbed into A.
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().sendDeltaUs == 20 * 1000);
+		REQUIRE(deltasValue.sendDeltaUs == 20 * 1000);
 		// B holds a single packet while A holds three of them.
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().sizeDelta == -2 * static_cast<int64_t>(PacketSize));
+		REQUIRE(deltasValue.sizeDelta == -2 * static_cast<int64_t>(PacketSize));
 	}
 
 	SECTION("increasing network delay produces a bigger arrival delta")
@@ -147,11 +150,13 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 		  /*feedbackAtMs*/ InitialSendTimeMs + 20 + BaseDelayMs + 20);
 
 		REQUIRE(deltas.has_value());
+
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().sendDeltaUs == 10 * 1000);
+		const auto& deltasValue = deltas.value();
+
+		REQUIRE(deltasValue.sendDeltaUs == 10 * 1000);
 		// 20 ms of extra queuing delay on top of the send delta.
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().arrivalDeltaUs == 30 * 1000);
+		REQUIRE(deltasValue.arrivalDeltaUs == 30 * 1000);
 	}
 
 	SECTION("packet sent before the current group is discarded")

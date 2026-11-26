@@ -33,6 +33,8 @@ namespace RTC
 		  bool isRttAboveLimit,
 		  Types::BandwidthUsage bandwidthUsage)
 		{
+			MS_TRACE();
+
 			if (bandwidthUsage == Types::BandwidthUsage::OVERUSING || bandwidthUsage == Types::BandwidthUsage::UNDERUSING)
 			{
 				return ProbeController::BandwidthLimitedCause::DELAY_BASED_LIMITED_DELAY_INCREASED;
@@ -82,12 +84,11 @@ namespace RTC
 		    // against a figure from long ago.
 		    probeController({ .enablePeriodicAlrProbing = true }),
 		    probingScheduler(this, shared),
-		    startBitrate(options.startBitrate)
+		    minBitrate(options.minBitrate),
+		    startBitrate(options.startBitrate),
+		    maxBitrate(options.maxBitrate)
 		{
 			MS_TRACE();
-
-			this->minBitrate = options.minBitrate;
-			this->maxBitrate = options.maxBitrate;
 
 			ResetConstraints(this->shared->GetTimeUs(), /*applyStartBitrate*/ true);
 

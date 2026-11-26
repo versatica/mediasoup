@@ -4,7 +4,7 @@
 #include "RTC/BWE/AimdRateControl.hpp"
 #include "Logger.hpp"
 #include "RTC/Consts.hpp"
-#include <cmath>
+#include <cmath> // std::ceil(), std::llround(), std::pow()
 
 namespace RTC
 {
@@ -200,6 +200,7 @@ namespace RTC
 			// Time the network takes to react to a change, which is a round trip plus
 			// the delay of the overuse detector, doubled to stay on the safe side.
 			const int64_t responseTimeUs = (this->rttUs + DetectorDelayUs) * 2;
+
 			// NOTE: The division is deliberately an integer one, since it's the
 			// resolution at which a bitrate is expressed.
 			const int64_t increaseRateBpsPerSecond = avgPacketSizeBytes * 8000000 / responseTimeUs;
@@ -221,9 +222,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::optional<int64_t> newBitrate;
 			const int64_t estimatedThroughput =
 			  input.estimatedThroughput.value_or(this->latestEstimatedThroughput);
+
+			std::optional<int64_t> newBitrate;
 
 			if (input.estimatedThroughput.has_value())
 			{
@@ -274,8 +276,9 @@ namespace RTC
 
 					if (this->currentBitrate < increaseLimit)
 					{
-						int64_t increasedBitrate{ 0 };
 						const auto linkCapacityEstimate = this->linkCapacity.GetEstimate();
+
+						int64_t increasedBitrate{ 0 };
 
 						if (linkCapacityEstimate.has_value())
 						{

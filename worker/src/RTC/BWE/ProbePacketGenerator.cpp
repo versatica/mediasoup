@@ -25,12 +25,11 @@ namespace RTC
 
 		/* Instance methods. */
 
-		ProbePacketGenerator::ProbePacketGenerator(Listener* listener) : listener(listener)
+		ProbePacketGenerator::ProbePacketGenerator(Listener* listener)
+		  : listener(listener),
+		    packet(RTC::RTP::Packet::Factory(this->packetBuffer.data(), this->packetBuffer.size()))
 		{
 			MS_TRACE();
-
-			this->packet.reset(
-			  RTC::RTP::Packet::Factory(this->packetBuffer.data(), this->packetBuffer.size()));
 
 			this->packet->SetPayloadType(RTC::Consts::BweProbeRtpPayloadType);
 			this->packet->SetSsrc(RTC::Consts::BweProbeRtpSsrc);

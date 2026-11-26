@@ -371,10 +371,12 @@ SCENARIO("BWE SendPacketHistory", "[bwe][sendpackethistory]")
 		const auto firstSentPacket = sendPacketHistory.ProcessSentPacket(0, InitialTimeUs);
 
 		REQUIRE(firstSentPacket.has_value());
+
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(firstSentPacket.value().sequenceNumber == 0);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(firstSentPacket.value().dataInFlight == 200);
+		const auto& firstSentPacketValue = firstSentPacket.value();
+
+		REQUIRE(firstSentPacketValue.sequenceNumber == 0);
+		REQUIRE(firstSentPacketValue.dataInFlight == 200);
 		REQUIRE(sendPacketHistory.GetOutstandingBytes() == 200);
 
 		addPacket(sendPacketHistory, 101, 300, InitialTimeUs + 10000);

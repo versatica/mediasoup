@@ -83,13 +83,13 @@ namespace RTC
 		private:
 			struct PacketTiming
 			{
-				double arrivalTimeUs;
-				double smoothedDelayUs;
+				double arrivalTimeUs{ 0.0 };
+				double smoothedDelayUs{ 0.0 };
 				/**
 				 * Accumulated delay before it's smoothed, which is what the slope cap
 				 * looks at.
 				 */
-				double rawDelayUs;
+				double rawDelayUs{ 0.0 };
 			};
 
 		public:

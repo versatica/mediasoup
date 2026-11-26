@@ -29,7 +29,8 @@ namespace RTC
 
 			~OveruseDetector() = default;
 
-			OveruseDetector(const OveruseDetector&)            = delete;
+			OveruseDetector(const OveruseDetector&) = delete;
+
 			OveruseDetector& operator=(const OveruseDetector&) = delete;
 
 			/**

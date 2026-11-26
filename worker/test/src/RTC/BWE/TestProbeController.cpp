@@ -46,8 +46,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		const auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
 
 		REQUIRE(probes.size() >= 2);
-		REQUIRE(probes[0].targetDurationUs == 15 * 1000);
-		REQUIRE(probes[0].targetProbeCount == 5);
+		REQUIRE(probes.at(0).targetDurationUs == 15 * 1000);
+		REQUIRE(probes.at(0).targetProbeCount == 5);
 	}
 
 	SECTION("and both can be configured")
@@ -63,8 +63,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		const auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
 
 		REQUIRE(probes.size() >= 2);
-		REQUIRE(probes[0].targetDurationUs == 123 * 1000);
-		REQUIRE(probes[0].targetProbeCount == 2);
+		REQUIRE(probes.at(0).targetDurationUs == 123 * 1000);
+		REQUIRE(probes.at(0).targetProbeCount == 2);
 	}
 
 	SECTION("nothing is probed while the network is down")
@@ -95,8 +95,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		const auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
 
 		REQUIRE(probes.size() == 2);
-		REQUIRE(probes[0].targetBitrate == StartBitrate * 2);
-		REQUIRE(probes[1].targetBitrate == StartBitrate * 3);
+		REQUIRE(probes.at(0).targetBitrate == StartBitrate * 2);
+		REQUIRE(probes.at(1).targetBitrate == StartBitrate * 3);
 	}
 
 	SECTION("and a factor of zero leaves just the first one")
@@ -112,7 +112,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		const auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == StartBitrate * 2);
+		REQUIRE(probes.at(0).targetBitrate == StartBitrate * 2);
 	}
 
 	SECTION("raising the maximum is room that hasn't been looked for yet")
@@ -131,7 +131,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate + 100, nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == MaxBitrate + 100);
+		REQUIRE(probes.at(0).targetBitrate == MaxBitrate + 100);
 	}
 
 	SECTION("asking for more is probed while not filling the link even when told not to otherwise")
@@ -335,7 +335,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate + 100, nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == MaxBitrate + 100);
+		REQUIRE(probes.at(0).targetBitrate == MaxBitrate + 100);
 	}
 
 	SECTION("each burst leads to the next one only once its result is good enough")
@@ -357,7 +357,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		  1800, RTC::BWE::ProbeController::BandwidthLimitedCause::DELAY_BASED_LIMITED, nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 2 * 1800);
+		REQUIRE(probes.at(0).targetBitrate == 2 * 1800);
 	}
 
 	SECTION("and stops climbing once the maximum is already reached")
@@ -426,7 +426,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		  1800, RTC::BWE::ProbeController::BandwidthLimitedCause::DELAY_BASED_LIMITED, nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 2 * StartBitrate);
+		REQUIRE(probes.at(0).targetBitrate == 2 * StartBitrate);
 	}
 
 	SECTION("a burst whose result never arrives is given up on")
@@ -464,7 +464,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		REQUIRE(!probes.empty());
 
 		const int64_t startTimeUs = nowUs;
-		int64_t lastProbeAtUs     = nowUs;
+
+		int64_t lastProbeAtUs = nowUs;
 
 		while (nowUs < startTimeUs + (5 * 1000 * 1000))
 		{
@@ -476,8 +477,8 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 			{
 				// One every second, noticed at the granularity this is asked at.
 				REQUIRE(nowUs - lastProbeAtUs == 1100 * 1000);
-				REQUIRE(probes[0].minProbeDeltaUs == 20 * 1000);
-				REQUIRE(probes[0].targetDurationUs == 100 * 1000);
+				REQUIRE(probes.at(0).minProbeDeltaUs == 20 * 1000);
+				REQUIRE(probes.at(0).targetDurationUs == 100 * 1000);
 
 				lastProbeAtUs = nowUs;
 			}
@@ -543,7 +544,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 		// 0.85 of what the estimate was worth before the drop.
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 425);
+		REQUIRE(probes.at(0).targetBitrate == 425);
 	}
 
 	SECTION("and also just after it starts filling it again")
@@ -574,7 +575,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.RequestProbe(nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 425);
+		REQUIRE(probes.at(0).targetBitrate == 425);
 	}
 
 	SECTION("but not once it has been filling it for a while")
@@ -660,7 +661,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 1000);
+		REQUIRE(probes.at(0).targetBitrate == 1000);
 
 		probes = probeController.SetEstimatedBitrate(
 		  500, RTC::BWE::ProbeController::BandwidthLimitedCause::DELAY_BASED_LIMITED, nowUs);
@@ -722,7 +723,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == StartBitrate * 2);
+		REQUIRE(probes.at(0).targetBitrate == StartBitrate * 2);
 	}
 
 	SECTION("nothing is probed while nothing can be sent")
@@ -764,7 +765,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		  60000000, RTC::BWE::ProbeController::BandwidthLimitedCause::DELAY_BASED_LIMITED, nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 100000000);
+		REQUIRE(probes.at(0).targetBitrate == 100000000);
 
 		// And once there, there is nothing left to climb towards.
 		probes = probeController.SetEstimatedBitrate(
@@ -799,7 +800,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 2 * 9000000);
+		REQUIRE(probes.at(0).targetBitrate == 2 * 9000000);
 
 		// With nothing asked for, the estimate is what bounds the burst again.
 		REQUIRE(probeController.OnMaxTotalAllocatedBitrate(0, nowUs).empty());
@@ -809,7 +810,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 2 * 10000000);
+		REQUIRE(probes.at(0).targetBitrate == 2 * 10000000);
 	}
 
 	SECTION("every factor and count that shapes a burst can be set")
@@ -832,10 +833,10 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, 5000000, nowUs);
 
 		REQUIRE(probes.size() == 2);
-		REQUIRE(probes[0].targetBitrate == 600);
-		REQUIRE(probes[0].targetProbeCount == 2);
-		REQUIRE(probes[1].targetBitrate == 1500);
-		REQUIRE(probes[1].targetProbeCount == 2);
+		REQUIRE(probes.at(0).targetBitrate == 600);
+		REQUIRE(probes.at(0).targetProbeCount == 2);
+		REQUIRE(probes.at(1).targetBitrate == 1500);
+		REQUIRE(probes.at(1).targetProbeCount == 2);
 
 		// Another burst only follows one whose result got above 0.8 of what it
 		// aimed for.
@@ -848,7 +849,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		  1250, RTC::BWE::ProbeController::BandwidthLimitedCause::DELAY_BASED_LIMITED, nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 3 * 1250);
+		REQUIRE(probes.at(0).targetBitrate == 3 * 1250);
 
 		nowUs += 5 * 1000 * 1000;
 
@@ -859,7 +860,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.OnMaxTotalAllocatedBitrate(200000, nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 400000);
+		REQUIRE(probes.at(0).targetBitrate == 400000);
 	}
 
 	SECTION("while loss is what holds the estimate back a burst barely goes above it")
@@ -892,7 +893,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 750);
+		REQUIRE(probes.at(0).targetBitrate == 750);
 
 		// And once loss is no longer what holds it back, the usual factor applies
 		// again.
@@ -904,7 +905,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetBitrate > 1125);
+		REQUIRE(probes.at(0).targetBitrate > 1125);
 	}
 
 	SECTION("a known upper bound of the link capacity is probed periodically")
@@ -929,14 +930,14 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 6000);
+		REQUIRE(probes.at(0).targetBitrate == 6000);
 
 		nowUs += 5 * 1000 * 1000;
 
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 6000);
+		REQUIRE(probes.at(0).targetBitrate == 6000);
 	}
 
 	SECTION("and it's what bounds the burst when loss holds the estimate back")
@@ -970,7 +971,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetBitrate == 700);
+		REQUIRE(probes.at(0).targetBitrate == 700);
 	}
 
 	SECTION("and it bounds the periodic bursts as soon as there is one")
@@ -997,7 +998,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == MaxBitrate);
+		REQUIRE(probes.at(0).targetBitrate == MaxBitrate);
 
 		probeController.SetLinkCapacityUpperBound(8000);
 
@@ -1006,7 +1007,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate == 8000);
+		REQUIRE(probes.at(0).targetBitrate == 8000);
 	}
 
 	SECTION("and those bursts may be told to last longer than the usual ones")
@@ -1025,7 +1026,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		  5000, RTC::BWE::ProbeController::BandwidthLimitedCause::DELAY_BASED_LIMITED, nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetDurationUs < 100 * 1000);
+		REQUIRE(probes.at(0).targetDurationUs < 100 * 1000);
 
 		probeController.SetLinkCapacityUpperBound(6000);
 
@@ -1034,7 +1035,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetDurationUs == 100 * 1000);
+		REQUIRE(probes.at(0).targetDurationUs == 100 * 1000);
 	}
 
 	SECTION("loss growing back while not filling the link is worth a burst")
@@ -1157,9 +1158,9 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetBitrate < 5 * StartBitrate);
+		REQUIRE(probes.at(0).targetBitrate < 5 * StartBitrate);
 
-		const auto probeTargetBitrate = probes[0].targetBitrate;
+		const auto probeTargetBitrate = probes.at(0).targetBitrate;
 
 		// The estimate reaching exactly what the burst aimed for is a result good
 		// enough to keep climbing.
@@ -1167,7 +1168,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		  probeTargetBitrate, RTC::BWE::ProbeController::BandwidthLimitedCause::DELAY_BASED_LIMITED, nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetBitrate == 2 * probeTargetBitrate);
+		REQUIRE(probes.at(0).targetBitrate == 2 * probeTargetBitrate);
 	}
 
 	SECTION("an estimate far below the measured link capacity is probed more often")
@@ -1206,7 +1207,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(probes.size() == 1);
-		REQUIRE(probes[0].targetBitrate > StartBitrate);
+		REQUIRE(probes.at(0).targetBitrate > StartBitrate);
 
 		// And it keeps going while the estimate stays that low.
 		nowUs += 1100 * 1000;
@@ -1255,10 +1256,10 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetBitrate < 3 * StartBitrate);
+		REQUIRE(probes.at(0).targetBitrate < 3 * StartBitrate);
 
 		probes = probeController.SetEstimatedBitrate(
-		  probes[0].targetBitrate,
+		  probes.at(0).targetBitrate,
 		  RTC::BWE::ProbeController::BandwidthLimitedCause::LOSS_LIMITED_BWE,
 		  nowUs);
 
@@ -1293,15 +1294,15 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetBitrate < 3 * StartBitrate);
+		REQUIRE(probes.at(0).targetBitrate < 3 * StartBitrate);
 
 		probes = probeController.SetEstimatedBitrate(
-		  probes[0].targetBitrate,
+		  probes.at(0).targetBitrate,
 		  RTC::BWE::ProbeController::BandwidthLimitedCause::DELAY_BASED_LIMITED,
 		  nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetBitrate == 3 * StartBitrate);
+		REQUIRE(probes.at(0).targetBitrate == 3 * StartBitrate);
 	}
 
 	SECTION("room appearing while a burst is in flight is looked for once it times out")
@@ -1320,7 +1321,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 		REQUIRE(!probes.empty());
 
-		const auto firstProbeBitrate = probes[0].targetBitrate;
+		const auto firstProbeBitrate = probes.at(0).targetBitrate;
 
 		probeController.SetLinkCapacityUpperBound((firstProbeBitrate * 12 / 10) / 2);
 
@@ -1338,14 +1339,14 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetBitrate <= (firstProbeBitrate * 12 / 10) / 2);
+		REQUIRE(probes.at(0).targetBitrate <= (firstProbeBitrate * 12 / 10) / 2);
 
 		// The link turning out to be wider than thought is worth looking into even
 		// before this burst's result arrives, once its own interval has passed.
 		probeController.SetLinkCapacityUpperBound(3 * StartBitrate);
 
 		probes = probeController.SetEstimatedBitrate(
-		  probes[0].targetBitrate,
+		  probes.at(0).targetBitrate,
 		  RTC::BWE::ProbeController::BandwidthLimitedCause::DELAY_BASED_LIMITED,
 		  nowUs);
 
@@ -1390,7 +1391,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		  nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetBitrate == MaxBitrate);
+		REQUIRE(probes.at(0).targetBitrate == MaxBitrate);
 
 		// Its result arriving changes nothing, since there is nothing above the
 		// maximum to aim at.
@@ -1431,7 +1432,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetBitrate == StartBitrate / 4 * 2);
+		REQUIRE(probes.at(0).targetBitrate == StartBitrate / 4 * 2);
 	}
 
 	SECTION("an estimate already close to the maximum is not worth a burst")
@@ -1570,9 +1571,9 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetBitrate <= 2 * StartBitrate);
-		REQUIRE(probes[0].minProbeDeltaUs == 20 * 1000);
-		REQUIRE(probes[0].targetDurationUs == 100 * 1000);
+		REQUIRE(probes.at(0).targetBitrate <= 2 * StartBitrate);
+		REQUIRE(probes.at(0).minProbeDeltaUs == 20 * 1000);
+		REQUIRE(probes.at(0).targetDurationUs == 100 * 1000);
 	}
 
 	SECTION("a measured link capacity below the estimate doesn't bring the burst down")
@@ -1610,11 +1611,11 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		probes = probeController.Process(nowUs);
 
 		REQUIRE(!probes.empty());
-		REQUIRE(probes[0].targetBitrate == StartBitrate);
+		REQUIRE(probes.at(0).targetBitrate == StartBitrate);
 
 		// And since it isn't what bounds the burst, neither are its durations.
-		REQUIRE(probes[0].minProbeDeltaUs == 2 * 1000);
-		REQUIRE(probes[0].targetDurationUs == 15 * 1000);
+		REQUIRE(probes.at(0).minProbeDeltaUs == 2 * 1000);
+		REQUIRE(probes.at(0).targetDurationUs == 15 * 1000);
 	}
 
 	SECTION("a delay that is growing right now is no moment to probe")

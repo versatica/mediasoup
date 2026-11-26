@@ -3,6 +3,7 @@
 #include "RTC/BWE/RobustThroughputEstimator.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <vector>
 
 SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 {
@@ -100,10 +101,12 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 			const auto throughput = throughputEstimator.GetBitrate();
 
 			REQUIRE(throughput.has_value());
+
 			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-			REQUIRE(throughput.value() >= Rate800Kbps);
-			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-			REQUIRE(throughput.value() <= Rate1600Kbps);
+			const int64_t throughputValue = throughput.value();
+
+			REQUIRE(throughputValue >= Rate800Kbps);
+			REQUIRE(throughputValue <= Rate1600Kbps);
 		}
 
 		// Another second at 1600 kbps, now stable there.
@@ -128,10 +131,12 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 			const auto throughput = throughputEstimator.GetBitrate();
 
 			REQUIRE(throughput.has_value());
+
 			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-			REQUIRE(throughput.value() <= Rate1600Kbps);
-			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-			REQUIRE(throughput.value() >= Rate400Kbps);
+			const int64_t throughputValue = throughput.value();
+
+			REQUIRE(throughputValue <= Rate1600Kbps);
+			REQUIRE(throughputValue >= Rate400Kbps);
 		}
 
 		// And stable at 400 kbps.
@@ -339,6 +344,8 @@ SCENARIO("BWE RobustThroughputEstimator", "[bwe][robustthroughputestimator]")
 		// The delayed packet arrives about a second after it should have. With a
 		// 500 ms window it was sent well before the second oldest packet, and even
 		// so the send rate must not drop.
+		REQUIRE(delayedPacketResults.size() == 1);
+
 		delayedPacketResults.front().receiveTimeUs = feedbackGenerator.recvClockUs;
 
 		throughputEstimator.IncomingPacketFeedbackVector(delayedPacketResults);

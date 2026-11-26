@@ -63,15 +63,15 @@ namespace RTC
 				 * Instant the packet says it left the sender, in the sender's own
 				 * timeline (us).
 				 */
-				int64_t sendTimeUs;
+				int64_t sendTimeUs{ 0 };
 				/**
 				 * Instant the packet arrived (us).
 				 */
-				int64_t receiveTimeUs;
+				int64_t receiveTimeUs{ 0 };
 				/**
 				 * Size of the packet (bytes).
 				 */
-				size_t payloadSize;
+				size_t payloadSize{ 0 };
 			};
 
 			/**
@@ -100,26 +100,16 @@ namespace RTC
 					return (static_cast<int64_t>(this->meanSize) * 8 * 1000000) / this->receiveMeanUs;
 				}
 
-				/**
-				 * Mean time between the send instants of two consecutive probes (us).
-				 */
+				// Mean time between the send instants of two consecutive probes (us).
 				int64_t sendMeanUs{ 0 };
-				/**
-				 * Mean time between the arrival instants of two consecutive probes (us).
-				 */
+				// Mean time between the arrival instants of two consecutive probes (us).
 				int64_t receiveMeanUs{ 0 };
-				/**
-				 * Mean size of the probes (bytes).
-				 */
+				// Mean size of the probes (bytes).
 				size_t meanSize{ 0 };
-				/**
-				 * Number of probes in the run.
-				 */
+				// Number of probes in the run.
 				int64_t count{ 0 };
-				/**
-				 * How many of those probes came far enough apart from the previous one
-				 * for the gap to be measurable.
-				 */
+				// How many of those probes came far enough apart from the previous one
+				// for the gap to be measurable.
 				int64_t numAboveMinDelta{ 0 };
 			};
 
@@ -129,10 +119,24 @@ namespace RTC
 				NO_UPDATE
 			};
 
+		private:
+			/**
+			 * Whether the given send delta is close enough to the mean of the run being
+			 * accumulated to belong to it.
+			 */
+			static bool IsWithinClusterBounds(int64_t sendDeltaUs, const Cluster& clusterAggregate);
+
+			/**
+			 * Close the run being accumulated and keep it, unless it is too short or
+			 * covers no time at all.
+			 */
+			static void MaybeAddCluster(const Cluster& clusterAggregate, std::list<Cluster>& clusters);
+
 		public:
 			explicit RemoteBitrateEstimatorAbsSendTime(Listener* listener);
 
 			RemoteBitrateEstimatorAbsSendTime(const RemoteBitrateEstimatorAbsSendTime&) = delete;
+
 			RemoteBitrateEstimatorAbsSendTime& operator=(const RemoteBitrateEstimatorAbsSendTime&) = delete;
 
 			/**
@@ -165,18 +169,6 @@ namespace RTC
 			int64_t GetLatestEstimate() const;
 
 		private:
-			/**
-			 * Whether the given send delta is close enough to the mean of the run being
-			 * accumulated to belong to it.
-			 */
-			static bool IsWithinClusterBounds(int64_t sendDeltaUs, const Cluster& clusterAggregate);
-
-			/**
-			 * Close the run being accumulated and keep it, unless it is too short or
-			 * covers no time at all.
-			 */
-			static void MaybeAddCluster(const Cluster& clusterAggregate, std::list<Cluster>& clusters);
-
 			/**
 			 * Split the probes seen so far into runs of similar send deltas.
 			 */

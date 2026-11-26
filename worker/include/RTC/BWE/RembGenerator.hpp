@@ -47,7 +47,8 @@ namespace RTC
 		public:
 			RembGenerator(Listener* listener, RembGeneratorOptions options);
 
-			RembGenerator(const RembGenerator&)            = delete;
+			RembGenerator(const RembGenerator&) = delete;
+
 			RembGenerator& operator=(const RembGenerator&) = delete;
 
 			/**

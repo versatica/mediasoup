@@ -3,7 +3,7 @@
 
 #include "RTC/BWE/OveruseEstimator.hpp"
 #include "Logger.hpp"
-#include <cmath>
+#include <cmath> // std::fabs(), std::pow(), std::sqrt()
 
 namespace RTC
 {
@@ -68,6 +68,7 @@ namespace RTC
 			const double h[2]  = { sizeDeltaDouble, 1.0 };
 			const double eh[2] = { (this->e[0][0] * h[0]) + (this->e[0][1] * h[1]),
 			                       (this->e[1][0] * h[0]) + (this->e[1][1] * h[1]) };
+
 			// How far the sample falls from what the model predicted.
 			const double residual = deltaDiffMs - (this->slopeMsPerByte * h[0]) - this->offsetMs;
 
@@ -152,6 +153,7 @@ namespace RTC
 			// The filter runs faster at the start so that it reaches the jitter level
 			// of the link quickly, and settles once it has seen enough.
 			const double alpha = this->numOfDeltas > SettledNumOfDeltas ? SettledNoiseAlpha : NoiseAlpha;
+
 			// The weight above is expressed per frame at a given rate, so it's scaled
 			// by how far apart these samples actually came.
 			const double beta = std::pow(1 - alpha, minFramePeriodMs * NoiseAlphaFrameRate / 1000.0);

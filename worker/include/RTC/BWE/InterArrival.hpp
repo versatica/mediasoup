@@ -33,17 +33,17 @@ namespace RTC
 				/**
 				 * Ticks elapsed between the send timestamps of both groups.
 				 */
-				uint32_t timestampDelta;
+				uint32_t timestampDelta{ 0 };
 
 				/**
 				 * Time elapsed between the arrival times of both groups (us).
 				 */
-				int64_t arrivalDeltaUs;
+				int64_t arrivalDeltaUs{ 0 };
 
 				/**
 				 * Difference of size between both groups (bytes).
 				 */
-				int64_t sizeDelta;
+				int64_t sizeDelta{ 0 };
 			};
 
 		private:

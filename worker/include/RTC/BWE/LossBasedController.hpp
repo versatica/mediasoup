@@ -34,7 +34,7 @@ namespace RTC
 		 * apart, and fades away as the observed loss grows.
 		 *
 		 * @remarks
-		 * - This class is a port of the LossBasedBweV2 class in libwebrtc (renamed to
+		 * - This class is a port of the `LossBasedBweV2` class in libwebrtc (renamed to
 		 *   a better name).
 		 */
 		class LossBasedController
@@ -488,9 +488,9 @@ namespace RTC
 			 * Feed the results of a feedback message.
 			 *
 			 * @param delayBasedEstimate - Estimate of the delay based path, which
-			 * bounds this one, or `Types::BitrateInfinite` if there is none.
+			 *   bounds this one, or `Types::BitrateInfinite` if there is none.
 			 * @param inAlr - Whether the sender is not sending enough to fill the link,
-			 * in which case the acknowledged bitrate says nothing about its capacity.
+			 *   in which case the acknowledged bitrate says nothing about its capacity.
 			 */
 			void UpdateBitrateEstimate(
 			  const std::vector<Types::PacketResult>& packetResults, int64_t delayBasedEstimate, bool inAlr);
@@ -501,7 +501,7 @@ namespace RTC
 			 * if it already covers a long enough span of send times.
 			 *
 			 * @returns Whether an observation was closed, which is when the estimate
-			 * can be recalculated.
+			 *   can be recalculated.
 			 */
 			bool PushBackObservation(const std::vector<Types::PacketResult>& packetResults);
 

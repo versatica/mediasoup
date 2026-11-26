@@ -13,6 +13,15 @@
 
 SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackgenerator]")
 {
+	constexpr uint32_t Ssrc{ 1111 };
+	constexpr uint8_t TransportWideCc01Id{ 5 };
+	// Instant the scenarios below start at, which is irrelevant other than for
+	// being far from zero.
+	constexpr int64_t BaseTimeUs{ 1000 * 1000 };
+	// Size used by the scenarios that don't care about it.
+	constexpr size_t DefaultPayloadSize{ 1000 };
+	constexpr std::string_view TimerLabel{ "transport-wide-cc-feedback-generator-send" };
+
 	struct TestInput
 	{
 		const uint16_t wideSeqNumber;
@@ -65,15 +74,6 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		std::vector<uint16_t> baseSequenceNumbers;
 		std::vector<std::vector<TestPacketStatus>> feedbacks;
 	};
-
-	constexpr uint32_t Ssrc{ 1111 };
-	constexpr uint8_t TransportWideCc01Id{ 5 };
-	// Instant the scenarios below start at, which is irrelevant other than for
-	// being far from zero.
-	constexpr int64_t BaseTimeUs{ 1000 * 1000 };
-	// Size used by the scenarios that don't care about it.
-	constexpr size_t DefaultPayloadSize{ 1000 };
-	constexpr std::string_view TimerLabel{ "transport-wide-cc-feedback-generator-send" };
 
 	int64_t nowUs{ BaseTimeUs };
 
@@ -171,13 +171,13 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	                        const std::vector<TestInput>& inputs,
 	                        const TestResults& expectedResults) -> void
 	{
+		constexpr int64_t FeedbackSendIntervalUs{ 100 * 1000 };
+
 		TestTransportWideCcFeedbackGeneratorListener listener;
 		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
 		  std::addressof(listener),
 		  std::addressof(shared),
 		  RTC::BWE::TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGeneratorOptions{});
-
-		constexpr int64_t FeedbackSendIntervalUs{ 100 * 1000 };
 
 		int64_t startTsUs = inputs.at(0).arrivalTimeUs;
 

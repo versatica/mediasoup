@@ -243,7 +243,7 @@ namespace RTC
 			 * Bounds set by the application, plus the bitrate to start from.
 			 *
 			 * @param maxBitrate - `Types::BitrateInfinite` for no limit, in which case
-			 * the highest bitrate that may be probed applies instead.
+			 *   the highest bitrate that may be probed applies instead.
 			 */
 			[[nodiscard]] std::vector<Types::ProbeClusterConfig> SetBitrates(
 			  int64_t minBitrate, int64_t startBitrate, int64_t maxBitrate, int64_t nowUs);
@@ -268,20 +268,11 @@ namespace RTC
 			 * Whether the initial bursts keep being repeated for a while, which only
 			 * makes sense until there is traffic of its own to measure.
 			 */
-			void EnableRepeatedInitialProbing(bool enable)
-			{
-				this->repeatedInitialProbingEnabled = enable;
-			}
+			void EnableRepeatedInitialProbing(bool enable);
 
-			void SetAlrStartTimeUs(std::optional<int64_t> alrStartTimeUs)
-			{
-				this->alrStartTimeUs = alrStartTimeUs;
-			}
+			void SetAlrStartTimeUs(std::optional<int64_t> alrStartTimeUs);
 
-			void SetAlrEndedTimeUs(int64_t alrEndedTimeUs)
-			{
-				this->alrEndedTimeUs = alrEndedTimeUs;
-			}
+			void SetAlrEndedTimeUs(int64_t alrEndedTimeUs);
 
 			/**
 			 * Ask for a burst after the estimate has come back up from a large drop,
@@ -298,12 +289,7 @@ namespace RTC
 			 *   the link capacity estimator answers while it has no estimate, and is
 			 *   kept as no bound at all rather than as an enormous one.
 			 */
-			void SetLinkCapacityUpperBound(int64_t linkCapacityUpperBound)
-			{
-				this->linkCapacityUpperBound = linkCapacityUpperBound != Types::BitrateInfinite
-				                                 ? std::optional<int64_t>(linkCapacityUpperBound)
-				                                 : std::nullopt;
-			}
+			void SetLinkCapacityUpperBound(int64_t linkCapacityUpperBound);
 
 			/**
 			 * Forget what was probed, leaving the settings alone, so that the climbing
@@ -328,7 +314,7 @@ namespace RTC
 			 * holding the estimate back.
 			 *
 			 * @param probeFurther - Whether the result of these bursts may lead to
-			 * another one.
+			 *   another one.
 			 */
 			[[nodiscard]] std::vector<Types::ProbeClusterConfig> InitiateProbing(
 			  int64_t nowUs, const std::vector<int64_t>& bitratesToProbe, bool probeFurther);
@@ -360,7 +346,7 @@ namespace RTC
 			// while nothing measured it.
 			std::optional<int64_t> linkCapacityUpperBound;
 			int64_t startBitrate{ 0 };
-			int64_t maxBitrate{ Types::BitrateInfinite };
+			int64_t maxBitrate;
 			std::optional<int64_t> lastBweDropProbingAtUs;
 			std::optional<int64_t> alrStartTimeUs;
 			std::optional<int64_t> alrEndedTimeUs;

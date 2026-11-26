@@ -6,11 +6,18 @@
 
 SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 {
+	// Instant the scenarios below start at, which is irrelevant other than for
+	// being far from zero.
+	constexpr int64_t BaseTimeMs{ 1000 };
+
 	struct TestRemb
 	{
-		const uint32_t senderSsrc;
-		const int64_t bitrate;
-		const std::vector<uint32_t> ssrcs;
+		// NOTE: These members are not const, since a const `ssrcs` cannot be moved,
+		// which would make every insertion into the vector of these, and every
+		// reallocation of it, copy the vector of SSRCs instead of moving it.
+		uint32_t senderSsrc{ 0 };
+		int64_t bitrate{ 0 };
+		std::vector<uint32_t> ssrcs;
 	};
 
 	class TestRembGeneratorListener : public RTC::BWE::RembGenerator::Listener
@@ -29,9 +36,6 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 		std::vector<TestRemb> rembs;
 	};
 
-	// Instant the scenarios below start at, which is irrelevant other than for
-	// being far from zero.
-	constexpr int64_t BaseTimeMs{ 1000 };
 	const std::vector<uint32_t> ssrcs{ 1, 2, 3 };
 
 	SECTION("the first estimation is announced right away")

@@ -29,7 +29,8 @@ namespace RTC
 		static constexpr uint32_t InterArrivalShift{ AbsSendTimeFraction +
 		                                             AbsSendTimeInterArrivalUpshift };
 		// Microseconds a single tick of those shifted timestamps is worth.
-		static constexpr double TimestampToUs{ 1000000.0 / static_cast<double>(1 << InterArrivalShift) };
+		static constexpr double TimestampToUs{ 1000000.0 /
+		                                       static_cast<double>(uint32_t{ 1 } << InterArrivalShift) };
 		// Fewest probes a run must hold to be taken as a burst.
 		static constexpr int64_t MinClusterSize{ 4 };
 		// Most probes kept while looking for a burst.
@@ -60,6 +61,43 @@ namespace RTC
 		static_assert(
 		  IncomingBitrateWindowItems == IncomingBitrateWindowMs,
 		  "the meter of incoming data needs one item per millisecond of its window");
+
+		/* Class methods. */
+
+		bool RemoteBitrateEstimatorAbsSendTime::IsWithinClusterBounds(
+		  int64_t sendDeltaUs, const Cluster& clusterAggregate)
+		{
+			MS_TRACE();
+
+			if (clusterAggregate.count == 0)
+			{
+				return true;
+			}
+
+			const int64_t clusterMeanUs = clusterAggregate.sendMeanUs / clusterAggregate.count;
+
+			return std::abs(sendDeltaUs - clusterMeanUs) < MaxClusterDeviationUs;
+		}
+
+		void RemoteBitrateEstimatorAbsSendTime::MaybeAddCluster(
+		  const Cluster& clusterAggregate, std::list<Cluster>& clusters)
+		{
+			MS_TRACE();
+
+			if (
+			  clusterAggregate.count < MinClusterSize || clusterAggregate.sendMeanUs <= 0 ||
+			  clusterAggregate.receiveMeanUs <= 0)
+			{
+				return;
+			}
+
+			clusters.push_back(
+			  Cluster{ .sendMeanUs       = clusterAggregate.sendMeanUs / clusterAggregate.count,
+				         .receiveMeanUs    = clusterAggregate.receiveMeanUs / clusterAggregate.count,
+				         .meanSize         = clusterAggregate.meanSize / clusterAggregate.count,
+				         .count            = clusterAggregate.count,
+				         .numAboveMinDelta = clusterAggregate.numAboveMinDelta });
+		}
 
 		/* Instance methods. */
 
@@ -145,6 +183,7 @@ namespace RTC
 			  (!this->remoteRateControl.IsValidEstimate() ||
 				 // NOTE: It was given a value right above if it had none, which the
 			   // checker cannot tell.
+			   //
 				 // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 				 nowUs - this->firstPacketTimeUs.value() < InitialProbingIntervalUs))
 			{
@@ -166,7 +205,7 @@ namespace RTC
 			if (deltas.has_value())
 			{
 				const auto sendDeltaMs    = (1000.0 * static_cast<double>(deltas.value().timestampDelta)) /
-				                            static_cast<double>(1 << InterArrivalShift);
+				                            static_cast<double>(uint32_t{ 1 } << InterArrivalShift);
 				const auto arrivalDeltaMs = static_cast<double>(deltas.value().arrivalDeltaUs) / 1000.0;
 
 				this->overuseEstimator->Update(
@@ -267,51 +306,17 @@ namespace RTC
 			return this->remoteRateControl.GetLatestEstimate();
 		}
 
-		bool RemoteBitrateEstimatorAbsSendTime::IsWithinClusterBounds(
-		  int64_t sendDeltaUs, const Cluster& clusterAggregate)
-		{
-			MS_TRACE();
-
-			if (clusterAggregate.count == 0)
-			{
-				return true;
-			}
-
-			const int64_t clusterMeanUs = clusterAggregate.sendMeanUs / clusterAggregate.count;
-
-			return std::abs(sendDeltaUs - clusterMeanUs) < MaxClusterDeviationUs;
-		}
-
-		void RemoteBitrateEstimatorAbsSendTime::MaybeAddCluster(
-		  const Cluster& clusterAggregate, std::list<Cluster>& clusters)
-		{
-			MS_TRACE();
-
-			if (
-			  clusterAggregate.count < MinClusterSize || clusterAggregate.sendMeanUs <= 0 ||
-			  clusterAggregate.receiveMeanUs <= 0)
-			{
-				return;
-			}
-
-			clusters.push_back(
-			  Cluster{ .sendMeanUs       = clusterAggregate.sendMeanUs / clusterAggregate.count,
-				         .receiveMeanUs    = clusterAggregate.receiveMeanUs / clusterAggregate.count,
-				         .meanSize         = clusterAggregate.meanSize / clusterAggregate.count,
-				         .count            = clusterAggregate.count,
-				         .numAboveMinDelta = clusterAggregate.numAboveMinDelta });
-		}
-
 		std::list<RemoteBitrateEstimatorAbsSendTime::Cluster> RemoteBitrateEstimatorAbsSendTime::ComputeClusters() const
 		{
 			MS_TRACE();
 
-			std::list<Cluster> clusters;
-			Cluster clusterAggregate;
 			// NOTE: The two instants a delta is taken against always come from the
 			// very same probe, so they are held as one rather than as two values that
 			// could tell a different story from each other.
 			const Probe* prevProbe{ nullptr };
+
+			std::list<Cluster> clusters;
+			Cluster clusterAggregate;
 
 			for (const auto& probe : this->probes)
 			{
@@ -351,12 +356,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			int64_t highestProbeBitrate{ 0 };
 			const Cluster* best{ nullptr };
+
+			int64_t highestProbeBitrate{ 0 };
 
 			for (const auto& cluster : clusters)
 			{
-				// NOTE: This is not redundant with the check MaybeAddCluster() does.
+				// NOTE: This is not redundant with the check `MaybeAddCluster()` does.
 				// That one requires the sums to be positive, but what is stored is
 				// their integer division by the number of probes, and a small enough
 				// sum over four probes or more gives a mean of zero. This is what keeps
@@ -489,7 +495,8 @@ namespace RTC
 				// NOTE: The instant of the first packet is deliberately not reset, since
 				// bursts are only looked for at the beginning of a call.
 				this->interArrival = std::make_unique<InterArrival>(
-				  static_cast<uint32_t>((TimestampGroupLengthMs << InterArrivalShift) / 1000), TimestampToUs);
+				  static_cast<uint32_t>((uint64_t{ TimestampGroupLengthMs } << InterArrivalShift) / 1000),
+				  TimestampToUs);
 				this->overuseEstimator = std::make_unique<OveruseEstimator>();
 			}
 		}

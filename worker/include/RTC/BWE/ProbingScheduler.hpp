@@ -76,7 +76,8 @@ namespace RTC
 
 				~ScopedShot();
 
-				ScopedShot(const ScopedShot&)            = delete;
+				ScopedShot(const ScopedShot&) = delete;
+
 				ScopedShot& operator=(const ScopedShot&) = delete;
 
 			private:
@@ -90,7 +91,8 @@ namespace RTC
 
 			// NOTE: It hands itself over as the listener of what it owns, so a copy
 			// would leave those pointing at the instance it came from.
-			ProbingScheduler(const ProbingScheduler&)            = delete;
+			ProbingScheduler(const ProbingScheduler&) = delete;
+
 			ProbingScheduler& operator=(const ProbingScheduler&) = delete;
 
 			/**
@@ -123,10 +125,7 @@ namespace RTC
 			 * - It depends on the path the packets take, so it has to be set again
 			 *   whenever that changes.
 			 */
-			void SetPacketOverhead(size_t packetOverhead)
-			{
-				this->packetOverhead = packetOverhead;
-			}
+			void SetPacketOverhead(size_t packetOverhead);
 
 			/**
 			 * Whether a burst is being emitted right now.

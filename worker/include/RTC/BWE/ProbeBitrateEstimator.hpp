@@ -41,11 +41,15 @@ namespace RTC
 				std::optional<int64_t> lastSendTimeUs;
 				std::optional<int64_t> firstReceiveTimeUs;
 				std::optional<int64_t> lastReceiveTimeUs;
-				// Size of the packet sent last, which the span of send times doesn't
-				// cover.
+				/**
+				 * Size of the packet sent last, which the span of send times doesn't
+				 * cover.
+				 */
 				int64_t sizeLastSend{ 0 };
-				// Size of the packet received first, which the span of receive times
-				// doesn't cover.
+				/**
+				 * Size of the packet received first, which the span of receive times
+				 * doesn't cover.
+				 */
 				int64_t sizeFirstReceive{ 0 };
 				int64_t sizeTotal{ 0 };
 			};
@@ -55,7 +59,7 @@ namespace RTC
 			 * Feed the feedback of a packet that belongs to a probe.
 			 *
 			 * @returns The bitrate the probe achieved (bps), or no value while its
-			 * burst cannot be trusted yet or at all.
+			 *   burst cannot be trusted yet or at all.
 			 */
 			std::optional<int64_t> HandleProbeAndEstimateBitrate(const Types::PacketResult& packetResult);
 

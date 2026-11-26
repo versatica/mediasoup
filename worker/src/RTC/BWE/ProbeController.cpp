@@ -43,7 +43,10 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		ProbeController::ProbeController(ProbeControllerOptions options) : options(options)
+		ProbeController::ProbeController(ProbeControllerOptions options)
+		  : options(options),
+		    // Until the application sets one, this is what bounds a burst.
+		    maxBitrate(DefaultMaxProbingBitrate)
 		{
 			MS_TRACE();
 
@@ -53,9 +56,6 @@ namespace RTC
 			MS_ASSERT(this->options.initialMinProbeDeltaUs > 0, "initialMinProbeDeltaUs cannot be zero");
 			MS_ASSERT(
 			  this->options.networkStateMinProbeDeltaUs > 0, "networkStateMinProbeDeltaUs cannot be zero");
-
-			// Until the application sets one, this is what bounds a burst.
-			this->maxBitrate = DefaultMaxProbingBitrate;
 		}
 
 		std::vector<Types::ProbeClusterConfig> ProbeController::SetBitrates(
@@ -136,10 +136,11 @@ namespace RTC
 					return {};
 				}
 
-				int64_t firstProbeBitrate = BitrateUtils::ApplyBitrateFactor(
-				  maxTotalAllocatedBitrate, this->options.firstAllocationProbeScale.value());
 				const int64_t currentBweLimit = BitrateUtils::ApplyBitrateFactor(
 				  this->estimatedBitrate, this->options.allocationProbeLimitByCurrentScale);
+
+				int64_t firstProbeBitrate = BitrateUtils::ApplyBitrateFactor(
+				  maxTotalAllocatedBitrate, this->options.firstAllocationProbeScale.value());
 
 				bool limitedByCurrentBwe = currentBweLimit < firstProbeBitrate;
 
@@ -250,6 +251,27 @@ namespace RTC
 			return {};
 		}
 
+		void ProbeController::EnableRepeatedInitialProbing(bool enable)
+		{
+			MS_TRACE();
+
+			this->repeatedInitialProbingEnabled = enable;
+		}
+
+		void ProbeController::SetAlrStartTimeUs(std::optional<int64_t> alrStartTimeUs)
+		{
+			MS_TRACE();
+
+			this->alrStartTimeUs = alrStartTimeUs;
+		}
+
+		void ProbeController::SetAlrEndedTimeUs(int64_t alrEndedTimeUs)
+		{
+			MS_TRACE();
+
+			this->alrEndedTimeUs = alrEndedTimeUs;
+		}
+
 		std::vector<Types::ProbeClusterConfig> ProbeController::RequestProbe(int64_t nowUs)
 		{
 			MS_TRACE();
@@ -296,6 +318,15 @@ namespace RTC
 			return {};
 		}
 
+		void ProbeController::SetLinkCapacityUpperBound(int64_t linkCapacityUpperBound)
+		{
+			MS_TRACE();
+
+			this->linkCapacityUpperBound = linkCapacityUpperBound != Types::BitrateInfinite
+			                                 ? std::optional<int64_t>(linkCapacityUpperBound)
+			                                 : std::nullopt;
+		}
+
 		void ProbeController::Reset(int64_t nowUs)
 		{
 			MS_TRACE();
@@ -319,14 +350,14 @@ namespace RTC
 			MS_TRACE();
 
 			// NOTE: Never having probed counts as having waited long enough.
-			if (!this->lastProbingInitiatedAtUs.has_value() || nowUs - this->lastProbingInitiatedAtUs.value() > MaxWaitingTimeForProbingResultUs)
+			if (
+			  (!this->lastProbingInitiatedAtUs.has_value() ||
+				 nowUs - this->lastProbingInitiatedAtUs.value() > MaxWaitingTimeForProbingResultUs) &&
+			  this->state == State::WAITING_FOR_PROBING_RESULT)
 			{
-				if (this->state == State::WAITING_FOR_PROBING_RESULT)
-				{
-					MS_DEBUG_DEV("gave up waiting for the result of a probe");
+				MS_DEBUG_DEV("gave up waiting for the result of a probe");
 
-					UpdateState(State::PROBING_COMPLETE);
-				}
+				UpdateState(State::PROBING_COMPLETE);
 			}
 
 			if (this->estimatedBitrate == 0 || this->state != State::PROBING_COMPLETE)

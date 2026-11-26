@@ -3,7 +3,7 @@
 
 #include "RTC/BWE/RobustThroughputEstimator.hpp"
 #include "Logger.hpp"
-#include <cmath>
+#include <cmath> // std::llround()
 
 namespace RTC
 {
@@ -107,9 +107,11 @@ namespace RTC
 				// Arrival times are usually already in order, but a reordered feedback
 				// needs a few swaps to keep the window sorted.
 				for (size_t idx = this->window.size() - 1;
+				     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				     idx > 0 && this->window[idx].receiveTimeUs < this->window[idx - 1].receiveTimeUs;
 				     --idx)
 				{
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					std::swap(this->window[idx], this->window[idx - 1]);
 				}
 
@@ -142,33 +144,6 @@ namespace RTC
 			}
 		}
 
-		bool RobustThroughputEstimator::IsFirstPacketOutsideWindow() const
-		{
-			MS_TRACE();
-
-			if (this->window.empty())
-			{
-				return false;
-			}
-
-			if (this->window.size() > this->options.maxWindowPackets)
-			{
-				return true;
-			}
-
-			const int64_t currentWindowDurationUs =
-			  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-			  this->window.back().receiveTimeUs.value() - this->window.front().receiveTimeUs.value();
-
-			if (currentWindowDurationUs > this->options.maxWindowDurationUs)
-			{
-				return true;
-			}
-
-			return this->window.size() > this->options.windowPackets &&
-			       currentWindowDurationUs > this->options.minWindowDurationUs;
-		}
-
 		std::optional<int64_t> RobustThroughputEstimator::GetBitrate() const
 		{
 			MS_TRACE();
@@ -184,7 +159,7 @@ namespace RTC
 			for (size_t idx = 1; idx < this->window.size(); ++idx)
 			{
 				const int64_t gapUs =
-				  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+				  // NOLINTNEXTLINE(bugprone-unchecked-optional-access, cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				  this->window[idx].receiveTimeUs.value() - this->window[idx - 1].receiveTimeUs.value();
 
 				if (gapUs > largestRecvGapUs)
@@ -287,6 +262,33 @@ namespace RTC
 
 			return std::min(
 			  sendSize * 8 * 1000000 / sendDurationUs, recvSize * 8 * 1000000 / recvDurationUs);
+		}
+
+		bool RobustThroughputEstimator::IsFirstPacketOutsideWindow() const
+		{
+			MS_TRACE();
+
+			if (this->window.empty())
+			{
+				return false;
+			}
+
+			if (this->window.size() > this->options.maxWindowPackets)
+			{
+				return true;
+			}
+
+			const int64_t currentWindowDurationUs =
+			  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+			  this->window.back().receiveTimeUs.value() - this->window.front().receiveTimeUs.value();
+
+			if (currentWindowDurationUs > this->options.maxWindowDurationUs)
+			{
+				return true;
+			}
+
+			return this->window.size() > this->options.windowPackets &&
+			       currentWindowDurationUs > this->options.minWindowDurationUs;
 		}
 	} // namespace BWE
 } // namespace RTC

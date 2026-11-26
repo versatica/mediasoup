@@ -287,9 +287,9 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 		constexpr int64_t Bitrate{ 10000000 };
 		constexpr size_t PacketSize{ 1000 };
 
-		const size_t expectedDataSent = bytesFor(Bitrate, 15 * 1000);
-
 		RTC::BWE::BitrateProber prober;
+
+		const size_t expectedDataSent = bytesFor(Bitrate, 15 * 1000);
 
 		prober.CreateProbeCluster(makeClusterConfig(0, nowUs, Bitrate, 2 * 1000));
 		prober.OnIncomingPacket(PacketSize);
@@ -313,9 +313,9 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 		constexpr int64_t Bitrate{ 1000000000 };
 		constexpr size_t PacketSize{ 1000 };
 
-		const size_t expectedDataSent = bytesFor(Bitrate, 15 * 1000);
-
 		RTC::BWE::BitrateProber prober;
+
+		const size_t expectedDataSent = bytesFor(Bitrate, 15 * 1000);
 
 		prober.CreateProbeCluster(makeClusterConfig(0, nowUs, Bitrate, 2 * 1000));
 		prober.OnIncomingPacket(PacketSize);

@@ -5,8 +5,8 @@
 #include "Logger.hpp"
 #include "RTC/BWE/BitrateUtils.hpp"
 #include "RTC/Consts.hpp"
-#include <cmath>
-#include <limits>
+#include <cmath>  // std::abs(), std::llround(), std::log(), std::pow(), std::round()
+#include <limits> // std::numeric_limits
 
 namespace RTC
 {
@@ -600,7 +600,9 @@ namespace RTC
 
 			for (const auto& kv : this->partialObservation.lostPackets)
 			{
-				lostSizeBytes += kv.second;
+				const int64_t lostPacketSize = kv.second;
+
+				lostSizeBytes += lostPacketSize;
 			}
 
 			Observation observation;
@@ -614,6 +616,7 @@ namespace RTC
 			  GetSendingRate((this->partialObservation.sizeBytes * 8 * 1000000) / observationDurationUs);
 			observation.id = this->numObservations++;
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			this->observations[observation.id % this->options.observationWindowSize] = observation;
 
 			this->partialObservation = PartialObservation();
@@ -757,6 +760,7 @@ namespace RTC
 				  observation.sendingRate);
 
 				const double temporalWeight =
+				  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				  this->temporalWeights[(this->numObservations - 1) - observation.id];
 
 				if (this->options.useByteLossRate)
@@ -800,6 +804,7 @@ namespace RTC
 				  observation.sendingRate);
 
 				const double temporalWeight =
+				  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				  this->temporalWeights[(this->numObservations - 1) - observation.id];
 
 				if (this->options.useByteLossRate)
@@ -926,6 +931,7 @@ namespace RTC
 
 			const int64_t latestObservationIdx =
 			  (this->numObservations - 1) % this->options.observationWindowSize;
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			const int64_t previousSendingRate = this->observations[latestObservationIdx].sendingRate;
 
 			// Each share is rounded on its own before they are added, so that the
@@ -966,6 +972,7 @@ namespace RTC
 				}
 
 				const double temporalWeight =
+				  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				  this->immediateUpperBoundTemporalWeights[(this->numObservations - 1) - observation.id];
 
 				numPackets += temporalWeight * static_cast<double>(observation.numPackets);
@@ -1012,6 +1019,7 @@ namespace RTC
 				}
 
 				const double temporalWeight =
+				  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				  this->immediateUpperBoundTemporalWeights[(this->numObservations - 1) - observation.id];
 
 				totalBytes += std::llround(temporalWeight * static_cast<double>(observation.sizeBytes));
@@ -1101,10 +1109,12 @@ namespace RTC
 
 			if (sendingRates.size() % 2 == 0)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				return (sendingRates[(sendingRates.size() / 2) - 1] + sendingRates[sendingRates.size() / 2]) /
 				       2;
 			}
 
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			return sendingRates[sendingRates.size() / 2];
 		}
 
@@ -1130,7 +1140,7 @@ namespace RTC
 				  (this->averageReportedLossRatio - this->options.immediateUpperBoundLossOffset);
 
 				// NOTE: A loss barely above the offset gives a bound beyond what an
-				// int64_t can hold, and converting such a value is undefined behaviour.
+				// `int64_t` can hold, and converting such a value is undefined behaviour.
 				// It bounds nothing anyway once it's over the maximum bitrate.
 				bitrate = boundBitrate >= static_cast<double>(this->maxBitrate) ? this->maxBitrate
 				                                                                : std::llround(boundBitrate);
@@ -1168,7 +1178,9 @@ namespace RTC
 
 			for (int64_t i{ 0 }; i < this->options.observationWindowSize; ++i)
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				this->temporalWeights[i] = std::pow(this->options.temporalWeightFactor, i);
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				this->immediateUpperBoundTemporalWeights[i] =
 				  std::pow(this->options.immediateUpperBoundTemporalWeightFactor, i);
 			}

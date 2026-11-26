@@ -82,7 +82,8 @@ namespace RTC
 			// NOTE: The packet is written over a buffer of this very instance, so one
 			// that was copied or moved would keep writing over the buffer of the one
 			// it came from.
-			ProbePacketGenerator(const ProbePacketGenerator&)            = delete;
+			ProbePacketGenerator(const ProbePacketGenerator&) = delete;
+
 			ProbePacketGenerator& operator=(const ProbePacketGenerator&) = delete;
 
 			/**
@@ -116,9 +117,9 @@ namespace RTC
 			alignas(4) std::array<uint8_t, MaxPacketLength> packetBuffer{};
 			// Length of the packet with no payload at all, so its header and its
 			// extensions.
-			size_t minPacketLength{ 0 };
+			size_t minPacketLength;
 			// Allocated by this.
-			std::unique_ptr<RTC::RTP::Packet> packet;
+			const std::unique_ptr<RTC::RTP::Packet> packet;
 		};
 	} // namespace BWE
 } // namespace RTC

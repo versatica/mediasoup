@@ -52,7 +52,7 @@ namespace RTC
 
 			// Unless it has been told to drive the target, the bound asked for by the
 			// receiver caps only the value handed out, which is why it's applied here
-			// and not in GetUpperLimit().
+			// and not in `GetUpperLimit()`.
 			if (!this->options.disableReceiverLimitCapsOnly)
 			{
 				target = std::min(target, this->receiverLimit);
@@ -107,32 +107,6 @@ namespace RTC
 
 			this->lossBasedController.SetBitrateLimits(
 			  this->minBitrateConfigured, this->maxBitrateConfigured);
-		}
-
-		void TargetRateController::SetAcknowledgedBitrate(int64_t acknowledgedBitrate)
-		{
-			MS_TRACE();
-
-			// Not knowing what the link delivers is not the same as it delivering
-			// nothing, so the last figure that was known is kept instead.
-			if (acknowledgedBitrate == Types::BitrateInfinite)
-			{
-				return;
-			}
-
-			// NOTE: Nothing else in here looks at it, it's only of use to the loss
-			// controller.
-			this->lossBasedController.SetAcknowledgedBitrate(acknowledgedBitrate);
-		}
-
-		void TargetRateController::UpdateLossBasedController(
-		  const std::vector<Types::PacketResult>& packetResults, bool inAlr, int64_t nowUs)
-		{
-			MS_TRACE();
-
-			this->lossBasedController.UpdateBitrateEstimate(packetResults, this->delayBasedLimit, inAlr);
-
-			Update(nowUs);
 		}
 
 		void TargetRateController::SetSendBitrate(int64_t bitrate)
@@ -198,8 +172,9 @@ namespace RTC
 			this->hasDecreasedSinceLastFractionLoss = false;
 
 			// NOTE: The reported fraction is in 1/256 units, hence the shift.
-			const int64_t lostQ8 =
-			  std::max<int64_t>(this->lostPacketsSinceLastLossUpdate + lostPackets, 0) << 8;
+			const auto lostQ8 = static_cast<int64_t>(
+			  static_cast<uint64_t>(std::max<int64_t>(this->lostPacketsSinceLastLossUpdate + lostPackets, 0))
+			  << 8);
 
 			this->lastFractionLost = static_cast<uint8_t>(std::min<int64_t>(lostQ8 / expectedPackets, 255));
 
@@ -331,8 +306,9 @@ namespace RTC
 					// that was throttled ramp up a second faster.
 					// Add a bit on top of the 8%, which is what keeps the target from
 					// getting stuck at low bitrates and is negligible at high ones.
-					const auto bitrate = BitrateUtils::AddBitrates(
-					  BitrateUtils::ApplyBitrateFactor(this->minBitrateHistory.front().second, 1.08), 1000);
+					const int64_t lowestBitrate = this->minBitrateHistory.front().second;
+					const auto bitrate =
+					  BitrateUtils::AddBitrates(BitrateUtils::ApplyBitrateFactor(lowestBitrate, 1.08), 1000);
 
 					SetTargetBitrate(bitrate);
 
@@ -367,6 +343,32 @@ namespace RTC
 			ApplyTargetLimits();
 		}
 
+		void TargetRateController::SetAcknowledgedBitrate(int64_t acknowledgedBitrate)
+		{
+			MS_TRACE();
+
+			// Not knowing what the link delivers is not the same as it delivering
+			// nothing, so the last figure that was known is kept instead.
+			if (acknowledgedBitrate == Types::BitrateInfinite)
+			{
+				return;
+			}
+
+			// NOTE: Nothing else in here looks at it, it's only of use to the loss
+			// controller.
+			this->lossBasedController.SetAcknowledgedBitrate(acknowledgedBitrate);
+		}
+
+		void TargetRateController::UpdateLossBasedController(
+		  const std::vector<Types::PacketResult>& packetResults, bool inAlr, int64_t nowUs)
+		{
+			MS_TRACE();
+
+			this->lossBasedController.UpdateBitrateEstimate(packetResults, this->delayBasedLimit, inAlr);
+
+			Update(nowUs);
+		}
+
 		bool TargetRateController::IsInStartPhase(int64_t nowUs) const
 		{
 			MS_TRACE();
@@ -382,17 +384,29 @@ namespace RTC
 			// Drop the points that fell out of the window. The window is closed a
 			// millisecond early, so that a target which has only just aged out of it
 			// doesn't hold the increase back.
-			while (!this->minBitrateHistory.empty() &&
-			       nowUs - this->minBitrateHistory.front().first + 1000 > BweIncreaseIntervalUs)
+			while (!this->minBitrateHistory.empty())
 			{
+				const int64_t oldestAtUs = this->minBitrateHistory.front().first;
+
+				if (nowUs - oldestAtUs + 1000 <= BweIncreaseIntervalUs)
+				{
+					break;
+				}
+
 				this->minBitrateHistory.pop_front();
 			}
 
 			// Sliding window minimum: drop the points not lower than the current
 			// target before pushing it, since they can never be the minimum again.
-			while (!this->minBitrateHistory.empty() &&
-			       this->currentTarget <= this->minBitrateHistory.back().second)
+			while (!this->minBitrateHistory.empty())
 			{
+				const int64_t latestBitrate = this->minBitrateHistory.back().second;
+
+				if (this->currentTarget > latestBitrate)
+				{
+					break;
+				}
+
 				this->minBitrateHistory.pop_back();
 			}
 

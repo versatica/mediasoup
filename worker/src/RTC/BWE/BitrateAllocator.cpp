@@ -4,6 +4,7 @@
 #include "RTC/BWE/BitrateAllocator.hpp"
 #include "Logger.hpp"
 #include "RTC/BWE/BitrateUtils.hpp"
+#include <iterator> // std::distance()
 
 namespace RTC
 {
@@ -15,6 +16,54 @@ namespace RTC
 		// own price, which is what keeps a link hovering around that price from
 		// having the candidate go up and down.
 		static constexpr double HysteresisFactor{ 1.2 };
+
+		/* Class methods. */
+
+		int64_t BitrateAllocator::ClimbWith(Entry& entry, int64_t bitrate)
+		{
+			MS_TRACE();
+
+			int64_t takenBitrate{ 0 };
+
+			// A candidate may climb more than one point with what it is offered, and
+			// may climb one that costs nothing or gives bitrate back.
+			while (entry.option + 1 < entry.options.size())
+			{
+				const int64_t climbBitrate = GetClimbBitrate(entry);
+
+				if (climbBitrate > bitrate - takenBitrate)
+				{
+					break;
+				}
+
+				takenBitrate += climbBitrate;
+
+				entry.option++;
+			}
+
+			return takenBitrate;
+		}
+
+		int64_t BitrateAllocator::GetClimbBitrate(const Entry& entry)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(entry.option + 1 < entry.options.size(), "no point above the one being held");
+
+			const int64_t heldBitrate = entry.options.at(entry.option).bitrate;
+			const int64_t nextBitrate = entry.options.at(entry.option + 1).bitrate;
+
+			// A candidate that has never been given a point is not climbing back to
+			// anything, so it pays the price and no more.
+			const bool isClimbingBack =
+			  entry.currentOption.has_value() && entry.option + 1 > entry.currentOption.value();
+
+			const int64_t requiredBitrate =
+			  isClimbingBack ? BitrateUtils::ApplyBitrateFactor(nextBitrate, HysteresisFactor)
+				               : nextBitrate;
+
+			return requiredBitrate - heldBitrate;
+		}
 
 		/* Instance methods. */
 
@@ -160,52 +209,6 @@ namespace RTC
 			}
 
 			this->numDistributions++;
-		}
-
-		int64_t BitrateAllocator::ClimbWith(Entry& entry, int64_t bitrate)
-		{
-			MS_TRACE();
-
-			int64_t takenBitrate{ 0 };
-
-			// A candidate may climb more than one point with what it is offered, and
-			// may climb one that costs nothing or gives bitrate back.
-			while (entry.option + 1 < entry.options.size())
-			{
-				const int64_t climbBitrate = GetClimbBitrate(entry);
-
-				if (climbBitrate > bitrate - takenBitrate)
-				{
-					break;
-				}
-
-				takenBitrate += climbBitrate;
-
-				entry.option++;
-			}
-
-			return takenBitrate;
-		}
-
-		int64_t BitrateAllocator::GetClimbBitrate(const Entry& entry)
-		{
-			MS_TRACE();
-
-			MS_ASSERT(entry.option + 1 < entry.options.size(), "no point above the one being held");
-
-			const int64_t heldBitrate = entry.options.at(entry.option).bitrate;
-			const int64_t nextBitrate = entry.options.at(entry.option + 1).bitrate;
-
-			// A candidate that has never been given a point is not climbing back to
-			// anything, so it pays the price and no more.
-			const bool isClimbingBack =
-			  entry.currentOption.has_value() && entry.option + 1 > entry.currentOption.value();
-
-			const int64_t requiredBitrate =
-			  isClimbingBack ? BitrateUtils::ApplyBitrateFactor(nextBitrate, HysteresisFactor)
-				               : nextBitrate;
-
-			return requiredBitrate - heldBitrate;
 		}
 
 		void BitrateAllocator::RotateWeightGroups(std::vector<Entry>& entries) const

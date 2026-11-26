@@ -119,7 +119,7 @@ namespace RTC
 			}
 			else
 			{
-				// NOTE: Not std::max() because these timestamps wrap around, so the
+				// NOTE: Not `std::max()` because these timestamps wrap around, so the
 				// later one is not necessarily the greater one.
 				this->currentGroup.timestamp =
 				  Utils::Number::IsHigherThan<uint32_t>(timestamp, this->currentGroup.timestamp)
@@ -182,7 +182,7 @@ namespace RTC
 			  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			  arrivalTimeUs - this->currentGroup.completeTimeUs.value();
 			const uint32_t timestampDiff = timestamp - this->currentGroup.timestamp;
-			const auto sendDeltaUs       = std::llround(this->timestampToUsCoeff * timestampDiff);
+			const int64_t sendDeltaUs    = std::llround(this->timestampToUsCoeff * timestampDiff);
 
 			// Packets sent at the very same time always belong to the same burst.
 			//

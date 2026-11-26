@@ -78,6 +78,13 @@ namespace RTC
 			}
 		}
 
+		void ProbingScheduler::SetPacketOverhead(size_t packetOverhead)
+		{
+			MS_TRACE();
+
+			this->packetOverhead = packetOverhead;
+		}
+
 		void ProbingScheduler::OnProbePacketGeneratorSendRtpPacket(
 		  ProbePacketGenerator* /*probePacketGenerator*/, RTC::RTP::Packet* packet)
 		{

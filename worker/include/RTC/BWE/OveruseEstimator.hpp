@@ -37,7 +37,8 @@ namespace RTC
 
 			~OveruseEstimator() = default;
 
-			OveruseEstimator(const OveruseEstimator&)            = delete;
+			OveruseEstimator(const OveruseEstimator&) = delete;
+
 			OveruseEstimator& operator=(const OveruseEstimator&) = delete;
 
 			/**

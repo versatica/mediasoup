@@ -13,14 +13,6 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 	constexpr int64_t InitialTimeUs{ 100000000 };
 	constexpr std::string_view TimerLabel{ "probing-scheduler-next-probe" };
 
-	int64_t nowUs{ InitialTimeUs };
-
-	mocks::MockShared shared(/*getTimeUs*/
-	                         [&nowUs]() -> int64_t
-	                         {
-		                         return nowUs;
-	                         });
-
 	class TestProbingSchedulerListener : public RTC::BWE::ProbingScheduler::Listener
 	{
 	public:
@@ -50,6 +42,14 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		// The burst each of those packets was handed over as part of.
 		std::vector<int64_t> sentClusterIds;
 	};
+
+	int64_t nowUs{ InitialTimeUs };
+
+	mocks::MockShared shared(/*getTimeUs*/
+	                         [&nowUs]() -> int64_t
+	                         {
+		                         return nowUs;
+	                         });
 
 	TestProbingSchedulerListener listener;
 
@@ -106,6 +106,7 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		REQUIRE(!listener.sentLengths.empty());
 		REQUIRE(probingScheduler.IsProbing());
 		// Every packet is handed over as part of the burst it belongs to.
+		REQUIRE(!listener.sentClusterIds.empty());
 		REQUIRE(listener.sentClusterIds.front() == 0);
 	}
 
@@ -188,7 +189,7 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 
 		// The burst is measured from when its first packet went out.
 		const int64_t startTimeUs = nowUs;
-		auto* timer               = shared.GetTimer(TimerLabel);
+		const auto* timer         = shared.GetTimer(TimerLabel);
 
 		// The next shot is due once the bytes already gone out have been carried at
 		// the bitrate asked for, measured from the start of the burst.
@@ -207,6 +208,8 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 	SECTION("a burst asked for while another one is being emitted waits for it")
 	{
 		constexpr int64_t TestBitrate{ 900000 };
+		// What each burst is meant to carry.
+		constexpr size_t MinBytes{ ((TestBitrate * (15 * 1000)) + 4000000) / (8 * 1000000) };
 
 		RTC::BWE::ProbingScheduler probingScheduler(std::addressof(listener), std::addressof(shared));
 
@@ -222,13 +225,12 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		}
 
 		// Two whole bursts went out, not one.
-		constexpr size_t MinBytes{ ((TestBitrate * (15 * 1000)) + 4000000) / (8 * 1000000) };
-
 		REQUIRE(listener.GetSentBytes() >= 2 * MinBytes);
 		REQUIRE(!probingScheduler.IsProbing());
 
 		// And each of them was handed over as its own, in the order they were asked
 		// for and without mixing their packets.
+		REQUIRE(!listener.sentClusterIds.empty());
 		REQUIRE(listener.sentClusterIds.front() == 0);
 		REQUIRE(listener.sentClusterIds.back() == 1);
 		REQUIRE(std::ranges::is_sorted(listener.sentClusterIds));
@@ -276,7 +278,7 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 			// Nothing to do, the shots go out on their own.
 		}
 
-		auto* timer = shared.GetTimer(TimerLabel);
+		const auto* timer = shared.GetTimer(TimerLabel);
 
 		REQUIRE(!timer->IsActive());
 
@@ -293,6 +295,7 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		}
 
 		REQUIRE(listener.sentLengths.size() > sentShotsBefore);
+		REQUIRE(!listener.sentClusterIds.empty());
 		REQUIRE(listener.sentClusterIds.back() == 1);
 	}
 }

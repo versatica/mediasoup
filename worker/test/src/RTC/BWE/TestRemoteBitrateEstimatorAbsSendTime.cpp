@@ -12,6 +12,13 @@
 
 SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatorabssendtime]")
 {
+	constexpr uint32_t Ssrc{ 1111 };
+	// Instant the scenarios below start at, which is irrelevant other than for
+	// being far from zero.
+	constexpr int64_t BaseTimeUs{ 1000 * 1000 };
+	// Fewest packets a burst needs for it to be taken as one.
+	constexpr uint32_t Probes{ 5 };
+
 	class TestRemoteBitrateEstimatorAbsSendTimeListener
 	  : public RTC::BWE::RemoteBitrateEstimatorAbsSendTime::Listener
 	{
@@ -31,13 +38,6 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 		int64_t latestBitrate{ 0 };
 		std::vector<uint32_t> latestSsrcs;
 	};
-
-	constexpr uint32_t Ssrc{ 1111 };
-	// Instant the scenarios below start at, which is irrelevant other than for
-	// being far from zero.
-	constexpr int64_t BaseTimeUs{ 1000 * 1000 };
-	// Fewest packets a burst needs for it to be taken as one.
-	constexpr uint32_t Probes{ 5 };
 
 	// Builds a packet of the given size carrying the given instant in its
 	// `abs-send-time` extension.
