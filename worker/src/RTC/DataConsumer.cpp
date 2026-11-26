@@ -8,6 +8,10 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	static thread_local std::vector<uint16_t> EmptySubchannels;
+
 	/* Instance methods. */
 
 	DataConsumer::DataConsumer(
@@ -306,8 +310,6 @@ namespace RTC
 					  }
 				  });
 
-				static thread_local std::vector<uint16_t> emptySubchannels;
-
 				const uint16_t streamId =
 				  this->type == DataConsumer::Type::SCTP ? this->sctpStreamParameters.streamId : 0;
 
@@ -315,7 +317,7 @@ namespace RTC
 				// move the message and pass its ownership to the SCTP stack.
 				RTC::SCTP::Message message(streamId, body->ppid(), std::vector<uint8_t>(data, data + len));
 
-				SendMessage(std::move(message), emptySubchannels, std::nullopt, std::nullopt, std::move(cb));
+				SendMessage(std::move(message), EmptySubchannels, std::nullopt, std::nullopt, std::move(cb));
 
 				break;
 			}

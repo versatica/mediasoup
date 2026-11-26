@@ -13,7 +13,7 @@ namespace mocks
 
 	class MockTimerHandle : public TimerHandleInterface
 	{
-		// Only MockShared class can invoke the constructor.
+		// Only `MockShared` class can invoke the constructor.
 		friend class mocks::MockShared;
 
 	private:
