@@ -24,7 +24,7 @@ namespace RTC
 					return nullptr;
 				}
 
-				std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
+				auto* const payloadDescriptor = new PayloadDescriptor();
 
 				const uint8_t byte = data[0];
 
@@ -37,7 +37,7 @@ namespace RTC
 				// the middle of an OBU, so a packet that continues one is not its first.
 				payloadDescriptor->isKeyFrame = payloadDescriptor->n && !payloadDescriptor->z;
 
-				return payloadDescriptor.release();
+				return payloadDescriptor;
 			}
 
 			bool AV1::ProcessRtpPacket(

@@ -61,8 +61,8 @@ namespace RTC
 					context.templateDependencyStructure = std::make_shared<TemplateDependencyStructure>();
 				}
 
-				std::unique_ptr<DependencyDescriptor> dependencyDescriptor(
-				  new DependencyDescriptor(data, len, context.templateDependencyStructure));
+				auto dependencyDescriptor =
+				  std::make_unique<DependencyDescriptor>(data, len, context.templateDependencyStructure);
 
 				if (!dependencyDescriptor->ReadMandatoryDescriptorFields())
 				{

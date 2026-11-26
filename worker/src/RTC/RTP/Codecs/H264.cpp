@@ -18,11 +18,11 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
+				auto* const payloadDescriptor = new PayloadDescriptor();
 
 				payloadDescriptor->isKeyFrame = IsKeyFrame(data, len);
 
-				return payloadDescriptor.release();
+				return payloadDescriptor;
 			}
 
 			bool H264::IsKeyFrame(const uint8_t* data, size_t len)
