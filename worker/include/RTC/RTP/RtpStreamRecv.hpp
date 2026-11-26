@@ -10,6 +10,7 @@
 #include "RTC/RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
+#include "RTC/RTP/Codecs/PictureIdUnwrapper.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "Utils.hpp"
@@ -428,7 +429,7 @@ namespace RTC
 			std::optional<SenderReportTiming> lastSenderReportTiming;
 			// Local time at which the last valid RTP packet arrived.
 			std::optional<int64_t> lastPacketReceivedAtUs;
-			// Most recent `abs-capture-time` RTP header extension received.
+			// Most recent 'abs-capture-time' RTP header extension received.
 			std::optional<AbsCaptureTime> lastAbsCaptureTime;
 			// Relative transit time for prev packet.
 			int32_t transit{ 0 };
@@ -450,6 +451,9 @@ namespace RTC
 			RTC::RtpDataCounter mediaTransmissionCounter;
 			// Template dependency structure for Dependency Descriptor.
 			RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
+			// Extends the pictureIds of the codecs that carry one, so that a 7 bits
+			// sequence does not look like it goes back every 128 pictures.
+			RTP::Codecs::PictureIdUnwrapper pictureIdUnwrapper;
 		};
 	} // namespace RTP
 } // namespace RTC

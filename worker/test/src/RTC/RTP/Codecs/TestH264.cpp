@@ -116,7 +116,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		const auto packet =
 		  createPacket(deltaFrameDescriptor, sizeof(deltaFrameDescriptor), /*reservedLen*/ 4);
 
-		RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
+		REQUIRE(RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
 
 		// The H264 payload descriptor handler never reserves room for a rewritten
 		// Dependency Descriptor, so a non zero length tells that the Dependency
@@ -224,7 +224,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		const auto lowerPacket =
 		  createPacket(lowerFrameDescriptor, sizeof(lowerFrameDescriptor), /*reservedLen*/ 4);
 
-		RTC::RTP::Codecs::H264::ProcessRtpPacket(lowerPacket.get(), dependencyDescriptorContext);
+		REQUIRE(RTC::RTP::Codecs::H264::ProcessRtpPacket(lowerPacket.get(), dependencyDescriptorContext));
 
 		REQUIRE(lowerPacket->ProcessPayload(std::addressof(context), marker));
 
@@ -232,7 +232,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		const auto upperPacket =
 		  createPacket(upperFrameDescriptor, sizeof(upperFrameDescriptor), /*reservedLen*/ 4);
 
-		RTC::RTP::Codecs::H264::ProcessRtpPacket(upperPacket.get(), dependencyDescriptorContext);
+		REQUIRE(RTC::RTP::Codecs::H264::ProcessRtpPacket(upperPacket.get(), dependencyDescriptorContext));
 
 		REQUIRE(!upperPacket->ProcessPayload(std::addressof(context), marker));
 	}
@@ -269,7 +269,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		const auto packet =
 		  createPacket(deltaFrameDescriptor, sizeof(deltaFrameDescriptor), /*reservedLen*/ 4);
 
-		RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
+		REQUIRE(RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
 
 		const RTC::RTP::Codecs::EncodingContext::Params params{
 			.spatialLayers = 1, .temporalLayers = 2, .simulcast = true, .preferDependencyDescriptor = true
@@ -345,7 +345,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 			  sizeof(keyFrameDescriptor),
 			  /*reservedLen*/ sizeof(keyFrameDescriptor) + 1);
 
-			RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), streamContext);
+			REQUIRE(RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), streamContext));
 
 			bool marker{ false };
 
@@ -382,7 +382,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 
 		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
-		RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
+		REQUIRE(RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
 
 		// No Dependency Descriptor to rewrite, and the key frame is told by the
 		// NAL unit of the payload.

@@ -17,10 +17,17 @@ namespace RTC
 			struct DependencyDescriptor
 			{
 			public:
-				/**
-				 * Bits the Dependency Descriptor numbers frames with.
-				 */
+				// Bits the Dependency Descriptor numbers frames with.
 				static constexpr uint8_t FrameIdLength{ 16 };
+				// Templates a template dependency structure may declare, which is what
+				// the 6 bits of a template id tell apart.
+				static constexpr size_t MaxTemplates{ 64 };
+				// Spatial layer ids a template may be given, which is what the 2 bits AV1
+				// gives the spatial id of a frame tell apart.
+				static constexpr uint8_t MaxSpatialIds{ 4 };
+				// Temporal layer ids a template may be given, which is what the 3 bits AV1
+				// gives the temporal id of a frame tell apart.
+				static constexpr uint8_t MaxTemporalIds{ 8 };
 
 			public:
 				enum class DecodeTargetIndication : uint8_t
@@ -173,6 +180,8 @@ namespace RTC
 				 *   which case writing it would exceed the maximum size of a 2 bytes RTP
 				 *   header extension. In that case we opt for skipping the bitmask and
 				 *   rewriting the frame number, so the endpoint can decode the frame.
+				 * - Nothing is written when it returns false, since the packet refuses a
+				 *   descriptor that does not fit before touching it.
 				 * - The packet is given on every call rather than remembered, since a
 				 *   packet shares its payload descriptor handler with its clones and every
 				 *   Consumer of its Producer.

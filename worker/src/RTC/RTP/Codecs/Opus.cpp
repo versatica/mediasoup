@@ -23,7 +23,7 @@ namespace RTC
 					return nullptr;
 				}
 
-				std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
+				auto payloadDescriptor = std::make_unique<PayloadDescriptor>();
 
 				const uint8_t byte = data[0];
 

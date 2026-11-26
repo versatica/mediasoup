@@ -1,6 +1,10 @@
 #include "common.hpp"
+#include "RTC/RTP/Codecs/AV1.hpp"
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
+#include "RTC/RTP/Codecs/H264.hpp"
+#include "RTC/RTP/Codecs/VP9.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "Utils.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcpy(), std::memset()
@@ -225,6 +229,158 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		fdiffChains = { 3 };
 
 		REQUIRE(templateStructure->templateLayers[4].frameDiffChains == fdiffChains);
+	}
+
+	// The decode target count is `dt_cnt_minus_one` plus one, so a descriptor
+	// may declare up to 32 of them and the bitmask of every one being active is
+	// built by shifting that many bits.
+	SECTION("a structure declaring the highest decode target counts is parsed")
+	{
+		// Key frame carrying a template dependency structure with a single
+		// template, whose decode target indications are all "switch", no frame
+		// diffs and no chains.
+		//
+		// NOTE: The decode target count goes in the five bits right after the
+		// first three bytes and the five extended descriptor field flags, this
+		// is, in the low five bits of the fifth byte.
+
+		// 31 decode targets, where the bitmask is the highest value an int holds.
+		// clang-format off
+		const uint8_t data31[] =
+		{
+			0xC0, 0x00, 0x00, 0x80,
+			0x1E, 0xEA, 0xAA, 0xAA,
+			0xAA, 0xAA, 0xAA, 0xAA,
+			0xAA, 0x00
+		};
+
+		// 32 decode targets, where the bitmask takes every bit of it.
+		const uint8_t data32[] =
+		{
+			0xC0, 0x00, 0x00, 0x80,
+			0x1F, 0xEA, 0xAA, 0xAA,
+			0xAA, 0xAA, 0xAA, 0xAA,
+			0xAA, 0x80, 0x00
+		};
+		// clang-format on
+
+		RTC::RTP::Codecs::DependencyDescriptor::Context context31;
+
+		const auto descriptor31 = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(data31, sizeof(data31), context31));
+
+		REQUIRE(descriptor31);
+		REQUIRE(descriptor31->templateDependencyStructure->decodeTargetCount == 31);
+		REQUIRE(descriptor31->activeDecodeTargetsBitmask == 0x7FFFFFFF);
+
+		RTC::RTP::Codecs::DependencyDescriptor::Context context32;
+
+		const auto descriptor32 = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(data32, sizeof(data32), context32));
+
+		REQUIRE(descriptor32);
+		REQUIRE(descriptor32->templateDependencyStructure->decodeTargetCount == 32);
+		REQUIRE(descriptor32->activeDecodeTargetsBitmask == 0xFFFFFFFF);
+	}
+
+	// The templates of a structure are told one after another by a 2 bits
+	// `next_layer_idc`, which says whether the next one is in the same layer, in
+	// the next temporal one, in the next spatial one or that there is none. A
+	// structure past the number of templates a template id can address, or past
+	// the layer ids a frame can be given, is rejected rather than taken into use
+	// for the frames that follow.
+	SECTION("a structure past the template and layer limits is rejected")
+	{
+		// Builds a key frame descriptor whose template dependency structure
+		// declares the templates told by the given `next_layer_idc` values, one
+		// template per value. It has a single decode target, no frame diffs, no
+		// chains and no render resolutions, so that nothing but the templates
+		// takes room.
+		const auto createStructure = [](const std::vector<uint8_t>& nextLayerIdcs) -> std::vector<uint8_t>
+		{
+			uint8_t buffer[RTC::Consts::TwoByteRtpExtensionMaxLength]{};
+
+			Utils::BitWriter writer(buffer, sizeof(buffer));
+
+			// Mandatory fields: start of frame, end of frame, template id and frame
+			// number.
+			writer.PutBits(1, 1);
+			writer.PutBits(1, 1);
+			writer.PutBits(6, 0);
+			writer.PutBits(16, 0);
+
+			// Extended descriptor field flags, with just the structure present.
+			writer.PutBits(5, 0b10000);
+
+			// Template id offset and decode target count minus one.
+			writer.PutBits(6, 0);
+			writer.PutBits(5, 0);
+
+			for (const auto nextLayerIdc : nextLayerIdcs)
+			{
+				writer.PutBits(2, nextLayerIdc);
+			}
+
+			// Decode target indications, one per template, all of them "switch".
+			for (size_t idx{ 0 }; idx < nextLayerIdcs.size(); ++idx)
+			{
+				writer.PutBits(2, 2);
+			}
+
+			// No frame diffs follow any template.
+			for (size_t idx{ 0 }; idx < nextLayerIdcs.size(); ++idx)
+			{
+				writer.PutBits(1, 0);
+			}
+
+			// No chains, which takes a single bit with a single decode target, and
+			// no render resolutions.
+			writer.PutBits(1, 0);
+			writer.PutBits(1, 0);
+
+			const size_t len = (writer.GetOffset() + 7) / 8;
+
+			return { buffer, buffer + len };
+		};
+
+		// The `next_layer_idc` values of `count` templates, the last of which tells
+		// that there is no other one.
+		const auto nextLayerIdcs = [](size_t count, uint8_t nextLayerIdc) -> std::vector<uint8_t>
+		{
+			std::vector<uint8_t> values(count, nextLayerIdc);
+
+			values.back() = 3;
+
+			return values;
+		};
+
+		const auto parse = [](const std::vector<uint8_t>& data) -> bool
+		{
+			RTC::RTP::Codecs::DependencyDescriptor::Context context;
+
+			const auto descriptor = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+			  RTC::RTP::Codecs::DependencyDescriptor::Parse(data.data(), data.size(), context));
+
+			return descriptor != nullptr;
+		};
+
+		// Every template in the same layer, so that only their number is at play.
+		REQUIRE(parse(
+		  createStructure(nextLayerIdcs(RTC::RTP::Codecs::DependencyDescriptor::MaxTemplates, 0))));
+		REQUIRE(!parse(
+		  createStructure(nextLayerIdcs(RTC::RTP::Codecs::DependencyDescriptor::MaxTemplates + 1, 0))));
+
+		// A template per temporal layer, so that the last one has the highest id.
+		REQUIRE(parse(
+		  createStructure(nextLayerIdcs(RTC::RTP::Codecs::DependencyDescriptor::MaxTemporalIds, 1))));
+		REQUIRE(!parse(createStructure(
+		  nextLayerIdcs(RTC::RTP::Codecs::DependencyDescriptor::MaxTemporalIds + 1, 1))));
+
+		// And the same per spatial layer.
+		REQUIRE(parse(
+		  createStructure(nextLayerIdcs(RTC::RTP::Codecs::DependencyDescriptor::MaxSpatialIds, 2))));
+		REQUIRE(!parse(
+		  createStructure(nextLayerIdcs(RTC::RTP::Codecs::DependencyDescriptor::MaxSpatialIds + 1, 2))));
 	}
 
 	SECTION("serialize")
@@ -861,15 +1017,6 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x41, 0x01, 0x0C, 0x13,
 			0xFC, 0x0B, 0x3C
 		};
-
-		// And frame number 252, in a packet that is not the first one of its frame.
-		const uint8_t newestKeyFrameNotStartOfFrame[] =
-		{
-			0x00, 0x00, 0xFC, 0x80,
-			0x01, 0x1E, 0xA8, 0x51,
-			0x41, 0x01, 0x0C, 0x13,
-			0xFC, 0x0B, 0x3C
-		};
 		// clang-format on
 
 		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
@@ -899,9 +1046,74 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		 */
 		REQUIRE(parse(oldKeyFrame, sizeof(oldKeyFrame)));
 		REQUIRE(dependencyDescriptorContext.templateDependencyStructure.get() == newStructure);
+	}
 
-		// Neither does a newer one that is not in the first packet of its frame.
-		REQUIRE(parse(newestKeyFrameNotStartOfFrame, sizeof(newestKeyFrameNotStartOfFrame)));
-		REQUIRE(dependencyDescriptorContext.templateDependencyStructure.get() == newStructure);
+	/**
+	 * A structure may only be given in the first packet of its frame. A
+	 * descriptor that carries it anywhere else is not to be trusted, since its
+	 * own layers would be told by a structure the stream does not take into use,
+	 * so it is not parsed at all and the packet it came in is dropped.
+	 */
+	SECTION("a template dependency structure that does not start its frame is rejected")
+	{
+		// Key frame of an L1T2 stream, frame number 232.
+		// clang-format off
+		const uint8_t keyFrame[] =
+		{
+			0x80, 0x00, 0xE8, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C
+		};
+
+		// The same one, frame number 252, in a packet that does not start its frame.
+		const uint8_t keyFrameNotStartOfFrame[] =
+		{
+			0x00, 0x00, 0xFC, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C
+		};
+		// clang-format on
+
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
+
+		const auto parse = [&dependencyDescriptorContext](
+		                     const uint8_t* data,
+		                     size_t len) -> std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>
+		{
+			return std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+			  RTC::RTP::Codecs::DependencyDescriptor::Parse(data, len, dependencyDescriptorContext));
+		};
+
+		REQUIRE(parse(keyFrame, sizeof(keyFrame)));
+
+		const auto* structure = dependencyDescriptorContext.templateDependencyStructure.get();
+
+		REQUIRE(!parse(keyFrameNotStartOfFrame, sizeof(keyFrameNotStartOfFrame)));
+
+		// And the structure in use is left alone.
+		REQUIRE(dependencyDescriptorContext.templateDependencyStructure.get() == structure);
+
+		// So the codecs refuse the packet it came in, which is told apart from a
+		// packet carrying no Dependency Descriptor at all. The ones that have a
+		// payload descriptor of their own refuse it just the same, since a Consumer
+		// given the extension would otherwise be sent a descriptor that nothing
+		// rewrote, with the frame numbers of the Producer.
+		RTC::RTP::Codecs::PictureIdUnwrapper pictureIdUnwrapper;
+
+		const auto packet = createPacket(
+		  keyFrameNotStartOfFrame,
+		  sizeof(keyFrameNotStartOfFrame),
+		  /*reservedLen*/ sizeof(keyFrameNotStartOfFrame));
+
+		REQUIRE(!RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
+		REQUIRE(!RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
+		REQUIRE(!RTC::RTP::Codecs::VP9::ProcessRtpPacket(
+		  packet.get(), dependencyDescriptorContext, pictureIdUnwrapper));
+
+		// So the packet gets no payload descriptor of any kind.
+		REQUIRE(packet->GetDependencyDescriptorMaxLength() == 0);
+		REQUIRE(packet->IsKeyFrame() == false);
 	}
 }
