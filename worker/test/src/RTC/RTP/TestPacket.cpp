@@ -2264,7 +2264,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		/* Shift payload. */
 
 		// This method removes padding.
-		packet->ShiftPayload(/*payloadOffset*/ 2, /*delta*/ 1);
+		REQUIRE(packet->ShiftPayload(/*payloadOffset*/ 2, /*delta*/ 1));
 
 		// Fill the new byte in the payload with 0XFF.
 		packet->GetPayload()[2] = 0xFF;
@@ -2333,7 +2333,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		/* Unshift payload. */
 
 		// This method removes padding.
-		packet->ShiftPayload(/*payloadOffset*/ 4, /*delta*/ -2);
+		REQUIRE(packet->ShiftPayload(/*payloadOffset*/ 4, /*delta*/ -2));
 
 		// clang-format off
 		const uint8_t unshiftedPayload[] =
@@ -2397,8 +2397,8 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		/* Shift and unshift (undo). */
 
-		packet->ShiftPayload(/*payloadOffset*/ 3, /*delta*/ 5);
-		packet->ShiftPayload(/*payloadOffset*/ 3, /*delta*/ -5);
+		REQUIRE(packet->ShiftPayload(/*payloadOffset*/ 3, /*delta*/ 5));
+		REQUIRE(packet->ShiftPayload(/*payloadOffset*/ 3, /*delta*/ -5));
 
 		REQUIRE(
 		  helpers::AreBuffersEqual(packet->GetPayload(), packet->GetPayloadLength(), payload, 10) == true);
@@ -2419,17 +2419,25 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		// clang-format on
 
 		packet->SetPayload(payload, 10);
+		packet->PadTo4Bytes();
+
+		const auto paddingLength = packet->GetPaddingLength();
+
+		REQUIRE(paddingLength > 0);
 
 		// payloadOffset higher or equal than payload length.
-		REQUIRE_THROWS_AS(packet->ShiftPayload(/*payloadOffset*/ 10, /*delta*/ 2), MediaSoupTypeError);
+		REQUIRE(!packet->ShiftPayload(/*payloadOffset*/ 10, /*delta*/ 2));
 
 		// delta too big.
-		REQUIRE_THROWS_AS(packet->ShiftPayload(/*payloadOffset*/ 2, /*delta*/ -9), MediaSoupTypeError);
+		REQUIRE(!packet->ShiftPayload(/*payloadOffset*/ 2, /*delta*/ -9));
 
 		// New computed payload length too big.
-		REQUIRE_THROWS_AS(
-		  packet->ShiftPayload(/*payloadOffset*/ 2, /*delta*/ packet->GetBufferLength()),
-		  MediaSoupTypeError);
+		REQUIRE(!packet->ShiftPayload(/*payloadOffset*/ 2, /*delta*/ packet->GetBufferLength()));
+
+		// None of them touched the packet, not even to take its padding out.
+		REQUIRE(
+		  helpers::AreBuffersEqual(packet->GetPayload(), packet->GetPayloadLength(), payload, 10) == true);
+		REQUIRE(packet->GetPaddingLength() == paddingLength);
 	}
 
 	SECTION("Packet::RtxEncode() and packet::RtxDecode() succeed")

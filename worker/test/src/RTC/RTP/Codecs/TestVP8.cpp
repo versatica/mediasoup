@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "RTC/RTP/Codecs/PictureIdUnwrapper.hpp"
 #include "RTC/RTP/Codecs/VP8.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
@@ -63,10 +64,48 @@ SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
 		REQUIRE(payloadDescriptor->hasPictureId == true);
-		REQUIRE(payloadDescriptor->hasOneBytePictureId == true);
 		REQUIRE(payloadDescriptor->hasTwoBytesPictureId == false);
 		REQUIRE(payloadDescriptor->hasTl0PictureIndex == false);
 		REQUIRE(payloadDescriptor->hasTlIndex == false);
+	}
+
+	// `hasTwoBytesPictureId` tells how wide the sender made the pictureId, which
+	// is where its numbering wraps. `ProcessRtpPacket()` widens a 7 bits one in
+	// the packet and leaves the flag alone, so `Encode()` always writes 15 bits.
+	SECTION("parse and encode a two bytes pictureId")
+	{
+		/**
+		 * VP8 Payload Descriptor
+		 *
+		 * 1 = X bit: Extended control bits present (I L T K)
+		 * 1 = S bit: Start of VP8 partition
+		 * Part Id: 0
+		 * 1 = I bit: Picture ID byte present
+		 * 1 = M bit: Picture ID is 15 bits long
+		 * Picture Id: 300
+		 */
+
+		// clang-format off
+		const uint8_t originalBuffer[] =
+		{
+			0x90, 0x80, 0x81, 0x2C, 0x00
+		};
+		// clang-format on
+
+		// Keep a copy of the original buffer for comparing.
+		uint8_t buffer[5] = { 0 };
+
+		std::memcpy(buffer, originalBuffer, sizeof(buffer));
+
+		const std::unique_ptr<RTC::RTP::Codecs::VP8::PayloadDescriptor> payloadDescriptor{
+			RTC::RTP::Codecs::VP8::Parse(buffer, sizeof(buffer))
+		};
+
+		REQUIRE(payloadDescriptor);
+
+		REQUIRE(payloadDescriptor->pictureId == 300);
+		REQUIRE(payloadDescriptor->hasPictureId == true);
+		REQUIRE(payloadDescriptor->hasTwoBytesPictureId == true);
 
 		SECTION("encode payload descriptor")
 		{
@@ -139,7 +178,6 @@ SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 		REQUIRE(payloadDescriptor->isKeyFrame == false);
 		REQUIRE(payloadDescriptor->hasPictureId == false);
-		REQUIRE(payloadDescriptor->hasOneBytePictureId == false);
 		REQUIRE(payloadDescriptor->hasTwoBytesPictureId == false);
 		REQUIRE(payloadDescriptor->hasTl0PictureIndex == false);
 		REQUIRE(payloadDescriptor->hasTlIndex == true);
@@ -170,20 +208,24 @@ SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 		 * 1 = L bit: TL0PICIDX byte present
 		 * 0 = T bit: TID (temporal layer index) byte not present
 		 * 0 = K bit: TID/KEYIDX byte not present
-		 * 0000 = Reserved A: 0
-		 * 0001 0001 = Picture Id: 17
+		 * 1 = M bit: Picture ID is 15 bits long
+		 * Picture Id: 17
 		 * 0000 0011 = TL0PICIDX: 3
+		 *
+		 * NOTE: The pictureId takes two bytes, which is the only width
+		 * `Encode()` ever writes and the one `ProcessRtpPacket()` has given the
+		 * field by the time any Consumer rewrites the packet.
 		 */
 
 		// clang-format off
 		const uint8_t originalBuffer[] =
 		{
-			0xd0, 0xc0, 0x11, 0x03
+			0xd0, 0xc0, 0x80, 0x11, 0x03
 		};
 		// clang-format on
 
 		// Keep a copy of the original buffer for comparing.
-		uint8_t buffer[4] = { 0 };
+		uint8_t buffer[5] = { 0 };
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
@@ -297,7 +339,6 @@ SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 		REQUIRE(payloadDescriptor->isKeyFrame == false);
 		REQUIRE(payloadDescriptor->hasPictureId == false);
-		REQUIRE(payloadDescriptor->hasOneBytePictureId == false);
 		REQUIRE(payloadDescriptor->hasTwoBytesPictureId == false);
 		REQUIRE(payloadDescriptor->hasTl0PictureIndex == false);
 		REQUIRE(payloadDescriptor->hasTlIndex == false);
@@ -350,7 +391,6 @@ SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
 		REQUIRE(payloadDescriptor->hasPictureId == false);
-		REQUIRE(payloadDescriptor->hasOneBytePictureId == false);
 		REQUIRE(payloadDescriptor->hasTwoBytesPictureId == false);
 		REQUIRE(payloadDescriptor->hasTl0PictureIndex == false);
 		REQUIRE(payloadDescriptor->hasTlIndex == false);
@@ -576,14 +616,20 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 	 * 1 = T bit: TID (temporal layer index) byte present
 	 * 0 = K bit: TID/KEYIDX byte present
 	 * 0000 = Reserved A: 14
-	 * 0000000000000001 = PictureId
+	 * 1 = M bit: Picture ID is 15 bits long
+	 * PictureId: 1
+	 *
+	 * NOTE: The pictureId takes two bytes, which is the width
+	 * `VP8::ProcessRtpPacket()` gives the field before any Consumer rewrites
+	 * the packet, and hence the only one `Encode()` ever writes.
 	 */
 
 	// clang-format off
 	const uint8_t payload[] =
 	{
-		0x80, 0xe0, 0x01, 0x01,
-		0xe8, 0x40, 0x7a, 0xd8
+		0x80, 0xe0, 0x80, 0x01,
+		0x01, 0xe8, 0x40, 0x7a,
+		0xd8
 	};
 	// clang-format on
 
@@ -669,5 +715,104 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 		REQUIRE(payloadDescriptor3);
 		REQUIRE(payloadDescriptor3->pictureId == 2);
+	}
+
+	// A sender may number its pictures with 7 bits, which wrap every 128 of them,
+	// while `ProcessRtpPacket()` widens the field to the 15 bits of
+	// `VP8::FrameIdLength` before the Consumers rewrite it. The pictureIds the
+	// endpoint is given must hence go on growing across such a wrap, and the gaps
+	// left by the filtered temporal layers must still be closed.
+	SECTION("the forwarded pictureIds go on across a 7 bits pictureId wrap")
+	{
+		// Runs a packet whose pictureId takes a single byte through the Producer
+		// side, which extends it and widens the field to two bytes, and then
+		// through the Consumer one, which rewrites it. Tells the pictureId the
+		// endpoint is given, or nothing if the packet is not forwarded at all.
+		const auto forwardVP8Packet = [](
+		                                RTC::RTP::Codecs::PictureIdUnwrapper& pictureIdUnwrapper,
+		                                RTC::RTP::Codecs::VP8::EncodingContext& context,
+		                                uint8_t pictureId,
+		                                uint8_t tl0PictureIndex,
+		                                uint8_t tlIndex) -> std::optional<uint16_t>
+		{
+			// clang-format off
+			uint8_t payload[] =
+			{
+				0x90, 0xE0, 0x00, 0x00, 0x00, 0x01
+			};
+			// clang-format on
+
+			// M unset, so the pictureId is the 7 bits that follow it.
+			payload[2] = pictureId & 0x7F;
+			payload[3] = tl0PictureIndex;
+			// tlIndex and the layer sync bit.
+			payload[4] = static_cast<uint8_t>((uint32_t{ tlIndex } << 6) | (uint32_t{ 1 } << 5));
+
+			const std::unique_ptr<RTC::RTP::Packet> packet{
+				RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)),
+			};
+
+			REQUIRE(packet);
+
+			packet->SetPayload(payload, sizeof(payload));
+
+			// As the Producer does, which is what extends the pictureId and widens
+			// the field to two bytes.
+			REQUIRE(RTC::RTP::Codecs::VP8::ProcessRtpPacket(packet.get(), pictureIdUnwrapper));
+
+			bool marker;
+
+			if (!packet->ProcessPayload(std::addressof(context), marker))
+			{
+				return std::nullopt;
+			}
+
+			const std::unique_ptr<RTC::RTP::Codecs::VP8::PayloadDescriptor> forwarded{
+				RTC::RTP::Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength())
+			};
+
+			REQUIRE(forwarded);
+			REQUIRE(forwarded->hasTwoBytesPictureId);
+
+			return forwarded->pictureId;
+		};
+
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers = 1, .temporalLayers = 2 };
+
+		// Held by the Producer stream, so every packet of it is extended with the
+		// same unwrapper.
+		RTC::RTP::Codecs::PictureIdUnwrapper pictureIdUnwrapper;
+
+		RTC::RTP::Codecs::VP8::EncodingContext context(params);
+
+		context.SyncRequired();
+		context.SetCurrentTemporalLayer(0);
+		context.SetTargetTemporalLayer(0);
+
+		// Picture 126, the first one forwarded.
+		const auto first = forwardVP8Packet(pictureIdUnwrapper, context, 126, 10, 0);
+
+		REQUIRE(first.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto firstPictureId = first.value();
+
+		// Picture 127, filtered out since it belongs to a higher temporal layer.
+		REQUIRE(!forwardVP8Packet(pictureIdUnwrapper, context, 127, 10, 1));
+
+		// Picture 128, where the 7 bits of the sender wrap back to zero. It is the
+		// one right after the one forwarded, since the filtered picture leaves no
+		// gap behind.
+		const auto second = forwardVP8Packet(pictureIdUnwrapper, context, 0, 11, 0);
+
+		REQUIRE(second == static_cast<uint16_t>(firstPictureId + 1));
+
+		// Picture 129, filtered out as well.
+		REQUIRE(!forwardVP8Packet(pictureIdUnwrapper, context, 1, 11, 1));
+
+		// Picture 130.
+		const auto third = forwardVP8Packet(pictureIdUnwrapper, context, 2, 12, 0);
+
+		REQUIRE(third == static_cast<uint16_t>(firstPictureId + 2));
 	}
 }

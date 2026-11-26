@@ -61,8 +61,8 @@ namespace RTC
 					context.templateDependencyStructure = std::make_shared<TemplateDependencyStructure>();
 				}
 
-				std::unique_ptr<DependencyDescriptor> dependencyDescriptor(
-				  new DependencyDescriptor(data, len, context.templateDependencyStructure));
+				auto dependencyDescriptor =
+				  std::make_unique<DependencyDescriptor>(data, len, context.templateDependencyStructure);
 
 				if (!dependencyDescriptor->ReadMandatoryDescriptorFields())
 				{
@@ -96,14 +96,18 @@ namespace RTC
 				// Update the template dependency structure if needed.
 				if (dependencyDescriptor->templateDependencyStructurePresent)
 				{
-					// A structure only counts in the first packet of its frame, and only if
-					// its frame is not older than the one that brought the structure in use.
+					// A structure may only be given in the first packet of its frame.
 					if (!dependencyDescriptor->startOfFrame)
 					{
-						MS_DEBUG_DEV(
-						  "ignoring a template dependency structure that is not in the first packet of its frame");
+						MS_WARN_TAG(
+						  codec, "template dependency structure in a packet that does not start its frame");
+
+						return nullptr;
 					}
-					else if (
+
+					// A structure only counts if its frame is not older than the one that
+					// brought the structure in use.
+					if (
 					  context.unwrappedStructureFrameNumber.has_value() &&
 					  unwrappedFrameNumber < context.unwrappedStructureFrameNumber.value())
 					{
@@ -280,8 +284,10 @@ namespace RTC
 
 					this->templateDependencyStructureEndOffset = this->bitReader.GetOffset();
 
-					this->activeDecodeTargetsBitmask =
-					  (1 << this->templateDependencyStructure->decodeTargetCount) - 1;
+					// NOTE: Shift in 64 bits since the decode target count reaches 32 and
+					// shifting a value by the width of its own type is undefined.
+					this->activeDecodeTargetsBitmask = static_cast<uint32_t>(
+					  (uint64_t{ 1 } << this->templateDependencyStructure->decodeTargetCount) - 1);
 				}
 
 				if (this->activeDecodeTargetsPresent)
@@ -421,6 +427,16 @@ namespace RTC
 
 				do
 				{
+					if (this->templateDependencyStructure->templateLayers.size() == DependencyDescriptor::MaxTemplates)
+					{
+						MS_WARN_TAG(
+						  codec,
+						  "more templates than the %zu a structure may declare",
+						  DependencyDescriptor::MaxTemplates);
+
+						return false;
+					}
+
 					this->templateDependencyStructure->templateLayers.emplace_back(spatialId, temporalId);
 
 					if (this->bitReader.GetLeftBits() < 2)
@@ -433,12 +449,29 @@ namespace RTC
 					// nextLayerIdc == 0, same spatialId and temporalId.
 					if (nextLayerIdc == 1)
 					{
-						temporalId++;
+						if (++temporalId == DependencyDescriptor::MaxTemporalIds)
+						{
+							MS_WARN_TAG(
+							  codec,
+							  "higher temporal layer id than the %" PRIu8 " a template may be given",
+							  DependencyDescriptor::MaxTemporalIds);
+
+							return false;
+						}
 					}
 					else if (nextLayerIdc == 2)
 					{
 						temporalId = 0;
-						spatialId++;
+
+						if (++spatialId == DependencyDescriptor::MaxSpatialIds)
+						{
+							MS_WARN_TAG(
+							  codec,
+							  "higher spatial layer id than the %" PRIu8 " a template may be given",
+							  DependencyDescriptor::MaxSpatialIds);
+
+							return false;
+						}
 					}
 				} while (nextLayerIdc != 3);
 
@@ -562,13 +595,14 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				const uint8_t templateIndex = (this->frameDependencyTemplateId + 64 -
-				                               this->templateDependencyStructure->templateIdOffset) %
-				                              64;
+				const auto templateIndex = static_cast<uint8_t>(
+				  (this->frameDependencyTemplateId + DependencyDescriptor::MaxTemplates -
+					 this->templateDependencyStructure->templateIdOffset) %
+				  DependencyDescriptor::MaxTemplates);
 
 				if (this->templateDependencyStructure->templateLayers.size() <= templateIndex)
 				{
-					MS_WARN_DEV("invalid template index %u", templateIndex);
+					MS_WARN_TAG(codec, "invalid template index %u", templateIndex);
 
 					return false;
 				}

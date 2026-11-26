@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
+#include "RTC/RTP/Codecs/PictureIdUnwrapper.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/SeqManager.hpp"
 
@@ -37,9 +38,7 @@ namespace RTC
 			class VP8
 			{
 			private:
-				/**
-				 * Bits VP8 numbers its pictures with, which tells where they wrap.
-				 */
+				// Bits VP8 numbers its pictures with, which tells where they wrap.
 				static constexpr uint8_t FrameIdLength{ 15 };
 
 			public:
@@ -68,7 +67,15 @@ namespace RTC
 					~PayloadDescriptor() override = default;
 
 					void Dump(int indentation = 0) const override;
-					// Rewrite the buffer with the given pictureId and tl0PictureIndex values.
+					/**
+					 * Rewrite the buffer with the given pictureId and tl0PictureIndex
+					 * values.
+					 *
+					 * @remarks
+					 * - The pictureId is always written with 15 bits, since
+					 *   `ProcessRtpPacket()` widens a 7 bits field as soon as the packet is
+					 *   parsed.
+					 */
 					void Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const;
 					void Restore(uint8_t* data) const;
 
@@ -91,7 +98,8 @@ namespace RTC
 					// Parsed values.
 					bool isKeyFrame{ false };
 					bool hasPictureId{ false };
-					bool hasOneBytePictureId{ false };
+					// Whether `pictureId` was originally represented with 15 bits rather
+					// than 7.
 					bool hasTwoBytesPictureId{ false };
 					bool hasTl0PictureIndex{ false };
 					bool hasTlIndex{ false };
@@ -99,7 +107,13 @@ namespace RTC
 
 			public:
 				static VP8::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
-				static void ProcessRtpPacket(RTP::Packet* packet);
+
+				/**
+				 * @param pictureIdUnwrapper - Unwrapper of the stream the packet
+				 *   belongs to, which extends its pictureId into the 15 bits.
+				 */
+				[[nodiscard]] static bool ProcessRtpPacket(
+				  RTP::Packet* packet, Codecs::PictureIdUnwrapper& pictureIdUnwrapper);
 
 			public:
 				class EncodingContext : public Codecs::EncodingContext

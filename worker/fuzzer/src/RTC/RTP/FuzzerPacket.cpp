@@ -250,10 +250,10 @@ void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->RtxEncode(1, 2, 3);
 	packet->RtxDecode(4, 5);
 	packet->PadTo4Bytes();
-	packet->ShiftPayload(4, 2);
-	packet->ShiftPayload(4, -2);
-	packet->ShiftPayload(3, 4);
-	packet->ShiftPayload(3, -4);
+	static_cast<void>(packet->ShiftPayload(4, 2));
+	static_cast<void>(packet->ShiftPayload(4, -2));
+	static_cast<void>(packet->ShiftPayload(3, 4));
+	static_cast<void>(packet->ShiftPayload(3, -4));
 
 	// These cannot be tested this way.
 	// packet->SetPayloadDescriptorHandler();

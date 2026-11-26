@@ -14,10 +14,8 @@ namespace RTC
 			class H264
 			{
 			private:
-				/**
-				 * Bits H264 numbers its frames with. It does not number them itself,
-				 * so they are the ones the Dependency Descriptor gives.
-				 */
+				// Bits H264 numbers its frames with. It does not number them itself, so
+				// they are the ones the Dependency Descriptor gives.
 				static constexpr uint8_t FrameIdLength{ DependencyDescriptor::FrameIdLength };
 
 			public:
@@ -41,7 +39,7 @@ namespace RTC
 			public:
 				static H264::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
 				static bool IsKeyFrame(const uint8_t* data, size_t len);
-				static void ProcessRtpPacket(
+				[[nodiscard]] static bool ProcessRtpPacket(
 				  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext);
 
 			public:

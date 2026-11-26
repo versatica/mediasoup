@@ -555,6 +555,11 @@ namespace RTC
 
 			bool ReadSsrcAudioLevel(uint8_t& volume, bool& voice) const;
 
+			bool HasDependencyDescriptor() const
+			{
+				return HasExtension(this->extensionMapping.dependencyDescriptor);
+			}
+
 			bool ReadDependencyDescriptor(
 			  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor,
 			  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext) const;
@@ -715,12 +720,14 @@ namespace RTC
 			 * Shift or unshift the content of the payload `delta` bytes after
 			 * `payloadOffset`.
 			 *
+			 * @returns Whether the payload was shifted.
+			 *
 			 * @remarks
 			 * - This method removes existing padding (if any).
-			 *
-			 * @throw MediaSoupTypeError - If wrong values are given.
+			 * - The packet is left untouched when it returns false, since everything is
+			 *   checked before anything is written.
 			 */
-			void ShiftPayload(size_t payloadOffset, int32_t delta);
+			[[nodiscard]] bool ShiftPayload(size_t payloadOffset, int32_t delta);
 
 			/**
 			 * Whether this packet has padding.

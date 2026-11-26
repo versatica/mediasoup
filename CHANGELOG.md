@@ -43,6 +43,13 @@
   - `Sync()` did not reset `maxForwarded`, so a drop lower than the sync point was accounted (repeating an already emitted output) while an out of order drop above it was not (leaving an unnecessary gap).
 - Consumer: Drop RTP packet if `SeqManager.Input()` returns `false` ([PR #2068](https://github.com/versatica/mediasoup/pull/2068)).
 - BWE: Fix Transport-CC feedback reporting missing RTP packets twice ([PR #2073](https://github.com/versatica/mediasoup/pull/2073)).
+- Worker: Codec fixes ([PR #2062](https://github.com/versatica/mediasoup/pull/2062)).
+  - DD: Fix undefined behaviour on network input in the Dependency Descriptor.
+  - VP8, VP9: Fix 7 bits pictureIds being taken for 15 bits ones.
+  - AV1: Parse aggregation header to detect a keyframe.
+  - DD: Validate the template dependency structure limits.
+  - Codecs: FrameIdList, consider frameId wraps.
+  - RTP: Drop the packet if its payload cannot be shifted.
 - Update OpenSSL meson wrap to 3.5.9-2 ([PR #2077](https://github.com/versatica/mediasoup/pull/2077)).
 
 ### 3.32.2

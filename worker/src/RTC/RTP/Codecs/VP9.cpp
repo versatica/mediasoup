@@ -24,7 +24,7 @@ namespace RTC
 					return nullptr;
 				}
 
-				std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
+				auto payloadDescriptor = std::make_unique<PayloadDescriptor>();
 
 				size_t offset{ 0 };
 				uint8_t byte = data[offset];
@@ -63,8 +63,7 @@ namespace RTC
 					}
 					else
 					{
-						payloadDescriptor->pictureId           = byte & 0x7F;
-						payloadDescriptor->hasOneBytePictureId = true;
+						payloadDescriptor->pictureId = byte & 0x7F;
 					}
 
 					payloadDescriptor->hasPictureId = true;
@@ -111,8 +110,10 @@ namespace RTC
 				return payloadDescriptor.release();
 			}
 
-			void VP9::ProcessRtpPacket(
-			  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
+			bool VP9::ProcessRtpPacket(
+			  RTP::Packet* packet,
+			  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext,
+			  Codecs::PictureIdUnwrapper& pictureIdUnwrapper)
 			{
 				MS_TRACE();
 
@@ -123,11 +124,17 @@ namespace RTC
 				//
 				// NOTE: The payload descriptor of the codec is parsed all the same, for
 				// the Consumers that did not and cannot be told the layers any other way.
-				auto* const dependencyDescriptorPayloadDescriptor =
-				  DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext);
-
-				if (dependencyDescriptorPayloadDescriptor)
+				if (packet->HasDependencyDescriptor())
 				{
+					auto* const dependencyDescriptorPayloadDescriptor =
+					  DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext);
+
+					// The descriptor could not be parsed.
+					if (!dependencyDescriptorPayloadDescriptor)
+					{
+						return false;
+					}
+
 					packet->SetDependencyDescriptorPayloadDescriptorHandler(
 					  std::make_unique<DependencyDescriptorPayloadDescriptorHandler>(
 					    dependencyDescriptorPayloadDescriptor));
@@ -140,7 +147,19 @@ namespace RTC
 
 				if (!payloadDescriptor)
 				{
-					return;
+					return true;
+				}
+
+				// Extend the pictureId into the 15 bits, that is, carrying the cycles a 7
+				// bits one has already wrapped.
+				//
+				// NOTE: Only the parsed value is extended. Nothing widens or rewrites the
+				// field, so the width the sender used is kept and the worker at the other
+				// end of a pipe extends the pictureId on its own.
+				if (payloadDescriptor->hasPictureId)
+				{
+					payloadDescriptor->pictureId = pictureIdUnwrapper.Unwrap(
+					  payloadDescriptor->pictureId, payloadDescriptor->hasTwoBytesPictureId);
 				}
 
 				if (payloadDescriptor->isKeyFrame)
@@ -153,6 +172,8 @@ namespace RTC
 
 				packet->SetPayloadDescriptorHandler(
 				  std::make_unique<PayloadDescriptorHandler>(payloadDescriptor));
+
+				return true;
 			}
 
 			/* Instance methods. */
@@ -180,8 +201,6 @@ namespace RTC
 				MS_DUMP_CLEAN(indentation, "  switchingUpPoint: %" PRIu8, this->switchingUpPoint);
 				MS_DUMP_CLEAN(indentation, "  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
 				MS_DUMP_CLEAN(indentation, "  hasPictureId: %s", this->hasPictureId ? "true" : "false");
-				MS_DUMP_CLEAN(
-				  indentation, "  hasOneBytePictureId: %s", this->hasOneBytePictureId ? "true" : "false");
 				MS_DUMP_CLEAN(
 				  indentation, "  hasTwoBytesPictureId: %s", this->hasTwoBytesPictureId ? "true" : "false");
 				MS_DUMP_CLEAN(
@@ -222,6 +241,9 @@ namespace RTC
 
 					return false;
 				}
+
+				// NOTE: `ProcessRtpPacket()` already extended the pictureId into the 15
+				// bits, so it is used as it comes from here on.
 
 				// Check whether pictureId sync is required.
 				if (context->syncRequired && this->payloadDescriptor->hasPictureId)
