@@ -50,6 +50,7 @@
   - DD: Validate the template dependency structure limits.
   - Codecs: FrameIdList, consider frameId wraps.
   - RTP: Drop the packet if its payload cannot be shifted.
+- Update OpenSSL meson wrap to 3.5.9-2 ([PR #2077](https://github.com/versatica/mediasoup/pull/2077)).
 
 ### 3.32.2
 
