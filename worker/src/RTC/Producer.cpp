@@ -19,6 +19,8 @@ namespace RTC
 
 	static constexpr size_t ProducerSendBufferSize{ 65536 };
 	static thread_local uint8_t ProducerSendBuffer[ProducerSendBufferSize];
+	static thread_local uint8_t RtpExtensionsBuffer[4096];
+	static thread_local std::vector<RTC::RTP::Packet::Extension> RtpExtensions;
 	static constexpr int64_t SendNackDelayMs{ 10 };
 
 	/* Instance methods. */
@@ -1228,20 +1230,17 @@ namespace RTC
 
 		// Mangle RTP header extensions.
 		{
-			static thread_local uint8_t buffer[4096];
-			static thread_local std::vector<RTC::RTP::Packet::Extension> extensions;
-
 			// This happens just once.
-			if (extensions.capacity() != 24)
+			if (RtpExtensions.capacity() != 24)
 			{
-				extensions.reserve(24);
+				RtpExtensions.reserve(24);
 			}
 
-			extensions.clear();
+			RtpExtensions.clear();
 
 			uint8_t* extenValue;
 			uint8_t extenLen;
-			uint8_t* bufferPtr{ buffer };
+			uint8_t* bufferPtr{ RtpExtensionsBuffer };
 			const uint8_t* dependencyDescriptorValue{ nullptr };
 			uint8_t dependencyDescriptorLen{ 0 };
 
@@ -1249,7 +1248,7 @@ namespace RTC
 			{
 				extenLen = RTC::Consts::MidRtpExtensionMaxLength;
 
-				extensions.emplace_back(
+				RtpExtensions.emplace_back(
 				  /*type*/ RTC::RtpHeaderExtensionUri::Type::MID,
 				  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MID),
 				  /*len*/ extenLen,
@@ -1270,7 +1269,7 @@ namespace RTC
 
 				Utils::Byte::Set2Bytes(bufferPtr, 0, wideSeqNumber);
 
-				extensions.emplace_back(
+				RtpExtensions.emplace_back(
 				  /*type*/ RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
 				  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01),
 				  /*len*/ extenLen,
@@ -1331,7 +1330,7 @@ namespace RTC
 						Utils::Byte::Set8Bytes(bufferPtr, 0, absCaptureTimestamp);
 						Utils::Byte::Set8Bytes(bufferPtr, 8, static_cast<uint64_t>(captureClockOffset));
 
-						extensions.emplace_back(
+						RtpExtensions.emplace_back(
 						  /*type*/ RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
 						  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
 						  /*len*/ extenLen,
@@ -1350,7 +1349,7 @@ namespace RTC
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
-					extensions.emplace_back(
+					RtpExtensions.emplace_back(
 					  /*type*/ RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY,
 					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY),
 					  /*len*/ extenLen,
@@ -1373,7 +1372,7 @@ namespace RTC
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
-					extensions.emplace_back(
+					RtpExtensions.emplace_back(
 					  /*type*/ RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID,
 					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID),
 					  /*len*/ extenLen,
@@ -1387,7 +1386,7 @@ namespace RTC
 
 					Utils::Byte::Set4Bytes(bufferPtr, 0, RTC::RTP::Packet::GetNextMediasoupPacketId());
 
-					extensions.emplace_back(
+					RtpExtensions.emplace_back(
 					  /*type*/ RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID,
 					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID),
 					  /*len*/ extenLen,
@@ -1407,7 +1406,7 @@ namespace RTC
 					{
 						std::memcpy(bufferPtr, extenValue, extenLen);
 
-						extensions.emplace_back(
+						RtpExtensions.emplace_back(
 						  /*type*/ RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL,
 						  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL),
 						  /*len*/ extenLen,
@@ -1430,7 +1429,7 @@ namespace RTC
 
 					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
 
-					extensions.emplace_back(
+					RtpExtensions.emplace_back(
 					  /*type*/ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME,
 					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME),
 					  /*len*/ extenLen,
@@ -1469,7 +1468,7 @@ namespace RTC
 							extenLen = maxExtenLen;
 						}
 
-						extensions.emplace_back(
+						RtpExtensions.emplace_back(
 						  /*type*/ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
 						  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
 						  /*len*/ extenLen,
@@ -1488,7 +1487,7 @@ namespace RTC
 					{
 						std::memcpy(bufferPtr, extenValue, extenLen);
 
-						extensions.emplace_back(
+						RtpExtensions.emplace_back(
 						  /*type*/ RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION,
 						  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION),
 						  /*len*/ extenLen,
@@ -1500,7 +1499,7 @@ namespace RTC
 				}
 			}
 
-			if (!packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions))
+			if (!packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, RtpExtensions))
 			{
 				MS_WARN_TAG(
 				  rtp,

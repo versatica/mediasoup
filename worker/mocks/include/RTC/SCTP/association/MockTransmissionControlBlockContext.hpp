@@ -59,7 +59,7 @@ namespace mocks
 				{
 					if (!this->getCurrentRtoUsOnceActions.empty())
 					{
-						auto action = std::move(this->getCurrentRtoUsOnceActions.front());
+						const auto action = std::move(this->getCurrentRtoUsOnceActions.front());
 
 						this->getCurrentRtoUsOnceActions.pop();
 
@@ -80,7 +80,6 @@ namespace mocks
 
 				void ClearTxErrorCounter() override
 				{
-					this->incrementTxErrorCounterCallCount = 0;
 				}
 
 				bool HasTooManyTxErrors() const override
@@ -138,7 +137,7 @@ namespace mocks
 					return *this;
 				}
 
-				mocks::VerificationResult VerifyExpectations() const
+				[[nodiscard]] mocks::VerificationResult VerifyExpectations() const
 				{
 					if (
 					  this->expectedObserveRttUsCallCount.has_value() &&
@@ -184,16 +183,16 @@ namespace mocks
 				::RTC::SCTP::AssociationListenerInterface& associationListener;
 				const ::RTC::SCTP::SctpOptions sctpOptions;
 
-				// ObserveRttUs().
+				// `ObserveRttUs()`.
 				size_t observeRttUsCallCount{ 0 };
 				std::optional<size_t> expectedObserveRttUsCallCount;
 				std::optional<int64_t> observeRttUsCalledWith;
 				std::optional<int64_t> expectedObserveRttUsCalledWith;
 
-				// GetCurrentRtoUs().
+				// `GetCurrentRtoUs()`.
 				mutable std::queue<GetCurrentRtoUsAction> getCurrentRtoUsOnceActions;
 
-				// IncrementTxErrorCounter().
+				// `IncrementTxErrorCounter()`.
 				size_t incrementTxErrorCounterCallCount{ 0 };
 				std::optional<size_t> expectedIncrementTxErrorCounterCallCount;
 

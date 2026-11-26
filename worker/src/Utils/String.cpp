@@ -15,15 +15,17 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 
-/* Static. */
-
-static constexpr size_t BufferOutSize{ 65536 };
-static thread_local uint8_t BufferOut[BufferOutSize];
-static constexpr uint8_t Base64Table[65] =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
 namespace Utils
 {
+	/* Static. */
+
+	static constexpr size_t BufferOutSize{ 65536 };
+	static thread_local uint8_t BufferOut[BufferOutSize];
+	static constexpr uint8_t Base64Table[65] =
+	  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+	/* Class methods. */
+
 	std::string String::Base64Encode(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();

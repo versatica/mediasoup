@@ -13,7 +13,7 @@ namespace mocks
 
 	class MockBackoffTimerHandle : public BackoffTimerHandleInterface
 	{
-		// Only MockShared class can invoke the constructor.
+		// Only `MockShared` class can invoke the constructor.
 		friend class mocks::MockShared;
 
 	private:
@@ -39,8 +39,9 @@ namespace mocks
 		{
 			this->running = true;
 
-			// NOTE: Reset the expiration count, just like the real BackoffTimerHandle
-			// does, so that the backoff starts over from the base timeout.
+			// NOTE: Reset the expiration count, just like the real
+			// `BackoffTimerHandle` does, so that the backoff starts over from the
+			// base timeout.
 			this->expirationCount = 0;
 			this->expiresAtMs     = this->getTimeMs() + ComputeNextTimeoutMs();
 		}
@@ -49,20 +50,12 @@ namespace mocks
 		{
 			this->running = false;
 
-			// NOTE: Reset the expiration count, just like the real BackoffTimerHandle
-			// does.
+			// NOTE: Reset the expiration count, just like the real
+			// `BackoffTimerHandle` does.
 			this->expirationCount = 0;
 			this->expiresAtMs     = std::numeric_limits<int64_t>::max();
 		}
 
-		/**
-		 * @remarks
-		 * - This method must be defined in the .cpp since it's called by the
-		 *   constructor. Otherwise clang-tidy complains:
-		 *   "warning: Call to virtual method 'BackoffTimerHandle::SetBaseTimeoutMs'
-		 *   during construction bypasses virtual dispatch
-		 *   [clang-analyzer-optin.cplusplus.VirtualCall]"
-		 */
 		void SetBaseTimeoutMs(int64_t baseTimeoutMs) override;
 
 		bool IsRunning() const override

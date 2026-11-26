@@ -1420,7 +1420,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		REQUIRE(q.Produce(NowUs + (1001 * 1000), OneFragmentPacketLength).has_value() == false);
 
-		REQUIRE(associationListener.HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
+		REQUIRE(associationListener.HasOnAssociationLifecycleMessageExpiredBeenCalledWithLifecycleId(
 		  1, false));
 		REQUIRE(associationListener.HasOnAssociationLifecycleMessageEndBeenCalledWithLifecycleId(1));
 	}
@@ -1450,7 +1450,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.PrepareResetStream(1);
 
-		REQUIRE(associationListener.HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
+		REQUIRE(associationListener.HasOnAssociationLifecycleMessageExpiredBeenCalledWithLifecycleId(
 		  2, false));
 		REQUIRE(associationListener.HasOnAssociationLifecycleMessageEndBeenCalledWithLifecycleId(2));
 
@@ -1483,7 +1483,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.Discard(dataToSendOneValue.data.GetStreamId(), dataToSendOneValue.outgoingMessageId);
 
-		REQUIRE(associationListener.HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
+		REQUIRE(associationListener.HasOnAssociationLifecycleMessageExpiredBeenCalledWithLifecycleId(
 		  1, false));
 		REQUIRE(associationListener.HasOnAssociationLifecycleMessageEndBeenCalledWithLifecycleId(1));
 	}

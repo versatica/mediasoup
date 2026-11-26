@@ -24,11 +24,11 @@ namespace mocks
 				struct DiscardExpectation
 				{
 					/**
-					 * If std::nullopt, don't check it.
+					 * If `std::nullopt`, don't check it.
 					 */
 					std::optional<uint16_t> streamId;
 					/**
-					 * If std::nullopt, don't check it.
+					 * If `std::nullopt`, don't check it.
 					 */
 					std::optional<uint32_t> outgoingMessageId;
 					bool returnValue{ false };
@@ -51,7 +51,7 @@ namespace mocks
 
 					if (!this->produceOnceActions.empty())
 					{
-						auto action = std::move(this->produceOnceActions.front());
+						const auto action = std::move(this->produceOnceActions.front());
 
 						this->produceOnceActions.pop();
 
@@ -208,7 +208,7 @@ namespace mocks
 					return *this;
 				}
 
-				mocks::VerificationResult VerifyExpectations() const
+				[[nodiscard]] mocks::VerificationResult VerifyExpectations() const
 				{
 					if (
 					  this->expectedMessageInterleavingCalledWith.has_value() &&
@@ -260,17 +260,17 @@ namespace mocks
 				}
 
 			private:
-				// EnableMessageInterleaving().
+				// `EnableMessageInterleaving()`.
 				std::optional<bool> messageInterleavingCalledWith;
 				std::optional<bool> expectedMessageInterleavingCalledWith;
 
-				// Produce().
+				// `Produce()`.
 				std::queue<ProduceAction> produceOnceActions;
 				ProduceAction produceRepeatedlyAction;
 				size_t produceCallCount{ 0 };
 				std::optional<size_t> expectedProduceCallCount;
 
-				// Discard().
+				// `Discard()`.
 				std::queue<DiscardExpectation> discardExpectations;
 				size_t discardCallCount{ 0 };
 				std::optional<size_t> expectedDiscardCallCount;

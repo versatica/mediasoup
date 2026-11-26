@@ -8,6 +8,11 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	// NOLINTNEXTLINE(bugprone-throwing-static-initialization)
+	static const std::string AptString{ "apt" };
+
 	/* Class variables. */
 
 	// clang-format off
@@ -228,8 +233,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const std::string AptString{ "apt" };
-
 		// NOTE: ValidateEncodings() has already given every encoding a payload type.
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		const uint8_t payloadType = encoding.codecPayloadType.value();
@@ -258,8 +261,6 @@ namespace RTC
 	void RtpParameters::ValidateCodecs()
 	{
 		MS_TRACE();
-
-		static const std::string AptString{ "apt" };
 
 		ankerl::unordered_dense::set<uint8_t> payloadTypes;
 

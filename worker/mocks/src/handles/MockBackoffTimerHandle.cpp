@@ -68,7 +68,7 @@ namespace mocks
 				: "(unset)");
 		MS_DUMP_CLEAN(
 		  indentation,
-		  "  max restarts (ms): %s",
+		  "  max restarts: %s",
 		  this->maxRestarts.has_value() ? std::to_string(this->maxRestarts.value()).c_str() : "(unset)");
 		MS_DUMP_CLEAN(indentation, "  running: %s", this->running ? "yes" : "no");
 		MS_DUMP_CLEAN(indentation, "  expiration count: %zu", this->expirationCount);
@@ -108,7 +108,7 @@ namespace mocks
 		this->expirationCount++;
 
 		// Compute whether the BackoffTimer should still be running after this timeout
-		// expiration so the parent can check IsRunning() within the `OnBackoffTimer()`
+		// expiration so the parent can check `IsRunning()` within the `OnBackoffTimer()`
 		// callback.
 		this->running =
 		  !this->maxRestarts.has_value() || this->expirationCount <= this->maxRestarts.value();
@@ -130,14 +130,14 @@ namespace mocks
 		// NOTE: This may throw.
 		SetBaseTimeoutMs(baseTimeoutMs);
 
-		// The caller may have called Stop() within the callback so we must check
+		// The caller may have called `Stop()` within the callback so we must check
 		// the `running` flag.
 		if (this->running)
 		{
 			this->expiresAtMs = this->getTimeMs() + ComputeNextTimeoutMs();
 		}
 		// Once the timer is no longer running (e.g. max restarts reached), the real
-		// BackoffTimerHandle doesn't restart the underlying timer, so it won't fire
+		// `BackoffTimerHandle` doesn't restart the underlying timer, so it won't fire
 		// again. Mirror that here so a stopped timer doesn't keep expiring.
 		else
 		{

@@ -8,7 +8,7 @@ namespace mocks
 {
 	struct VerificationResult
 	{
-		bool ok;
+		bool ok{ false };
 		std::string errorMessage;
 	};
 } // namespace mocks

@@ -18,9 +18,6 @@ namespace mocks
 		MockChannelMessageRegistrator::~MockChannelMessageRegistrator()
 		{
 			MS_TRACE();
-
-			this->mapChannelRequestHandlers.clear();
-			this->mapChannelNotificationHandlers.clear();
 		}
 
 		flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> MockChannelMessageRegistrator::FillBuffer(

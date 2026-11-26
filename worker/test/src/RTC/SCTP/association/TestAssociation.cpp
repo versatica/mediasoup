@@ -2175,7 +2175,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		exchangeMessages(a, z);
 
 		REQUIRE(
-		  a.listener.HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
+		  a.listener.HasOnAssociationLifecycleMessageExpiredBeenCalledWithLifecycleId(
 		    1, /*maybeDelivered*/ false) == true);
 		REQUIRE(a.listener.HasOnAssociationLifecycleMessageEndBeenCalledWithLifecycleId(1) == true);
 
@@ -2603,7 +2603,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(a.listener.HasOnAssociationLifecycleMessageDeliveredBeenCalledWithLifecycleId(1) == true);
 		REQUIRE(a.listener.HasOnAssociationLifecycleMessageEndBeenCalledWithLifecycleId(1) == true);
 		REQUIRE(
-		  a.listener.HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
+		  a.listener.HasOnAssociationLifecycleMessageExpiredBeenCalledWithLifecycleId(
 		    2, /*maybeDelivered*/ true) == true);
 		REQUIRE(a.listener.HasOnAssociationLifecycleMessageEndBeenCalledWithLifecycleId(2) == true);
 		REQUIRE(a.listener.HasOnAssociationLifecycleMessageDeliveredBeenCalledWithLifecycleId(3) == true);
@@ -2637,7 +2637,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		exchangeMessages(a, z);
 
 		REQUIRE(
-		  a.listener.HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
+		  a.listener.HasOnAssociationLifecycleMessageExpiredBeenCalledWithLifecycleId(
 		    1, /*maybeDelivered*/ false) == true);
 		REQUIRE(a.listener.HasOnAssociationLifecycleMessageEndBeenCalledWithLifecycleId(1) == true);
 

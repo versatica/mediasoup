@@ -5,10 +5,19 @@ Completion:
   HeaderInsertion: Never
 
 ---
-# Test files are only given the Catch2 include paths and the MS_TEST define when
-# `ms_build_tests` is enabled, which happens in its own build directory.
+# Test and mock files are only given the Catch2 include paths and the MS_TEST
+# define when `ms_build_tests` is enabled.
 If:
-  PathMatch: test/.*
+  PathMatch: (test|mocks)/.*
 
 CompileFlags:
   CompilationDatabase: "out/Release/build-test"
+
+---
+# Fuzzer files are only given the MS_FUZZER define when `ms_build_fuzzer` is
+# enabled.
+If:
+  PathMatch: fuzzer/.*
+
+CompileFlags:
+  CompilationDatabase: "out/Release/build-fuzzer"
