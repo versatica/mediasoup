@@ -164,9 +164,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// NOTE: Reporting a shot means one was asked for with GetCurrentCluster(),
-			// which only answers while a burst is being emitted, and that state is
-			// only left from within this class.
+			// NOTE: Reporting a shot means one was asked for with
+			// `GetCurrentCluster()`, which only answers while a burst is being
+			// emitted, and that state is only left from within this class.
 			MS_ASSERT(this->state == State::ACTIVE, "no burst is being emitted");
 			// NOTE: A shot out of which no byte left is not reported at all, since
 			// there would be nothing to measure the burst with.

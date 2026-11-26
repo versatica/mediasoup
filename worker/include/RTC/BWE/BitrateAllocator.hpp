@@ -127,21 +127,6 @@ namespace RTC
 				virtual void SetBitrateOption(const BitrateOption& option) = 0;
 			};
 
-		public:
-			/**
-			 * Give `availableBitrate` out among the candidates that want it.
-			 *
-			 * @remarks
-			 * - The candidates are given on each call rather than kept, so that a
-			 *   candidate that goes away needs no unregistering anywhere.
-			 * - Every candidate is given, with points to choose from or without.
-			 *   What the ones without offer is taken off `availableBitrate` first,
-			 *   so the caller has nothing to work out beforehand.
-			 * - No candidate may be destroyed while this runs, since the rest are
-			 *   held as plain pointers across the calls made into each one.
-			 */
-			void Distribute(int64_t availableBitrate, const std::vector<Candidate*>& candidates);
-
 		private:
 			/**
 			 * A candidate taking part in a round, along with the points it offered
@@ -175,6 +160,22 @@ namespace RTC
 			 */
 			static int64_t GetClimbBitrate(const Entry& entry);
 
+		public:
+			/**
+			 * Give `availableBitrate` out among the candidates that want it.
+			 *
+			 * @remarks
+			 * - The candidates are given on each call rather than kept, so that a
+			 *   candidate that goes away needs no unregistering anywhere.
+			 * - Every candidate is given, with points to choose from or without.
+			 *   What the ones without offer is taken off `availableBitrate` first,
+			 *   so the caller has nothing to work out beforehand.
+			 * - No candidate may be destroyed while this runs, since the rest are
+			 *   held as plain pointers across the calls made into each one.
+			 */
+			void Distribute(int64_t availableBitrate, const std::vector<Candidate*>& candidates);
+
+		private:
 			/**
 			 * Move the starting point of every group of equal weight one position
 			 * further along than the previous round did.

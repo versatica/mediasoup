@@ -3,7 +3,7 @@
 
 #include "RTC/BWE/TrendlineEstimator.hpp"
 #include "Logger.hpp"
-#include <cmath>
+#include <cmath> // std::fabs()
 
 namespace RTC
 {
@@ -83,16 +83,21 @@ namespace RTC
 			// the window did, in which case the regression just gets a negative x.
 			const auto elapsedUs = static_cast<double>(arrivalTimeUs - this->firstArrivalTimeUs.value());
 
-			this->delayHist.push_back({ elapsedUs, this->smoothedDelayUs, this->accumulatedDelayUs });
+			this->delayHist.push_back(
+			  { .arrivalTimeUs   = elapsedUs,
+				  .smoothedDelayUs = this->smoothedDelayUs,
+				  .rawDelayUs      = this->accumulatedDelayUs });
 
 			// Feedback should already give the groups in order, so this is a safety
 			// net against a source that doesn't.
 			if (this->options.enableSort)
 			{
 				for (size_t idx{ this->delayHist.size() - 1 };
+				     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 				     idx > 0 && this->delayHist[idx].arrivalTimeUs < this->delayHist[idx - 1].arrivalTimeUs;
 				     --idx)
 				{
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 					std::swap(this->delayHist[idx], this->delayHist[idx - 1]);
 				}
 			}
@@ -128,63 +133,6 @@ namespace RTC
 			}
 
 			Detect(trend, static_cast<double>(sendDeltaUs), arrivalTimeUs);
-		}
-
-		std::optional<double> TrendlineEstimator::GetSlopeCap() const
-		{
-			MS_TRACE();
-
-			// NOTE: Both counts come from the options this was built with, never from
-			// anything received, so a window they don't fit in is a programming error.
-			MS_ASSERT(
-			  this->options.beginningPackets >= 1 && this->options.beginningPackets < this->delayHist.size(),
-			  "beginning packets don't fit in the window [beginningPackets:%zu, window:%zu]",
-			  this->options.beginningPackets,
-			  this->delayHist.size());
-			MS_ASSERT(
-			  this->options.endPackets >= 1 && this->options.endPackets < this->delayHist.size(),
-			  "end packets don't fit in the window [endPackets:%zu, window:%zu]",
-			  this->options.endPackets,
-			  this->delayHist.size());
-			MS_ASSERT(
-			  this->options.beginningPackets + this->options.endPackets <= this->delayHist.size(),
-			  "beginning and end packets overlap [beginningPackets:%zu, endPackets:%zu, window:%zu]",
-			  this->options.beginningPackets,
-			  this->options.endPackets,
-			  this->delayHist.size());
-
-			// The least delayed sample of the beginning of the window.
-			PacketTiming early = this->delayHist[0];
-
-			for (size_t idx{ 1 }; idx < this->options.beginningPackets; ++idx)
-			{
-				if (this->delayHist[idx].rawDelayUs < early.rawDelayUs)
-				{
-					early = this->delayHist[idx];
-				}
-			}
-
-			const size_t lateStart = this->delayHist.size() - this->options.endPackets;
-
-			// The least delayed sample of the end of the window.
-			PacketTiming late = this->delayHist[lateStart];
-
-			for (size_t idx{ lateStart + 1 }; idx < this->delayHist.size(); ++idx)
-			{
-				if (this->delayHist[idx].rawDelayUs < late.rawDelayUs)
-				{
-					late = this->delayHist[idx];
-				}
-			}
-
-			// Too close in time for a slope between them to say anything.
-			if (late.arrivalTimeUs - early.arrivalTimeUs < 1000)
-			{
-				return std::nullopt;
-			}
-
-			return ((late.rawDelayUs - early.rawDelayUs) / (late.arrivalTimeUs - early.arrivalTimeUs)) +
-			       this->options.capUncertainty;
 		}
 
 		std::optional<double> TrendlineEstimator::GetLinearFitSlope() const
@@ -232,6 +180,71 @@ namespace RTC
 			return numerator / denominator;
 		}
 
+		std::optional<double> TrendlineEstimator::GetSlopeCap() const
+		{
+			MS_TRACE();
+
+			// NOTE: Both counts come from the options this was built with, never from
+			// anything received, so a window they don't fit in is a programming error.
+			MS_ASSERT(
+			  this->options.beginningPackets >= 1 && this->options.beginningPackets < this->delayHist.size(),
+			  "beginning packets don't fit in the window [beginningPackets:%zu, window:%zu]",
+			  this->options.beginningPackets,
+			  this->delayHist.size());
+			MS_ASSERT(
+			  this->options.endPackets >= 1 && this->options.endPackets < this->delayHist.size(),
+			  "end packets don't fit in the window [endPackets:%zu, window:%zu]",
+			  this->options.endPackets,
+			  this->delayHist.size());
+			MS_ASSERT(
+			  this->options.beginningPackets + this->options.endPackets <= this->delayHist.size(),
+			  "beginning and end packets overlap [beginningPackets:%zu, endPackets:%zu, window:%zu]",
+			  this->options.beginningPackets,
+			  this->options.endPackets,
+			  this->delayHist.size());
+
+			// The least delayed sample of the beginning of the window.
+			//
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			PacketTiming early = this->delayHist[0];
+
+			for (size_t idx{ 1 }; idx < this->options.beginningPackets; ++idx)
+			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+				if (this->delayHist[idx].rawDelayUs < early.rawDelayUs)
+				{
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+					early = this->delayHist[idx];
+				}
+			}
+
+			const size_t lateStart = this->delayHist.size() - this->options.endPackets;
+
+			// The least delayed sample of the end of the window.
+			//
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+			PacketTiming late = this->delayHist[lateStart];
+
+			for (size_t idx{ lateStart + 1 }; idx < this->delayHist.size(); ++idx)
+			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+				if (this->delayHist[idx].rawDelayUs < late.rawDelayUs)
+				{
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+					late = this->delayHist[idx];
+				}
+			}
+
+			// Too close in time for a slope between them to say anything.
+			if (late.arrivalTimeUs - early.arrivalTimeUs < 1000)
+			{
+				return std::nullopt;
+			}
+
+			return ((late.rawDelayUs - early.rawDelayUs) / (late.arrivalTimeUs - early.arrivalTimeUs)) +
+			       this->options.capUncertainty;
+		}
+
 		void TrendlineEstimator::Detect(double trend, double sendDeltaUs, int64_t arrivalTimeUs)
 		{
 			MS_TRACE();
@@ -265,14 +278,13 @@ namespace RTC
 				// Only declare overuse once the condition has persisted for long enough,
 				// over more than a single sample, and while the trend is not decreasing
 				// already. This is what filters out isolated jitter spikes.
-				if (this->timeOverUsingUs.value() / 1000.0 > OverusingTimeThresholdMs && this->overuseCounter > 1)
+				if (
+				  this->timeOverUsingUs.value() / 1000.0 > OverusingTimeThresholdMs &&
+				  this->overuseCounter > 1 && trend >= this->prevTrend)
 				{
-					if (trend >= this->prevTrend)
-					{
-						this->timeOverUsingUs = 0;
-						this->overuseCounter  = 0;
-						this->state           = Types::BandwidthUsage::OVERUSING;
-					}
+					this->timeOverUsingUs = 0;
+					this->overuseCounter  = 0;
+					this->state           = Types::BandwidthUsage::OVERUSING;
 				}
 			}
 			else if (modifiedTrend < -this->threshold)
@@ -315,6 +327,7 @@ namespace RTC
 			// once the network calms down.
 			const double coef =
 			  std::fabs(modifiedTrend) < this->threshold ? ThresholdDownCoef : ThresholdUpCoef;
+
 			// NOTE: The coefficients above are rates per millisecond, so the step is
 			// expressed in those units no matter that the instants are microseconds.
 			const double elapsedMs = std::min(

@@ -9,7 +9,7 @@
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstdlib> // std::abs()
-#include <limits>
+#include <limits>  // std::numeric_limits
 
 namespace bweHelpers
 {
@@ -27,6 +27,25 @@ namespace bweHelpers
 	// Id the scenarios give to the 'abs-send-time' extension.
 	static constexpr uint8_t AbsSendTimeId{ 1 };
 
+	/* Class methods. */
+
+	uint32_t RemoteBitrateEstimatorAbsSendTimeTestHelper::AbsSendTime(int64_t t, int64_t denom)
+	{
+		MS_TRACE();
+
+		return static_cast<uint32_t>(
+		  (((static_cast<uint64_t>(t) << 18) + (static_cast<uint64_t>(denom) >> 1)) /
+			 static_cast<uint64_t>(denom)) &
+		  0x00FFFFFF);
+	}
+
+	uint32_t RemoteBitrateEstimatorAbsSendTimeTestHelper::AddAbsSendTime(uint32_t t1, uint32_t t2)
+	{
+		MS_TRACE();
+
+		return (t1 + t2) & 0x00FFFFFF;
+	}
+
 	/* Instance methods. */
 
 	RemoteBitrateEstimatorAbsSendTimeTestHelper::RemoteBitrateEstimatorAbsSendTimeTestHelper()
@@ -35,20 +54,6 @@ namespace bweHelpers
 	    remoteBitrateEstimator(this)
 	{
 		MS_TRACE();
-	}
-
-	uint32_t RemoteBitrateEstimatorAbsSendTimeTestHelper::AbsSendTime(int64_t t, int64_t denom)
-	{
-		MS_TRACE();
-
-		return (((t << 18) + (denom >> 1)) / denom) & 0x00FFFFFF;
-	}
-
-	uint32_t RemoteBitrateEstimatorAbsSendTimeTestHelper::AddAbsSendTime(uint32_t t1, uint32_t t2)
-	{
-		MS_TRACE();
-
-		return (t1 + t2) & 0x00FFFFFF;
 	}
 
 	void RemoteBitrateEstimatorAbsSendTimeTestHelper::AddDefaultStream()
@@ -69,7 +74,7 @@ namespace bweHelpers
 	{
 		MS_TRACE();
 
-		std::unique_ptr<RTC::RTP::Packet> packet(
+		const std::unique_ptr<RTC::RTP::Packet> packet(
 		  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
 
 		REQUIRE(packet);
@@ -112,6 +117,7 @@ namespace bweHelpers
 		std::vector<Packet> packets;
 
 		const int64_t nextTimeUs = this->linkSimulator.GenerateFrame(this->nowUs, packets);
+
 		bool overuse{ false };
 
 		for (const auto& packet : packets)
@@ -193,6 +199,7 @@ namespace bweHelpers
 
 		const uint32_t frameIntervalAbsSendTime =
 		  RemoteBitrateEstimatorAbsSendTimeTestHelper::AbsSendTime(1, Framerate);
+
 		uint32_t rtpTimestamp{ 0 };
 		uint32_t absSendTime{ 0 };
 
@@ -257,6 +264,7 @@ namespace bweHelpers
 
 		const uint32_t frameIntervalAbsSendTime =
 		  RemoteBitrateEstimatorAbsSendTimeTestHelper::AbsSendTime(1, Framerate);
+
 		uint32_t rtpTimestamp{ 0 };
 		uint32_t absSendTime{ 0 };
 
@@ -309,7 +317,7 @@ namespace bweHelpers
 			  Utils::Time::TimeUsToMs(this->nowUs),
 			  rtpTimestamp - (90 * FrameIntervalMs),
 			  RemoteBitrateEstimatorAbsSendTimeTestHelper::AddAbsSendTime(
-			    absSendTime, -static_cast<int>(frameIntervalAbsSendTime)));
+			    absSendTime, static_cast<uint32_t>(-static_cast<int64_t>(frameIntervalAbsSendTime))));
 		}
 
 		REQUIRE(this->updated);
@@ -384,8 +392,9 @@ namespace bweHelpers
 		{
 			steadyStateTime = 10 * numberOfStreams;
 
-			int64_t bitrateSum{ 0 };
 			const int64_t bitrateDenom = numberOfStreams * (numberOfStreams - 1);
+
+			int64_t bitrateSum{ 0 };
 
 			for (uint32_t idx{ 0 }; idx < numberOfStreams; ++idx)
 			{
@@ -444,6 +453,7 @@ namespace bweHelpers
 		this->linkSimulator.SetCapacityBps(ReducedCapacityBps);
 
 		const int64_t overuseStartTimeMs = Utils::Time::TimeUsToMs(this->nowUs);
+
 		int64_t bitrateDropTimeMs{ -1 };
 
 		for (uint32_t idx{ 0 }; idx < 100 * numberOfStreams; ++idx)
@@ -488,11 +498,12 @@ namespace bweHelpers
 
 		const uint32_t frameIntervalAbsSendTime =
 		  RemoteBitrateEstimatorAbsSendTimeTestHelper::AbsSendTime(1, Framerate);
+
 		uint32_t rtpTimestamp{ 0 };
 		// Started near the top of the 24 bits so that it definitely wraps during
 		// the run.
 		uint32_t absSendTime = RemoteBitrateEstimatorAbsSendTimeTestHelper::AddAbsSendTime(
-		  1U << 24, -static_cast<int>(50 * frameIntervalAbsSendTime));
+		  1U << 24, static_cast<uint32_t>(-static_cast<int64_t>(50 * frameIntervalAbsSendTime)));
 
 		// Initial set of frames to increase the bitrate, over six seconds so that
 		// there is time for the first estimation to come out.
@@ -546,7 +557,8 @@ namespace bweHelpers
 			absSendTime = RemoteBitrateEstimatorAbsSendTimeTestHelper::AddAbsSendTime(
 			  absSendTime,
 			  RemoteBitrateEstimatorAbsSendTimeTestHelper::AddAbsSendTime(
-			    frameIntervalAbsSendTime, -static_cast<int>(timestampGroupLengthAbsSendTime)));
+			    frameIntervalAbsSendTime,
+			    static_cast<uint32_t>(-static_cast<int64_t>(timestampGroupLengthAbsSendTime))));
 		}
 
 		REQUIRE(this->updated);
@@ -563,6 +575,7 @@ namespace bweHelpers
 
 		const uint32_t frameIntervalAbsSendTime =
 		  RemoteBitrateEstimatorAbsSendTimeTestHelper::AbsSendTime(1, Framerate);
+
 		uint32_t rtpTimestamp{ 0 };
 		uint32_t absSendTime{ 0 };
 

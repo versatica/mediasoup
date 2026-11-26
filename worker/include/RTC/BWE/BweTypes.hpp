@@ -2,7 +2,7 @@
 #define MS_RTC_BWE_BWE_TYPES_HPP
 
 #include "common.hpp"
-#include <limits>
+#include <limits> // std::numeric_limits
 #include <string_view>
 #include <vector>
 
@@ -113,7 +113,7 @@ namespace RTC
 				/**
 				 * How the network is behaving according to the delay based detector.
 				 */
-				BandwidthUsage bandwidthUsage;
+				BandwidthUsage bandwidthUsage{ BandwidthUsage::NORMAL };
 				/**
 				 * Bitrate acknowledged by the receiver (bps), or no value if it could
 				 * not be measured.
@@ -197,7 +197,7 @@ namespace RTC
 				 *   while with RFC 8888 the feedback identifies packets by SSRC and RTP
 				 *   sequence number and the adapter resolves them against this one.
 				 */
-				int64_t sequenceNumber;
+				int64_t sequenceNumber{ 0 };
 				/**
 				 * Time at which the packet was sent, or `Types::TimeUsInfinite` if it was
 				 * never assigned one.
@@ -265,76 +265,60 @@ namespace RTC
 				}
 
 				SentPacket sentPacket;
-				/**
-				 * Time at which the packet arrived, in the remote clock reference, or no
-				 * value if it was reported as lost.
-				 */
+				// Time at which the packet arrived, in the remote clock reference, or no
+				// value if it was reported as lost.
 				std::optional<int64_t> receiveTimeUs;
-				/**
-				 * What identifies the packet on the wire, or no value when the feedback
-				 * doesn't report on an RTP packet.
-				 */
+				// What identifies the packet on the wire, or no value when the feedback
+				// doesn't report on an RTP packet.
 				std::optional<RtpPacketInfo> rtpPacketInfo;
-				/**
-				 * How long the receiver held the packet before sending the feedback
-				 * that reports it, which is what allows a round trip time per packet.
-				 *
-				 * @remark
-				 * - Only a feedback that carries it per packet has it, which is the one
-				 *   of RFC 8888 and not the transport-cc one.
-				 *
-				 * @see https://datatracker.ietf.org/doc/html/rfc8888
-				 */
+				// How long the receiver held the packet before sending the feedback that
+				// reports it, which is what allows a round trip time per packet.
+				//
+				// @remarks
+				// - Only a feedback that carries it per packet has it, which is the one
+				//   of RFC 8888 and not the transport-cc one.
+				//
+				// @see https://datatracker.ietf.org/doc/html/rfc8888
 				std::optional<int64_t> arrivalTimeOffsetUs;
-				/**
-				 * The marking the packet carried when it arrived, which is how the
-				 * network reports being congested without dropping it.
-				 *
-				 * @remark
-				 * - Only a feedback that reports it has it, which is the one of RFC
-				 *   8888 and not the transport-cc one.
-				 *
-				 * @see https://datatracker.ietf.org/doc/html/rfc8888
-				 */
+				// The marking the packet carried when it arrived, which is how the
+				// network reports being congested without dropping it.
+				//
+				// @remarks
+				// - Only a feedback that reports it has it, which is the one of RFC 8888
+				//   and not the transport-cc one.
+				//
+				// @see https://datatracker.ietf.org/doc/html/rfc8888
 				EcnMarking ecn{ EcnMarking::NOT_ECT };
-				/**
-				 * Whether the arrival time reported for this packet cannot be told from
-				 * that of another one, so it says nothing about the delay.
-				 *
-				 * @remark
-				 * - Nothing in this estimator reads it. It is only of use to SCReAM,
-				 *   another way of estimating the bandwidth.
-				 *
-				 * @link https://datatracker.ietf.org/doc/draft-johansson-ccwg-rfc8298bis-screamv2
-				 */
+				// Whether the arrival time reported for this packet cannot be told from
+				// that of another one, so it says nothing about the delay.
+				//
+				// @remarks
+				// - Nothing in this estimator reads it. It is only of use to SCReAM,
+				//   another way of estimating the bandwidth.
+				//
+				// @see https://datatracker.ietf.org/doc/draft-johansson-ccwg-rfc8298bis-screamv2
 				bool ambiguousReceiveTime{ false };
-				/**
-				 * Whether the packet was sent marked as ECT(1), which asks the network
-				 * to report congestion instead of dropping the packet.
-				 *
-				 * @see https://www.rfc-editor.org/rfc/rfc9331.html
-				 */
+				// Whether the packet was sent marked as ECT(1), which asks the network to
+				// report congestion instead of dropping the packet.
+				//
+				// @see https://www.rfc-editor.org/rfc/rfc9331.html
 				bool sentWithEct1{ false };
-				/**
-				 * Whether this is the first feedback to report the packet as lost.
-				 *
-				 * @remark
-				 * - Only a feedback that reports on a whole range of packets can tell,
-				 *   which is the one of RFC 8888 and not the transport-cc one.
-				 *
-				 * @see https://datatracker.ietf.org/doc/html/rfc8888
-				 */
+				// Whether this is the first feedback to report the packet as lost.
+				//
+				// @remarks
+				// - Only a feedback that reports on a whole range of packets can tell,
+				//   which is the one of RFC 8888 and not the transport-cc one.
+				//
+				// @see https://datatracker.ietf.org/doc/html/rfc8888
 				bool reportedLostForTheFirstTime{ false };
-				/**
-				 * Whether this feedback reports as received a packet that an earlier
-				 * one had reported as lost.
-				 *
-				 * @remark
-				 * - Only a feedback that reports on a whole range of packets can tell,
-				 *   which is the one of RFC 8888 and not the transport-cc one.
-				 *
-				 * @see https://datatracker.ietf.org/doc/html/rfc8888
-				 */
+				// Whether this feedback reports as received a packet that an earlier one
+				// had reported as lost.
+				//
+				// @remarks
+				// - Only a feedback that reports on a whole range of packets can tell,
+				//   which is the one of RFC 8888 and not the transport-cc one.
+				//
+				// @see https://datatracker.ietf.org/doc/html/rfc8888
 				bool reportedRecoveredForTheFirstTime{ false };
 			};
 
@@ -359,17 +343,11 @@ namespace RTC
 				 */
 				std::vector<PacketResult> ReceivedWithSendInfo() const;
 
-				/**
-				 * Time at which this feedback was received, in our own clock reference.
-				 */
-				int64_t feedbackTimeUs;
-				/**
-				 * Data that was sent and no feedback has reported on yet (bytes).
-				 */
+				// Time at which this feedback was received, in our own clock reference.
+				int64_t feedbackTimeUs{ 0 };
+				// Data that was sent and no feedback has reported on yet (bytes).
 				size_t dataInFlight{ 0 };
-				/**
-				 * Every packet the feedback reports on, received and lost alike.
-				 */
+				// Every packet the feedback reports on, received and lost alike.
 				std::vector<PacketResult> packetFeedbacks;
 			};
 		} // namespace Types

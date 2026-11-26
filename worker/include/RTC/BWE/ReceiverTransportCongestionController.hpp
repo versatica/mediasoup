@@ -51,7 +51,7 @@ namespace RTC
 				 *   returns.
 				 */
 				virtual void OnReceiverTransportCongestionControllerSendRtcpPacket(
-				  ReceiverTransportCongestionController* receiverTransportCongestionControl,
+				  ReceiverTransportCongestionController* receiverTransportCongestionController,
 				  const RTC::RTCP::Packet* packet) = 0;
 			};
 
@@ -76,6 +76,7 @@ namespace RTC
 			~ReceiverTransportCongestionController() override = default;
 
 			ReceiverTransportCongestionController(const ReceiverTransportCongestionController&) = delete;
+
 			ReceiverTransportCongestionController& operator=(
 			  const ReceiverTransportCongestionController&) = delete;
 
@@ -140,6 +141,7 @@ namespace RTC
 			// Passed by argument.
 			Listener* const listener;
 			SharedInterface* const shared;
+			// Others.
 			TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator;
 			RemoteBitrateEstimatorAbsSendTime remoteBitrateEstimator;
 			RembGenerator rembGenerator;

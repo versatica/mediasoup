@@ -60,12 +60,25 @@ namespace RTC
 				uint32_t rtcpSenderSsrc{ 0 };
 			};
 
+#ifdef MS_TEST
+		public:
+#else
+		private:
+#endif
+			/**
+			 * How often feedback should be emitted (ms) to report on the given
+			 * incoming bitrate (bps) without taking more than a small share of it.
+			 */
+			static int64_t ComputeSendIntervalMs(int64_t incomingBitrate);
+
 		public:
 			TransportWideCcFeedbackGenerator(
 			  Listener* listener, SharedInterface* shared, TransportWideCcFeedbackGeneratorOptions options);
+
 			~TransportWideCcFeedbackGenerator() override = default;
 
-			TransportWideCcFeedbackGenerator(const TransportWideCcFeedbackGenerator&)            = delete;
+			TransportWideCcFeedbackGenerator(const TransportWideCcFeedbackGenerator&) = delete;
+
 			TransportWideCcFeedbackGenerator& operator=(const TransportWideCcFeedbackGenerator&) = delete;
 
 			/**
@@ -86,12 +99,6 @@ namespace RTC
 			 * packets as it takes.
 			 */
 			void FillAndSendFeedback();
-
-			/**
-			 * How often feedback should be emitted (ms) to report on the given
-			 * incoming bitrate (bps) without taking more than a small share of it.
-			 */
-			static int64_t ComputeSendIntervalMs(int64_t incomingBitrate);
 
 			/**
 			 * How often feedback is being emitted right now (ms).

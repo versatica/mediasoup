@@ -7,6 +7,7 @@
 #include "RTC/BWE/BweTypes.hpp"
 #include "RTC/BWE/DelayBasedBwe.hpp"
 #include "RTC/BWE/FeedbackAdapter.hpp"
+#include "RTC/BWE/LossBasedController.hpp"
 #include "RTC/BWE/ProbeBitrateEstimator.hpp"
 #include "RTC/BWE/ProbeController.hpp"
 #include "RTC/BWE/ProbingScheduler.hpp"
@@ -148,6 +149,7 @@ namespace RTC
 			~SenderTransportCongestionController() override = default;
 
 			SenderTransportCongestionController(const SenderTransportCongestionController&) = delete;
+
 			SenderTransportCongestionController& operator=(const SenderTransportCongestionController&) = delete;
 
 			/**
@@ -346,9 +348,9 @@ namespace RTC
 			// The one to start from is kept because a change of the other two has to
 			// be handed down along with it, and it is raised to the minimum where it
 			// is used rather than here, so that it stays what was asked for.
-			int64_t minBitrate{ 0 };
+			int64_t minBitrate;
 			const int64_t startBitrate;
-			int64_t maxBitrate{ Types::BitrateInfinite };
+			int64_t maxBitrate;
 			// Whether the probing may run, which the transport tells out of what its
 			// remote endpoint can measure.
 			bool enableProbing{ false };

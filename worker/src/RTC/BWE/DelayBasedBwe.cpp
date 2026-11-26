@@ -78,6 +78,41 @@ namespace RTC
 			  ackedBitrate, probeBitrate, recoveredFromOveruse, feedback.feedbackTimeUs);
 		}
 
+		void DelayBasedBwe::OnRttUpdate(int64_t avgRttUs)
+		{
+			MS_TRACE();
+
+			this->rateControl.SetRttUs(avgRttUs);
+		}
+
+		void DelayBasedBwe::SetStartBitrate(int64_t startBitrate)
+		{
+			MS_TRACE();
+
+			MS_DEBUG_TAG(bwe, "setting start bitrate [bitrate:%" PRIi64 "]", startBitrate);
+
+			this->rateControl.SetStartBitrate(startBitrate);
+		}
+
+		void DelayBasedBwe::SetMinBitrate(int64_t minBitrate)
+		{
+			MS_TRACE();
+
+			this->rateControl.SetMinBitrate(minBitrate);
+		}
+
+		std::optional<int64_t> DelayBasedBwe::GetLatestEstimate() const
+		{
+			MS_TRACE();
+
+			if (!this->rateControl.IsValidEstimate())
+			{
+				return std::nullopt;
+			}
+
+			return this->rateControl.GetLatestEstimate();
+		}
+
 		void DelayBasedBwe::IncomingPacketFeedback(const Types::PacketResult& packetResult, int64_t nowUs)
 		{
 			MS_TRACE();
@@ -231,41 +266,5 @@ namespace RTC
 
 			return this->rateControl.IsValidEstimate();
 		}
-
-		std::optional<int64_t> DelayBasedBwe::GetLatestEstimate() const
-		{
-			MS_TRACE();
-
-			if (!this->rateControl.IsValidEstimate())
-			{
-				return std::nullopt;
-			}
-
-			return this->rateControl.GetLatestEstimate();
-		}
-
-		void DelayBasedBwe::OnRttUpdate(int64_t avgRttUs)
-		{
-			MS_TRACE();
-
-			this->rateControl.SetRttUs(avgRttUs);
-		}
-
-		void DelayBasedBwe::SetStartBitrate(int64_t startBitrate)
-		{
-			MS_TRACE();
-
-			MS_DEBUG_TAG(bwe, "setting start bitrate [bitrate:%" PRIi64 "]", startBitrate);
-
-			this->rateControl.SetStartBitrate(startBitrate);
-		}
-
-		void DelayBasedBwe::SetMinBitrate(int64_t minBitrate)
-		{
-			MS_TRACE();
-
-			this->rateControl.SetMinBitrate(minBitrate);
-		}
-
 	} // namespace BWE
 } // namespace RTC

@@ -16,11 +16,11 @@ namespace bweHelpers
 	 */
 	struct Packet
 	{
-		uint32_t ssrc;
-		uint32_t rtpTimestamp;
-		int64_t sendTimeUs;
-		int64_t arrivalTimeUs;
-		size_t size;
+		uint32_t ssrc{ 0 };
+		uint32_t rtpTimestamp{ 0 };
+		int64_t sendTimeUs{ 0 };
+		int64_t arrivalTimeUs{ 0 };
+		size_t size{ 0 };
 	};
 
 	/**
@@ -29,6 +29,12 @@ namespace bweHelpers
 	 */
 	class RtpStream
 	{
+	public:
+		/**
+		 * Orders streams by which one is due to produce a frame first.
+		 */
+		static bool Compare(const std::unique_ptr<RtpStream>& lhs, const std::unique_ptr<RtpStream>& rhs);
+
 	public:
 		RtpStream(
 		  uint32_t fps,
@@ -84,11 +90,6 @@ namespace bweHelpers
 		 * is left for the link to fill in.
 		 */
 		int64_t GenerateFrame(int64_t timeNowUs, std::vector<Packet>& packets);
-
-		/**
-		 * Orders streams by which one is due to produce a frame first.
-		 */
-		static bool Compare(const std::unique_ptr<RtpStream>& lhs, const std::unique_ptr<RtpStream>& rhs);
 
 	private:
 		const uint32_t fps;

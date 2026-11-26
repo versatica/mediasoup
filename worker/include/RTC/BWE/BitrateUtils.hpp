@@ -15,7 +15,7 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - The algorithm derives a bitrate from another one this way all over the
-			 *   place, and the result has to come back to an int64_t. A value beyond
+			 *   place, and the result has to come back to an `int64_t`. A value beyond
 			 *   what that type holds becomes `Types::BitrateInfinite` rather than the
 			 *   undefined one that converting it would give.
 			 * - The result is rounded, not truncated, since each bitrate is derived
@@ -28,7 +28,7 @@ namespace RTC
 			 * Sum of two bitrates (bps).
 			 *
 			 * @remarks
-			 * - A sum beyond what an int64_t can hold becomes `Types::BitrateInfinite`
+			 * - A sum beyond what an `int64_t` can hold becomes `Types::BitrateInfinite`
 			 *   rather than wrapping around into a negative bitrate.
 			 */
 			static int64_t AddBitrates(int64_t bitrate, int64_t otherBitrate);

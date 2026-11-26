@@ -23,15 +23,6 @@ namespace bweHelpers
 		static constexpr uint32_t DefaultSsrc{ 1 };
 
 	public:
-		RemoteBitrateEstimatorAbsSendTimeTestHelper();
-
-		~RemoteBitrateEstimatorAbsSendTimeTestHelper() override = default;
-
-		RemoteBitrateEstimatorAbsSendTimeTestHelper(const RemoteBitrateEstimatorAbsSendTimeTestHelper&) =
-		  delete;
-		RemoteBitrateEstimatorAbsSendTimeTestHelper& operator=(
-		  const RemoteBitrateEstimatorAbsSendTimeTestHelper&) = delete;
-
 		/**
 		 * Turn an instant into the 24 bits of the 'abs-send-time' extension,
 		 * rounded upwards.
@@ -45,6 +36,17 @@ namespace bweHelpers
 		 * Add two of those values together, keeping the result within 24 bits.
 		 */
 		static uint32_t AddAbsSendTime(uint32_t t1, uint32_t t2);
+
+	public:
+		RemoteBitrateEstimatorAbsSendTimeTestHelper();
+
+		~RemoteBitrateEstimatorAbsSendTimeTestHelper() override = default;
+
+		RemoteBitrateEstimatorAbsSendTimeTestHelper(const RemoteBitrateEstimatorAbsSendTimeTestHelper&) =
+		  delete;
+
+		RemoteBitrateEstimatorAbsSendTimeTestHelper& operator=(
+		  const RemoteBitrateEstimatorAbsSendTimeTestHelper&) = delete;
 
 		void AddDefaultStream();
 

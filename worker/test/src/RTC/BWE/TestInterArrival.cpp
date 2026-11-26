@@ -16,6 +16,10 @@ SCENARIO("BWE InterArrival", "[bwe][interarrival]")
 	// NOTE: Both are private to the class, so they are repeated here.
 	constexpr int64_t ArrivalTimeOffsetThresholdMs{ 3000 };
 	constexpr size_t ReorderedResetThreshold{ 3 };
+	// NOTE: Each of these instants lands on 0xfffffffe once turned into its kind
+	// of timestamp, so the walk across them crosses the wrap around.
+	constexpr int64_t StartRtpTimestampWrapUs{ 47721858827 };
+	constexpr int64_t StartAbsSendTimeWrapUs{ 63999995 };
 
 	// The given instant, expressed as an RTP timestamp of a 90 kHz clock.
 	const auto makeRtpTimestamp = [](int64_t us) -> uint32_t
@@ -462,11 +466,6 @@ SCENARIO("BWE InterArrival", "[bwe][interarrival]")
 		  0);
 	}
 
-	// NOTE: Each of these instants lands on 0xfffffffe once turned into its kind
-	// of timestamp, so the walk below crosses the wrap around.
-	constexpr int64_t StartRtpTimestampWrapUs{ 47721858827 };
-	constexpr int64_t StartAbsSendTimeWrapUs{ 63999995 };
-
 	SECTION("RTP timestamps wrapping around")
 	{
 		wrapTestHelper(StartRtpTimestampWrapUs, 1, false);
@@ -520,12 +519,13 @@ SCENARIO("BWE InterArrival", "[bwe][interarrival]")
 		  static_cast<uint32_t>(sendTimeMs), arrivalTimeMs * 1000, systemTimeMs * 1000, PacketSize);
 
 		REQUIRE(deltas.has_value());
+
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().timestampDelta == TimeDeltaMs);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().arrivalDeltaUs == TimeDeltaMs * 1000);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().sizeDelta == 0);
+		const auto firstDeltasValue = deltas.value();
+
+		REQUIRE(firstDeltasValue.timestampDelta == TimeDeltaMs);
+		REQUIRE(firstDeltasValue.arrivalDeltaUs == TimeDeltaMs * 1000);
+		REQUIRE(firstDeltasValue.sizeDelta == 0);
 
 		sendTimeMs += TimeDeltaMs;
 		arrivalTimeMs += TimeDeltaMs;
@@ -560,12 +560,13 @@ SCENARIO("BWE InterArrival", "[bwe][interarrival]")
 		  static_cast<uint32_t>(sendTimeMs), arrivalTimeMs * 1000, systemTimeMs * 1000, PacketSize);
 
 		REQUIRE(deltas.has_value());
+
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().timestampDelta == TimeDeltaMs);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().arrivalDeltaUs == TimeDeltaMs * 1000);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().sizeDelta == 0);
+		const auto lastDeltasValue = deltas.value();
+
+		REQUIRE(lastDeltasValue.timestampDelta == TimeDeltaMs);
+		REQUIRE(lastDeltasValue.arrivalDeltaUs == TimeDeltaMs * 1000);
+		REQUIRE(lastDeltasValue.sizeDelta == 0);
 	}
 
 	SECTION("the arrival times jumping backwards resets everything")
@@ -601,12 +602,13 @@ SCENARIO("BWE InterArrival", "[bwe][interarrival]")
 		  static_cast<uint32_t>(sendTimeMs), arrivalTimeMs * 1000, systemTimeMs * 1000, PacketSize);
 
 		REQUIRE(deltas.has_value());
+
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().timestampDelta == TimeDeltaMs);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().arrivalDeltaUs == TimeDeltaMs * 1000);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().sizeDelta == 0);
+		const auto firstDeltasValue = deltas.value();
+
+		REQUIRE(firstDeltasValue.timestampDelta == TimeDeltaMs);
+		REQUIRE(firstDeltasValue.arrivalDeltaUs == TimeDeltaMs * 1000);
+		REQUIRE(firstDeltasValue.sizeDelta == 0);
 
 		// Three groups arriving out of order give nothing, and after the reset two
 		// more are needed before the first valid deltas show up again.
@@ -633,11 +635,12 @@ SCENARIO("BWE InterArrival", "[bwe][interarrival]")
 		  static_cast<uint32_t>(sendTimeMs), arrivalTimeMs * 1000, systemTimeMs * 1000, PacketSize);
 
 		REQUIRE(deltas.has_value());
+
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().timestampDelta == TimeDeltaMs);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().arrivalDeltaUs == TimeDeltaMs * 1000);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().sizeDelta == 0);
+		const auto lastDeltasValue = deltas.value();
+
+		REQUIRE(lastDeltasValue.timestampDelta == TimeDeltaMs);
+		REQUIRE(lastDeltasValue.arrivalDeltaUs == TimeDeltaMs * 1000);
+		REQUIRE(lastDeltasValue.sizeDelta == 0);
 	}
 }

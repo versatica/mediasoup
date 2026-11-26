@@ -3,7 +3,7 @@
 #include "RTC/BWE/BweTypes.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
-#include <cmath>
+#include <cmath> // std::llround()
 
 SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 {
@@ -274,10 +274,10 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 	{
 		constexpr int64_t LinkCapacityUpper{ 400000 };
 
+		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
+
 		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper =
 		                                                               LinkCapacityUpper };
-
-		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
 
 		aimdRateControl.SetEstimate(300000, InitialTimeUs);
 		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
@@ -290,10 +290,10 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 	{
 		constexpr int64_t CurrentBitrate{ 500000 };
 
+		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
+
 		// Below the current bitrate, so it must not drag it down.
 		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper = 300000 };
-
-		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
 
 		aimdRateControl.SetEstimate(CurrentBitrate, InitialTimeUs);
 
@@ -309,14 +309,14 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 	{
 		constexpr int64_t LinkCapacityUpper{ 300000 };
 
-		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper =
-		                                                               LinkCapacityUpper };
-
 		auto options = sendSideOptions;
 
 		options.useCurrentEstimateAsMinUpperBound = false;
 
 		RTC::BWE::AimdRateControl aimdRateControl(options);
+
+		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper =
+		                                                               LinkCapacityUpper };
 
 		aimdRateControl.SetEstimate(500000, InitialTimeUs);
 
@@ -332,10 +332,10 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 	{
 		constexpr int64_t LinkCapacityLower{ 400000 };
 
+		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
+
 		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityLower =
 		                                                               LinkCapacityLower };
-
-		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
 
 		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
 		aimdRateControl.SetEstimate(100000, InitialTimeUs);
@@ -348,9 +348,9 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 	{
 		constexpr int64_t CurrentBitrate{ 200000 };
 
-		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityLower = 400000 };
-
 		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
+
+		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityLower = 400000 };
 
 		aimdRateControl.SetEstimate(CurrentBitrate, InitialTimeUs);
 
@@ -370,14 +370,14 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		constexpr int64_t InitialBitrate{ 123000 };
 		constexpr int64_t LinkCapacityUpper{ 150000 };
 
-		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper =
-		                                                               LinkCapacityUpper };
-
 		auto options = sendSideOptions;
 
 		options.estimateBoundedIncrease = false;
 
 		RTC::BWE::AimdRateControl aimdRateControl(options);
+
+		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper =
+		                                                               LinkCapacityUpper };
 
 		int64_t nowUs{ InitialTimeUs };
 

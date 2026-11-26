@@ -2,6 +2,7 @@
 #include "RTC/BWE/BweTypes.hpp"
 #include "RTC/BWE/TargetRateController.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <vector>
 
 SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 {
@@ -23,6 +24,7 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 
 		for (size_t idx{ 0 }; idx < packetResults.size(); ++idx)
 		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 			auto& packetResult = packetResults[idx];
 
 			packetResult.sentPacket.sequenceNumber = sequenceNumber++;
@@ -61,6 +63,9 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 
 	SECTION("the first bound applies at once but a later one has to wait")
 	{
+		constexpr int64_t FirstBitrate{ 1000000 };
+		constexpr int64_t SecondBitrate{ FirstBitrate + 500000 };
+
 		// Both bounds behave the same here, so the very same case is run twice.
 		for (const bool delayBased : { false, true })
 		{
@@ -72,9 +77,6 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 
 			targetRateController.UpdatePacketsLost(/*lostPackets*/ 0, /*totalPackets*/ 1, nowUs);
 			targetRateController.UpdateRtt(50 * 1000);
-
-			constexpr int64_t FirstBitrate{ 1000000 };
-			constexpr int64_t SecondBitrate{ FirstBitrate + 500000 };
 
 			feedLimit(targetRateController, delayBased, FirstBitrate, nowUs);
 
@@ -144,6 +146,7 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 		constexpr int64_t ForcedHighBitrate{ 2500000 };
 
 		RTC::BWE::TargetRateController targetRateController;
+
 		const int64_t nowUs{ InitialTimeUs };
 
 		targetRateController.SetBitrateLimits(10000, 10000000);
@@ -180,6 +183,7 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 	SECTION("the round trip time is above the limit once it exceeds it")
 	{
 		RTC::BWE::TargetRateController targetRateController;
+
 		const int64_t nowUs{ InitialTimeUs };
 
 		targetRateController.SetBitrateLimits(10000, 10000000);
@@ -193,6 +197,7 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 	SECTION("the round trip time is below the limit while it doesn't reach it")
 	{
 		RTC::BWE::TargetRateController targetRateController;
+
 		const int64_t nowUs{ InitialTimeUs };
 
 		targetRateController.SetBitrateLimits(10000, 10000000);
@@ -212,6 +217,7 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 		};
 
 		RTC::BWE::TargetRateController targetRateController(options);
+
 		const int64_t nowUs{ InitialTimeUs };
 
 		targetRateController.SetBitrateLimits(10000, 10000000);
@@ -288,7 +294,7 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 
 		targetRateController.SetBitrateLimits(10000, 10000000);
 		targetRateController.SetSendBitrate(InitialBitrate);
-		// NOTE: After SetSendBitrate(), which drops it on purpose, so that the loss
+		// NOTE: After `SetSendBitrate()`, which drops it on purpose, so that the loss
 		// controller has a bitrate to start its estimate from.
 		targetRateController.SetDelayBasedEstimate(InitialBitrate);
 
@@ -318,7 +324,7 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 
 		targetRateController.SetBitrateLimits(10000, 10000000);
 		targetRateController.SetSendBitrate(InitialBitrate);
-		// NOTE: After SetSendBitrate(), which drops it on purpose, so that the loss
+		// NOTE: After `SetSendBitrate()`, which drops it on purpose, so that the loss
 		// controller has a bitrate to start its estimate from.
 		targetRateController.SetDelayBasedEstimate(InitialBitrate);
 

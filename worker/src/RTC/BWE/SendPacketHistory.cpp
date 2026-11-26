@@ -21,7 +21,7 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		int64_t SendPacketHistory::AddPacket(const AddPacketOptions& addPacketOptions)
+		int64_t SendPacketHistory::AddPacket(const AddPacketOptions& options)
 		{
 			MS_TRACE();
 
@@ -32,7 +32,7 @@ namespace RTC
 
 				// The packets are held for as long as the window, beyond which a
 				// feedback reporting on them is not of any use anymore.
-				if (addPacketOptions.createdAtUs - oldestEntry.createdAtUs <= this->options.windowDurationUs)
+				if (options.createdAtUs - oldestEntry.createdAtUs <= this->options.windowDurationUs)
 				{
 					break;
 				}
@@ -57,21 +57,21 @@ namespace RTC
 			SentPacketEntry entry;
 
 			entry.sentPacket.sequenceNumber = sequenceNumber;
-			entry.sentPacket.size           = addPacketOptions.size;
-			entry.sentPacket.isAudio        = addPacketOptions.isAudio;
-			entry.sentPacket.probeCluster   = addPacketOptions.probeCluster;
-			entry.createdAtUs               = addPacketOptions.createdAtUs;
-			entry.ssrc                      = addPacketOptions.ssrc;
-			entry.seq                       = addPacketOptions.seq;
-			entry.isRetransmission          = addPacketOptions.isRetransmission;
-			entry.sentWithEct1              = addPacketOptions.sentWithEct1;
+			entry.sentPacket.size           = options.size;
+			entry.sentPacket.isAudio        = options.isAudio;
+			entry.sentPacket.probeCluster   = options.probeCluster;
+			entry.createdAtUs               = options.createdAtUs;
+			entry.ssrc                      = options.ssrc;
+			entry.seq                       = options.seq;
+			entry.isRetransmission          = options.isRetransmission;
+			entry.sentWithEct1              = options.sentWithEct1;
 
 			// The very same SSRC and RTP sequence number can be sent twice, as an audio
 			// retransmission does. What a feedback then reports as the arrival time of
 			// either of them may be of the other one, so both are marked and the
 			// mapping is left on the first of them.
 			const auto [it, inserted] = this->ssrcAndSeqToSequenceNumber.emplace(
-			  SsrcAndSeq{ .ssrc = addPacketOptions.ssrc, .seq = addPacketOptions.seq }, sequenceNumber);
+			  SsrcAndSeq{ .ssrc = options.ssrc, .seq = options.seq }, sequenceNumber);
 
 			if (!inserted)
 			{
@@ -91,9 +91,8 @@ namespace RTC
 			// sequence number as what it retransmits, so it is just as ambiguous even
 			// when the packet it repeats is not held anymore.
 			else if (
-			  addPacketOptions.isRetransmission &&
-			  (!addPacketOptions.originalSsrc.has_value() ||
-				 addPacketOptions.originalSsrc.value() == addPacketOptions.ssrc))
+			  options.isRetransmission &&
+			  (!options.originalSsrc.has_value() || options.originalSsrc.value() == options.ssrc))
 			{
 				entry.ambiguousReceiveTime = true;
 			}
@@ -217,10 +216,10 @@ namespace RTC
 				this->lastAckSequenceNumber = sequenceNumber;
 			}
 
-			if (endIt == this->history.begin() || std::prev(endIt)->first != sequenceNumber)
+			// Either the window already dropped it or a previous feedback reported it
+			// as received.
+			if (endIt == this->history.begin())
 			{
-				// Either the window already dropped it or a previous feedback reported it
-				// as received.
 				MS_DEBUG_DEV("packet not held anymore [sequenceNumber:%" PRIi64 "]", sequenceNumber);
 
 				return std::nullopt;
@@ -228,7 +227,15 @@ namespace RTC
 
 			const auto it = std::prev(endIt);
 
-			auto& storedEntry = it->second;
+			auto& [storedSequenceNumber, storedEntry] = *it;
+
+			// The same, while an earlier packet is still in the history.
+			if (storedSequenceNumber != sequenceNumber)
+			{
+				MS_DEBUG_DEV("packet not held anymore [sequenceNumber:%" PRIi64 "]", sequenceNumber);
+
+				return std::nullopt;
+			}
 
 			// A feedback cannot report on a packet that was never taken note of as
 			// having left.

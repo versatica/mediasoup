@@ -4,6 +4,7 @@
 #include "RTC/RTCP/packet/TransportWideCcPacket.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <vector>
 
 SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 {
@@ -109,8 +110,12 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		}
 
 		// The first feedback is anchored on the time it was received.
+		//
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[0].receiveTimeUs == InitialTimeUs + 50000);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[1].receiveTimeUs == InitialTimeUs + 60000);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[2].receiveTimeUs == InitialTimeUs + 70000);
 	}
 
@@ -140,8 +145,11 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		const auto& result = processedFeedback.value();
 
 		REQUIRE(result.packetFeedbacks.size() == 3);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[0].IsReceived());
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(!result.packetFeedbacks[1].IsReceived());
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[2].IsReceived());
 	}
 
@@ -170,7 +178,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		const auto& result = processedFeedback.value();
 
 		REQUIRE(result.packetFeedbacks.size() == 2);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[0].sentPacket.isAudio == true);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[1].sentPacket.isAudio == false);
 	}
 
@@ -200,14 +210,14 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 
 		REQUIRE(firstResult.has_value());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(firstResult->dataInFlight == 300);
+		REQUIRE(firstResult.value().dataInFlight == 300);
 
 		const auto secondResult =
 		  feedbackAdapter.ProcessTransportWideCcFeedback(secondFeedback.get(), InitialTimeUs + 60000);
 
 		REQUIRE(secondResult.has_value());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(secondResult->dataInFlight == 0);
+		REQUIRE(secondResult.value().dataInFlight == 0);
 	}
 
 	SECTION("the packets the history no longer holds are left out")
@@ -239,6 +249,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		const auto& result = processedFeedback.value();
 
 		REQUIRE(result.packetFeedbacks.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[0].sentPacket.sequenceNumber == 1);
 	}
 
@@ -281,7 +292,10 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 
 		// Both packets took the very same time to arrive, so both feedbacks have to
 		// tell the same however each of them was anchored.
-		const auto& firstPacketResult  = firstResult.packetFeedbacks[0];
+		//
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+		const auto& firstPacketResult = firstResult.packetFeedbacks[0];
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		const auto& secondPacketResult = secondResult.packetFeedbacks[0];
 
 		const int64_t firstDelayUs =
@@ -332,7 +346,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		REQUIRE(firstResult.packetFeedbacks.size() == 1);
 		REQUIRE(secondResult.packetFeedbacks.size() == 1);
 
-		const auto& firstPacketResult  = firstResult.packetFeedbacks[0];
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+		const auto& firstPacketResult = firstResult.packetFeedbacks[0];
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		const auto& secondPacketResult = secondResult.packetFeedbacks[0];
 
 		const int64_t firstDelayUs =
@@ -387,7 +403,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		REQUIRE(firstResult.packetFeedbacks.size() == 1);
 		REQUIRE(secondResult.packetFeedbacks.size() == 1);
 
-		const auto& firstPacketResult  = firstResult.packetFeedbacks[0];
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+		const auto& firstPacketResult = firstResult.packetFeedbacks[0];
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		const auto& secondPacketResult = secondResult.packetFeedbacks[0];
 
 		const int64_t firstDelayUs =
@@ -429,10 +447,15 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		const auto& result = processedFeedback.value();
 
 		REQUIRE(result.packetFeedbacks.size() == 3);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[0].sentPacket.sequenceNumber == 0);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[1].sentPacket.sequenceNumber == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[2].sentPacket.sequenceNumber == 2);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[0].receiveTimeUs > result.packetFeedbacks[1].receiveTimeUs);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[1].receiveTimeUs > result.packetFeedbacks[2].receiveTimeUs);
 	}
 
@@ -463,6 +486,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		const auto& result = processedFeedback.value();
 
 		REQUIRE(result.packetFeedbacks.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(result.packetFeedbacks[0].sentPacket.sequenceNumber == 2);
 	}
 
@@ -494,7 +518,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 
 		REQUIRE(firstResult.has_value());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(firstResult->packetFeedbacks.size() == 2);
+		REQUIRE(firstResult.value().packetFeedbacks.size() == 2);
 
 		// And now a lot of packets are sent before the next feedback comes.
 		for (int64_t idx{ 2 }; idx < PacketCount; ++idx)
@@ -519,6 +543,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		const auto& secondResult = secondProcessedFeedback.value();
 
 		REQUIRE(secondResult.packetFeedbacks.size() == 1);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 		REQUIRE(secondResult.packetFeedbacks[0].sentPacket.sequenceNumber == 2);
 	}
 

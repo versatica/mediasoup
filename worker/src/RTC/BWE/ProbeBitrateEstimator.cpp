@@ -91,7 +91,7 @@ namespace RTC
 			// scaled down.
 			const auto minProbes =
 			  static_cast<int64_t>(static_cast<double>(probeCluster.minProbes) * MinReceivedProbesRatio);
-			const auto minSize =
+			const int64_t minSize =
 			  std::llround(static_cast<double>(probeCluster.minBytes) * MinReceivedBytesRatio);
 
 			// Too little of the burst has come back to tell anything yet.
@@ -104,8 +104,8 @@ namespace RTC
 			// that gets here is both sent and received.
 			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			const int64_t sendIntervalUs = cluster.lastSendTimeUs.value() - cluster.firstSendTimeUs.value();
-			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			const int64_t receiveIntervalUs =
+			  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			  cluster.lastReceiveTimeUs.value() - cluster.firstReceiveTimeUs.value();
 
 			// A burst that covers no span at all, or one so long that it isn't a burst
@@ -135,7 +135,7 @@ namespace RTC
 			//
 			// NOTE: Bytes over microseconds into bits over seconds, in integer
 			// arithmetic. A burst is a handful of packets, so the product stays far
-			// from what an int64_t holds.
+			// from what an `int64_t` holds.
 			const int64_t sendBitrate =
 			  ((cluster.sizeTotal - cluster.sizeLastSend) * 8 * 1000000) / sendIntervalUs;
 			const int64_t receiveBitrate =

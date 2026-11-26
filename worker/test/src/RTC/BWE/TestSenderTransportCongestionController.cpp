@@ -125,7 +125,7 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 	};
 
 	// Let the periodic work run once.
-	const auto runProcessTimer = [&nowUs, &shared, &ProcessTimerLabel]()
+	const auto runProcessTimer = [&nowUs, &shared, &ProcessTimerLabel]() -> void
 	{
 		auto* timer = shared.GetTimer(ProcessTimerLabel);
 
@@ -167,12 +167,12 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		return feedback;
 	};
 
+	uint16_t nextRtpSequenceNumber{ 0 };
+
 	// Sends a packet every 50 ms for the given span and feeds back the arrival of
 	// each one, with an arrival that falls further and further behind by
 	// `delayPerPacketUs` on every packet, which is what a queue filling up looks
 	// like. Answers the target the loop is left at.
-	uint16_t nextRtpSequenceNumber{ 0 };
-
 	const auto transmitAndFeedBack = [&nowUs,
 	                                  &shared,
 	                                  &ProcessTimerLabel,
@@ -183,6 +183,7 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 	                                   int64_t runtimeMs, int64_t delayPerPacketUs) -> int64_t
 	{
 		const int64_t startUs = nowUs;
+
 		int64_t delayBuildupUs{ 0 };
 
 		while (nowUs - startUs < runtimeMs * 1000)
@@ -311,6 +312,7 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 
 		runProcessTimer();
 
+		REQUIRE(!listener.targetBitrates.empty());
 		REQUIRE(listener.targetBitrates.back() == StartBitrate / 2);
 
 		// And it follows it back up, since the cap is not a ratchet.
@@ -329,6 +331,7 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 
 		runProcessTimer();
 
+		REQUIRE(!listener.targetBitrates.empty());
 		REQUIRE(listener.targetBitrates.back() == StartBitrate / 2);
 
 		senderTransportCongestionController.ReceiveEstimatedBitrate(0);
@@ -341,6 +344,8 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 	SECTION("the loss the Receiver Reports measure brings the target down")
 	{
 		runProcessTimer();
+
+		REQUIRE(!listener.targetBitrates.empty());
 
 		const int64_t targetBeforeLoss = listener.targetBitrates.back();
 
@@ -449,7 +454,7 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 
 		// Which is what every audio packet looks like, since the extension is only
 		// written into video ones.
-		std::unique_ptr<RTC::RTP::Packet> audioPacket(
+		const std::unique_ptr<RTC::RTP::Packet> audioPacket(
 		  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
 
 		REQUIRE(audioPacket);

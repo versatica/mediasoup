@@ -520,6 +520,9 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 	SECTION("of two equally likely candidates the higher one is taken")
 	{
 		constexpr int64_t InitialBitrate{ 1000000 };
+		// Just above the candidate that the factor of 1.02 builds, so that it's the
+		// delay based estimate the one added as a candidate and taken.
+		constexpr int64_t DelayBasedEstimate{ 1020008 };
 
 		RTC::BWE::LossBasedController lossBasedController(shortObservationOptions);
 
@@ -529,10 +532,6 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		  createResults(/*firstSendTimeUs*/ 0, /*numPackets*/ 2, /*numLostPackets*/ 0),
 		  InitialBitrate,
 		  /*inAlr*/ false);
-
-		// Just above the candidate that the factor of 1.02 builds, so that it's the
-		// delay based estimate the one added as a candidate and taken.
-		constexpr int64_t DelayBasedEstimate{ 1020008 };
 
 		lossBasedController.UpdateBitrateEstimate(
 		  createResults(ObservationDurationLowerBoundUs, /*numPackets*/ 2, /*numLostPackets*/ 0),
@@ -570,8 +569,9 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		}
 
 		// The next feedback reports it as received, and closes the observation.
-		std::vector<RTC::BWE::Types::PacketResult> secondResults(3);
 		const std::array<int64_t, 3> sequenceNumbers{ 2, 4, 5 };
+
+		std::vector<RTC::BWE::Types::PacketResult> secondResults(3);
 
 		for (size_t idx{ 0 }; idx < secondResults.size(); ++idx)
 		{

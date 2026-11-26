@@ -54,27 +54,36 @@ SCENARIO("BWE BitrateAllocator", "[bwe][bitrateallocator]")
 			this->timesGivenAPoint++;
 		}
 
-		// Bitrate it ended the round at.
+		/**
+		 * Bitrate it ended the round at.
+		 */
 		int64_t GetBitrate() const
 		{
 			return this->bitrate;
 		}
 
-		// How often it was told to run at a point, so that a round that walks it
-		// through several of them is told from one that applies each one on the way.
+		/**
+		 * How often it was told to run at a point, so that a round that walks it
+		 * through several of them is told from one that applies each one on the
+		 * way.
+		 */
 		uint8_t GetTimesGivenAPoint() const
 		{
 			return this->timesGivenAPoint;
 		}
 
-		// Cap the application put on it, as an index into the bitrates.
+		/**
+		 * Cap the application put on it, as an index into the bitrates.
+		 */
 		void SetMaxPoint(size_t maxPoint)
 		{
 			this->maxPoint = maxPoint;
 		}
 
-		// Where a previous round left it, as an index into the points it offers,
-		// zero being not sending anything.
+		/**
+		 * Where a previous round left it, as an index into the points it offers,
+		 * zero being not sending anything.
+		 */
 		void SetCurrentOption(size_t currentOption)
 		{
 			this->currentOption = currentOption;

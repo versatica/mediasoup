@@ -4,7 +4,7 @@
 #include "RTC/BWE/LinkCapacityEstimator.hpp"
 #include "Logger.hpp"
 #include "RTC/BWE/BweTypes.hpp"
-#include <cmath>
+#include <cmath> // std::round(), std::sqrt()
 
 namespace RTC
 {

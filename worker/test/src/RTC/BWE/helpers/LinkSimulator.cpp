@@ -15,6 +15,15 @@ namespace bweHelpers
 	// arrival ones, which would hide a mistake mixing both references.
 	static constexpr int64_t SendSideOffsetUs{ 1000 * 1000 };
 
+	/* Class methods. */
+
+	bool RtpStream::Compare(const std::unique_ptr<RtpStream>& lhs, const std::unique_ptr<RtpStream>& rhs)
+	{
+		MS_TRACE();
+
+		return lhs->nextRtpTimeUs < rhs->nextRtpTimeUs;
+	}
+
 	/* Instance methods. */
 
 	RtpStream::RtpStream(
@@ -28,15 +37,6 @@ namespace bweHelpers
 		MS_TRACE();
 
 		MS_ASSERT(fps > 0, "fps must be greater than zero [fps:%" PRIu32 "]", fps);
-	}
-
-	void RtpStream::SetBitrateBps(int64_t bitrateBps)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(bitrateBps >= 0, "bitrate must not be negative [bitrate:%" PRIi64 "]", bitrateBps);
-
-		this->bitrateBps = bitrateBps;
 	}
 
 	int64_t RtpStream::GenerateFrame(
@@ -64,6 +64,15 @@ namespace bweHelpers
 		return nextRtpTimeUs;
 	}
 
+	void RtpStream::SetBitrateBps(int64_t bitrateBps)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(bitrateBps >= 0, "bitrate must not be negative [bitrate:%" PRIi64 "]", bitrateBps);
+
+		this->bitrateBps = bitrateBps;
+	}
+
 	int64_t RtpStream::GenerateFrame(int64_t timeNowUs, std::vector<Packet>& packets)
 	{
 		MS_TRACE();
@@ -77,7 +86,7 @@ namespace bweHelpers
 		const size_t numPackets   = std::max<size_t>((bitsPerFrame + (4 * Mtu)) / (8 * Mtu), 1);
 		const size_t payloadSize  = (bitsPerFrame + (4 * numPackets)) / (8 * numPackets);
 		const int64_t sendTimeUs  = timeNowUs + SendSideOffsetUs;
-		const auto rtpTimestamp =
+		const uint32_t rtpTimestamp =
 		  this->rtpTimestampOffset +
 		  static_cast<uint32_t>((((this->frequency / 1000) * sendTimeUs) + 500) / 1000);
 
@@ -94,13 +103,6 @@ namespace bweHelpers
 		this->nextRtpTimeUs = timeNowUs + ((1000000 + (this->fps / 2)) / this->fps);
 
 		return this->nextRtpTimeUs;
-	}
-
-	bool RtpStream::Compare(const std::unique_ptr<RtpStream>& lhs, const std::unique_ptr<RtpStream>& rhs)
-	{
-		MS_TRACE();
-
-		return lhs->nextRtpTimeUs < rhs->nextRtpTimeUs;
 	}
 
 	LinkSimulator::LinkSimulator(int64_t capacityBps, int64_t timeNowUs)

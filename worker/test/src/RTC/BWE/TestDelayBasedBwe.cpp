@@ -5,6 +5,7 @@
 #include "test/include/RTC/BWE/helpers/LinkSimulator.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstdlib> // std::abs()
+#include <vector>
 
 SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 {
@@ -87,7 +88,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 
 			RTC::BWE::Types::TransportPacketsFeedback feedback;
 
-			feedback.packetFeedbacks = packetResults;
+			feedback.packetFeedbacks = std::move(packetResults);
 			feedback.feedbackTimeUs  = this->nowUs;
 
 			const auto result = this->delayBasedBwe.IncomingPacketFeedbackVector(
@@ -182,7 +183,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 	                                      SimulatedTransport& simulatedTransport,
 	                                      int64_t numberOfStreams,
 	                                      int64_t expectedBitrateDropDeltaUs,
-	                                      int64_t receiverClockOffsetChangeUs)
+	                                      int64_t receiverClockOffsetChangeUs) -> void
 	{
 		constexpr uint32_t Framerate{ 30 };
 		constexpr int64_t StartBitrate{ 900000 };
@@ -203,8 +204,9 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		{
 			steadyStateSec = 10 * numberOfStreams;
 
-			int64_t bitrateSum{ 0 };
 			const int64_t bitrateDenom = numberOfStreams * (numberOfStreams - 1);
+
+			int64_t bitrateSum{ 0 };
 
 			for (int64_t i{ 0 }; i < numberOfStreams; ++i)
 			{
@@ -247,6 +249,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		simulatedTransport.linkSimulator.SetCapacityBps(ReducedCapacityBps);
 
 		const int64_t overuseStartTimeUs = simulatedTransport.nowUs;
+
 		int64_t bitrateDropTimeUs{ -1 };
 
 		for (int64_t i{ 0 }; i < 100 * numberOfStreams; ++i)
@@ -323,8 +326,8 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		capacityDropTestHelper(
 		  simulatedTransport,
 		  /*numberOfStreams*/ 1,
-		  /*expectedDropDeltaUs*/ 500 * 1000,
-		  /*clockOffsetUs*/ 0);
+		  /*expectedBitrateDropDeltaUs*/ 500 * 1000,
+		  /*receiverClockOffsetChangeUs*/ 0);
 	}
 
 	SECTION("the estimate follows a capacity drop when the remote clock jumps forward")
@@ -334,8 +337,8 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		capacityDropTestHelper(
 		  simulatedTransport,
 		  /*numberOfStreams*/ 1,
-		  /*expectedDropDeltaUs*/ 867 * 1000,
-		  /*clockOffsetUs*/ 30000 * 1000);
+		  /*expectedBitrateDropDeltaUs*/ 867 * 1000,
+		  /*receiverClockOffsetChangeUs*/ 30000 * 1000);
 	}
 
 	SECTION("the estimate follows a capacity drop when the remote clock jumps backwards")
@@ -345,8 +348,8 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		capacityDropTestHelper(
 		  simulatedTransport,
 		  /*numberOfStreams*/ 1,
-		  /*expectedDropDeltaUs*/ 933 * 1000,
-		  /*clockOffsetUs*/ -30000 * 1000);
+		  /*expectedBitrateDropDeltaUs*/ 933 * 1000,
+		  /*receiverClockOffsetChangeUs*/ -30000 * 1000);
 	}
 
 	SECTION("the estimate follows a capacity drop within a wider margin")
@@ -360,14 +363,15 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		capacityDropTestHelper(
 		  simulatedTransport,
 		  /*numberOfStreams*/ 1,
-		  /*expectedDropDeltaUs*/ 533 * 1000,
-		  /*clockOffsetUs*/ 0);
+		  /*expectedBitrateDropDeltaUs*/ 533 * 1000,
+		  /*receiverClockOffsetChangeUs*/ 0);
 	}
 
 	SECTION("packets sent very close together are treated as one group")
 	{
 		constexpr uint32_t Framerate{ 50 };
 		constexpr int64_t FrameIntervalUs{ 1000000 / Framerate };
+		constexpr uint32_t TimestampGroupLength{ 15 };
 
 		SimulatedTransport simulatedTransport;
 
@@ -387,8 +391,6 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 
 		// Batches of frames sent one tick apart, which the estimator must take as
 		// a single group, while the time between batches grows to simulate overuse.
-		constexpr uint32_t TimestampGroupLength{ 15 };
-
 		for (uint32_t i{ 0 }; i < 100; ++i)
 		{
 			for (uint32_t j{ 0 }; j < TimestampGroupLength; ++j)
@@ -410,12 +412,12 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 
 	SECTION("a short silence doesn't leave the estimate stale")
 	{
-		SimulatedTransport simulatedTransport;
-
 		constexpr uint32_t Framerate{ 100 };
 		constexpr int64_t FrameIntervalUs{ 1000000 / Framerate };
 		// A client leaving and rejoining after 35 seconds.
 		constexpr int64_t SilenceTimeUs{ 35 * 1000000 };
+
+		SimulatedTransport simulatedTransport;
 
 		int64_t sendTimeUs{ 0 };
 
@@ -450,13 +452,13 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 
 	SECTION("a long silence doesn't leave the estimate stale")
 	{
-		SimulatedTransport simulatedTransport;
-
 		constexpr uint32_t Framerate{ 100 };
 		constexpr int64_t FrameIntervalUs{ 1000000 / Framerate };
 		// A client rejoining a multiple of 64 seconds later, which is what used to
 		// produce no difference at all in the send times.
 		constexpr int64_t SilenceTimeUs{ 10 * 64 * 1000000 };
+
+		SimulatedTransport simulatedTransport;
 
 		int64_t sendTimeUs{ 0 };
 

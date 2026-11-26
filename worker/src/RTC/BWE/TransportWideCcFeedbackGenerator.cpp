@@ -30,6 +30,32 @@ namespace RTC
 		// reports as received.
 		static constexpr uint16_t MaxMissingRtpPackets{ 0x7FFE };
 
+		/* Class methods. */
+
+		int64_t TransportWideCcFeedbackGenerator::ComputeSendIntervalMs(int64_t incomingBitrate)
+		{
+			MS_TRACE();
+
+			// Bitrate the feedback is allowed to take, which is what decides how long
+			// its fixed cost may be spread over.
+			const double feedbackBitrate = static_cast<double>(incomingBitrate) * FeedbackBitrateFraction;
+
+			// NOTE: Checked against the bitrate rather than against the resulting
+			// interval, so that a bitrate of zero is not divided by.
+			const double minFeedbackBitrate = (static_cast<double>(FeedbackPacketOverhead) * 8 * 1000) /
+			                                  static_cast<double>(MaxSendIntervalMs);
+
+			if (feedbackBitrate <= minFeedbackBitrate)
+			{
+				return MaxSendIntervalMs;
+			}
+
+			const auto intervalMs = static_cast<int64_t>(
+			  (static_cast<double>(FeedbackPacketOverhead) * 8 * 1000) / feedbackBitrate);
+
+			return std::max(intervalMs, MinSendIntervalMs);
+		}
+
 		/* Instance methods. */
 
 		TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGenerator(
@@ -72,7 +98,10 @@ namespace RTC
 			MayDropOldPacketArrivalTimes(wideSeqNumber, arrivalTimeUs);
 
 			// Only take note of the packet the first time it's received.
-			if (!this->mapPacketArrivalTimes.try_emplace(wideSeqNumber, arrivalTimeUs).second)
+			const bool inserted =
+			  this->mapPacketArrivalTimes.try_emplace(wideSeqNumber, arrivalTimeUs).second;
+
+			if (!inserted)
 			{
 				return;
 			}
@@ -150,6 +179,7 @@ namespace RTC
 					// NOTE: clang-tidy doesn't understand that this is guaranteed to have
 					// a value: the method returns above when it has none, and nothing
 					// takes it away afterwards, since this loop only ever assigns one.
+					//
 					// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 					uint16_t baseSequenceNumber = this->feedbackWideSeqNumStart.value();
 
@@ -193,7 +223,7 @@ namespace RTC
 				}
 			}
 
-			// The packet may hold nothing, but then SendFeedback() won't send it.
+			// The packet may hold nothing, but then `SendFeedback()` won't send it.
 			if (SendFeedback())
 			{
 				++this->feedbackPacketCount;
@@ -256,10 +286,18 @@ namespace RTC
 
 			auto it = this->mapPacketArrivalTimes.begin();
 
-			while (it != this->mapPacketArrivalTimes.end() && it->first != feedbackWideSeqNumStart &&
-			       RTC::SeqManager<uint16_t>::IsSeqLowerThan(it->first, seqNum) &&
-			       it->second <= expiryTimestampUs)
+			while (it != this->mapPacketArrivalTimes.end())
 			{
+				const auto& [sequenceNumber, storedArrivalTimeUs] = *it;
+
+				if (
+				  sequenceNumber == feedbackWideSeqNumStart ||
+				  !RTC::SeqManager<uint16_t>::IsSeqLowerThan(sequenceNumber, seqNum) ||
+				  storedArrivalTimeUs > expiryTimestampUs)
+				{
+					break;
+				}
+
 				it = this->mapPacketArrivalTimes.erase(it);
 			}
 		}
@@ -277,29 +315,6 @@ namespace RTC
 
 			this->packet->SetSenderSsrc(this->options.rtcpSenderSsrc);
 			this->packet->SetFeedbackPacketCount(feedbackPacketCount);
-		}
-
-		int64_t TransportWideCcFeedbackGenerator::ComputeSendIntervalMs(int64_t incomingBitrate)
-		{
-			MS_TRACE();
-
-			// Bitrate the feedback is allowed to take, which is what decides how long
-			// its fixed cost may be spread over.
-			const double feedbackBitrate = static_cast<double>(incomingBitrate) * FeedbackBitrateFraction;
-			// NOTE: Checked against the bitrate rather than against the resulting
-			// interval, so that a bitrate of zero is not divided by.
-			const double minFeedbackBitrate = (static_cast<double>(FeedbackPacketOverhead) * 8 * 1000) /
-			                                  static_cast<double>(MaxSendIntervalMs);
-
-			if (feedbackBitrate <= minFeedbackBitrate)
-			{
-				return MaxSendIntervalMs;
-			}
-
-			const auto intervalMs = static_cast<int64_t>(
-			  (static_cast<double>(FeedbackPacketOverhead) * 8 * 1000) / feedbackBitrate);
-
-			return std::max(intervalMs, MinSendIntervalMs);
 		}
 
 		void TransportWideCcFeedbackGenerator::MayUpdateSendInterval(int64_t nowMs)

@@ -3,7 +3,7 @@
 
 #include "RTC/BWE/OveruseDetector.hpp"
 #include "Logger.hpp"
-#include <cmath>
+#include <cmath> // std::fabs()
 
 namespace RTC
 {
@@ -61,14 +61,13 @@ namespace RTC
 				// Only declare overuse once the condition has persisted for long enough,
 				// over more than a single sample, and while the trend is not decreasing
 				// already. This is what filters out isolated jitter spikes.
-				if (this->timeOverUsingMs.value() > OverUsingTimeThresholdMs && this->overuseCounter > 1)
+				if (
+				  this->timeOverUsingMs.value() > OverUsingTimeThresholdMs && this->overuseCounter > 1 &&
+				  offsetMs >= this->prevOffsetMs)
 				{
-					if (offsetMs >= this->prevOffsetMs)
-					{
-						this->timeOverUsingMs = 0.0;
-						this->overuseCounter  = 0;
-						this->state           = Types::BandwidthUsage::OVERUSING;
-					}
+					this->timeOverUsingMs = 0.0;
+					this->overuseCounter  = 0;
+					this->state           = Types::BandwidthUsage::OVERUSING;
 				}
 			}
 			else if (modifiedOffsetMs < -this->threshold)
@@ -113,6 +112,7 @@ namespace RTC
 			// once the network calms down.
 			const double coef =
 			  std::fabs(modifiedOffsetMs) < this->threshold ? ThresholdDownCoef : ThresholdUpCoef;
+
 			// NOTE: The coefficients above are rates per millisecond, so the step is
 			// expressed in those units no matter that the instants are microseconds.
 			const double elapsedMs = std::min(
