@@ -621,7 +621,7 @@ namespace RTC
 				return false;
 			}
 
-			if (receiverReportPacket->GetAvailableLength() < RTC::RTCP::AnyReportPacket::ReportBlockLength)
+			if (receiverReportPacket->GetAvailableBufferLength() < RTC::RTCP::AnyReportPacket::ReportBlockLength)
 			{
 				return false;
 			}
@@ -1297,7 +1297,7 @@ namespace RTC
 
 				// If the item does not fit in the packet, send the packet and start a
 				// new one.
-				if (nackPacket->GetAvailableLength() < RTC::RTCP::NackPacket::NackItemLength)
+				if (nackPacket->GetAvailableBufferLength() < RTC::RTCP::NackPacket::NackItemLength)
 				{
 					sendPacket();
 

@@ -284,8 +284,8 @@ namespace RTC
 
 			const auto packet = CreatePacket();
 
-			auto result =
-			  this->retransmissionQueue.GetChunksForFastRetransmit(nowUs, packet->GetAvailableLength());
+			auto result = this->retransmissionQueue.GetChunksForFastRetransmit(
+			  nowUs, packet->GetAvailableBufferLength());
 
 			for (auto& [tsn, data] : result)
 			{
@@ -362,7 +362,7 @@ namespace RTC
 					// NOTE: The size is checked first, since ShouldSendAck() considers the
 					// pending ack sent. If it does not fit, the ack stays pending.
 					if (
-					  this->dataTracker.GetSackSelectiveAckLength() <= packet->GetAvailableLength() &&
+					  this->dataTracker.GetSackSelectiveAckLength() <= packet->GetAvailableBufferLength() &&
 					  this->dataTracker.ShouldSendAck(/*alsoIfDelayed*/ true))
 					{
 						this->dataTracker.AddSackSelectiveAck(
@@ -380,7 +380,7 @@ namespace RTC
 				}
 
 				auto chunksToSend =
-				  this->retransmissionQueue.GetChunksToSend(nowUs, packet->GetAvailableLength());
+				  this->retransmissionQueue.GetChunksToSend(nowUs, packet->GetAvailableBufferLength());
 
 				if (!chunksToSend.empty())
 				{

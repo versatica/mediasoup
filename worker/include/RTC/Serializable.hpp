@@ -81,9 +81,11 @@ namespace RTC
 		}
 
 		/**
-		 * Current available length of the Serializable.
+		 * Length (in bytes) of the free space of the buffer, after the current
+		 * content of the Serializable. It's what the Serializable can still grow
+		 * within its buffer.
 		 */
-		virtual size_t GetAvailableLength() const final
+		virtual size_t GetAvailableBufferLength() const final
 		{
 			return this->bufferLength - this->length;
 		}

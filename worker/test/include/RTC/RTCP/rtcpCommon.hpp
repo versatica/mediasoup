@@ -57,7 +57,7 @@ namespace rtcpCommon
 		REQUIRE(compoundPacket->GetLength() != 0);                                                       \
 		REQUIRE(compoundPacket->GetLength() == length);                                                  \
 		REQUIRE(                                                                                         \
-		  compoundPacket->GetAvailableLength() ==                                                        \
+		  compoundPacket->GetAvailableBufferLength() ==                                                  \
 		  compoundPacket->GetBufferLength() - compoundPacket->GetLength());                              \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(compoundPacket->GetLength()) == true);                     \
 		REQUIRE(compoundPacket->GetPacketsCount() == packetsCount);                                      \
@@ -108,7 +108,7 @@ namespace rtcpCommon
 		REQUIRE(packet->GetLength() != 0);                                                                   \
 		REQUIRE(packet->GetLength() == length);                                                              \
 		REQUIRE((static_cast<size_t>(Utils::Byte::Get2Bytes(packet->GetBuffer(), 2)) + 1) * 4 == length);    \
-		REQUIRE(packet->GetAvailableLength() == packet->GetBufferLength() - packet->GetLength());            \
+		REQUIRE(packet->GetAvailableBufferLength() == packet->GetBufferLength() - packet->GetLength());      \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);                                 \
 		REQUIRE(static_cast<uint32_t>(packet->GetVersion()) == 2);                                           \
 		REQUIRE(packet->GetType() == packetType);                                                            \
@@ -158,7 +158,7 @@ namespace rtcpCommon
 		  (static_cast<size_t>(Utils::Byte::Get2Bytes(extendedReport->GetBuffer(), 2)) + 1) * 4 ==       \
 		  length);                                                                                       \
 		REQUIRE(                                                                                         \
-		  extendedReport->GetAvailableLength() ==                                                        \
+		  extendedReport->GetAvailableBufferLength() ==                                                  \
 		  extendedReport->GetBufferLength() - extendedReport->GetLength());                              \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(extendedReport->GetLength()) == true);                     \
 		REQUIRE(extendedReport->GetType() == blockType);                                                 \

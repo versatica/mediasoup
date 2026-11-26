@@ -341,7 +341,7 @@ namespace RTC
 				return false;
 			}
 
-			if (compoundPacket->GetAvailableLength() < RTC::RTCP::SenderReportPacket::ComputeLengthFor(0))
+			if (compoundPacket->GetAvailableBufferLength() < RTC::RTCP::SenderReportPacket::ComputeLengthFor(0))
 			{
 				return false;
 			}
@@ -389,7 +389,7 @@ namespace RTC
 				return false;
 			}
 
-			if (sdesPacket->GetAvailableLength() < GetRtcpSdesChunkLength())
+			if (sdesPacket->GetAvailableBufferLength() < GetRtcpSdesChunkLength())
 			{
 				return false;
 			}

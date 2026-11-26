@@ -81,7 +81,7 @@ namespace RTC
 			  OutgoingSsnResetRequestParameter::ComputeLengthFor(
 			    this->retransmissionQueue->GetNumberOfStreamsReadyToBeReset()));
 
-			if (reConfigChunkLength > packet->GetAvailableLength())
+			if (reConfigChunkLength > packet->GetAvailableBufferLength())
 			{
 				// NOTE: Don't create a packet to measure this, since it would reuse the
 				// buffer of the given one.
@@ -108,7 +108,7 @@ namespace RTC
 					  sctp,
 					  "no room in the packet for the stream reset request [len:%zu, available len:%zu]",
 					  reConfigChunkLength,
-					  packet->GetAvailableLength());
+					  packet->GetAvailableBufferLength());
 				}
 
 				return false;

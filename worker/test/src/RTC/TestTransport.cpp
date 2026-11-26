@@ -331,7 +331,7 @@ SCENARIO("Transport", "[rtcp][transport]")
 
 				if (withOwnSdesChunk)
 				{
-					REQUIRE(sdesPacket->GetAvailableLength() >= ownSdesChunkLength);
+					REQUIRE(sdesPacket->GetAvailableBufferLength() >= ownSdesChunkLength);
 
 					sdesPacket->AddChunk(RtcpSsrc);
 					sdesPacket->AddItem(RTC::RTCP::SdesPacket::ItemType::CNAME, rtcpCname);
@@ -390,7 +390,7 @@ SCENARIO("Transport", "[rtcp][transport]")
 						dlrr |= static_cast<uint32_t>(((delayUs % 1000000) * 65536) / 1000000);
 
 						REQUIRE(
-						  dlrrExtendedReport->GetAvailableLength() >=
+						  dlrrExtendedReport->GetAvailableBufferLength() >=
 						  RTC::RTCP::DlrrExtendedReport::SubBlockLength);
 
 						dlrrExtendedReport->AddSubBlock(
@@ -448,14 +448,14 @@ SCENARIO("Transport", "[rtcp][transport]")
 			    senderReportRtpStreams.size(),
 			    numDlrrSubBlocks,
 			    /*withReceiverReports*/ true);
-			const size_t availableLength = receiverReportPacket
-			                                 ? receiverReportPacket->GetAvailableLength()
-			                                 : compoundPacket->GetAvailableLength();
+			const size_t availableBufferLength = receiverReportPacket
+			                                       ? receiverReportPacket->GetAvailableBufferLength()
+			                                       : compoundPacket->GetAvailableBufferLength();
 
 			// NOTE: The SDES packet may already be full with the chunks of the
 			// Sender Reports, and the first Receiver Report brings in the chunk of
 			// this Transport.
-			if (availableLength < requiredLength || senderReportRtpStreams.size() == RTC::RTCP::SdesPacket::MaxChunks)
+			if (availableBufferLength < requiredLength || senderReportRtpStreams.size() == RTC::RTCP::SdesPacket::MaxChunks)
 			{
 				sendCompoundPacket();
 				startCompoundPacket();
@@ -506,7 +506,7 @@ SCENARIO("Transport", "[rtcp][transport]")
 				const size_t numSdesChunks =
 				  senderReportRtpStreams.size() + (hasReceiverReports || numDlrrSubBlocks > 0 ? 1 : 0);
 
-				if (numSdesChunks == RTC::RTCP::SdesPacket::MaxChunks || compoundPacket->GetAvailableLength() < requiredLength)
+				if (numSdesChunks == RTC::RTCP::SdesPacket::MaxChunks || compoundPacket->GetAvailableBufferLength() < requiredLength)
 				{
 					sendCompoundPacket();
 					startCompoundPacket();

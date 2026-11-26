@@ -69,6 +69,6 @@ When adding inline documentation for methods or functions, we use `/** */` synta
  * Calculates current score for foo and bar.
  */
 function calculateScore(): number {
-	// [...]
+  // [...]
 }
 ```

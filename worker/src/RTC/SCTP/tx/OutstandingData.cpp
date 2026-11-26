@@ -359,7 +359,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			if (ForwardTsnChunk::ComputeLengthFor(skippedPerOrderedStream.size()) > packet->GetAvailableLength())
+			if (ForwardTsnChunk::ComputeLengthFor(skippedPerOrderedStream.size()) > packet->GetAvailableBufferLength())
 			{
 				return nullptr;
 			}
@@ -416,7 +416,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			if (IForwardTsnChunk::ComputeLengthFor(skippedPerStream.size()) > packet->GetAvailableLength())
+			if (IForwardTsnChunk::ComputeLengthFor(skippedPerStream.size()) > packet->GetAvailableBufferLength())
 			{
 				return nullptr;
 			}

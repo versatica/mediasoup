@@ -35,6 +35,7 @@ const ESLINT_IGNORE_PATHS = ['node/src/fbs'];
 // NOTE: Prettier ignores paths in .gitignore so we don't need to care about
 // node/src/fbs.
 const PRETTIER_PATHS = [
+	'.github',
 	'CHANGELOG.md',
 	'CONTRIBUTING.md',
 	'README.md',
