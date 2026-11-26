@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "RTC/RTP/Codecs/AV1.hpp"
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
+#include "RTC/RTP/Codecs/Tools.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -179,6 +180,54 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 		// the Consumer can be given.
 		REQUIRE(packet->GetSpatialLayer() == 0);
 		REQUIRE(packet->GetTemporalLayer() == 0);
+	}
+
+	/**
+	 * A simulcast Consumer is given one of several streams rather than the layers
+	 * of a single one, so the stream the ProducerStreamManager picks is what
+	 * chooses its spatial layer and its target spatial layer is never set.
+	 */
+	SECTION("a simulcast Consumer filters no spatial layer")
+	{
+		RTC::RtpCodecMimeType mimeType;
+
+		mimeType.SetMimeType("video/AV1");
+
+		REQUIRE(
+		  RTC::RTP::Codecs::Tools::IsValidTypeForCodec(RTC::RtpParameters::Type::SIMULCAST, mimeType));
+
+		uint8_t value[RTC::Consts::TwoByteRtpExtensionMaxLength]{};
+
+		std::memcpy(value, KeyFrameData, sizeof(KeyFrameData));
+
+		const std::vector<RTC::RTP::Packet::Extension> extensions{
+			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
+			 DependencyDescriptorId, static_cast<uint8_t>(sizeof(KeyFrameData)),
+			 value }
+		};
+
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsForm::Auto, extensions) == true);
+
+		REQUIRE(RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext));
+
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers  = 3,
+		                                                        .temporalLayers = 3,
+		                                                        .simulcast      = true };
+
+		RTC::RTP::Codecs::AV1::EncodingContext context(params);
+
+		context.SyncRequired();
+		context.SetCurrentTemporalLayer(0);
+		context.SetTargetTemporalLayer(0);
+
+		// As the SimulcastProducerStreamManager leaves it.
+		REQUIRE(context.GetTargetSpatialLayer() == -1);
+
+		// The packet is given to the Dependency Descriptor handler, which AV1
+		// installs as the handler of the codec, and no spatial layer filters it out.
+		bool marker{ false };
+
+		REQUIRE(packet->ProcessPayload(std::addressof(context), marker));
 	}
 
 	SECTION("a packet carrying no Dependency Descriptor and no key frame is told so")
