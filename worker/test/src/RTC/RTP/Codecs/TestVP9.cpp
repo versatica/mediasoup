@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "RTC/RTP/Codecs/PictureIdUnwrapper.hpp"
+#include "RTC/RTP/Codecs/Tools.hpp"
 #include "RTC/RTP/Codecs/VP9.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
@@ -216,6 +217,52 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		REQUIRE(processVP9PacketWithOneBytePictureId(
 		  dependencyDescriptorContext, pictureIdUnwrapper, context, 2, 1));
 		REQUIRE(context.GetCurrentTemporalLayer() == 1);
+	}
+
+	/**
+	 * A simulcast Consumer is given one of several streams rather than the layers
+	 * of a single one, so the stream the ProducerStreamManager picks is what
+	 * chooses its spatial layer and its target spatial layer is never set.
+	 */
+	SECTION("a simulcast Consumer filters no spatial layer")
+	{
+		RTC::RtpCodecMimeType mimeType;
+
+		mimeType.SetMimeType("video/VP9");
+
+		REQUIRE(
+		  RTC::RTP::Codecs::Tools::IsValidTypeForCodec(RTC::RtpParameters::Type::SIMULCAST, mimeType));
+
+		const RTC::RTP::Codecs::EncodingContext::Params params{ .spatialLayers  = 3,
+		                                                        .temporalLayers = 3,
+		                                                        .simulcast      = true };
+
+		RTC::RTP::Codecs::VP9::EncodingContext context(params);
+
+		context.SyncRequired();
+		context.SetCurrentTemporalLayer(0);
+		context.SetTargetTemporalLayer(0);
+
+		// As the SimulcastProducerStreamManager leaves it.
+		REQUIRE(context.GetTargetSpatialLayer() == -1);
+
+		// Every stream says spatial layer 0, which no target is compared against.
+		REQUIRE(processVP9Packet(context, 1, 0));
+
+		// The temporal layers are still filtered.
+		REQUIRE(!processVP9Packet(context, 2, 1));
+
+		context.SetTargetTemporalLayer(1);
+
+		REQUIRE(processVP9Packet(context, 3, 1));
+
+		// The Consumer is given another stream, whose pictures another encoder
+		// numbered, so the manager tells that the packet flow restarts.
+		context.SyncRequired();
+
+		REQUIRE(processVP9Packet(context, 1000, 0));
+		REQUIRE(processVP9Packet(context, 1001, 1));
+		REQUIRE(!processVP9Packet(context, 1002, 2));
 	}
 
 	SECTION("PayloadDescriptorHandler")

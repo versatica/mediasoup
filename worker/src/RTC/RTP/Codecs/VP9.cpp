@@ -221,7 +221,14 @@ namespace RTC
 
 				auto* context = static_cast<Codecs::VP9::EncodingContext*>(encodingContext);
 
-				MS_ASSERT(context->GetTargetSpatialLayer() >= 0, "target spatial layer cannot be -1");
+				// The spatial layer of a simulcast Consumer is chosen by picking the
+				// stream to forward, which the ProducerStreamManager does, so its target
+				// spatial layer is never set and there is nothing to filter here.
+				const bool filterSpatialLayers = !context->IsSimulcast();
+
+				MS_ASSERT(
+				  !filterSpatialLayers || context->GetTargetSpatialLayer() >= 0,
+				  "target spatial layer cannot be -1");
 				MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
 				auto packetSpatialLayer  = GetSpatialLayer();
@@ -229,12 +236,20 @@ namespace RTC
 				auto tmpSpatialLayer     = context->GetCurrentSpatialLayer();
 				auto tmpTemporalLayer    = context->GetCurrentTemporalLayer();
 
-				// If packet spatial or temporal layer is higher than maximum announced
-				// one, drop the packet.
-				if (packetSpatialLayer >= context->GetSpatialLayers() || packetTemporalLayer >= context->GetTemporalLayers())
+				// If packet temporal layer is higher than the maximum announced one, drop
+				// the packet.
+				if (packetTemporalLayer >= context->GetTemporalLayers())
 				{
-					MS_WARN_TAG(
-					  codec, "too high packet layers %" PRIu8 ":%" PRIu8, packetSpatialLayer, packetTemporalLayer);
+					MS_WARN_TAG(codec, "too high packet temporal layer %" PRIu8, packetTemporalLayer);
+
+					return false;
+				}
+
+				// Same for the spatial one, whose maximum is the number of layers of the
+				// stream rather than of the Consumer when it is not filtered here.
+				if (filterSpatialLayers && packetSpatialLayer >= context->GetSpatialLayers())
+				{
+					MS_WARN_TAG(codec, "too high packet spatial layer %" PRIu8, packetSpatialLayer);
 
 					return false;
 				}
@@ -255,7 +270,7 @@ namespace RTC
 					 RTC::SeqManager<uint16_t, VP9::FrameIdLength>::IsSeqLowerThan(
 				     this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()));
 
-				if (!isOldPacket)
+				if (!isOldPacket && filterSpatialLayers)
 				{
 					// Upgrade current spatial layer if needed.
 					if (context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())
@@ -325,9 +340,9 @@ namespace RTC
 					            : tmpSpatialLayer;
 
 				if (
-				  packetSpatialLayer > spatialLayerForFrameId ||
-				  (context->IsKSvc() && this->payloadDescriptor->p &&
-					 packetSpatialLayer != spatialLayerForFrameId))
+				  filterSpatialLayers && (packetSpatialLayer > spatialLayerForFrameId ||
+					                        (context->IsKSvc() && this->payloadDescriptor->p &&
+					                         packetSpatialLayer != spatialLayerForFrameId)))
 				{
 					return false;
 				}
@@ -385,7 +400,9 @@ namespace RTC
 				}
 
 				// Set marker bit if needed.
-				if (std::cmp_equal(packetSpatialLayer, tmpSpatialLayer) && this->payloadDescriptor->e)
+				if (
+				  (!filterSpatialLayers || std::cmp_equal(packetSpatialLayer, tmpSpatialLayer)) &&
+				  this->payloadDescriptor->e)
 				{
 					marker = true;
 				}
@@ -402,7 +419,7 @@ namespace RTC
 				}
 
 				// Update current spatial layer if needed.
-				if (tmpSpatialLayer != context->GetCurrentSpatialLayer())
+				if (filterSpatialLayers && tmpSpatialLayer != context->GetCurrentSpatialLayer())
 				{
 					context->SetCurrentSpatialLayer(tmpSpatialLayer, this->payloadDescriptor->pictureId);
 				}
